@@ -1,0 +1,25 @@
+services:
+  # app:
+  #   build: ./web
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3001:3001"
+  #   depends_on: 
+  #     - db
+  #   volumes:
+  #     - ./web:/web
+  #   environment:
+  #     - PORT=3001
+  db:
+    image: postgres
+    restart: unless-stopped
+    ports: 
+      - "5432:5432"
+    volumes:
+      - ccvol:/var/lib/postgresql
+      - ./sql/01-init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    environment:
+      - POSTGRES_PASSWORD=qwf
+
+volumes:
+  ccvol:

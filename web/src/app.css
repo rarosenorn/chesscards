@@ -1,0 +1,89 @@
+:root {
+	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+body {
+	background-color: #efefef;
+}
+.button-row {
+	display: flex;
+	margin: 0 3px;
+}
+.button-row > *:hover {
+	border: 1px solid darkgrey;
+}
+.button-row > * {
+	border: 1px solid lightgrey;
+	border-bottom: 1px solid darkgrey;
+	background-color: #f5f5f5;
+}
+.button-row > *:first-child {
+	border-radius: 4px 0 0 4px;
+}
+.button-row > *:last-child {
+	border-radius: 0 4px 4px 0;
+}
+.std-btn {
+	border: 1px solid lightgrey;
+	border-bottom: 1px solid darkgrey;
+	background-color: #f5f5f5;
+	padding: 6px 12px;
+	border-radius: 4px;
+}
+.std-btn:hover {
+	border: 1px solid darkgrey;
+}
+.white-btn {
+	align-items: center;
+	background-color: #FFFFFF;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-radius: .25rem;
+	box-shadow: rgba(0, 0, 0, 0.02) 0 1px 3px 0;
+	box-sizing: border-box;
+	color: rgba(0, 0, 0, 0.85);
+	cursor: pointer;
+	display: inline-flex;
+	font-family: system-ui,-apple-system,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	font-weight: 600;
+	justify-content: center;
+	line-height: 1.25;
+	margin: 0;
+	padding: 14px 28px;
+	position: relative;
+	text-decoration: none;
+	transition: all 250ms;
+	user-select: none;
+	-webkit-user-select: none;
+	touch-action: manipulation;
+	vertical-align: baseline;
+	width: auto;
+}
+.white-btn:hover {
+	border-color: rgba(0, 0, 0, 0.15);
+	box-shadow: rgba(0, 0, 0, 0.1) 0 4px 12px;
+	color: rgba(0, 0, 0, 0.65);
+	transform: translateY(-1px);
+}
+.white-btn:active {
+	background-color: #F0F0F1;
+	border-color: rgba(0, 0, 0, 0.15);
+	box-shadow: rgba(0, 0, 0, 0.06) 0 2px 4px;
+	color: rgba(0, 0, 0, 0.65);
+	transform: translateY(0);
+}
+.delete-button {
+	color: white;
+	background-color: red;
+}
+.oldschool-button-row {
+	display: flex;
+	border: 1px solid #404040;
+	border-radius: 5px;
+	button {
+		border: none;
+		border-radius: 0;
+	}
+}
+thead > th {
+	text-align: left;
+}

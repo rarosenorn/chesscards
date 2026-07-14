@@ -7,4 +7,4 @@
 <p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
 <p>yoo</p>
 <p>{data.user?.email}</p>
-<Chessboard width="400px" fen="8/8/8/2P2P2/8/2P2P2/8/8 w - - 0 1" />
+<Chessboard minWidth="400px" board="8/8/8/2P2P2/8/2P2P2/8/8 w - - 0 1" />

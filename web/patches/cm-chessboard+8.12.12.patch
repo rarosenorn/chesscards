@@ -1,0 +1,15 @@
+diff --git a/node_modules/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js b/node_modules/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js
+index 4100512..150421d 100644
+--- a/node_modules/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js
++++ b/node_modules/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js
+@@ -65,8 +65,8 @@ export class RightClickAnnotator extends Extension {
+         })
+ 
+         // register public API
+-        this.chessboard.getAnnotations = this.getAnnotations.bind(this.chessboard)
+-        this.chessboard.setAnnotations = this.setAnnotations.bind(this.chessboard)
++        this.chessboard.getAnnotations = this.getAnnotations.bind(this)
++        this.chessboard.setAnnotations = this.setAnnotations.bind(this)
+     }
+ 
+     getAnnotations() {

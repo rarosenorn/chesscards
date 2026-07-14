@@ -40,9 +40,23 @@
 				}
 			}
 		});
+		const customBulletList = BulletList.extend({
+			addKeyboardShortcuts() {
+				return {
+					"Mod-u": () => this.editor.commands.toggleBulletList()
+				}
+			}
+		})
+		const customOrderedList = OrderedList.extend({
+			addKeyboardShortcuts() {
+				return {
+					"Mod-o": () => this.editor.commands.toggleOrderedList()
+				}
+			}
+		})
 		editorState.editor = new Editor({
 			element: element,
-			extensions: [Document, Paragraph, customHardBreak, Text, Bold, Italic, OrderedList, BulletList, ListItem, UndoRedo],
+			extensions: [Document, Paragraph, customHardBreak, Text, Bold, Italic, customOrderedList, customBulletList, ListItem, UndoRedo],
 			content: content,
 			onTransaction: ({ editor }) => {
 				// Update the state signal to force a re-render
@@ -57,7 +71,9 @@
 
 <div class="tiptap">
 	{#if editorState.editor}
-		<div class="fixed-menu">
+		<!-- preventDefault on mousedown stops the browser from stealing focus
+		from the editor when a menu button is pressed, click still fires -->
+		<div class="fixed-menu" role="toolbar" tabindex="-1" onmousedown={e => e.preventDefault()}>
 			<div class="button-row">
 				<button
 					title="Bold text (ctrl-b)"
@@ -78,14 +94,14 @@
 			<span class="seperator"></span>
 			<div class="button-row">
 				<button
-					title="Unordered list"
+					title="Unordered list (ctrl-u)"
 					onclick={() => editorState.editor.chain().focus().toggleBulletList().run()}
 					class:active={editorState.editor.isActive("bulletList")}
 					disabled={!editorState.editor.isFocused}
 				><BulletListIcon />
 				</button>
 				<button
-					title="Ordered list"
+					title="Ordered list (ctrl-o)"
 					onclick={() => editorState.editor.chain().focus().toggleOrderedList().run()}
 					class:active={editorState.editor.isActive("orderedList")}
 					disabled={!editorState.editor.isFocused}

@@ -87,3 +87,25 @@ body {
 thead > th {
 	text-align: left;
 }
+/* shared white card/panel: flashcard views, card editors */
+.card-surface {
+	background-color: white;
+	width: 100%;
+	max-width: 900px;
+	margin-left: auto;
+	margin-right: auto;
+	display: flex;
+	flex-direction: column;
+	border-radius: 8px;
+	box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
+	rgba(0, 0, 0, 0.06) 0px 4px 16px 0px;
+}
+.board-number {
+	text-align: left;
+	align-self: stretch;
+	margin: 0 0 2px 0;
+	padding-left: 6px;
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: #404040;
+}

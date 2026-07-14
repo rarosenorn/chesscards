@@ -3,6 +3,7 @@
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating } from "ts-fsrs"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
+	import { countBoards, boardsBefore } from "$lib/card-utils.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
 
@@ -17,6 +18,12 @@
 	));
 
 	let preview = $derived(scheduler.repeat(currentCard, new Date()));
+
+	let frontBoardCount = $derived(currentCard ? countBoards(currentCard.front) : 0);
+	// board numbers are only shown when the card has several boards to reference
+	let showBoardNumbers = $derived(
+		currentCard && frontBoardCount + countBoards(currentCard.back) > 1
+	);
 
 	const evaluateCard = async rating => {
 		const cardAndLog = 
@@ -63,20 +70,25 @@
 </script>
 <svelte:window onkeydown={handleKeyDown} />
 
-{#snippet side(side)}
-	{#each side as block}
+{#snippet side(side, boardNumberOffset)}
+	{#each side as block, blockIndex}
 		{#if block.type === "text"}
 			{@html ttGenerateHTML(block.content)}
 		{:else if block.type === "chessboards"}
-			<div 
+			<div
 				class={{
 					"single-board-block": block.content.length < 2,
 						"board-grid-block": block.content.length > 1
 				}}
 			>
-				{#each block.content as chessboard}
+				{#each block.content as chessboard, boardIndex}
 					<div class="board-container">
-						<Chessboard fen={chessboard} />
+						{#if showBoardNumbers}
+							<p class="board-number">
+								{boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1}
+							</p>
+						{/if}
+						<Chessboard board={chessboard} minWidth={block.content.length < 2 ? "450px" : "409px"} />
 					</div>
 				{/each}
 			</div>
@@ -85,11 +97,11 @@
 {/snippet}
 
 {#if currentCard}
-	<div class="flashcard">
-		{@render side(currentCard.front)}
+	<div class="flashcard card-surface">
+		{@render side(currentCard.front, 0)}
 		<hr class="divider">
 		{#if isCardTurned}
-			{@render side(currentCard.back)}
+			{@render side(currentCard.back, frontBoardCount)}
 		{/if}
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
@@ -127,22 +139,11 @@
 
 <style>
 	.flashcard {
-		background-color: white;
-		margin: 0 auto;
-		display: flex;
-		flex-direction: column;
 		align-items: center;
-		width: 900px;
-		border-radius: 5px;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12),
-		0 1px 2px rgba(0, 0, 0, 0.24);
 		margin-top: 34px;
-		min-height: 100px;
-		padding: 24px 16px;
-		padding-top: 36px;
 		min-height: 750px;
+		padding: 36px 16px 75px 16px;
 		position: relative;
-		padding-bottom: 75px;
 	}
 	.divider {
 		width: 100%;

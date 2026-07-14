@@ -7,7 +7,7 @@
 
 <div class="register-and-login-container">
 	<h1>Register</h1>
-	<FormErros form={form} />
+	<FormErrors form={form} />
 	<form method="POST">
 		<label for="email">Email:</label>
 		<input 

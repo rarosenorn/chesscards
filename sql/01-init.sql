@@ -56,7 +56,7 @@ create table marketplace_card_instances (
 create table review_logs (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid references users(id) not null,
-	card_id uuid references cards(id),
+	card_id uuid references cards(id) on delete cascade,
 	marketplace_card_instance_id uuid references marketplace_card_instances(id),
 	rating smallint check(rating between 0 and 4) not null,
 	state smallint check(state between 0 and 3) not null,

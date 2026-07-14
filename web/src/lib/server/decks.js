@@ -82,6 +82,28 @@ const addCard = async (userId, deckId, front, back, FSRSValues) => {
 	return rows[0];
 }
 
+const updateCardContent = async (userId, cardId, front, back) => {
+	const { rowCount } = await pool.query(`
+		update cards c set front = $3, back = $4
+		from decks d
+		where c.id = $2 and c.deck_id = d.id and d.user_id = $1`,
+		[userId, cardId, front, back]
+	);
+
+	return rowCount === 1;
+}
+
+const deleteCards = async (userId, cardIds) => {
+	const { rowCount } = await pool.query(`
+		delete from cards c
+		using decks d
+		where c.id = any($2::uuid[]) and c.deck_id = d.id and d.user_id = $1`,
+		[userId, cardIds]
+	);
+
+	return rowCount;
+}
+
 const updateCardStudyState = async (userId, card) => {
 	const { rows } = await pool.query(`
 		update cards 
@@ -98,4 +120,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardStudyState, createReviewLog }
+export { create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardContent, deleteCards, updateCardStudyState, createReviewLog }

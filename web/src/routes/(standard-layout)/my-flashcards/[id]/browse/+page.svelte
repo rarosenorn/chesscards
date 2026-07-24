@@ -13,20 +13,61 @@
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import CardSideEditor from "$lib/components/CardSideEditor.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
-	import { getSideJson, sideHasContent, countBoards, normalizeBoard } from "$lib/card-utils.js"
+	import { getSideJson, sideHasContent, countBoards, normalizeBoard, invalidBoardNumbers, invalidFenMessage } from "$lib/card-utils.js"
+	import { createCardDnd } from "$lib/card-dnd.svelte.js"
+	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardContent, deleteCards } from "./browse.remote.js"
 
 	let deck = getContext("deck");
-	let selectedCard = $derived(deck.cards[0]);
+	// marketplace deck instances can only be viewed, not edited
+	const readonly = deck.isMarketplace;
 
-	// id of the card open for editing; selecting another card falls back to view mode
-	let editingCardId = $state(null);
-	let editFront = $state([]);
-	let editBack = $state([]);
-	let editError = $state("");
-	let isEditingSelected = $derived(selectedCard && editingCardId === selectedCard.id);
-	let editFrontBoardCount = $derived(countBoards(editFront));
-	let editShowBoardNumbers = $derived(editFrontBoardCount + countBoards(editBack) > 1);
+	// in-progress edit lives in the deck layout's context so it survives tab
+	// navigation within the deck
+	const cardDrafts = getContext("cardDrafts");
+	if (!cardDrafts.browse) {
+		cardDrafts.browse = {
+			// id of the card open for editing; selecting another card falls back to view mode
+			editingCardId: null,
+			editFront: [],
+			editBack: [],
+			// shared by both side editors in edit mode so drags work between front and back
+			dnd: createCardDnd()
+		};
+	}
+	const draft = cardDrafts.browse;
+	const cardDnd = draft.dnd;
+
+	// returning to the tab mid-edit reselects the card being edited; captured
+	// non-reactively so Save/Cancel (clearing editingCardId) can't yank the
+	// selection back to the first card
+	// svelte-ignore state_referenced_locally
+	const restoredCardId = draft.editingCardId;
+	let selectedCard = $derived(
+		deck.cards.find(card => card.id === restoredCardId) ?? deck.cards[0]
+	);
+
+	let isEditingSelected = $derived(selectedCard && draft.editingCardId === selectedCard.id);
+	let editFrontBoardCount = $derived(countBoards(draft.editFront));
+	let editShowBoardNumbers = $derived(editFrontBoardCount + countBoards(draft.editBack) > 1);
+
+	// errors follow the attempted-and-still-invalid pattern: shown after a
+	// blocked save, then tracking the live condition until it clears
+	let invalidFenAttempted = $state(false);
+	let invalidBoardNums = $derived(
+		draft.editingCardId
+			? [
+				...invalidBoardNumbers(draft.editFront, 0, cardDnd),
+				...invalidBoardNumbers(draft.editBack, editFrontBoardCount, cardDnd)
+			]
+			: []
+	);
+	$effect(() => { if (invalidBoardNums.length === 0) invalidFenAttempted = false })
+
+	let noContentAttempted = $state(false);
+	$effect(() => {
+		if (draft.editingCardId && sideHasContent(draft.editFront)) noContentAttempted = false;
+	})
 
 	const toEditableSide = side =>
 		(side ?? []).map(block => ({
@@ -39,32 +80,44 @@
 		}));
 
 	const startEditing = () => {
-		editFront = toEditableSide(selectedCard.front);
-		editBack = toEditableSide(selectedCard.back);
-		editError = "";
-		editingCardId = selectedCard.id;
+		draft.editFront = toEditableSide(selectedCard.front);
+		draft.editBack = toEditableSide(selectedCard.back);
+		invalidFenAttempted = false;
+		noContentAttempted = false;
+		draft.editingCardId = selectedCard.id;
 	}
 
-	const stopEditing = () => editingCardId = null;
+	const stopEditing = () => {
+		draft.editingCardId = null;
+		// board ids are regenerated per edit session; drop any leftover open
+		// editors and their persisted state
+		draft.dnd.editingBoards = [];
+		draft.dnd.editorStates = {};
+		draft.dnd.invalidBoards = {};
+	}
 
 	// bound to the two CardSideEditor instances in edit mode
-	let editFrontEditor, editBackEditor;
+	let editFrontEditor = $state(), editBackEditor = $state();
 
 	const saveCard = async () => {
-		if (editFrontEditor?.hasOpenEditors() || editBackEditor?.hasOpenEditors()) {
-			editError = "All board editors must be closed (Ok or Cancel) before saving the card";
+		// open board editors are applied as if Ok was pressed; an invalid FEN
+		// (in an editor or an inline input) blocks the save
+		editFrontEditor?.applyOpenEditors();
+		editBackEditor?.applyOpenEditors();
+		if (invalidBoardNums.length > 0) {
+			invalidFenAttempted = true;
 			return;
 		}
-		if (!sideHasContent(editFront)) {
-			editError = "Front must have atleast 1 non-empty text field or 1 chessboard";
+		if (!sideHasContent(draft.editFront)) {
+			noContentAttempted = true;
 			return;
 		}
-		const front = getSideJson(editFront);
-		const back = getSideJson(editBack);
+		const front = getSideJson(draft.editFront);
+		const back = getSideJson(draft.editBack);
 		await updateCardContent({ cardId: selectedCard.id, front, back });
 		selectedCard.front = JSON.parse(front);
 		selectedCard.back = JSON.parse(back);
-		editingCardId = null;
+		stopEditing();
 	}
 
 	let searchInput = $state("");
@@ -124,6 +177,7 @@
 	let contextMenu = $state(null);
 
 	const handleRowContextMenu = (e, card, index) => {
+		if (readonly) return;
 		e.preventDefault();
 		// right-clicking outside the current selection selects the clicked row instead
 		if (!multiSelected.has(card.id)) {
@@ -135,14 +189,21 @@
 	}
 
 	const deleteCardsByIds = async ids => {
-		const message = ids.length === 1 ? "Delete this card?" : `Delete ${ids.length} cards?`;
-		if (!confirm(message)) return;
+		const confirmed = await confirmModal({
+			title: ids.length === 1 ? "Delete card" : `Delete ${ids.length} cards`,
+			message: ids.length === 1
+				? "This permanently deletes the card and its review history."
+				: `This permanently deletes these ${ids.length} cards and their review history.`,
+			confirmLabel: "Delete",
+			danger: true
+		});
+		if (!confirmed) return;
 		const index = filteredCards.indexOf(selectedCard);
 		await deleteCards({ cardIds: ids });
 		deck.cards = deck.cards.filter(card => !ids.includes(card.id));
 		multiSelected = new SvelteSet();
 		anchorIndex = null;
-		editingCardId = null;
+		stopEditing();
 		selectedCard = filteredCards[Math.min(index, filteredCards.length - 1)];
 	}
 
@@ -158,8 +219,14 @@
 
 	const stateNames = ["New", "Learning", "Review", "Relearning"];
 
-	const formatDue = card =>
-		card.state === 0 ? "New" : new Date(card.due).toLocaleDateString();
+	const formatDue = card => {
+		if (card.finished_at) return "Done";
+		if (card.card_type === "tactic")
+			return Date.parse(card.due) > Date.now()
+				? new Date(card.due).toLocaleDateString()
+				: "New";
+		return card.state === 0 ? "New" : new Date(card.due).toLocaleDateString();
+	}
 
 	const handleTableNav = async e => {
 		if (e.key === "ArrowUp") {
@@ -183,7 +250,22 @@
 <svelte:window
 	onmouseup={() => dragging = false}
 	onmousedown={() => contextMenu = null}
-	onkeydown={e => { if (e.key === "Escape") contextMenu = null; }}
+	onkeydown={e => {
+		if (e.key === "Escape") {
+			contextMenu = null;
+		} else if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && isEditingSelected) {
+			e.preventDefault();
+			saveCard();
+		} else if (
+			e.key === "e" && !e.ctrlKey && !e.metaKey && !e.altKey &&
+			!readonly && selectedCard && !isEditingSelected &&
+			e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA" &&
+			!e.target.isContentEditable
+		) {
+			e.preventDefault();
+			startEditing();
+		}
+	}}
 />
 
 {#if contextMenu}
@@ -194,7 +276,18 @@
 		style="left: {contextMenu.x}px; top: {contextMenu.y}px"
 		onmousedown={e => e.stopPropagation()}
 	>
+		{#if multiSelected.size === 1}
+			<button
+				onclick={() => {
+					contextMenu = null;
+					if (!isEditingSelected) startEditing();
+				}}
+			>
+				Edit card
+			</button>
+		{/if}
 		<button
+			class="danger"
 			onclick={() => {
 				contextMenu = null;
 				deleteCardsByIds([...multiSelected]);
@@ -214,6 +307,7 @@
 			onkeydown={e => { if (e.key === "Enter") applySearch(); }}
 		/>
 		<div class="table-container">
+		<!-- svelte-ignore a11y_autofocus -- table is the page's primary interaction target; focus enables arrow-key nav immediately -->
 		<table
 			role="grid"
 			tabindex="0"
@@ -223,6 +317,7 @@
 			<thead>
 				<tr>
 					<th>Front</th>
+					<th class="col-type">Type</th>
 					<th class="col-due">Due</th>
 					<th class="col-reps">Reps</th>
 					<th class="col-state">State</th>
@@ -246,9 +341,10 @@
 								<span class="board-only">{boardCount > 1 ? "{{chessboards}}" : "{{chessboard}}"}</span>
 							{/if}
 						</td>
+						<td>{card.card_type === "tactic" ? "Tactic" : "Basic"}</td>
 						<td>{formatDue(card)}</td>
-						<td>{card.reps}</td>
-						<td>{stateNames[card.state]}</td>
+						<td>{card.reps ?? "—"}</td>
+						<td>{card.card_type === "tactic" ? "—" : stateNames[card.state]}</td>
 					</tr>
 				{/each}
 			</tbody>
@@ -257,29 +353,31 @@
 	</div>
 	<div class="selected-card-container">
 		{#if selectedCard}
-			<div class="card-toolbar">
-				{#if isEditingSelected}
-					<button class="std-btn" onclick={saveCard}>Save</button>
-					<button class="std-btn" onclick={stopEditing}>Cancel</button>
-				{:else}
-					<button class="std-btn" onclick={startEditing}>Edit card</button>
-				{/if}
-				<button class="std-btn delete-card-btn" onclick={() => deleteCardsByIds([selectedCard.id])}>
-					Delete card
-				</button>
-			</div>
 			{#if isEditingSelected}
 				<div class="card-edit card-surface">
 					<p class="side-indicator">Front</p>
-					{#if editError}
-						<p class="edit-error">{editError}</p>
+					{#if invalidFenAttempted && invalidBoardNums.length > 0}
+						<p class="edit-error">{invalidFenMessage(invalidBoardNums)}</p>
 					{/if}
-					<CardSideEditor bind:this={editFrontEditor} side={editFront} boardNumberOffset={0} showBoardNumbers={editShowBoardNumbers} />
+					{#if noContentAttempted}
+						<p class="edit-error">Front must have atleast 1 non-empty text field or 1 chessboard</p>
+					{/if}
+					<CardSideEditor bind:this={editFrontEditor} side={draft.editFront} boardNumberOffset={0} showBoardNumbers={editShowBoardNumbers} dnd={cardDnd} extendEdge="top" />
 					<p class="side-indicator" style="margin-top: 10px;">Back</p>
-					<CardSideEditor bind:this={editBackEditor} side={editBack} boardNumberOffset={editFrontBoardCount} showBoardNumbers={editShowBoardNumbers} />
+					<CardSideEditor bind:this={editBackEditor} side={draft.editBack} boardNumberOffset={editFrontBoardCount} showBoardNumbers={editShowBoardNumbers} dnd={cardDnd} extendEdge="bottom" />
 				</div>
 			{:else}
 				<FlashcardBrowse card={selectedCard} />
+			{/if}
+			{#if !readonly}
+				<div class="card-toolbar">
+					{#if isEditingSelected}
+						<button class="std-btn" onclick={stopEditing}>Cancel</button>
+						<button class="std-btn" onclick={saveCard}>Save</button>
+					{:else}
+						<button class="std-btn" onclick={startEditing}>Edit card</button>
+					{/if}
+				</div>
 			{/if}
 		{/if}
 	</div>
@@ -349,6 +447,9 @@
 	th:last-child {
 		border-right: none;
 	}
+	.col-type {
+		width: 70px;
+	}
 	.col-due {
 		width: 100px;
 	}
@@ -381,7 +482,7 @@
 		background-color: #e9f1fc;
 	}
 	tbody tr.active td {
-		background-color: #d8e8fb;
+		background-color: var(--accent-subtle-strong);
 	}
 	.board-only {
 		color: rgba(0, 0, 0, 0.45);
@@ -394,19 +495,23 @@
 		height: 100%;
 		overflow-y: auto;
 	}
+	/* sits bottom-right under the card it acts on */
+	/* matches .card-surface's max-width so the buttons sit flush with the
+	   card's right edge */
 	.card-toolbar {
 		display: flex;
 		justify-content: end;
 		gap: 8px;
-		max-width: 950px;
-		margin: 16px auto 0 auto;
+		max-width: 900px;
+		margin: 8px auto 40px auto;
 	}
-	.delete-card-btn {
-		color: #c00;
+	.selected-card-container :global(.flashcard) {
+		margin-top: 16px;
+		margin-bottom: 0;
 	}
 	.card-edit {
-		margin-top: 12px;
-		margin-bottom: 40px;
+		margin-top: 16px;
+		margin-bottom: 0;
 		padding: 12px 20px;
 	}
 	.side-indicator {
@@ -436,6 +541,8 @@
 		border: none;
 		background: none;
 		cursor: pointer;
+	}
+	.context-menu button.danger {
 		color: #c00;
 	}
 	.context-menu button:hover {

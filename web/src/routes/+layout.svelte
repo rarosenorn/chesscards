@@ -1,10 +1,17 @@
 <script>
+	import { setContext } from "svelte"
 	import favicon from '$lib/assets/favicon.svg';
 	import Logo from "$lib/assets/Logo.svelte"
+	import ModalHost from "$lib/components/ModalHost.svelte"
+	import { DEFAULT_BOARD_PREFS } from "$lib/board-prefs.js"
 	import "../reset.css"
 	import "../app.css"
 
 	let { children, data } = $props();
+
+	// every chessboard in the app reads the user's board preferences from here
+	// (a getter so consumers stay reactive to profile changes)
+	setContext("boardPrefs", () => data.boardPrefs ?? DEFAULT_BOARD_PREFS);
 </script>
 
 <svelte:head>
@@ -16,21 +23,24 @@
 		<div class="left-nav">
 			<a id="logo-anchor-tag" href="/"><Logo /><span>Chesscards</span></a>
 			<nav>
-				<a href="/my-flashcards">My flashcards</a>
-				<a href="/statistics">Statistics</a>
-				<a href="/marketplace">Marketplace</a>
-				<a href="/why-flashcards">Why flashcards?</a>
-				<a href="/faq">FAQ</a>
+				{#each [
+					["/my-flashcards", "My flashcards"],
+					["/statistics", "Statistics"],
+					["/marketplace", "Marketplace"],
+					["/why-flashcards", "Why flashcards?"],
+					["/faq", "FAQ"],
+					...(data.user?.isAdmin ? [["/admin", "Admin"]] : [])
+				] as [href, label]}
+					<a {href}>{label}</a>
+				{/each}
 			</nav>
 		</div>
 		<div class="right-nav">
 			{#if data.user?.email}
-				<form method="POST" action="/logout">
-					<button type="submit">Log out</button>
-				</form>
+				<a class="nav-link" href="/profile">Settings</a>
 			{:else}
-				<a href="/login">Log in</a>
-				<a href="/register">Register</a>
+				<a class="nav-link" href="/login">Log in</a>
+				<a class="primary-btn" href="/register">Register</a>
 			{/if}
 		</div>
 	</div>
@@ -38,6 +48,7 @@
 		{@render children()}
 	</main>
 </div>
+<ModalHost />
 
 <style>
 	.layout {
@@ -73,8 +84,31 @@
 			}
 		}
 		.right-nav {
-			margin-top: 5px;
 			display: flex;
+			align-items: center;
+			gap: 6px;
+			.nav-link {
+				padding: 8px;
+				color: rgba(0, 0, 0, 0.6);
+				text-decoration: none;
+			}
+			.nav-link:hover {
+				color: black;
+				text-decoration: underline;
+			}
+			.primary-btn {
+				padding: 7px 16px;
+				border-radius: 5px;
+				font-size: 1rem;
+				text-decoration: none;
+				cursor: pointer;
+				background-color: var(--accent);
+				border: 1px solid var(--accent);
+				color: white;
+			}
+			.primary-btn:hover {
+				background-color: var(--accent-hover);
+			}
 		}
 		nav {
 			display: flex;
@@ -89,9 +123,6 @@
 				text-decoration: underline;
 			}
 		}
-	}
-	:global(.is-active) {
-		color: black !important;
 	}
 	main {
 		background-color: #efefef;

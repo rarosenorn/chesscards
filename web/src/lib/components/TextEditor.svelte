@@ -58,6 +58,9 @@
 			element: element,
 			extensions: [Document, Paragraph, customHardBreak, Text, Bold, Italic, customOrderedList, customBulletList, ListItem, UndoRedo],
 			content: content,
+			editorProps: {
+				attributes: { spellcheck: "false" }
+			},
 			onTransaction: ({ editor }) => {
 				// Update the state signal to force a re-render
 				editorState = { editor }

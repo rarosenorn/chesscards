@@ -1,29 +1,31 @@
-import { redirect } from "@sveltejs/kit"
-import * as auth from "$lib/server/auth.js"
+import { error, redirect } from "@sveltejs/kit"
+import { building } from "$app/environment"
+import { svelteKitHandler } from "better-auth/svelte-kit"
+import { auth } from "$lib/server/auth.js"
 
 const handle = async ({ event, resolve }) => {
-	const sessionId = event.cookies.get("session_id");
-	if (sessionId) {
-		event.locals.userId = await auth.getUserIdFromSessionId(sessionId);
+	const session = await auth.api.getSession({ headers: event.request.headers });
+	event.locals.user = session?.user;
+	event.locals.userId = session?.user.id;
+	event.locals.isAdmin = session?.user.isAdmin ?? false;
 
-		if (!event.locals.userId) {
-			event.cookies.delete("session_id", { path: "/" });
-		}
+	// 404 (not 403) so the panel's existence isn't revealed to non-admins
+	if (event.url.pathname.startsWith("/admin") && !event.locals.isAdmin) {
+		error(404, "Not Found");
 	}
 
-	const authenticatedRoutes = ["/my-flashcards"];
+	const authenticatedRoutes = ["/my-flashcards", "/profile"];
 	if (authenticatedRoutes.some(r => event.url.pathname.startsWith(r) && !event.locals.userId)) {
 		redirect(303, `/login?redirect_to=${event.url.pathname}`);
 	}
 
-	const notAuthenticatedRoutes = ["/login", "/register"];
+	const notAuthenticatedRoutes = ["/login", "/register", "/forgot-password"];
 	if (notAuthenticatedRoutes.some(r => event.url.pathname === r && event.locals.userId)) {
 		redirect(303, "/my-flashcards")
 	}
 
-	return resolve(event);
+	// mounts better-auth's /api/auth/* endpoints
+	return svelteKitHandler({ event, resolve, auth, building });
 }
-
-
 
 export { handle }

@@ -41,7 +41,7 @@ in check, the 6 things you can do if there is an attack on the king but not in c
 [ ] muster the rohirrim (master the knight, e.g. where it can move in x moves and patterns etc.
 [ ] chess axioms (first principles)
 [ ] thought process while calculating / common calculating structures
-[ ] how to checkmate with x
+[ ] how to checkmate with x (K+Q vs K designed: see deck-kq-vs-k.md)
 [ ] chess terms
 [ ] tactic types
 [ ] opening decks? could show position from opening and ask what the next move is and why

@@ -24,9 +24,13 @@
 	</li>
 	<li>
 		Q: Is remembering things, e.g. SQL syntax waste of time now that we
-		can just ask AI? <br />
+		can just ask AI? <br>
 		A: I would argue no, flashcards causes both memory and understanding,
 		both are relevant for prompting an AI, validating AI output, knowing
 		what is possible and writing yourself without AI
+	</li>
+	<li>
+		Q: Different card types?<br>
+		A: They are built the same way, but tactic cards are done when you get them correct once, basic cards follow fsrs scheduling
 	</li>
 </ul>

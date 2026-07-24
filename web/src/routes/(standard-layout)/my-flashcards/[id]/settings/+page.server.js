@@ -1,7 +1,17 @@
-import { fail, redirect } from "@sveltejs/kit"
+import { error, fail, redirect } from "@sveltejs/kit"
 import * as decks from "$lib/server/decks.js"
+import * as marketplace from "$lib/server/marketplace.js"
 
-export const load = () => ({ pageTitle: "Deck" })
+export const load = async ({ locals, params, parent }) => {
+	// marketplace deck instances are readonly: no settings page for them
+	const { deck } = await parent();
+	if (deck.isMarketplace) error(404);
+
+	return {
+		pageTitle: "Deck",
+		uploadRequest: await marketplace.getUploadRequestForDeck(locals.userId, params.id)
+	}
+}
 
 export const actions = {
 	delete: async ({ request, locals }) => {

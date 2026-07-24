@@ -1,19 +1,75 @@
 <script>
 	import { page } from "$app/state"
+	import { beforeNavigate, goto } from "$app/navigation"
 	import { setContext } from "svelte"
+	import { sideHasContent, syncTextBlocks } from "$lib/card-utils.js"
+	import { confirmModal } from "$lib/modals.svelte.js"
 
 	let { data, children } = $props();
 
 	// svelte-ignore state_referenced_locally
 	let deck = $state(data.deck);
 	setContext("deck", deck);
-	// for decks from marketplace
-	// const paths = ["study", "browse", "statistics", "",  "settings"];
-	// const names= ["Study", "Browse", "Statistics", "Description", "Settings"];
 
-	// for decks owned by me
-	const paths = ["study", "browse", "add-cards", "settings"];
-	const names= ["Study", "Browse / edit", "Add cards", "Settings"];
+	// In-progress card state for the add-cards and browse tabs. It lives here,
+	// in the layout that stays mounted across tab navigation, so switching
+	// tabs doesn't wipe a half-written card; leaving the deck discards it
+	// (after the warning below).
+	const cardDrafts = $state({ addCards: null, browse: null });
+	setContext("cardDrafts", cardDrafts);
+
+	const draftSides = () => [
+		...(cardDrafts.addCards ? [cardDrafts.addCards.front, cardDrafts.addCards.back] : []),
+		...(cardDrafts.browse?.editingCardId ? [cardDrafts.browse.editFront, cardDrafts.browse.editBack] : [])
+	];
+
+	// tab names (as shown in the nav) holding unsaved work, for the warning
+	const unsavedPlaces = () => [
+		...(cardDrafts.addCards
+			&& (sideHasContent(cardDrafts.addCards.front) || sideHasContent(cardDrafts.addCards.back))
+			? ["Add cards"] : []),
+		...(cardDrafts.browse?.editingCardId != null ? ["Browse / edit"] : [])
+	];
+
+	// set once the user confirmed leaving, so the re-navigation passes through
+	let leaveConfirmed = false;
+
+	beforeNavigate(nav => {
+		// live tiptap content only lives in the editor components; flush it
+		// into block state before any navigation unmounts them
+		for (const side of draftSides()) syncTextBlocks(side);
+
+		if (leaveConfirmed) return;
+		const base = `/my-flashcards/${page.params.id}`;
+		const path = nav.to?.url.pathname;
+		if (path === base || path?.startsWith(base + "/")) return;
+		const places = unsavedPlaces();
+		if (places.length === 0) return;
+		if (nav.willUnload) {
+			nav.cancel(); // browser shows its own leave dialog
+			return;
+		}
+		// beforeNavigate is synchronous: cancel now, re-navigate on confirm
+		const to = nav.to?.url;
+		nav.cancel();
+		confirmModal({
+			title: "Unsaved changes",
+			message: `You have unsaved state in ${places.join(" and ")}. Leaving discards it.`,
+			confirmLabel: "Leave",
+			danger: true
+		}).then(confirmed => {
+			if (!confirmed || !to) return;
+			leaveConfirmed = true;
+			goto(to);
+		});
+	});
+	// marketplace deck instances are readonly: study and browse only
+	const paths = deck.isMarketplace
+		? ["study", "browse"]
+		: ["study", "browse", "add-cards", "settings"];
+	const names = deck.isMarketplace
+		? ["Study", "Browse"]
+		: ["Study", "Browse / edit", "Add cards", "Settings"];
 </script>
 
 <div class="deck-nav-container">
@@ -65,7 +121,7 @@
 	}
 	.tabs [aria-current]:not([aria-current="false"]) {
 		color: white !important;
-		background-color: steelblue !important;
+		background-color: var(--accent) !important;
 	}
 	.tabs > a:hover {
 		background-color: rgba(0, 0, 0, 0.05);

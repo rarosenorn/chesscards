@@ -13,11 +13,13 @@
 
 	let isCardTurned = $state(false);
 
-	let currentCard = $derived(deck.cards.find(card => 
-		Date.parse(card.due) <= Date.now()
+	let currentCard = $derived(deck.cards.find(card =>
+		!card.finished_at && Date.parse(card.due) <= Date.now()
 	));
 
-	let preview = $derived(scheduler.repeat(currentCard, new Date()));
+	let isTactic = $derived(currentCard?.card_type === "tactic");
+
+	let preview = $derived(isTactic ? null : scheduler.repeat(currentCard, new Date()));
 
 	let frontBoardCount = $derived(currentCard ? countBoards(currentCard.front) : 0);
 	// board numbers are only shown when the card has several boards to reference
@@ -26,16 +28,35 @@
 	);
 
 	const evaluateCard = async rating => {
-		const cardAndLog = 
+		const cardAndLog =
 			scheduler.next(currentCard, new Date(), rating);
 		isCardTurned = false;
 		deck.cards[deck.cards.indexOf(currentCard)] = cardAndLog.card;
 		await updateCardStudyStateAndAddLog(cardAndLog);
 	}
 
-	const getTimeUntilDuePreviewText = rating => {
-		const dueDateString = preview[rating].card.due;
-		const minutes = (Date.parse(dueDateString) - Date.now()) / 1000 / 60;
+	// tactic cards: Correct finishes the card for good, Incorrect re-queues
+	// it a day later (a post-fail success can't come from short-term memory)
+	const evaluateTactic = async correct => {
+		const now = new Date();
+		const card = {
+			...currentCard,
+			due: correct ? currentCard.due : new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+			finished_at: correct ? now.toISOString() : null
+		};
+		const log = {
+			rating: correct ? Rating.Good : Rating.Again,
+			state: null, due: correct ? null : card.due, stability: null,
+			difficulty: null, elapsed_days: null, last_elapsed_days: null,
+			scheduled_days: null, learning_steps: null, review: now.toISOString()
+		};
+		isCardTurned = false;
+		deck.cards[deck.cards.indexOf(currentCard)] = card;
+		await updateCardStudyStateAndAddLog({ card, log });
+	}
+
+	const formatTimeUntil = dueDate => {
+		const minutes = (Date.parse(dueDate) - Date.now()) / 1000 / 60;
 		if (minutes < 60)
 			return Math.round(minutes * 10) / 10 + "m";
 		if (minutes / 60 < 24)
@@ -46,6 +67,35 @@
 		return minutes / 60 / 24 / 365 + "y";
 	}
 
+	const getTimeUntilDuePreviewText = rating =>
+		formatTimeUntil(preview[rating].card.due);
+
+	// same thresholds as formatTimeUntil, spelled out ("3.5 hours")
+	const formatTimeUntilLong = dueDate => {
+		const withUnit = (value, unit) => `${value} ${unit}${value === 1 ? "" : "s"}`;
+		const minutes = (Date.parse(dueDate) - Date.now()) / 1000 / 60;
+		if (minutes < 1)
+			return "less than a minute";
+		if (minutes < 60)
+			return withUnit(Math.round(minutes), "minute");
+		if (minutes / 60 < 24)
+			return withUnit(Math.round(minutes / 60 * 10) / 10, "hour");
+		if (minutes / 60 / 24 < 365)
+			return withUnit(Math.floor(minutes / 60 / 24), "day");
+		return withUnit(Math.round(minutes / 60 / 24 / 365 * 10) / 10, "year");
+	}
+
+	// earliest upcoming due among the deck's unfinished cards (null when
+	// empty or all finished); only meaningful when no card is currently due
+	let nextDue = $derived.by(() => {
+		const unfinished = deck.cards.filter(card => !card.finished_at);
+		return unfinished.length
+			? unfinished.reduce((min, card) =>
+				Date.parse(card.due) < Date.parse(min.due) ? card : min
+			).due
+			: null;
+	});
+
 	const handleKeyDown = e => {
 		console.log(e);
 		if (!isCardTurned) {
@@ -53,14 +103,23 @@
 				e.preventDefault();
 				isCardTurned = true;
 			}
+		} else if (isTactic) {
+			switch (e.key) {
+				case "1": evaluateTactic(false); break;
+				case " ":
+				case "2":
+					e.preventDefault();
+					evaluateTactic(true);
+					break;
+			}
 		} else {
 			switch (e.key) {
 				case "1": evaluateCard(Rating.Again); break;
 				case "2": evaluateCard(Rating.Hard); break;
 				case " ":
-				case "3": 
-					e.preventDefault(); 
-					evaluateCard(Rating.Good); 
+				case "3":
+					e.preventDefault();
+					evaluateCard(Rating.Good);
 					break;
 				case "4": evaluateCard(Rating.Easy); break;
 			}
@@ -73,7 +132,9 @@
 {#snippet side(side, boardNumberOffset)}
 	{#each side as block, blockIndex}
 		{#if block.type === "text"}
-			{@html ttGenerateHTML(block.content)}
+			<div class="text-block">
+				{@html ttGenerateHTML(block.content)}
+			</div>
 		{:else if block.type === "chessboards"}
 			<div
 				class={{
@@ -125,15 +186,43 @@
 							</button>
 						</div>
 					{/snippet}
-					{@render evalBtn("Again", Rating.Again, "1")}
-					{@render evalBtn("Hard", Rating.Hard, "2")}
-					{@render evalBtn("Good", Rating.Good, "Space or 3")}
-					{@render evalBtn("Easy", Rating.Easy, "4")}
+					{#if isTactic}
+						<div class="eval-btn">
+							<p>1d</p>
+							<button
+								onclick={() => evaluateTactic(false)}
+								class="std-btn"
+								title="Shortcut key: 1"
+							>
+								Incorrect
+							</button>
+						</div>
+						<div class="eval-btn">
+							<p>done</p>
+							<button
+								onclick={() => evaluateTactic(true)}
+								class="std-btn"
+								title="Shortcut key: Space or 2"
+							>
+								Correct
+							</button>
+						</div>
+					{:else}
+						{@render evalBtn("Again", Rating.Again, "1")}
+						{@render evalBtn("Hard", Rating.Hard, "2")}
+						{@render evalBtn("Good", Rating.Good, "Space or 3")}
+						{@render evalBtn("Easy", Rating.Easy, "4")}
+					{/if}
 			{/if}
 		</div>
 	</div>
 {:else}
-	<p>Congratulations you finished this deck for now! Come back later</p>
+	<div class="deck-done">
+		<p>Congratulations you finished this deck for now! 🎉</p>
+		{#if nextDue}
+			<p class="next-review">Next review in {formatTimeUntilLong(nextDue)}</p>
+		{/if}
+	</div>
 {/if}
 
 
@@ -142,8 +231,11 @@
 		align-items: center;
 		margin-top: 34px;
 		min-height: 750px;
-		padding: 36px 16px 75px 16px;
+		padding: 36px 30px 75px 30px;
 		position: relative;
+	}
+	.text-block {
+		padding: 0 30px;
 	}
 	.divider {
 		width: 100%;
@@ -157,6 +249,13 @@
 		flex-direction: column;
 		align-items: center;
 		padding-top: 10px;
+	}
+	/* a lone board keeps the same size as a 2-column grid cell, centered */
+	.single-board-block > .board-container {
+		width: calc(50% - 10px);
+		/* a board wider than the half-width cell (Chessboard minWidth) must
+		   grow the centered cell, not spill out one-sided */
+		min-width: min-content;
 	}
 	.board-grid-block {
 		display: grid;
@@ -178,11 +277,18 @@
 		font-size: 0.9rem;
 		font-weight: 350;
 	}
-	.eval-form {
-		display: flex;
-		gap: 20px;
-	}
 	.std-btn {
 		padding: 4px 8px;
+	}
+	.deck-done {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		margin-top: 28vh;
+	}
+	.next-review {
+		font-size: 0.9rem;
+		color: rgba(0, 0, 0, 0.6);
 	}
 </style>

@@ -1,53 +1,89 @@
 <script>
-	import { onMount } from "svelte"
+	import { onMount, getContext } from "svelte"
+	import { playMoveSound } from "$lib/sounds.js"
+	import TrashIcon from "$lib/icons/Trash.svelte"
+	import CursorArrowIcon from "$lib/icons/CursorArrow.svelte"
 	import "cm-chessboard/assets/chessboard.css"
 	import "cm-chessboard/assets/extensions/arrows/arrows.css"
 	import "cm-chessboard/assets/extensions/markers/markers.css"
+	import "cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css"
 	import { Chessboard, INPUT_EVENT_TYPE } from "cm-chessboard/src/Chessboard.js"
 	import { MOVE_CANCELED_REASON } from "cm-chessboard/src/view/VisualMoveInput.js"
 	import { Arrows } from "cm-chessboard/src/extensions/arrows/Arrows.js"
 	import { Markers } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { RightClickAnnotator } from "cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js"
-	import { Chess } from "chess.js"
+	import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
 	import { isValidFen } from "$lib/isValidFen.js"
-	import { getPositionFens, isFenPlayable, serializeAnnotations, hasAnnotations, showAnnotations } from "$lib/board-utils.js"
+	import { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations } from "$lib/board-utils.js"
+	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
+	// inlined so the palette's <use href="#wk"> works in Firefox, which doesn't
+	// render <use> that references an external SVG file
+	import standardSprite from "cm-chessboard/assets/pieces/standard.svg?raw"
+	import stauntySprite from "cm-chessboard/assets/pieces/staunty.svg?raw"
+	import FlipIcon from "$lib/icons/Flip.svelte"
 
-	let { board: boardData, onSave, onCancel } = $props();
+	const boardPrefs = getContext("boardPrefs") ?? (() => DEFAULT_BOARD_PREFS);
+	// the palette follows the user's piece set
+	const pieceSprite = boardPrefs().pieceSet === "staunty" ? stauntySprite : standardSprite;
+
+	// restore: working state captured by persistState when a still-open editor
+	// unmounted; takes precedence over the board's data so the editor resumes
+	// exactly where it was (invalid FEN mid-typing included)
+	let { board: boardData, restore, persistState, onFenValidityChange, onSave, onCancel } = $props();
 
 	const emptyPlacement = "8/8/8/8/8/8/8/8"
 	const startPlacement = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 
+	// svelte-ignore state_referenced_locally -- deliberately captures the board as it was when the editor opened
 	const initial = $state.snapshot(boardData);
+	// svelte-ignore state_referenced_locally -- deliberately captures the resume point as of mount
+	const resume = restore ? $state.snapshot(restore) : null;
 
-	// start-position FEN, bound to the FEN input (setup mode only)
-	let currentFen = $state(initial.fen.trim());
-	let moves = $state([...initial.moves]);
-	let annotations = $state({ ...initial.annotations });
+	// start-position FEN, bound to the FEN input (setup mode only); a pending
+	// invalid FEN typed in the inline input (fenInput) carries into the editor
+	let currentFen = $state(resume?.currentFen ?? (initial.fenInput ?? initial.fen).trim());
+	let moves = $state(resume ? [...resume.moves] : [...initial.moves]);
+	let annotations = $state(resume ? { ...resume.annotations } : { ...initial.annotations });
+	let orientation = $state(resume?.orientation ?? initial.orientation ?? "w");
 
 	let fenIsValid = $derived(isValidFen(currentFen));
-	// recording moves requires a position chess.js accepts (both kings, etc.)
-	let canRecordMoves = $derived(isFenPlayable(currentFen));
+	// any valid FEN can record moves — free-form setups (missing kings etc.)
+	// included, via loose chess.js loading
+	let canRecordMoves = $derived(fenIsValid);
 
-	let mode = $state(initial.moves.length > 0 ? "moves" : "setup");
+	// report FEN validity live (and revert to valid on unmount) so callers can
+	// show which boards block a save
+	$effect(() => {
+		onFenValidityChange?.(fenIsValid);
+		return () => onFenValidityChange?.(true);
+	})
+
+	let mode = $state(resume?.mode ?? (initial.moves.length > 0 ? "moves" : "setup"));
 	// position shown in moves mode; editing continues from the last move
-	let currentIndex = $state(initial.moves.length);
-	let positions = $derived(getPositionFens({ fen: currentFen, moves }));
+	let currentIndex = $state(resume?.currentIndex ?? initial.moves.length);
+	let replay = $derived(replayMoves({ fen: currentFen, moves }));
+	let positions = $derived(replay.fens);
 
-	// last start FEN accepted by the clear-moves confirm, to revert declined edits
-	let acceptedFen = currentFen;
+	// a newly recorded move must be visible: keep the list scrolled to the
+	// bottom as it grows (and on open, where editing resumes after the last move)
+	let moveListElement = $state();
+	$effect(() => {
+		void moves.length;
+		if (moveListElement) moveListElement.scrollTop = moveListElement.scrollHeight;
+	});
 
-	// Recorded moves are cleared when the start position changes. Asks the user
-	// first; returns false (and leaves everything untouched) if they decline.
-	const confirmClearMoves = () => {
-		if (moves.length === 0) return true;
-		if (!confirm("Editing the start position clears the recorded moves and their annotations. Continue?")) {
-			return false;
-		}
+	// the board's committed start FEN — always valid, unlike currentFen, which
+	// may be invalid mid-typing
+	let acceptedFen = resume?.acceptedFen ?? initial.fen.trim();
+
+	// Drops the recorded moves (they no longer apply once the start position
+	// changes), keeping only the set position and its annotations.
+	const clearMoves = () => {
+		if (moves.length === 0) return;
 		moves = [];
 		// annotations on later positions are meaningless without the moves
 		annotations = annotations[0] ? { 0: annotations[0] } : {};
 		currentIndex = 0;
-		return true;
 	}
 
 	const syncFenFromBoard = () => {
@@ -57,20 +93,22 @@
 	}
 
 	const handleFenInput = () => {
-		if (!confirmClearMoves()) {
-			currentFen = acceptedFen;
-			return;
-		}
-		acceptedFen = currentFen;
+		clearMoves();
 		if (isValidFen(currentFen)) {
+			acceptedFen = currentFen;
 			board.setPosition(currentFen.trim().split(/\s+/)[0], true);
 		}
 	}
 
 	const setPlacement = placement => {
-		if (!confirmClearMoves()) return;
+		clearMoves();
 		board.setPosition(placement, true);
 		syncFenFromBoard();
+	}
+
+	const flipBoard = () => {
+		orientation = orientation === "w" ? "b" : "w";
+		board.setOrientation(orientation);
 	}
 
 	const paletteRows = [
@@ -84,14 +122,40 @@
 	let selectedTool = $state(null);
 
 	// set by validateMoveInput, committed by moveInputFinished
-	let pendingMove = null;
+	let pendingSan = null;
 	let pendingFen = null;
+	// a promotion is committed later, once the dialog picks the piece
+	let pendingPromotion = null;
+
+	const commitMove = (san, fen) => {
+		playMoveSound(san);
+		// playing a move mid-list replaces everything after this position
+		moves = [...moves.slice(0, currentIndex), san];
+		for (const key of Object.keys(annotations)) {
+			if (Number(key) > currentIndex) delete annotations[key];
+		}
+		currentIndex += 1;
+		// render from chess.js so promotion/castling/en passant show correctly
+		board.setPosition(fen, false);
+	}
 
 	const handleMoveInput = event => {
+		// drag cursor lifecycle: closed hand for the whole drag (any square),
+		// back to open hand right at the drop — the hover state is recomputed
+		// for the drop square after the position commits, so the cursor is
+		// correct before the mouse even moves again
+		if (event.type === INPUT_EVENT_TYPE.moveInputStarted) draggingPiece = true;
+		if (event.type === INPUT_EVENT_TYPE.moveInputFinished || event.type === INPUT_EVENT_TYPE.moveInputCanceled) {
+			draggingPiece = false;
+			setTimeout(() => {
+				hoverPiece = !!(event.squareTo && board.getPiece(event.squareTo));
+			}, 0);
+		}
 		if (mode === "setup") {
 			switch (event.type) {
 				case INPUT_EVENT_TYPE.moveInputStarted:
-					return confirmClearMoves();
+					clearMoves();
+					return true;
 				case INPUT_EVENT_TYPE.validateMoveInput:
 					return true;
 				case INPUT_EVENT_TYPE.moveInputCanceled:
@@ -106,39 +170,61 @@
 			}
 			return;
 		}
-		// moves mode: only legal moves from the shown position, auto-queen promotion
+		// moves mode: legal moves from the shown position, auto-queen promotion.
+		// Either side may move: a piece of the side not to move gets the turn
+		// flipped first, and the move is stored with the flipped-move prefix so
+		// replay repeats the flip.
 		switch (event.type) {
 			case INPUT_EVENT_TYPE.moveInputStarted:
 				return true;
 			case INPUT_EVENT_TYPE.validateMoveInput: {
+				pendingSan = null;
+				pendingFen = null;
+				pendingPromotion = null;
 				try {
-					const chess = new Chess(positions[currentIndex]);
-					pendingMove = chess.move({ from: event.squareFrom, to: event.squareTo, promotion: "q" });
-					pendingFen = chess.fen();
+					const chess = looseChess(positions[currentIndex]);
+					const piece = chess.get(event.squareFrom);
+					const flipped = !!piece && piece.color !== chess.turn();
+					if (flipped) chess.load(flipTurn(chess.fen()), { skipValidation: true });
+					const move = chess.move({ from: event.squareFrom, to: event.squareTo, promotion: "q" });
+					if (move.promotion) {
+						pendingPromotion = { from: event.squareFrom, to: event.squareTo, flipped, color: move.color };
+					} else {
+						pendingSan = flipped ? FLIPPED_MOVE_PREFIX + move.san : move.san;
+						pendingFen = chess.fen();
+					}
 					return true;
 				} catch {
+					// anything chess.js won't play as a legal move is rejected
 					return false;
 				}
 			}
 			case INPUT_EVENT_TYPE.moveInputFinished:
-				if (event.legalMove && pendingMove) {
-					// playing a move mid-list replaces everything after this position
-					moves = [...moves.slice(0, currentIndex), pendingMove.san];
-					for (const key of Object.keys(annotations)) {
-						if (Number(key) > currentIndex) delete annotations[key];
-					}
-					currentIndex += 1;
-					// render from chess.js so promotion/castling/en passant show correctly
-					board.setPosition(pendingFen, false);
+				if (event.legalMove && pendingPromotion) {
+					const { from, to, flipped, color } = pendingPromotion;
+					board.showPromotionDialog(to, color, result => {
+						if (result?.type === PROMOTION_DIALOG_RESULT_TYPE.pieceSelected) {
+							const chess = looseChess(positions[currentIndex]);
+							if (flipped) chess.load(flipTurn(chess.fen()), { skipValidation: true });
+							const move = chess.move({ from, to, promotion: result.piece.charAt(1) });
+							commitMove(flipped ? FLIPPED_MOVE_PREFIX + move.san : move.san, chess.fen());
+						} else {
+							// canceled: take the visually placed pawn back
+							board.setPosition(positions[Math.min(currentIndex, moves.length)], false);
+						}
+					});
+				} else if (event.legalMove && pendingSan) {
+					commitMove(pendingSan, pendingFen);
 				}
-				pendingMove = null;
+				pendingSan = null;
 				pendingFen = null;
+				pendingPromotion = null;
 		}
 	}
 
 	const handleSquareClick = ({ square }) => {
 		if (!square || !selectedTool || mode !== "setup") return;
-		if (!confirmClearMoves()) return;
+		clearMoves();
 		board.setPiece(square, selectedTool === "trash" ? null : selectedTool);
 		syncFenFromBoard();
 	}
@@ -168,6 +254,30 @@
 	// index of the position annotations are attached to right now
 	let annotationIndex = $derived(mode === "setup" ? 0 : Math.min(currentIndex, moves.length));
 
+	// Move-list rows, numbered sequentially (the FEN fullmove counter doesn't
+	// advance for flipped/manual moves): a black move joins the preceding row
+	// when that row has a white move and no black one yet; otherwise (black
+	// moving repeatedly, or a start position with black to move) it gets its
+	// own row with an ellipsis in the white column. Each entry keeps its move
+	// index so clicking can select the resulting position.
+	let moveRows = $derived.by(() => {
+		const rows = [];
+		replay.moveInfos.forEach(({ san, color }, index) => {
+			const move = { san, index };
+			const last = rows[rows.length - 1];
+			if (color === "b" && last?.white && !last.black) {
+				last.black = move;
+			} else {
+				rows.push({
+					number: rows.length + 1,
+					white: color === "w" ? move : null,
+					black: color === "b" ? move : null
+				});
+			}
+		});
+		return rows;
+	});
+
 	// the annotator draws on right-click; capture its state after the event settles.
 	// getArrows/getMarkers instead of getAnnotations: cm-chessboard 8.12.12 binds
 	// getAnnotations to the wrong object, making it throw
@@ -193,74 +303,182 @@
 		showAnnotations(board, annotations[annotationIndex]);
 	})
 
+	// Pressing the board must move pieces, never start an item drag: the
+	// dnd library's drag listener sits on the surrounding card item, so keep
+	// board presses from bubbling to it. Plain stopPropagation (bubble phase,
+	// on the board itself) leaves cm-chessboard's own listeners unaffected.
+	const stopDndPress = e => e.stopPropagation();
+
+	// pointer only over squares holding a piece (or always, while a palette
+	// tool is selected): the library's blanket input-enabled pointer is
+	// overridden in CSS, keyed on the pointer-squares class below.
+	// With a tool selected, a translucent ghost of it follows the cursor
+	// (lichess-style), so you see what you're about to place.
+	let hoverPiece = $state(false);
+	let draggingPiece = $state(false);
+	let ghostPos = $state(null);
+	const handleBoardHoverCursor = e => {
+		const square = e.target.closest?.("[data-square]")?.getAttribute("data-square");
+		hoverPiece = !!(square && board.getPiece(square));
+		if (selectedTool) {
+			const rect = boardElement.getBoundingClientRect();
+			ghostPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+		} else {
+			ghostPos = null;
+		}
+	}
+	const clearHoverCursor = () => {
+		hoverPiece = false;
+		ghostPos = null;
+	}
+
 	onMount(() => {
-		board = new Chessboard(boardElement, {
-			position: initial.fen,
+		board = withSpriteCache(boardPrefs().pieceSet, () => new Chessboard(boardElement, {
+			// acceptedFen, not currentFen: a restored FEN may be invalid
+			// mid-typing; the board shows the last accepted position
+			position: acceptedFen,
+			orientation,
 			assetsUrl: "/chessboard-assets/",
-			extensions: [{ class: Arrows }, { class: Markers }, { class: RightClickAnnotator }]
-		})
+			style: boardStyleProps(boardPrefs()),
+			extensions: [{ class: Arrows }, { class: Markers }, { class: RightClickAnnotator }, { class: PromotionDialog }]
+		}))
 		board.enableMoveInput(handleMoveInput);
 		board.enableSquareSelect("pointerdown", handleSquareClick);
+		boardElement.addEventListener("mousedown", stopDndPress);
+		boardElement.addEventListener("touchstart", stopDndPress);
 		boardElement.addEventListener("mouseup", captureAnnotations);
+		boardElement.addEventListener("mousemove", handleBoardHoverCursor);
+		boardElement.addEventListener("mouseleave", clearHoverCursor);
+		// the FEN row matches the board's whole-pixel rendered width (border
+		// included) instead of overhanging it; see Chessboard.svelte
+		const boardBox = boardElement.firstElementChild;
+		const syncWidth = () => boardElement.closest(".board-column").style.setProperty(
+			"--board-px", boardBox.getBoundingClientRect().width + "px"
+		);
+		syncWidth();
+		const resizeObserver = new ResizeObserver(syncWidth);
+		resizeObserver.observe(boardBox);
 		return () => {
+			resizeObserver.disconnect();
+			boardElement.removeEventListener("mousedown", stopDndPress);
+			boardElement.removeEventListener("touchstart", stopDndPress);
 			boardElement.removeEventListener("mouseup", captureAnnotations);
+			boardElement.removeEventListener("mousemove", handleBoardHoverCursor);
+			boardElement.removeEventListener("mouseleave", clearHoverCursor);
 			board.destroy();
+			// hand the working state to the parent; it only keeps it if the
+			// editor is still open (not unmounting because of Ok/Cancel)
+			persistState?.({
+				currentFen,
+				moves: $state.snapshot(moves),
+				annotations: $state.snapshot(annotations),
+				orientation,
+				mode,
+				currentIndex,
+				acceptedFen
+			});
 		}
 	})
 
-	const save = () => onSave({
-		fen: currentFen,
+	// The applied board data; parents use this to auto-apply open editors on
+	// submit. An invalid FEN is never committed as the board's fen — it rides
+	// along as fenInput (pending text) for the card validators to catch.
+	export const getBoardData = () => ({
+		fen: isValidFen(currentFen) ? currentFen : acceptedFen,
+		fenInput: isValidFen(currentFen) ? undefined : currentFen,
 		moves: $state.snapshot(moves),
-		annotations: $state.snapshot(annotations)
-	})
+		annotations: $state.snapshot(annotations),
+		orientation
+	});
+
+	const save = () => onSave(getBoardData())
+
+	// stepping forward sounds the move being made, stepping back the move
+	// being unmade (both are the move crossed between the two positions)
+	const goToIndex = index => {
+		const from = Math.min(currentIndex, moves.length);
+		if (index !== from) {
+			const crossed = index > from ? index - 1 : from - 1;
+			playMoveSound(replay.moveInfos[crossed]?.san);
+		}
+		currentIndex = index;
+	}
 
 	const handleKeyDown = e => {
-		if (e.key === "Escape") {
-			onCancel();
-			return;
-		}
 		if (mode !== "moves" || e.target.tagName === "INPUT") return;
 		if (e.key === "ArrowLeft") {
 			e.preventDefault();
-			currentIndex = Math.max(currentIndex - 1, 0);
+			goToIndex(Math.max(Math.min(currentIndex, moves.length) - 1, 0));
 		} else if (e.key === "ArrowRight") {
 			e.preventDefault();
-			currentIndex = Math.min(currentIndex + 1, moves.length);
+			goToIndex(Math.min(currentIndex + 1, moves.length));
 		}
 	}
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
 
+<!-- hidden sprite the palette's <use href="#..."> references (see import) -->
+<div class="sprite-host" aria-hidden="true">{@html pieceSprite}</div>
+
 <div class="editor">
 	<div class="board-column">
-		<div class="board" bind:this={boardElement}></div>
-		<input
-			class="fen-input"
-			class:invalid={!fenIsValid}
-			bind:value={currentFen}
-			oninput={handleFenInput}
-			disabled={mode === "moves"}
-			title={mode === "moves" ? "Switch to Set up position to edit the start FEN" : ""}
-		/>
+		<div class="ghost-host">
+			<div
+				class="board"
+				class:black-border={hasBlackBorder(boardPrefs())}
+				class:pointer-squares={selectedTool !== null}
+				class:grab-squares={hoverPiece && selectedTool === null}
+				class:grabbing-squares={draggingPiece}
+				bind:this={boardElement}
+			></div>
+			{#if ghostPos && selectedTool}
+				<div
+					class="tool-ghost"
+					class:trash-ghost={selectedTool === "trash"}
+					style:left={ghostPos.x + "px"}
+					style:top={ghostPos.y + "px"}
+				>
+					{#if selectedTool === "trash"}
+						<span class="ghost-tool"><TrashIcon /></span>
+					{:else}
+						<svg class="ghost-tool" viewBox="0 0 40 40"><use href="#{selectedTool}" /></svg>
+					{/if}
+				</div>
+			{/if}
+		</div>
+		<div class="fen-row">
+			<input
+				class="fen-input"
+				class:invalid={!fenIsValid}
+				bind:value={currentFen}
+				oninput={handleFenInput}
+				disabled={mode === "moves"}
+				title={mode === "moves" ? "Switch to Position to edit the start FEN" : ""}
+			/>
+			<button class="std-btn flip-btn" onclick={flipBoard} title="Flip board"><FlipIcon /></button>
+		</div>
 	</div>
 	<div class="side-panel">
-		<div class="mode-tabs">
+		<!-- the two stages as peer modes: set up a position, record moves on it -->
+		<div class="stage-segments" role="tablist" aria-label="Editor stage">
 			<button
-				class="mode-tab"
-				class:active={mode === "setup"}
+				role="tab"
+				aria-selected={mode === "setup"}
+				class:selected={mode === "setup"}
 				onclick={() => switchMode("setup")}
 			>
-				Set up position
+				<span class="step-number">(1)</span> Position
 			</button>
 			<button
-				class="mode-tab"
-				class:active={mode === "moves"}
-				onclick={() => switchMode("moves")}
+				role="tab"
+				aria-selected={mode === "moves"}
+				class:selected={mode === "moves"}
 				disabled={!canRecordMoves}
-				title={canRecordMoves ? "" : "The start position must be a legal position to record moves"}
+				title={canRecordMoves ? "" : "Enter a valid FEN to record moves"}
+				onclick={() => switchMode("moves")}
 			>
-				Moves
+				<span class="step-number">(2)</span> Moves
 			</button>
 		</div>
 		{#if mode === "setup"}
@@ -275,96 +493,188 @@
 								onclick={() => selectTool(piece)}
 							>
 								<svg viewBox="0 0 40 40">
-									<use href="/chessboard-assets/pieces/standard.svg#{piece}" />
+									<use href="#{piece}" />
 								</svg>
 							</button>
 						{/each}
 					</div>
 				{/each}
-				<button
-					class="palette-piece trash"
-					class:selected={selectedTool === "trash"}
-					title="Click a square to remove its piece"
-					onclick={() => selectTool("trash")}
-				>
-					🗑
-				</button>
+				<div class="tool-row">
+					<button
+						class="palette-piece trash"
+						class:selected={selectedTool === "trash"}
+						title="Click a square to remove its piece"
+						onclick={() => selectTool("trash")}
+					>
+						<TrashIcon />
+					</button>
+					<button
+						class="palette-piece"
+						class:selected={selectedTool === null}
+						title="Drag pieces on the board"
+						onclick={() => selectTool(null)}
+					>
+						<CursorArrowIcon />
+					</button>
+				</div>
 			</div>
-			<p class="hint">
-				{#if selectedTool === "trash"}
-					Click a square to remove its piece
-				{:else if selectedTool}
-					Click a square to place the piece
-				{:else}
-					Drag pieces to move them, drag off the board to remove them.
-					Right-click (+shift/alt) draws arrows and circles.
-				{/if}
-			</p>
 			<div class="position-buttons">
 				<button class="std-btn" onclick={() => setPlacement(startPlacement)}>Start position</button>
 				<button class="std-btn" onclick={() => setPlacement(emptyPlacement)}>Clear board</button>
 			</div>
 		{:else}
-			<div class="move-list">
-				<button
-					class="move-btn"
-					class:current={Math.min(currentIndex, moves.length) === 0}
-					onclick={() => currentIndex = 0}
-				>
-					Start
-				</button>
-				{#each moves as san, moveIndex}
-					{#if moveIndex % 2 === 0}
-						<span class="move-number">{moveIndex / 2 + 1}.</span>
-					{/if}
-					<button
-						class="move-btn"
-						class:current={Math.min(currentIndex, moves.length) === moveIndex + 1}
-						onclick={() => currentIndex = moveIndex + 1}
-					>
-						{san}
-					</button>
+			<div class="move-list" bind:this={moveListElement}>
+				{#each moveRows as row}
+					<div class="move-row">
+						<span class="move-number">{row.number}</span>
+						{#if row.white}
+							<button
+								class="move-btn"
+								class:current={Math.min(currentIndex, moves.length) === row.white.index + 1}
+								onclick={() => goToIndex(row.white.index + 1)}
+							>
+								{row.white.san}
+							</button>
+						{:else}
+							<span class="move-btn ellipsis">...</span>
+						{/if}
+						{#if row.black}
+							<button
+								class="move-btn"
+								class:current={Math.min(currentIndex, moves.length) === row.black.index + 1}
+								onclick={() => goToIndex(row.black.index + 1)}
+							>
+								{row.black.san}
+							</button>
+						{/if}
+					</div>
 				{/each}
 			</div>
-			<p class="hint">
-				{#if moves.length === 0}
-					Play legal moves on the board to record them.
-				{:else}
-					← → or click a move to navigate. A new move replaces everything after the shown position.
-				{/if}
-				Right-click (+shift/alt) draws arrows and circles on the shown position.
-			</p>
 		{/if}
 		<div class="actions">
 			<button class="std-btn" onclick={onCancel}>Cancel</button>
-			<button class="std-btn" disabled={!fenIsValid} onclick={save}>Ok</button>
+			<button class="std-btn" onclick={save}>Save</button>
 		</div>
 	</div>
 </div>
 
 <style>
+	.sprite-host {
+		display: none;
+	}
+	/* the dialog auto-focuses its first option (queen) and strokes it, which
+	   looks like a divider between queen and rook; hover still highlights */
+	:global(svg.cm-chessboard .promotion-dialog-group .promotion-dialog-button-group:focus .promotion-dialog-button) {
+		stroke: none;
+	}
 	.editor {
-		display: flex;
-		gap: 20px;
+		position: relative;
 		width: 100%;
 	}
 	.board-column {
-		flex: 1 1 0;
+		/* reserves the side panel's 300px + 20px gutter */
+		margin-right: 320px;
 		min-width: 0;
-		align-self: start;
 		display: flex;
 		flex-direction: column;
 	}
 	.board {
-		border: 2px solid #404040;
 		border-radius: 2px 2px 0 0;
 	}
+	/* the library puts a pointer on every input-enabled square; instead:
+	   pointer while a palette tool is selected (clicking any square acts),
+	   grab over draggable pieces, default otherwise */
+	.board :global(.cm-chessboard .board.input-enabled .square) {
+		cursor: default;
+	}
+	/* with a tool selected the native cursor disappears over the board: the
+	   ghost's own arrow replaces it (lichess-style) */
+	.board.pointer-squares :global(.cm-chessboard) {
+		cursor: none;
+	}
+	/* preview of the selected tool riding the cursor: an arrow whose tip sits
+	   at the actual pointer position, with the translucent tool below-right;
+	   never intercepts the clicks that place/remove pieces */
+	.ghost-host {
+		position: relative;
+	}
+	.tool-ghost {
+		position: absolute;
+		pointer-events: none;
+		z-index: 3;
+		width: calc(var(--board-px, 400px) / 8 * 0.8);
+		height: calc(var(--board-px, 400px) / 8 * 0.8);
+		/* the pointer position is the ghost's center */
+		transform: translate(-50%, -50%);
+	}
+	.tool-ghost .ghost-tool {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		max-width: none;
+		opacity: 0.65;
+	}
+	.tool-ghost svg.ghost-tool {
+		display: block;
+	}
+	.tool-ghost.trash-ghost .ghost-tool {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.4rem;
+		color: #333;
+	}
+	.board.grab-squares :global(.cm-chessboard .board.input-enabled .square) {
+		cursor: grab;
+	}
+	/* last so an active drag beats the hover/tool cursors */
+	.board.grabbing-squares :global(.cm-chessboard .board.input-enabled .square) {
+		cursor: grabbing;
+	}
+	/* border on the whole-pixel inner box so the frame hugs the board; the
+	   dark background makes rasterization slack at fractional zoom read as
+	   border, not white. The FEN bar overlaps 2px, so the bottom border is
+	   widened to keep 2px visible. See Chessboard.svelte. */
+	.board.black-border > :global(div) {
+		border: 2px solid #404040;
+		background-color: #404040;
+		border-radius: 2px 2px 0 0;
+		border-bottom-width: 4px;
+	}
+	.board > :global(div) {
+		margin: 0 auto;
+	}
+	.fen-row {
+		display: flex;
+		/* matches the board's rendered width; the -1px covers the
+		   sub-device-pixel seam Chromium can open at fractional zoom */
+		width: var(--board-px, 100%);
+		box-sizing: border-box;
+		margin: -1px auto 0 auto;
+		position: relative;
+	}
+	.board-column:has(.board.black-border) .fen-row {
+		margin-top: -2px;
+	}
 	.fen-input {
+		flex-grow: 1;
+		min-width: 0;
 		border: 1px solid lightgrey;
 		border-bottom: 1px solid darkgrey;
 		background-color: #f5f5f5;
-		border-radius: 0 0 4px 4px;
+		border-radius: 0;
 		padding: 3px 6px;
+	}
+	/* joins the FEN bar seamlessly: shared border via the -1px overlap */
+	.flip-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 0;
+		padding: 3px 30px;
+		margin-left: -1px;
 	}
 	.fen-input:disabled {
 		color: rgba(0, 0, 0, 0.4);
@@ -373,44 +683,84 @@
 		border: 1px solid #c00;
 		outline-color: #c00;
 	}
+	/* numbered wizard steps on a full-width track: the circled numbers carry
+	   the order, the active step lifts white with a dark-filled number */
+	.stage-segments {
+		display: flex;
+		background-color: #e6e6e6;
+		border-radius: 6px;
+		padding: 2px;
+	}
+	.stage-segments button {
+		flex: 1 1 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		padding: 3px 4px;
+		border: none;
+		border-radius: 4px;
+		background-color: transparent;
+		color: rgba(0, 0, 0, 0.5);
+		font-size: 0.9rem;
+		cursor: pointer;
+	}
+	.step-number {
+		font-size: 0.8rem;
+		color: rgba(0, 0, 0, 0.45);
+	}
+	.stage-segments button:hover:enabled:not(.selected) {
+		color: black;
+	}
+	.stage-segments button.selected {
+		background-color: white;
+		box-shadow: rgba(0, 0, 0, 0.18) 0 1px 2px;
+		color: black;
+		font-weight: 500;
+	}
+	.stage-segments button.selected .step-number {
+		color: rgba(0, 0, 0, 0.7);
+	}
+	.stage-segments button:disabled {
+		color: rgba(0, 0, 0, 0.3);
+		cursor: default;
+	}
+	.stage-segments button:disabled .step-number {
+		color: rgba(0, 0, 0, 0.3);
+	}
+	/* pinned to the board column's height, so a long move list scrolls inside
+	   the panel (.move-list) instead of growing the editor */
+	/* inset from the editor edge so the panel column sits centered between
+	   the board and the editor's right edge (10px gutter on both sides) */
 	.side-panel {
-		flex: 0 0 300px;
+		--action-btn-width: 84px;
+		position: absolute;
+		top: 0;
+		right: 5px;
+		bottom: 0;
+		width: 300px;
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
-	}
-	.mode-tabs {
-		display: flex;
-		border: 1px solid #404040;
-		border-radius: 5px;
-		overflow: hidden;
-	}
-	.mode-tab {
-		flex: 1 1 0;
-		border: none;
-		background-color: white;
-		padding: 5px 0;
-		cursor: pointer;
-	}
-	.mode-tab:hover:enabled {
-		background-color: gainsboro;
-	}
-	.mode-tab.active {
-		background-color: #404040;
-		color: white;
-	}
-	.mode-tab:disabled {
-		color: rgba(0, 0, 0, 0.35);
-		cursor: default;
 	}
 	.palette {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
 	}
+	.tool-row {
+		display: flex;
+		gap: 4px;
+	}
 	.palette-row {
 		display: flex;
 		gap: 4px;
+	}
+	.palette-row > .palette-piece {
+		flex: 1 1 0;
+		width: auto;
+		height: auto;
+		aspect-ratio: 1;
 	}
 	.palette-piece {
 		width: 44px;
@@ -428,54 +778,75 @@
 	.palette-piece:hover {
 		background-color: gainsboro;
 	}
+	/* the bin and cursor tools render larger than the 1.3rem default; the
+	   pieces size themselves via their own svg rule below */
+	.palette-piece.trash,
+	.tool-row .palette-piece {
+		font-size: 1.7rem;
+		color: #333;
+	}
 	.palette-piece.selected {
-		border: 2px solid #404040;
-		background-color: gainsboro;
+		border: 2px solid var(--accent);
+		background-color: var(--accent-subtle-strong);
 	}
 	.palette-piece svg {
 		width: 100%;
 		height: 100%;
 	}
+	/* fills the panel's remaining height, pushing the buttons to the bottom */
 	.move-list {
 		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 3px;
-		max-height: 200px;
+		flex-direction: column;
+		flex-grow: 1;
+		min-height: 0;
 		overflow-y: auto;
+	}
+	/* lichess-style rows: number gutter + two equal move columns filling the panel */
+	.move-row {
+		display: grid;
+		grid-template-columns: 2.2em minmax(0, 1fr) minmax(0, 1fr);
+		align-items: stretch;
 	}
 	.move-number {
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
-		margin-left: 3px;
+		background-color: rgba(0, 0, 0, 0.04);
+		padding: 3px 0 3px 6px;
 	}
 	.move-btn {
-		border: 1px solid rgba(0, 0, 0, 0.2);
-		border-radius: 4px;
-		background-color: white;
-		padding: 2px 7px;
+		border: none;
+		background-color: transparent;
+		padding: 3px 8px;
+		text-align: left;
 		cursor: pointer;
 	}
-	.move-btn:hover {
+	.move-btn.ellipsis {
+		cursor: default;
+		color: rgba(0, 0, 0, 0.5);
+	}
+	button.move-btn:hover {
 		background-color: gainsboro;
 	}
 	.move-btn.current {
-		background-color: #404040;
+		background-color: var(--accent);
 		color: white;
 	}
-	.hint {
-		margin: 0;
-		font-size: 0.85rem;
-		color: rgba(0, 0, 0, 0.6);
-	}
 	.position-buttons {
-		display: flex;
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 8px;
+	}
+	.position-buttons > .std-btn {
+		white-space: nowrap;
 	}
 	.actions {
 		display: flex;
+		justify-content: flex-end;
 		gap: 8px;
+		/* pinned to the panel's bottom, below the palette / scrolling move list */
 		margin-top: auto;
-		justify-content: end;
+	}
+	.actions .std-btn {
+		width: var(--action-btn-width);
 	}
 </style>

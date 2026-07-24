@@ -1,4 +1,4 @@
 export const load = () => {
-	return { pageTitle: "Chesscards" }
+	return { pageTitle: "Landing page" }
 }
 

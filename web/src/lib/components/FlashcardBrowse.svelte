@@ -13,7 +13,9 @@
 {#snippet side(side, boardNumberOffset)}
 	{#each side as block, blockIndex}
 		{#if block.type === "text"}
-			{@html ttGenerateHTML(block.content)}
+			<div class="text-block">
+				{@html ttGenerateHTML(block.content)}
+			</div>
 		{:else if block.type === "chessboards"}
 			<div
 				class={{
@@ -48,7 +50,10 @@
 		margin-top: 32px;
 		margin-bottom: 40px;
 		min-height: 200px;
-		padding: 32px 32px 40px 32px;
+		padding: 32px 30px 40px 30px;
+	}
+	.text-block {
+		padding: 0 30px;
 	}
 	.divider {
 		width: 100%;
@@ -62,6 +67,13 @@
 		flex-direction: column;
 		align-items: center;
 		padding-top: 10px;
+	}
+	/* a lone board keeps the same size as a 2-column grid cell, centered */
+	.single-board-block > .board-container {
+		width: calc(50% - 10px);
+		/* a board wider than the half-width cell (Chessboard minWidth) must
+		   grow the centered cell, not spill out one-sided */
+		min-width: min-content;
 	}
 	.board-grid-block {
 		display: grid;

@@ -21,7 +21,7 @@ const getById = async (userId, id) => {
 	// }
 
 	// (for using json_agg(c) ) same reason as above but 1 null element instead
-	if (rows[0].cards[0] === null) {
+	if (rows[0] && rows[0].cards[0] === null) {
 		rows[0].cards = [];
 	}
 
@@ -30,7 +30,7 @@ const getById = async (userId, id) => {
 
 const getMineWithoutCards = async userId => {
 	const { rows } = 
-		await pool.query(`select d.id, d.name, count(c.id) no_cards, count(c.id) filter (where c.due <= now()) due_cards from decks d left join cards c on d.id = c.deck_id where d.user_id = $1 group by d.id, d.name`, [userId]
+		await pool.query(`select d.id, d.name, count(c.id) no_cards, count(c.id) filter (where c.due <= now() and c.finished_at is null) due_cards from decks d left join cards c on d.id = c.deck_id where d.user_id = $1 group by d.id, d.name`, [userId]
 		);
 
 	return rows;
@@ -69,17 +69,31 @@ const remove = async (id, userId) => {
 	return rowCount === 1;
 }
 
-const addCard = async (userId, deckId, front, back, FSRSValues) => {
+const addCard = async (userId, deckId, front, back, cardType, FSRSValues) => {
 	if (!await userIdOwnsDeckId(userId, deckId)) {
 		throw new Error("Unauthorized");
 	}
 
+	// tactic cards are due immediately and carry no FSRS state
+	const values = cardType === "tactic"
+		? [new Date(), null, null, null, null, null, null, null, null, null]
+		: FSRSValues;
 	const { rows } = await pool.query(`insert into cards(
-			deck_id, front, back, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
-		) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
-		returning *`, [deckId, front, back, ...FSRSValues]);
+			deck_id, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
+		) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		returning *`, [deckId, front, back, cardType, ...values]);
 
-	return rows[0];
+	// pg returns numeric as string and timestamptz as Date; normalize to the
+	// shape the json_agg deck load produces (ts-fsrs treats a truthy string
+	// stability/difficulty as an existing — and invalid — memory state)
+	const card = rows[0];
+	return {
+		...card,
+		stability: card.stability === null ? null : Number(card.stability),
+		difficulty: card.difficulty === null ? null : Number(card.difficulty),
+		due: card.due.toISOString(),
+		last_review: card.last_review?.toISOString() ?? null
+	};
 }
 
 const updateCardContent = async (userId, cardId, front, back) => {
@@ -106,10 +120,10 @@ const deleteCards = async (userId, cardIds) => {
 
 const updateCardStudyState = async (userId, card) => {
 	const { rows } = await pool.query(`
-		update cards 
-		set due = $1, stability = $2, difficulty = $3, elapsed_days = $4, scheduled_days = $5, reps = $6, lapses = $7, learning_steps = $8, state = $9, last_review = $10
-		where id = $11
-	`, [card.due, card.stability, card.difficulty, card.elapsed_days, card.scheduled_days, card.reps, card.lapses, card.learning_steps, card.state, card.last_review, card.id]
+		update cards
+		set due = $1, stability = $2, difficulty = $3, elapsed_days = $4, scheduled_days = $5, reps = $6, lapses = $7, learning_steps = $8, state = $9, last_review = $10, finished_at = $11
+		where id = $12
+	`, [card.due, card.stability, card.difficulty, card.elapsed_days, card.scheduled_days, card.reps, card.lapses, card.learning_steps, card.state, card.last_review, card.finished_at ?? null, card.id]
 	);
 }
 

@@ -1,0 +1,220 @@
+diff --git a/node_modules/svelte-dnd-action/dist/index.js b/node_modules/svelte-dnd-action/dist/index.js
+index eb75285..7bd7441 100644
+--- a/node_modules/svelte-dnd-action/dist/index.js
++++ b/node_modules/svelte-dnd-action/dist/index.js
+@@ -599,6 +599,10 @@
+   }
+   resetIndexesCache();
+ 
++  // dz -> timestamp of the drag entering it; drives the entry pin in findWouldBeIndex
++  var dzToEnteredAt = new WeakMap();
++  var ENTRY_PIN_MS = 800;
++
+   /**
+    * Caches the coordinates of the shadow element when it's in a certain index in a certain dropzone.
+    * Helpful in order to determine "would be index" more effectively
+@@ -645,22 +649,48 @@
+     }
+     var shadowElIndex = cacheShadowRect(collectionBelowEl);
+ 
++    // just entering a foreign zone (no shadow here yet): open the space at the
++    // edge the drag came in over — predictable, and the regular midpoint rules
++    // take over once the entry pin below expires
++    if (shadowElIndex === undefined) {
++      var dzRect = getAbsoluteRectNoTransforms(collectionBelowEl);
++      var fromTop = referencePoint.y - dzRect.top < dzRect.bottom - referencePoint.y;
++      dzToEnteredAt.set(collectionBelowEl, Date.now());
++      return {
++        index: fromTop ? 0 : children.length,
++        isProximityBased: false
++      };
++    }
++
++    // entry pin: hold the just-entered position briefly so the space that opened
++    // at the edge doesn't immediately reshuffle under the cursor
++    if (Date.now() - (dzToEnteredAt.get(collectionBelowEl) || 0) < ENTRY_PIN_MS) {
++      return {
++        index: shadowElIndex,
++        isProximityBased: false
++      };
++    }
++
+     // the search could be more efficient but keeping it simple for now
+     // a possible improvement: pass in the lastIndex it was found in and check there first, then expand from there
+     for (var i = 0; i < children.length; i++) {
+       var childRect = getAbsoluteRectNoTransforms(children[i]);
+       if (isPointInsideRect(referencePoint, childRect)) {
+-        var cachedShadowRect = dzToShadowIndexToRect.has(collectionBelowEl) && dzToShadowIndexToRect.get(collectionBelowEl).get(i);
+-        if (cachedShadowRect) {
+-          if (!isPointInsideRect(referencePoint, cachedShadowRect)) {
+-            return {
+-              index: shadowElIndex,
+-              isProximityBased: false
+-            };
+-          }
++        if (i === shadowElIndex) {
++          return {
++            index: shadowElIndex,
++            isProximityBased: false
++          };
+         }
++        // Midpoint rule: displace the hovered item only once the reference point
++        // passes its center (see dist/index.mjs for the full rationale)
++        var shadowRect = getAbsoluteRectNoTransforms(children[shadowElIndex]);
++        var sameRow = Math.min(childRect.bottom, shadowRect.bottom) - Math.max(childRect.top, shadowRect.top) > Math.min(childRect.bottom - childRect.top, shadowRect.bottom - shadowRect.top) / 2;
++        var center = sameRow ? (childRect.left + childRect.right) / 2 : (childRect.top + childRect.bottom) / 2;
++        var coord = sameRow ? referencePoint.x : referencePoint.y;
++        var pastCenter = i > shadowElIndex ? coord > center : coord < center;
+         return {
+-          index: i,
++          index: pastCenter ? i : shadowElIndex,
+           isProximityBased: false
+         };
+       }
+diff --git a/node_modules/svelte-dnd-action/dist/index.mjs b/node_modules/svelte-dnd-action/dist/index.mjs
+index 5bdd171..02fc963 100644
+--- a/node_modules/svelte-dnd-action/dist/index.mjs
++++ b/node_modules/svelte-dnd-action/dist/index.mjs
+@@ -593,6 +593,10 @@ function resetIndexesCache() {
+ }
+ resetIndexesCache();
+ 
++// dz -> timestamp of the drag entering it; drives the entry pin in findWouldBeIndex
++var dzToEnteredAt = new WeakMap();
++var ENTRY_PIN_MS = 800;
++
+ /**
+  * Caches the coordinates of the shadow element when it's in a certain index in a certain dropzone.
+  * Helpful in order to determine "would be index" more effectively
+@@ -639,22 +643,55 @@ function findWouldBeIndex(referencePoint, collectionBelowEl) {
+   }
+   var shadowElIndex = cacheShadowRect(collectionBelowEl);
+ 
++  // just entering a foreign zone (no shadow here yet): open the space at the
++  // edge the drag came in over — predictable, and the regular midpoint rules
++  // take over once the entry pin below expires
++  if (shadowElIndex === undefined) {
++    var dzRect = getAbsoluteRectNoTransforms(collectionBelowEl);
++    var fromTop = referencePoint.y - dzRect.top < dzRect.bottom - referencePoint.y;
++    dzToEnteredAt.set(collectionBelowEl, Date.now());
++    return {
++      index: fromTop ? 0 : children.length,
++      isProximityBased: false
++    };
++  }
++
++  // entry pin: hold the just-entered position briefly so the space that opened
++  // at the edge doesn't immediately reshuffle under the cursor
++  if (Date.now() - (dzToEnteredAt.get(collectionBelowEl) || 0) < ENTRY_PIN_MS) {
++    return {
++      index: shadowElIndex,
++      isProximityBased: false
++    };
++  }
++
+   // the search could be more efficient but keeping it simple for now
+   // a possible improvement: pass in the lastIndex it was found in and check there first, then expand from there
+   for (var i = 0; i < children.length; i++) {
+     var childRect = getAbsoluteRectNoTransforms(children[i]);
+     if (isPointInsideRect(referencePoint, childRect)) {
+-      var cachedShadowRect = dzToShadowIndexToRect.has(collectionBelowEl) && dzToShadowIndexToRect.get(collectionBelowEl).get(i);
+-      if (cachedShadowRect) {
+-        if (!isPointInsideRect(referencePoint, cachedShadowRect)) {
+-          return {
+-            index: shadowElIndex,
+-            isProximityBased: false
+-          };
+-        }
++      // over the shadow itself
++      if (i === shadowElIndex) {
++        return {
++          index: shadowElIndex,
++          isProximityBased: false
++        };
+       }
++      // Midpoint rule (replaces the upstream cached-shadow-rect heuristic, whose
++      // cache goes stale after a few reshuffles and then blocks swaps): the hovered
++      // item is only displaced once the reference point passes its center, measured
++      // along the axis it is laid out on relative to the shadow. Items swap when the
++      // dragged element is half-way over them; swapping back requires re-crossing
++      // the center, which gives natural hysteresis instead of jitter.
++      var shadowRect = getAbsoluteRectNoTransforms(children[shadowElIndex]);
++      var sameRow =
++        Math.min(childRect.bottom, shadowRect.bottom) - Math.max(childRect.top, shadowRect.top) >
++        Math.min(childRect.bottom - childRect.top, shadowRect.bottom - shadowRect.top) / 2;
++      var center = sameRow ? (childRect.left + childRect.right) / 2 : (childRect.top + childRect.bottom) / 2;
++      var coord = sameRow ? referencePoint.x : referencePoint.y;
++      var pastCenter = i > shadowElIndex ? coord > center : coord < center;
+       return {
+-        index: i,
++        index: pastCenter ? i : shadowElIndex,
+         isProximityBased: false
+       };
+     }
+diff --git a/node_modules/svelte-dnd-action/src/helpers/listUtil.js b/node_modules/svelte-dnd-action/src/helpers/listUtil.js
+index 4469f95..eac1414 100644
+--- a/node_modules/svelte-dnd-action/src/helpers/listUtil.js
++++ b/node_modules/svelte-dnd-action/src/helpers/listUtil.js
+@@ -12,6 +12,10 @@ export function resetIndexesCache() {
+ }
+ resetIndexesCache();
+ 
++// dz -> timestamp of the drag entering it; drives the entry pin in findWouldBeIndex
++const dzToEnteredAt = new WeakMap();
++const ENTRY_PIN_MS = 800;
++
+ /**
+  * Caches the coordinates of the shadow element when it's in a certain index in a certain dropzone.
+  * Helpful in order to determine "would be index" more effectively
+@@ -54,18 +58,45 @@ export function findWouldBeIndex(referencePoint, collectionBelowEl) {
+     }
+     const shadowElIndex = cacheShadowRect(collectionBelowEl);
+ 
++    // just entering a foreign zone (no shadow here yet): open the space at the
++    // edge the drag came in over — predictable, and the regular midpoint rules
++    // take over once the entry pin below expires
++    if (shadowElIndex === undefined) {
++        const dzRect = getAbsoluteRectNoTransforms(collectionBelowEl);
++        const fromTop = referencePoint.y - dzRect.top < dzRect.bottom - referencePoint.y;
++        dzToEnteredAt.set(collectionBelowEl, Date.now());
++        return {index: fromTop ? 0 : children.length, isProximityBased: false};
++    }
++
++    // entry pin: hold the just-entered position briefly so the space that opened
++    // at the edge doesn't immediately reshuffle under the cursor
++    if (Date.now() - (dzToEnteredAt.get(collectionBelowEl) || 0) < ENTRY_PIN_MS) {
++        return {index: shadowElIndex, isProximityBased: false};
++    }
++
+     // the search could be more efficient but keeping it simple for now
+     // a possible improvement: pass in the lastIndex it was found in and check there first, then expand from there
+     for (let i = 0; i < children.length; i++) {
+         const childRect = getAbsoluteRectNoTransforms(children[i]);
+         if (isPointInsideRect(referencePoint, childRect)) {
+-            const cachedShadowRect = dzToShadowIndexToRect.has(collectionBelowEl) && dzToShadowIndexToRect.get(collectionBelowEl).get(i);
+-            if (cachedShadowRect) {
+-                if (!isPointInsideRect(referencePoint, cachedShadowRect)) {
+-                    return {index: shadowElIndex, isProximityBased: false};
+-                }
++            // over the shadow itself
++            if (i === shadowElIndex) {
++                return {index: shadowElIndex, isProximityBased: false};
+             }
+-            return {index: i, isProximityBased: false};
++            // Midpoint rule (replaces the upstream cached-shadow-rect heuristic, whose
++            // cache goes stale after a few reshuffles and then blocks swaps): the hovered
++            // item is only displaced once the reference point passes its center, measured
++            // along the axis it is laid out on relative to the shadow. Items swap when the
++            // dragged element is half-way over them; swapping back requires re-crossing
++            // the center, which gives natural hysteresis instead of jitter.
++            const shadowRect = getAbsoluteRectNoTransforms(children[shadowElIndex]);
++            const sameRow =
++                Math.min(childRect.bottom, shadowRect.bottom) - Math.max(childRect.top, shadowRect.top) >
++                Math.min(childRect.bottom - childRect.top, shadowRect.bottom - shadowRect.top) / 2;
++            const center = sameRow ? (childRect.left + childRect.right) / 2 : (childRect.top + childRect.bottom) / 2;
++            const coord = sameRow ? referencePoint.x : referencePoint.y;
++            const pastCenter = i > shadowElIndex ? coord > center : coord < center;
++            return {index: pastCenter ? i : shadowElIndex, isProximityBased: false};
+         }
+     }
+     // this can happen if there is space around the children so the floating element has

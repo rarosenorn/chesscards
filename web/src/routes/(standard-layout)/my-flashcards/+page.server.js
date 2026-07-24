@@ -1,10 +1,12 @@
 import { fail } from "@sveltejs/kit"
 import * as decks from "$lib/server/decks.js"
+import * as marketplace from "$lib/server/marketplace.js"
 import * as zod from "$lib/zod-schemas.js"
 
 const load = async ({ locals }) => {
 	return {
 		decks: await decks.getMineWithoutCards(locals.userId),
+		marketplaceDecks: await marketplace.getInstancesWithoutCards(locals.userId),
 		pageTitle: "My flashcards"
 	}
 }

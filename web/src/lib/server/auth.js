@@ -1,48 +1,109 @@
+import "dotenv/config"
+import { betterAuth } from "better-auth"
+import { genericOAuth } from "better-auth/plugins"
 import { pool } from "./pool.js"
-import argon2 from "argon2" 
+import { sendMail } from "./mail.js"
 
-// TODO delete sessions after 30 days of non use?
-// TODO right now sessions expire after 30 days, I should do something so session refreshes on load or something, figure out best practice
-// TODO delete user
-// TODO confirm email before create
+// deliberately plain process.env (not $env): the better-auth CLI loads this
+// file outside the SvelteKit build to generate the database schema
 
-const createSession = async userId => {
-	const { rows } = await pool.query(
-		'insert into sessions(user_id) values($1) returning id, user_id "userId", created_at "createdAt";',
-		[userId]
-	);
+const link = (label, url) => ({
+	text: `${label}: ${url}`,
+	html: `<p><a href="${url}">${label}</a></p>`
+});
 
-	return rows[0];
+// Lichess is an open OAuth2 provider: public client with PKCE, no secret and
+// no registration; any client id string identifies the app.
+const lichessUserInfo = async tokens => {
+	const headers = { Authorization: `Bearer ${tokens.accessToken}` };
+	const account = await (await fetch("https://lichess.org/api/account", { headers })).json();
+	const { email } = await (await fetch("https://lichess.org/api/account/email", { headers })).json();
+	return {
+		id: account.id,
+		name: account.username,
+		email,
+		// lichess verifies emails itself
+		emailVerified: true
+	};
 }
-	
-const deleteSession = async sessionId => {
-	await pool.query("delete from sessions where id = $1", [sessionId]);
-}
 
-const authenticateUser = async (email, password) => {
-	const { rows } = await pool.query("select id, email, password_hash from users where email = $1", [email]);
-
-	if (!rows[0] || !await argon2.verify(rows[0].password_hash, password)) {
-		return null;
+export const auth = betterAuth({
+	database: pool,
+	baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:5173",
+	secret: process.env.BETTER_AUTH_SECRET,
+	advanced: {
+		// domain tables reference user ids as uuid
+		database: { generateId: () => crypto.randomUUID() }
+	},
+	emailAndPassword: {
+		enabled: true,
+		minPasswordLength: 6,
+		requireEmailVerification: true,
+		sendResetPassword: async ({ user, url }) => {
+			await sendMail({
+				to: user.email,
+				subject: "Reset your Chesscards password",
+				...link("Reset your password", url)
+			});
+		}
+	},
+	emailVerification: {
+		sendOnSignUp: true,
+		autoSignInAfterVerification: true,
+		sendVerificationEmail: async ({ user, url }) => {
+			await sendMail({
+				to: user.email,
+				subject: "Verify your Chesscards email",
+				...link("Verify your email", url)
+			});
+		}
+	},
+	// Google requires a registered OAuth client (cloud console); only enabled
+	// once its credentials are in the env
+	socialProviders: process.env.GOOGLE_CLIENT_ID
+		? {
+			google: {
+				clientId: process.env.GOOGLE_CLIENT_ID,
+				clientSecret: process.env.GOOGLE_CLIENT_SECRET
+			}
+		}
+		: {},
+	plugins: [
+		genericOAuth({
+			config: [
+				{
+					providerId: "lichess",
+					clientId: process.env.LICHESS_CLIENT_ID ?? "chesscards-dev",
+					clientSecret: "",
+					authorizationUrl: "https://lichess.org/oauth",
+					tokenUrl: "https://lichess.org/api/token",
+					scopes: ["email:read"],
+					pkce: true,
+					getUserInfo: lichessUserInfo
+				}
+			]
+		})
+	],
+	user: {
+		// board preferences and the admin flag live on the user row, so the
+		// session lookup returns them with no extra query
+		additionalFields: {
+			isAdmin: { type: "boolean", defaultValue: false, input: false },
+			pieceSet: { type: "string", defaultValue: "standard", input: false },
+			boardTheme: { type: "string", defaultValue: "default", input: false },
+			borderType: { type: "string", defaultValue: "black", input: false },
+			showCoordinates: { type: "boolean", defaultValue: true, input: false },
+			animationDuration: { type: "number", defaultValue: 300, input: false }
+		},
+		deleteUser: {
+			enabled: true,
+			sendDeleteAccountVerification: async ({ user, url }) => {
+				await sendMail({
+					to: user.email,
+					subject: "Confirm deleting your Chesscards account",
+					...link("Delete your account", url)
+				});
+			}
+		}
 	}
-
-	return rows[0];
-}
-
-const createUser = async (email, password) => {
-	const password_hash = await argon2.hash(password);
-	const { rows } = await pool.query(
-		'insert into users(email, password_hash) values($1, $2) returning id, email, password_hash "passwordHash";',
-		[email, password_hash]
-	)
-
-	return rows[0];
-}
-
-const getUserIdFromSessionId = async sessionId => {
-	const { rows } = await pool.query('select user_id "userId" from sessions where id = $1', [sessionId])
-
-	return rows[0]?.userId;
-}
-
-export { createSession, deleteSession, authenticateUser, createUser, getUserIdFromSessionId }
+});

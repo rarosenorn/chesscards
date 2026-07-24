@@ -111,7 +111,11 @@ const hasAnnotations = annotation =>
 // Arrows and Markers extensions, replacing whatever is currently drawn.
 const showAnnotations = (chessboard, annotation) => {
 	chessboard.removeArrows();
-	chessboard.removeMarkers();
+	// only the annotator's own marker types: a blanket removeMarkers() would
+	// also wipe unrelated markers (e.g. the editor's picked-up-piece highlight)
+	for (const key of Object.keys(MARKER_TYPE)) {
+		chessboard.removeMarkers(MARKER_TYPE[key]);
+	}
 	for (const { type, from, to } of annotation?.arrows ?? []) {
 		if (ARROW_TYPE[type]) chessboard.addArrow(ARROW_TYPE[type], from, to);
 	}

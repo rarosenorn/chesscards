@@ -128,6 +128,7 @@
 			["tactic", "Tactic", "Tactic card type: If evaluated <i>Correct</i>, card is done. If evaluated <i>Incorrect</i>, card is scheduled for next day"]
 		] as [value, label, description]}
 			<button
+				class="std-btn"
 				role="radio"
 				aria-checked={draft.cardType === value}
 				class:selected={draft.cardType === value}
@@ -222,23 +223,24 @@
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
 	}
-	/* iOS-style segmented control: grey track, selected segment lifted white */
+	/* independent std-btn-style buttons (same press feel as Duplicate/Edit),
+	   the selected one tinted accent */
 	.type-segments {
 		display: flex;
-		background-color: #e6e6e6;
-		border-radius: 6px;
-		padding: 2px;
+		gap: 4px;
 	}
+	/* unselected recedes grey, the selected pill is plain white — the
+	   contrast alone carries the state, no accent border */
 	.type-segments button {
-		width: 70px;
+		width: 62px;
 		padding: 3px 0;
-		border: none;
-		border-radius: 4px;
-		background-color: transparent;
-		color: rgba(0, 0, 0, 0.6);
+		border-radius: 999px;
 		font-size: 0.85rem;
 		cursor: pointer;
 		position: relative;
+		margin: 0;
+		background-color: #e6e6e6;
+		color: rgba(0, 0, 0, 0.65);
 	}
 	/* custom tooltip: appears after 300ms instead of the ~1s native delay
 	   (a real element rather than a title attribute, so it can hold markup) */
@@ -249,10 +251,12 @@
 		width: max-content;
 		max-width: 300px;
 		text-align: left;
-		background-color: #333;
+		/* matches GlobalTooltip's default-Firefox skin */
+		background-color: black;
 		color: white;
-		font-size: 0.75rem;
-		padding: 4px 8px;
+		font-size: 13px;
+		font-weight: 500;
+		padding: 5px 10px;
 		border-radius: 4px;
 		opacity: 0;
 		visibility: hidden;
@@ -264,17 +268,12 @@
 		opacity: 1;
 		visibility: visible;
 	}
-	.type-segments button:hover:not(.selected) {
-		color: black;
-	}
 	.type-segments button.selected {
 		background-color: white;
 		color: black;
-		font-weight: 500;
-		box-shadow: rgba(0, 0, 0, 0.18) 0 1px 2px;
 	}
 	.side-indicator {
-		margin-left: 14px;
+		margin-left: 20px;
 		margin-bottom: 0px;
 		font-size: 1.12rem;
 		align-self: start;

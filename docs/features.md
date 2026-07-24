@@ -1,5 +1,4 @@
 # Currently working on
-- Subdecks
 ## correct move card
 Instead of showing correct move in position on back, just show the arrow on the front board when you do "Show" and have explanation on back appear as to why.
 

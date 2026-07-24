@@ -5,6 +5,7 @@
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore } from "$lib/card-utils.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
+	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
 
 	let deck = getContext("deck");
@@ -218,7 +219,7 @@
 	</div>
 {:else}
 	<div class="deck-done">
-		<p>Congratulations you finished this deck for now! 🎉</p>
+		<p>Congratulations you finished this deck for now! <span class="party"><PartyPopper /></span></p>
 		{#if nextDue}
 			<p class="next-review">Next review in {formatTimeUntilLong(nextDue)}</p>
 		{/if}
@@ -279,6 +280,16 @@
 	}
 	.std-btn {
 		padding: 4px 8px;
+	}
+	/* svg instead of an emoji: no color-emoji font on the user's system
+	   required (Chromium on linux often has none) */
+	.party {
+		display: inline-block;
+		vertical-align: -0.15em;
+		font-size: 1.1em;
+	}
+	.party :global(svg) {
+		display: block;
 	}
 	.deck-done {
 		display: flex;

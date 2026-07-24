@@ -126,6 +126,15 @@
 	.tabs > a:hover {
 		background-color: rgba(0, 0, 0, 0.05);
 	}
+	/* the std-btn key press: the tab dips into its bottom edge while held */
+	.tabs > a:active {
+		transform: translateY(1px);
+		padding-bottom: 2px;
+		background-color: rgba(0, 0, 0, 0.08);
+	}
+	.tabs [aria-current]:not([aria-current="false"]):active {
+		background-color: var(--accent-hover) !important;
+	}
 	.breadcrumbs a {
 		color: black;
 	}

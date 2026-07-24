@@ -10,7 +10,7 @@
 	import { Chessboard, INPUT_EVENT_TYPE } from "cm-chessboard/src/Chessboard.js"
 	import { MOVE_CANCELED_REASON } from "cm-chessboard/src/view/VisualMoveInput.js"
 	import { Arrows } from "cm-chessboard/src/extensions/arrows/Arrows.js"
-	import { Markers } from "cm-chessboard/src/extensions/markers/Markers.js"
+	import { Markers, MARKER_TYPE } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { RightClickAnnotator } from "cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js"
 	import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
 	import { isValidFen } from "$lib/isValidFen.js"
@@ -96,13 +96,14 @@
 		clearMoves();
 		if (isValidFen(currentFen)) {
 			acceptedFen = currentFen;
-			board.setPosition(currentFen.trim().split(/\s+/)[0], true);
+			board.setPosition(currentFen.trim().split(/\s+/)[0], false);
 		}
 	}
 
 	const setPlacement = placement => {
 		clearMoves();
-		board.setPosition(placement, true);
+		// setup-stage position changes are always instant
+		board.setPosition(placement, false);
 		syncFenFromBoard();
 	}
 
@@ -144,9 +145,18 @@
 		// back to open hand right at the drop — the hover state is recomputed
 		// for the drop square after the position commits, so the cursor is
 		// correct before the mouse even moves again
-		if (event.type === INPUT_EVENT_TYPE.moveInputStarted) draggingPiece = true;
+		if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
+			draggingPiece = true;
+			clickMoving = false;
+			// highlight the picked-up piece's square (also covers click-move,
+			// where the selection outlives the press); safe in setup too now
+			// that showAnnotations only wipes its own marker types
+			board.addMarker(MARKER_TYPE.square, event.squareFrom);
+		}
 		if (event.type === INPUT_EVENT_TYPE.moveInputFinished || event.type === INPUT_EVENT_TYPE.moveInputCanceled) {
 			draggingPiece = false;
+			clickMoving = false;
+			board.removeMarkers(MARKER_TYPE.square);
 			setTimeout(() => {
 				hoverPiece = !!(event.squareTo && board.getPiece(event.squareTo));
 			}, 0);
@@ -239,15 +249,22 @@
 		}
 	}
 
+	let configuredAnimationMs;
+	const syncAnimationSpeed = () =>
+		// 1ms, not 0: at 0 the animation queue drops the final frame and
+		// pieces vanish from the view after a move
+		board.props.style.animationDuration = mode === "setup" ? 1 : configuredAnimationMs;
+
 	const switchMode = newMode => {
 		if (newMode === mode) return;
 		if (newMode === "moves" && !canRecordMoves) return;
 		if (selectedTool) selectTool(selectedTool);
 		mode = newMode;
+		syncAnimationSpeed();
 		if (mode === "moves") {
 			currentIndex = Math.min(currentIndex, moves.length);
 		} else {
-			board.setPosition(currentFen.trim().split(/\s+/)[0], true);
+			board.setPosition(currentFen.trim().split(/\s+/)[0], false);
 		}
 	}
 
@@ -316,6 +333,18 @@
 	// (lichess-style), so you see what you're about to place.
 	let hoverPiece = $state(false);
 	let draggingPiece = $state(false);
+	// a piece was click-selected (pressed and released in place) and awaits a
+	// destination click — pointer, not the drag cursors, until then
+	let clickMoving = $state(false);
+
+	// pointerup (the library's finish/cancel path) always precedes mouseup, so
+	// if the press ends with move input still live, it was a click-select
+	const handleBoardMouseUp = () => {
+		if (draggingPiece) {
+			draggingPiece = false;
+			clickMoving = true;
+		}
+	}
 	let ghostPos = $state(null);
 	const handleBoardHoverCursor = e => {
 		const square = e.target.closest?.("[data-square]")?.getAttribute("data-square");
@@ -340,13 +369,20 @@
 			orientation,
 			assetsUrl: "/chessboard-assets/",
 			style: boardStyleProps(boardPrefs()),
-			extensions: [{ class: Arrows }, { class: Markers }, { class: RightClickAnnotator }, { class: PromotionDialog }]
+			// autoMarkers off: no corner frames on origin/destination; the
+			// picked-up piece's square gets a background marker instead (below)
+			extensions: [{ class: Arrows }, { class: Markers, props: { autoMarkers: null } }, { class: RightClickAnnotator }, { class: PromotionDialog }]
 		}))
+		// in the setup stage every piece movement is instant; recorded-move
+		// playback in the moves stage keeps the configured animation
+		configuredAnimationMs = board.props.style.animationDuration;
+		syncAnimationSpeed();
 		board.enableMoveInput(handleMoveInput);
 		board.enableSquareSelect("pointerdown", handleSquareClick);
 		boardElement.addEventListener("mousedown", stopDndPress);
 		boardElement.addEventListener("touchstart", stopDndPress);
 		boardElement.addEventListener("mouseup", captureAnnotations);
+		boardElement.addEventListener("mouseup", handleBoardMouseUp);
 		boardElement.addEventListener("mousemove", handleBoardHoverCursor);
 		boardElement.addEventListener("mouseleave", clearHoverCursor);
 		// the FEN row matches the board's whole-pixel rendered width (border
@@ -363,6 +399,7 @@
 			boardElement.removeEventListener("mousedown", stopDndPress);
 			boardElement.removeEventListener("touchstart", stopDndPress);
 			boardElement.removeEventListener("mouseup", captureAnnotations);
+			boardElement.removeEventListener("mouseup", handleBoardMouseUp);
 			boardElement.removeEventListener("mousemove", handleBoardHoverCursor);
 			boardElement.removeEventListener("mouseleave", clearHoverCursor);
 			board.destroy();
@@ -427,8 +464,9 @@
 			<div
 				class="board"
 				class:black-border={hasBlackBorder(boardPrefs())}
-				class:pointer-squares={selectedTool !== null}
-				class:grab-squares={hoverPiece && selectedTool === null}
+				class:tool-squares={selectedTool !== null}
+				class:pointer-squares={clickMoving}
+				class:grab-squares={hoverPiece && selectedTool === null && !clickMoving}
 				class:grabbing-squares={draggingPiece}
 				bind:this={boardElement}
 			></div>
@@ -581,6 +619,13 @@
 	.board {
 		border-radius: 2px 2px 0 0;
 	}
+	/* the picked-up piece's square: yellow fill, not the default faint black */
+	/* fully opaque: a translucent fill blends differently with light and
+	   dark squares, making the highlight look inconsistent */
+	.board :global(.cm-chessboard .markers .marker.marker-square) {
+		fill: #ffff33;
+		opacity: 1;
+	}
 	/* the library puts a pointer on every input-enabled square; instead:
 	   pointer while a palette tool is selected (clicking any square acts),
 	   grab over draggable pieces, default otherwise */
@@ -589,8 +634,15 @@
 	}
 	/* with a tool selected the native cursor disappears over the board: the
 	   ghost's own arrow replaces it (lichess-style) */
-	.board.pointer-squares :global(.cm-chessboard) {
+	.board.tool-squares :global(.cm-chessboard) {
 		cursor: none;
+	}
+	/* during a click-move the next click acts, so the whole board shows a
+	   pointer; the input-enabled variant matches the default-cursor rule's
+	   specificity, which would otherwise win while move input is live */
+	.board.pointer-squares :global(.cm-chessboard .square),
+	.board.pointer-squares :global(.cm-chessboard .board.input-enabled .square) {
+		cursor: pointer;
 	}
 	/* preview of the selected tool riding the cursor: an arrow whose tip sits
 	   at the actual pointer position, with the translucent tool below-right;
@@ -743,18 +795,23 @@
 		flex-direction: column;
 		gap: 10px;
 	}
+	/* lichess-style palette: borderless tiles, flush grid */
 	.palette {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
 	}
 	.tool-row {
 		display: flex;
-		gap: 4px;
+	}
+	/* bin/cursor tiles match the piece tiles' size (a sixth of the row) */
+	.tool-row > .palette-piece {
+		flex: 0 0 calc(100% / 6);
+		width: auto;
+		height: auto;
+		aspect-ratio: 1;
 	}
 	.palette-row {
 		display: flex;
-		gap: 4px;
 	}
 	.palette-row > .palette-piece {
 		flex: 1 1 0;
@@ -769,8 +826,7 @@
 		justify-content: center;
 		align-items: center;
 		background-color: white;
-		border: 1px solid rgba(0, 0, 0, 0.2);
-		border-radius: 4px;
+		border: none;
 		cursor: pointer;
 		font-size: 1.3rem;
 		padding: 2px;
@@ -785,9 +841,10 @@
 		font-size: 1.7rem;
 		color: #333;
 	}
+	/* selection reads through the background alone, same yellow as the
+	   board's picked-up-piece highlight */
 	.palette-piece.selected {
-		border: 2px solid var(--accent);
-		background-color: var(--accent-subtle-strong);
+		background-color: #ffff33;
 	}
 	.palette-piece svg {
 		width: 100%;

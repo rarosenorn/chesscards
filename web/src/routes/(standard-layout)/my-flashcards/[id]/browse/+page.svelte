@@ -515,7 +515,7 @@
 		padding: 12px 20px;
 	}
 	.side-indicator {
-		margin-left: 14px;
+		margin-left: 20px;
 		margin-bottom: 0px;
 		font-size: 1.12rem;
 		align-self: start;

@@ -13,3 +13,19 @@ index 4100512..150421d 100644
      }
  
      getAnnotations() {
+diff --git a/node_modules/cm-chessboard/src/view/VisualMoveInput.js b/node_modules/cm-chessboard/src/view/VisualMoveInput.js
+index 1db6fdc..8d2717b 100644
+--- a/node_modules/cm-chessboard/src/view/VisualMoveInput.js
++++ b/node_modules/cm-chessboard/src/view/VisualMoveInput.js
+@@ -300,6 +300,11 @@ export class VisualMoveInput {
+                             } else {
+                                 this.setMoveInputState(MOVE_INPUT_STATE.reset)
+                             }
++                        } else {
++                            // upstream bug: an accepted move onto a same-color
++                            // piece fell through with no state change, leaving
++                            // the input machine stuck — complete it as a move
++                            this.setMoveInputState(MOVE_INPUT_STATE.moveDone, {square: square})
+                         }
+                     } else {
+                         this.setMoveInputState(MOVE_INPUT_STATE.moveDone, {square: square})

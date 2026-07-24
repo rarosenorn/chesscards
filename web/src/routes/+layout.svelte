@@ -3,6 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import Logo from "$lib/assets/Logo.svelte"
 	import ModalHost from "$lib/components/ModalHost.svelte"
+	import GlobalTooltip from "$lib/components/GlobalTooltip.svelte"
 	import { DEFAULT_BOARD_PREFS } from "$lib/board-prefs.js"
 	import "../reset.css"
 	import "../app.css"
@@ -49,6 +50,7 @@
 	</main>
 </div>
 <ModalHost />
+<GlobalTooltip />
 
 <style>
 	.layout {

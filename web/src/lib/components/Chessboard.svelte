@@ -80,7 +80,9 @@
 		syncWidth();
 		const resizeObserver = new ResizeObserver(syncWidth);
 		resizeObserver.observe(boardBox);
+		chessboardElement.addEventListener("wheel", handleWheel, { passive: false });
 		return () => {
+			chessboardElement.removeEventListener("wheel", handleWheel);
 			resizeObserver.disconnect();
 			cmBoard.destroy();
 		};
@@ -100,12 +102,30 @@
 
 	let wrapperElement = $state();
 
-	// left board half steps back, right half steps forward; focusing the
-	// wrapper makes the arrow keys work right after a click
-	const handleBoardClick = e => {
-		wrapperElement.focus({ preventScroll: true });
-		const rect = chessboardElement.getBoundingClientRect();
-		if (e.clientX - rect.left < rect.width / 2) previous(); else next();
+	// note for the responsive pass: on touch there is no wheel/keyboard, so
+	// tap zones on the board halves may come back for touch input only —
+	// desktop clicks stay reserved for future piece interaction on cards
+
+	// scroll steps through the moves (lichess-style); deltas accumulate so
+	// trackpads don't fire a step per micro-tick, and page scroll is always
+	// swallowed over a board with moves. Attached manually: svelte's wheel
+	// handlers are passive, which forbids preventDefault.
+	let wheelAcc = 0;
+	let lastWheel = 0;
+	const handleWheel = e => {
+		if (!hasMoves) return;
+		e.preventDefault();
+		const now = performance.now();
+		if (now - lastWheel > 250) wheelAcc = 0;
+		lastWheel = now;
+		wheelAcc += e.deltaY;
+		if (wheelAcc > 40) {
+			next();
+			wheelAcc = 0;
+		} else if (wheelAcc < -40) {
+			previous();
+			wheelAcc = 0;
+		}
 	}
 
 	const handleKeyDown = e => {
@@ -135,7 +155,7 @@
 		class:black-border={hasBlackBorder(boardPrefs())}
 		class:flush-bottom={flushBottom}
 		bind:this={chessboardElement}
-		onclick={hasMoves ? handleBoardClick : undefined}
+		onclick={hasMoves ? () => wrapperElement.focus({ preventScroll: true }) : undefined}
 	></div>
 	{@render children?.()}
 	{#if hasMoves}

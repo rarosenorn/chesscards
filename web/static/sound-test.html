@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Knock audition</title>
+<style>
+	body { font-family: Inter, system-ui, sans-serif; background: #efefef; margin: 40px auto; max-width: 460px; }
+	h1 { font-size: 1.2rem; }
+	p { color: #555; font-size: 0.9rem; }
+	.row { display: flex; align-items: center; gap: 10px; background: white; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; }
+	.name { width: 40px; font-weight: 600; }
+	.tag { font-size: 0.75rem; color: #3381ca; width: 110px; }
+	button { border: 1px solid lightgrey; border-bottom-color: darkgrey; background: #f5f5f5; border-radius: 4px; padding: 5px 14px; cursor: pointer; }
+	button:active { transform: translateY(1px); }
+</style>
+</head>
+<body>
+<h1>Capture-sound audition</h1>
+<p>Play = the knock alone. Pair = current move sound, then the knock, like a move followed by a capture.</p>
+<div id="rows"></div>
+<script>
+	const tags = { k4: "old move/capture", k5: "current MOVE", k8: "current CAPTURE" };
+	const play = src => { const a = new Audio(src); a.play(); return a; };
+	const rows = document.getElementById("rows");
+	for (let i = 1; i <= 9; i++) {
+		const name = "k" + i;
+		const src = "/sounds/candidates/" + name + ".mp3";
+		const row = document.createElement("div");
+		row.className = "row";
+		row.innerHTML = `<span class="name">${name}</span><span class="tag">${tags[name] ?? ""}</span>`;
+		const playBtn = document.createElement("button");
+		playBtn.textContent = "Play";
+		playBtn.onclick = () => play(src);
+		const pairBtn = document.createElement("button");
+		pairBtn.textContent = "Pair";
+		pairBtn.onclick = () => { play("/sounds/move.mp3"); setTimeout(() => play(src), 700); };
+		row.append(playBtn, pairBtn);
+		rows.append(row);
+	}
+</script>
+</body>
+</html>

@@ -54,7 +54,7 @@
 				<input name="email" id="email" type="email" bind:value={email} required autocomplete="email" />
 			</label>
 			<label for="password">
-				Password <span class="note">(min. 6 characters)</span>
+				<span>Password <span class="note">(min. 6 characters)</span></span>
 				<input name="password" id="password" type="password" bind:value={password} required minlength="6" autocomplete="new-password" />
 			</label>
 			<label for="confirm-password">

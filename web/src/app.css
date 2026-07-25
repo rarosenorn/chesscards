@@ -128,6 +128,30 @@ thead > th {
 	box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
 	rgba(0, 0, 0, 0.06) 0px 4px 16px 0px;
 }
+/* the Q/A visibility letters: Q = part of the question, A = part of the
+   answer (hidden in study until Show); the blackletter face sets them apart
+   from surrounding UI text wherever they appear */
+/* !! Gothic Valentine is FREE FOR PERSONAL USE ONLY (1001freefonts.com) —
+   a commercial license must be purchased before this ships to real users;
+   Canterbury.ttf (also in static/fonts, 1001fonts FFC license) is the
+   commercially-safe fallback to swap back to */
+@font-face {
+	font-family: "Gothic Valentine";
+	src: url("/fonts/GothicValentine-PERSONAL-USE-ONLY.ttf") format("truetype");
+	font-display: swap;
+}
+@font-face {
+	font-family: Canterbury;
+	src: url("/fonts/Canterbury.ttf") format("truetype");
+	font-display: swap;
+}
+.qa-letter {
+	font-family: "Gothic Valentine", Canterbury, Luminari, "Uncial Antiqua", Papyrus, Georgia, fantasy, serif;
+	/* normal, not 600: the font ships one weight, so anything heavier makes
+	   the browser fake-bold it — that's what read as too heavy */
+	font-weight: normal;
+	line-height: 1;
+}
 .board-number {
 	text-align: left;
 	align-self: stretch;

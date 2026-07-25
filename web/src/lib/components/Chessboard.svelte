@@ -11,14 +11,29 @@
 	import { playMoveSound } from "$lib/sounds.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
 
-	// `board` is a board object ({ fen, moves, annotations, orientation }) or a
-	// legacy FEN string; `children` renders between the board and the move line
-	// (e.g. the card editor's FEN/Duplicate/Edit row)
-	let { board, minWidth = "409px", flushBottom = false, children } = $props();
+	// `board` is a board object ({ fen, moves, annotations, solutionFrom,
+	// solutionAnnotations, orientation }) or a legacy FEN string; `children`
+	// renders between the board and the move line (e.g. the card editor's
+	// FEN/Duplicate/Edit row).
+	// `revealed` controls the solution layer: while false, moves from
+	// solutionFrom on stay hidden and only the question annotations show; when
+	// true the full line shows and solutionAnnotations displaces annotations
+	// per position. `authorView` (editors/browse) tints the answer segment of
+	// the move line so authors see what study hides.
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
-	let positions = $derived(replay.fens);
+	// clamped: a solutionFrom beyond the (possibly failed) replay hides nothing
+	let solutionFrom = $derived(
+		normalized.solutionFrom == null
+			? null
+			: Math.min(normalized.solutionFrom, replay.moveInfos.length)
+	);
+	let visiblePlies = $derived(
+		revealed || solutionFrom == null ? replay.moveInfos.length : solutionFrom
+	);
+	let positions = $derived(replay.fens.slice(0, visiblePlies + 1));
 	let hasMoves = $derived(positions.length > 1);
 
 	let currentIndex = $state(0);
@@ -33,7 +48,7 @@
 	let moveLine = $derived.by(() => {
 		const pairs = [];
 		let pairOpen = false;
-		replay.moveInfos.forEach(({ san, color }, index) => {
+		replay.moveInfos.slice(0, visiblePlies).forEach(({ san, color }, index) => {
 			if (color !== "b" || !pairOpen) {
 				pairs.push({ number: pairs.length + 1, ellipsis: color === "b", moves: [] });
 			}
@@ -47,9 +62,17 @@
 	let cmBoard = $state();
 	let renderedIndex = 0;
 
+	// on reveal the solution layer displaces the question annotations wherever
+	// it has an entry for the position
+	let displayedAnnotation = $derived(
+		revealed
+			? normalized.solutionAnnotations[displayIndex] ?? normalized.annotations[displayIndex]
+			: normalized.annotations[displayIndex]
+	);
+
 	$effect(() => {
 		const fen = positions[displayIndex];
-		const annotation = normalized.annotations[displayIndex];
+		const annotation = displayedAnnotation;
 		if (!cmBoard) return;
 		if (cmBoard.getOrientation() !== normalized.orientation) {
 			cmBoard.setOrientation(normalized.orientation, false);
@@ -72,14 +95,19 @@
 		}))
 		// cm-chessboard sizes its inner box to whole pixels inside our
 		// fractional-width container; --board-px lets the bar below and the
-		// move line match the board's real rendered width exactly
-		const boardBox = chessboardElement.firstElementChild;
+		// move line match the board's real rendered width exactly.
+		// offsetWidth, not getBoundingClientRect: a board mounting mid
+		// flip-animation is scaled, and rect widths include transforms — the
+		// too-wide measurement would stick (no further layout resize fires
+		// the observer). The outer element is observed as well, so a cell
+		// resize re-measures even if cm-chessboard replaces the inner box.
 		const syncWidth = () => wrapperElement.style.setProperty(
-			"--board-px", boardBox.getBoundingClientRect().width + "px"
+			"--board-px", chessboardElement.firstElementChild.offsetWidth + "px"
 		);
 		syncWidth();
 		const resizeObserver = new ResizeObserver(syncWidth);
-		resizeObserver.observe(boardBox);
+		resizeObserver.observe(chessboardElement.firstElementChild);
+		resizeObserver.observe(chessboardElement);
 		chessboardElement.addEventListener("wheel", handleWheel, { passive: false });
 		return () => {
 			chessboardElement.removeEventListener("wheel", handleWheel);
@@ -179,6 +207,9 @@
 						<button
 							class="move-btn"
 							class:current={displayIndex === move.index + 1}
+							title={authorView && solutionFrom != null && move.index >= solutionFrom
+								? "Revealed when the card is turned"
+								: undefined}
 							onclick={() => goTo(move.index + 1)}
 						>
 							{pair.ellipsis && moveIndex === 0 ? "…" + move.san : move.san}

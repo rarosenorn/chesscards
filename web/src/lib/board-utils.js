@@ -29,27 +29,85 @@ const looseChess = fen => {
 // ("e2-e4"): SAN can't represent them, coordinates replay unambiguously.
 const MANUAL_MOVE_PATTERN = /^([a-h][1-8])-([a-h][1-8])$/;
 
-// Applies a free-form move — any piece to any square not holding its own
-// color, check rules ignored — and hands the turn to the other side.
+// Applies a free-form move directly on the FEN — the piece must move the way
+// it moves in chess (patterns, clear paths), but turn order and check rules
+// are ignored, auto-queen promotion — and hands the turn to the other side.
+// Works on positions chess.js cannot even hold (e.g. two same-color kings),
+// which is why it avoids chess.js entirely.
 // Returns { san, fen } (san for display only) or null if impossible.
-const manualMove = (chess, from, to) => {
-	const piece = chess.get(from);
+const expandPlacement = placement =>
+	placement.split("/").map(rank =>
+		[...rank].flatMap(ch => (ch >= "1" && ch <= "8") ? Array(Number(ch)).fill(null) : [ch]));
+
+const compressPlacement = grid =>
+	grid.map(rank => {
+		let out = "", empty = 0;
+		for (const cell of rank) {
+			if (cell === null) { empty += 1; continue; }
+			if (empty) { out += empty; empty = 0; }
+			out += cell;
+		}
+		return empty ? out + empty : out;
+	}).join("/");
+
+const squareIndex = square => ({ rank: 8 - Number(square[1]), file: square.charCodeAt(0) - 97 });
+
+// geometry only: does this piece move that way, with a clear path where the
+// piece can't jump? (turn and check rules deliberately not enforced)
+const isPieceMovePattern = (grid, piece, f, t, captured) => {
+	const dr = t.rank - f.rank, df = t.file - f.file;
+	const adr = Math.abs(dr), adf = Math.abs(df);
+	const clearPath = () => {
+		const sr = Math.sign(dr), sf = Math.sign(df);
+		let rank = f.rank + sr, file = f.file + sf;
+		while (rank !== t.rank || file !== t.file) {
+			if (grid[rank][file]) return false;
+			rank += sr;
+			file += sf;
+		}
+		return true;
+	};
+	switch (piece.toLowerCase()) {
+		case "n": return (adr === 1 && adf === 2) || (adr === 2 && adf === 1);
+		case "k": return adr <= 1 && adf <= 1;
+		case "r": return (dr === 0 || df === 0) && clearPath();
+		case "b": return adr === adf && clearPath();
+		case "q": return (dr === 0 || df === 0 || adr === adf) && clearPath();
+		case "p": {
+			const forward = piece === "P" ? -1 : 1;
+			if (df === 0 && dr === forward && !captured) return true;
+			const startRank = piece === "P" ? 6 : 1;
+			if (df === 0 && dr === 2 * forward && f.rank === startRank && !captured
+				&& !grid[f.rank + forward][f.file]) return true;
+			return adf === 1 && dr === forward && !!captured;
+		}
+	}
+	return false;
+}
+
+const applyFreeMove = (fen, from, to) => {
+	const parts = fen.trim().split(/\s+/);
+	const grid = expandPlacement(parts[0]);
+	const f = squareIndex(from), t = squareIndex(to);
+	const piece = grid[f.rank][f.file];
 	if (!piece || from === to) return null;
-	const captured = chess.get(to);
-	if (captured && captured.color === piece.color) return null;
-	// auto-queen, matching normal recording
-	const promotes = piece.type === "p" && (to[1] === "1" || to[1] === "8");
-	chess.remove(from);
-	if (captured) chess.remove(to);
-	chess.put({ type: promotes ? "q" : piece.type, color: piece.color }, to);
-	const parts = chess.fen().split(/\s+/);
-	parts[1] = piece.color === "w" ? "b" : "w";
+	const captured = grid[t.rank][t.file];
+	const isWhite = piece === piece.toUpperCase();
+	if (captured && (captured === captured.toUpperCase()) === isWhite) return null;
+	if (!isPieceMovePattern(grid, piece, f, t, captured)) return null;
+	const promotes = piece.toLowerCase() === "p" && (to[1] === "1" || to[1] === "8");
+	grid[f.rank][f.file] = null;
+	grid[t.rank][t.file] = promotes ? (isWhite ? "Q" : "q") : piece;
+	parts[0] = compressPlacement(grid);
+	parts[1] = isWhite ? "b" : "w";
 	parts[3] = "-";
-	if (piece.color === "b") parts[5] = String(Number(parts[5]) + 1);
-	const fen = parts.join(" ");
-	chess.load(fen, { skipValidation: true });
-	const pieceLetter = piece.type === "p" ? (captured ? from[0] : "") : piece.type.toUpperCase();
-	return { san: pieceLetter + (captured ? "x" : "") + to + (promotes ? "=Q" : ""), fen };
+	if (!isWhite) parts[5] = String(Number(parts[5]) + 1);
+	const letter = piece.toLowerCase() === "p" ? (captured ? from[0] : "") : piece.toUpperCase();
+	return {
+		san: letter + (captured ? "x" : "") + to + (promotes ? "=Q" : ""),
+		fen: parts.join(" "),
+		color: isWhite ? "w" : "b"
+	};
 }
 
 // Replays board.moves from board.fen. Returns one FEN per position (index 0 =
@@ -60,18 +118,21 @@ const replayMoves = board => {
 	const fens = [board.fen];
 	const moveInfos = [];
 	try {
-		const chess = looseChess(board.fen);
+		let currentFen = board.fen;
 		for (const stored of board.moves) {
 			const coordinate = stored.match(MANUAL_MOVE_PATTERN);
 			if (coordinate) {
-				const color = chess.get(coordinate[1])?.color;
-				const number = chess.moveNumber();
-				const result = manualMove(chess, coordinate[1], coordinate[2]);
+				// coordinate moves replay without chess.js, so they work on
+				// positions it can't represent
+				const number = Number(currentFen.trim().split(/\s+/)[5]);
+				const result = applyFreeMove(currentFen, coordinate[1], coordinate[2]);
 				if (!result) throw new Error(`invalid manual move ${stored}`);
-				moveInfos.push({ san: result.san, color, number });
-				fens.push(result.fen);
+				moveInfos.push({ san: result.san, color: result.color, number });
+				currentFen = result.fen;
+				fens.push(currentFen);
 				continue;
 			}
+			const chess = looseChess(currentFen);
 			const flipped = stored.startsWith(FLIPPED_MOVE_PREFIX);
 			if (flipped) chess.load(flipTurn(chess.fen()), { skipValidation: true });
 			const san = flipped ? stored.slice(FLIPPED_MOVE_PREFIX.length) : stored;
@@ -79,7 +140,8 @@ const replayMoves = board => {
 			const number = chess.moveNumber();
 			chess.move(san);
 			moveInfos.push({ san, color, number });
-			fens.push(chess.fen());
+			currentFen = chess.fen();
+			fens.push(currentFen);
 		}
 	} catch {
 		return { fens: [board.fen], moveInfos: [] };
@@ -124,4 +186,4 @@ const showAnnotations = (chessboard, annotation) => {
 	}
 }
 
-export { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, manualMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations }
+export { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations }

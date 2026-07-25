@@ -31,7 +31,8 @@
 	const cardDnd = draft.dnd;
 
 	// Card is valid if it has atleast 1 non-empty text field or 1 chessboard
-	let cardIsValid = $derived(sideHasContent(draft.front))
+	// on either side — outline decks (question-only or answer-only) are fine
+	let cardIsValid = $derived(sideHasContent(draft.front) || sideHasContent(draft.back))
 	let frontBoardCount = $derived(countBoards(draft.front))
 	let showBoardNumbers = $derived(frontBoardCount + countBoards(draft.back) > 1)
 	let formAttemptedAndInvalid = $state(false);
@@ -149,11 +150,11 @@
 >
 	<p class="side-indicator">Front</p>
 	{#if formAttemptedAndInvalid}
-	<p style="color: red; margin-left: 16px; margin-top: 4px; margin-bottom: 4px;" >Front must have atleast 1 non-empty text field or 1 chessboard</p>
+	<p style="color: red; margin-left: 16px; margin-top: 4px; margin-bottom: 4px;" >The card must have atleast 1 non-empty text field or 1 chessboard</p>
 	{/if}
 	<CardSideEditor bind:this={frontEditor} side={draft.front} boardNumberOffset={0} {showBoardNumbers} dnd={cardDnd} extendEdge="top" />
 	<p class="side-indicator" style="margin-top: 10px;">Back</p>
-	<CardSideEditor bind:this={backEditor} side={draft.back} boardNumberOffset={frontBoardCount} {showBoardNumbers} dnd={cardDnd} extendEdge="bottom" />
+	<CardSideEditor bind:this={backEditor} side={draft.back} boardNumberOffset={frontBoardCount} {showBoardNumbers} dnd={cardDnd} extendEdge="bottom" isBack />
 	{#if invalidFenAttempted && invalidBoardNums.length > 0}
 		<p style="color: red; align-self: end; margin: 4px 16px 0 0;">{invalidFenMessage(invalidBoardNums)}</p>
 	{/if}

@@ -98,12 +98,13 @@
 	});
 
 	const handleKeyDown = e => {
-		console.log(e);
 		if (!isCardTurned) {
 			if (e.key === " ") {
 				e.preventDefault();
 				isCardTurned = true;
 			}
+		} else if (e.key === "h" || e.key === "H") {
+			isCardTurned = false;
 		} else if (isTactic) {
 			switch (e.key) {
 				case "1": evaluateTactic(false); break;
@@ -130,7 +131,7 @@
 </script>
 <svelte:window onkeydown={handleKeyDown} />
 
-{#snippet side(side, boardNumberOffset)}
+{#snippet side(side, boardNumberOffset, revealed)}
 	{#each side as block, blockIndex}
 		{#if block.type === "text"}
 			<div class="text-block">
@@ -150,7 +151,7 @@
 								{boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1}
 							</p>
 						{/if}
-						<Chessboard board={chessboard} minWidth={block.content.length < 2 ? "450px" : "409px"} />
+						<Chessboard board={chessboard} {revealed} minWidth="409px" />
 					</div>
 				{/each}
 			</div>
@@ -160,10 +161,21 @@
 
 {#if currentCard}
 	<div class="flashcard card-surface">
-		{@render side(currentCard.front, 0)}
+		<!-- turning reveals front boards' back layers (moves/annotations) in
+		     place, on top of showing the back side below the divider -->
+		{@render side(currentCard.front, 0, isCardTurned)}
 		<hr class="divider">
 		{#if isCardTurned}
-			{@render side(currentCard.back, frontBoardCount)}
+			{@render side(currentCard.back, frontBoardCount, true)}
+		{/if}
+		{#if isCardTurned}
+			<button
+				class="std-btn hide-answer-btn"
+				onclick={() => isCardTurned = false}
+				title="Shortcut key: H"
+			>
+				Hide answer
+			</button>
 		{/if}
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
@@ -199,7 +211,7 @@
 							</button>
 						</div>
 						<div class="eval-btn">
-							<p>done</p>
+							<p>Never</p>
 							<button
 								onclick={() => evaluateTactic(true)}
 								class="std-btn"
@@ -228,11 +240,13 @@
 
 
 <style>
+	/* fits two lines of text plus one board row with a little slack; the
+	   taller bottom padding keeps content clear of the button row */
 	.flashcard {
 		align-items: center;
 		margin-top: 34px;
-		min-height: 750px;
-		padding: 36px 30px 75px 30px;
+		min-height: 700px;
+		padding: 36px 30px 90px 30px;
 		position: relative;
 	}
 	.text-block {
@@ -244,12 +258,13 @@
 		border-top: 2px solid #e5e5e5;
 		margin: 24px 0;
 	}
+	/* boards breathe: extra space between board blocks and neighboring text */
 	.single-board-block {
 		display: flex;
 		position: relative;
 		flex-direction: column;
 		align-items: center;
-		padding-top: 10px;
+		margin: 26px 0;
 	}
 	/* a lone board keeps the same size as a 2-column grid cell, centered */
 	.single-board-block > .board-container {
@@ -263,7 +278,14 @@
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		gap: 20px;
 		position: relative;
-		padding-top: 10px;
+		margin: 26px 0;
+	}
+	/* quiet exit bottom-left, away from the rating row */
+	.hide-answer-btn {
+		position: absolute;
+		bottom: 10px;
+		left: 30px;
+		padding: 4px 8px;
 	}
 	.flashcard-btn-row {
 		display: flex;

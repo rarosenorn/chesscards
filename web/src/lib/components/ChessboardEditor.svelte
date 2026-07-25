@@ -14,7 +14,7 @@
 	import { RightClickAnnotator } from "cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js"
 	import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
 	import { isValidFen } from "$lib/isValidFen.js"
-	import { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations } from "$lib/board-utils.js"
+	import { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations } from "$lib/board-utils.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
 	// inlined so the palette's <use href="#wk"> works in Firefox, which doesn't
 	// render <use> that references an external SVG file
@@ -29,7 +29,10 @@
 	// restore: working state captured by persistState when a still-open editor
 	// unmounted; takes precedence over the board's data so the editor resumes
 	// exactly where it was (invalid FEN mid-typing included)
-	let { board: boardData, restore, persistState, onFenValidityChange, onSave, onCancel } = $props();
+	// boardOnBack: the board lives on the card's back — the whole board only
+	// shows once the card is turned, so a separate back layer makes no sense;
+	// the toggle disappears and everything records as the visible layer
+	let { board: boardData, restore, persistState, onFenValidityChange, onSave, onCancel, boardOnBack = false } = $props();
 
 	const emptyPlacement = "8/8/8/8/8/8/8/8"
 	const startPlacement = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
@@ -45,10 +48,38 @@
 	let moves = $state(resume ? [...resume.moves] : [...initial.moves]);
 	let annotations = $state(resume ? { ...resume.annotations } : { ...initial.annotations });
 	let orientation = $state(resume?.orientation ?? initial.orientation ?? "w");
+	// solution layer: moves[solutionFrom..] and solutionAnnotations are the
+	// answer, hidden in study until the card is turned
+	let solutionFrom = $state(resume ? resume.solutionFrom : (initial.solutionFrom ?? null));
+	let solutionAnnotations = $state(resume
+		? { ...resume.solutionAnnotations }
+		: { ...(initial.solutionAnnotations ?? {}) });
+	// the recording toggle: while on, recorded moves and drawn annotations go
+	// to the back layer; opens on for boards that already have one
+	let recordingAnswer = $state(resume
+		? resume.recordingAnswer
+		: initial.solutionFrom != null || Object.keys(initial.solutionAnnotations ?? {}).length > 0);
+	// the view: front = only what the student sees before turning (back moves
+	// hidden, front annotations), back = the turned card (full line, back
+	// annotations displacing front's). Independent of the recording toggle,
+	// except that recording for the back forces the back visible — you can
+	// never record into a layer you cannot see.
+	let showBack = $state(resume
+		? resume.showBack
+		: initial.solutionFrom != null || Object.keys(initial.solutionAnnotations ?? {}).length > 0);
 
 	let fenIsValid = $derived(isValidFen(currentFen));
-	// any valid FEN can record moves — free-form setups (missing kings etc.)
-	// included, via loose chess.js loading
+	// any valid FEN can record moves — free-form setups (two kings, missing
+	// kings, extra pieces) included. Where chess.js can hold the position it
+	// provides legal moves and SAN; everywhere else moves apply as free-form
+	// coordinates (applyFreeMove), which need no chess.js at all.
+	const chessJsRepresentable = fen => {
+		try {
+			return looseChess(fen).fen().split(" ")[0] === fen.trim().split(/\s+/)[0];
+		} catch {
+			return false;
+		}
+	}
 	let canRecordMoves = $derived(fenIsValid);
 
 	// report FEN validity live (and revert to valid on unmount) so callers can
@@ -77,12 +108,14 @@
 	let acceptedFen = resume?.acceptedFen ?? initial.fen.trim();
 
 	// Drops the recorded moves (they no longer apply once the start position
-	// changes), keeping only the set position and its annotations.
+	// changes), keeping only the set position and its annotations (both layers).
 	const clearMoves = () => {
 		if (moves.length === 0) return;
 		moves = [];
 		// annotations on later positions are meaningless without the moves
 		annotations = annotations[0] ? { 0: annotations[0] } : {};
+		solutionAnnotations = solutionAnnotations[0] ? { 0: solutionAnnotations[0] } : {};
+		solutionFrom = null;
 		currentIndex = 0;
 	}
 
@@ -134,6 +167,17 @@
 		moves = [...moves.slice(0, currentIndex), san];
 		for (const key of Object.keys(annotations)) {
 			if (Number(key) > currentIndex) delete annotations[key];
+		}
+		for (const key of Object.keys(solutionAnnotations)) {
+			if (Number(key) > currentIndex) delete solutionAnnotations[key];
+		}
+		if (recordingAnswerEffective) {
+			// the answer starts at the first answer move
+			if (solutionFrom == null || solutionFrom > currentIndex) solutionFrom = currentIndex;
+		} else {
+			// a question move replaces the answer moves that followed it — a
+			// changed question invalidates the recorded solution
+			solutionFrom = null;
 		}
 		currentIndex += 1;
 		// render from chess.js so promotion/castling/en passant show correctly
@@ -191,23 +235,33 @@
 				pendingSan = null;
 				pendingFen = null;
 				pendingPromotion = null;
-				try {
-					const chess = looseChess(positions[currentIndex]);
-					const piece = chess.get(event.squareFrom);
-					const flipped = !!piece && piece.color !== chess.turn();
-					if (flipped) chess.load(flipTurn(chess.fen()), { skipValidation: true });
-					const move = chess.move({ from: event.squareFrom, to: event.squareTo, promotion: "q" });
-					if (move.promotion) {
-						pendingPromotion = { from: event.squareFrom, to: event.squareTo, flipped, color: move.color };
-					} else {
-						pendingSan = flipped ? FLIPPED_MOVE_PREFIX + move.san : move.san;
-						pendingFen = chess.fen();
+				const currentPosition = positions[currentIndex];
+				if (chessJsRepresentable(currentPosition)) {
+					try {
+						const chess = looseChess(currentPosition);
+						const piece = chess.get(event.squareFrom);
+						const flipped = !!piece && piece.color !== chess.turn();
+						if (flipped) chess.load(flipTurn(chess.fen()), { skipValidation: true });
+						const move = chess.move({ from: event.squareFrom, to: event.squareTo, promotion: "q" });
+						if (move.promotion) {
+							pendingPromotion = { from: event.squareFrom, to: event.squareTo, flipped, color: move.color };
+						} else {
+							pendingSan = flipped ? FLIPPED_MOVE_PREFIX + move.san : move.san;
+							pendingFen = chess.fen();
+						}
+						return true;
+					} catch {
+						// falls through to the free-form path below
 					}
-					return true;
-				} catch {
-					// anything chess.js won't play as a legal move is rejected
-					return false;
 				}
+				// positions chess.js can't hold (two same-color kings) and
+				// moves it refuses (into check, ...) apply as free-form
+				// coordinate moves, stored as "e2-e4"
+				const result = applyFreeMove(currentPosition, event.squareFrom, event.squareTo);
+				if (!result) return false;
+				pendingSan = `${event.squareFrom}-${event.squareTo}`;
+				pendingFen = result.fen;
+				return true;
 			}
 			case INPUT_EVENT_TYPE.moveInputFinished:
 				if (event.legalMove && pendingPromotion) {
@@ -220,7 +274,7 @@
 							commitMove(flipped ? FLIPPED_MOVE_PREFIX + move.san : move.san, chess.fen());
 						} else {
 							// canceled: take the visually placed pawn back
-							board.setPosition(positions[Math.min(currentIndex, moves.length)], false);
+							board.setPosition(positions[Math.min(currentIndex, viewLimit)], false);
 						}
 					});
 				} else if (event.legalMove && pendingSan) {
@@ -262,14 +316,56 @@
 		mode = newMode;
 		syncAnimationSpeed();
 		if (mode === "moves") {
-			currentIndex = Math.min(currentIndex, moves.length);
+			currentIndex = Math.min(currentIndex, viewLimit);
 		} else {
 			board.setPosition(currentFen.trim().split(/\s+/)[0], false);
 		}
 	}
 
+	// the last position reachable in the current view: the front view stops
+	// at the back layer's boundary, the back view spans the whole line
+	let viewLimit = $derived(
+		showBack || solutionFrom == null ? moves.length : Math.min(solutionFrom, moves.length)
+	);
+
 	// index of the position annotations are attached to right now
-	let annotationIndex = $derived(mode === "setup" ? 0 : Math.min(currentIndex, moves.length));
+	let annotationIndex = $derived(mode === "setup" ? 0 : Math.min(currentIndex, viewLimit));
+
+	// Beyond the back's start every position is back territory: anything
+	// recorded there continues the back line, so the toggle locks on there
+	// instead of silently converting the hidden line into visible front moves.
+	let answerLocked = $derived(
+		solutionFrom != null && mode === "moves" && Math.min(currentIndex, viewLimit) > solutionFrom
+	);
+	let recordingAnswerEffective = $derived(!boardOnBack && (recordingAnswer || answerLocked));
+
+	// recording for the back forces the back visible
+	const setRecording = back => {
+		recordingAnswer = back;
+		if (back) showBack = true;
+	}
+
+	// hiding the back also stops recording into it, and pulls the shown
+	// position back inside the front view
+	const setShowBack = on => {
+		showBack = on;
+		if (!on) {
+			recordingAnswer = false;
+			if (solutionFrom != null) currentIndex = Math.min(currentIndex, solutionFrom);
+		}
+	}
+
+	// for the card editor's T shortcut
+	export const toggleAnswer = () => {
+		if (!boardOnBack && !answerLocked) setRecording(!recordingAnswer);
+	}
+	// the layer recorded stuff goes to; the board shows this layer while
+	// recording the front (so a capture can never copy back arrows into the
+	// front), and the merged turned-card view while recording the back
+	let activeAnnotations = $derived(recordingAnswerEffective ? solutionAnnotations : annotations);
+	let displayedAnnotation = $derived(recordingAnswerEffective
+		? solutionAnnotations[annotationIndex] ?? annotations[annotationIndex]
+		: annotations[annotationIndex]);
 
 	// Move-list rows, numbered sequentially (the FEN fullmove counter doesn't
 	// advance for flipped/manual moves): a black move joins the preceding row
@@ -279,7 +375,7 @@
 	// index so clicking can select the resulting position.
 	let moveRows = $derived.by(() => {
 		const rows = [];
-		replay.moveInfos.forEach(({ san, color }, index) => {
+		replay.moveInfos.slice(0, viewLimit).forEach(({ san, color }, index) => {
 			const move = { san, index };
 			const last = rows[rows.length - 1];
 			if (color === "b" && last?.white && !last.black) {
@@ -305,19 +401,20 @@
 			markers: board.getMarkers()
 		});
 		if (hasAnnotations(annotation)) {
-			annotations[annotationIndex] = annotation;
+			activeAnnotations[annotationIndex] = annotation;
 		} else {
-			delete annotations[annotationIndex];
+			delete activeAnnotations[annotationIndex];
 		}
 	})
 
 	// keep the board and drawn annotations in sync with the viewed position
+	// (and the view: front/back switches which layer is shown)
 	$effect(() => {
 		if (!board) return;
 		if (mode === "moves") {
-			board.setPosition(positions[Math.min(currentIndex, moves.length)], true);
+			board.setPosition(positions[Math.min(currentIndex, viewLimit)], true);
 		}
-		showAnnotations(board, annotations[annotationIndex]);
+		showAnnotations(board, displayedAnnotation);
 	})
 
 	// Pressing the board must move pieces, never start an item drag: the
@@ -386,14 +483,15 @@
 		boardElement.addEventListener("mousemove", handleBoardHoverCursor);
 		boardElement.addEventListener("mouseleave", clearHoverCursor);
 		// the FEN row matches the board's whole-pixel rendered width (border
-		// included) instead of overhanging it; see Chessboard.svelte
-		const boardBox = boardElement.firstElementChild;
+		// included) instead of overhanging it; offsetWidth + outer observation
+		// for the same transform/replacement reasons as Chessboard.svelte
 		const syncWidth = () => boardElement.closest(".board-column").style.setProperty(
-			"--board-px", boardBox.getBoundingClientRect().width + "px"
+			"--board-px", boardElement.firstElementChild.offsetWidth + "px"
 		);
 		syncWidth();
 		const resizeObserver = new ResizeObserver(syncWidth);
-		resizeObserver.observe(boardBox);
+		resizeObserver.observe(boardElement.firstElementChild);
+		resizeObserver.observe(boardElement);
 		return () => {
 			resizeObserver.disconnect();
 			boardElement.removeEventListener("mousedown", stopDndPress);
@@ -409,6 +507,10 @@
 				currentFen,
 				moves: $state.snapshot(moves),
 				annotations: $state.snapshot(annotations),
+				solutionFrom,
+				solutionAnnotations: $state.snapshot(solutionAnnotations),
+				recordingAnswer,
+				showBack,
 				orientation,
 				mode,
 				currentIndex,
@@ -425,6 +527,8 @@
 		fenInput: isValidFen(currentFen) ? undefined : currentFen,
 		moves: $state.snapshot(moves),
 		annotations: $state.snapshot(annotations),
+		solutionFrom,
+		solutionAnnotations: $state.snapshot(solutionAnnotations),
 		orientation
 	});
 
@@ -433,7 +537,7 @@
 	// stepping forward sounds the move being made, stepping back the move
 	// being unmade (both are the move crossed between the two positions)
 	const goToIndex = index => {
-		const from = Math.min(currentIndex, moves.length);
+		const from = Math.min(currentIndex, viewLimit);
 		if (index !== from) {
 			const crossed = index > from ? index - 1 : from - 1;
 			playMoveSound(replay.moveInfos[crossed]?.san);
@@ -445,10 +549,10 @@
 		if (mode !== "moves" || e.target.tagName === "INPUT") return;
 		if (e.key === "ArrowLeft") {
 			e.preventDefault();
-			goToIndex(Math.max(Math.min(currentIndex, moves.length) - 1, 0));
+			goToIndex(Math.max(Math.min(currentIndex, viewLimit) - 1, 0));
 		} else if (e.key === "ArrowRight") {
 			e.preventDefault();
-			goToIndex(Math.min(currentIndex + 1, moves.length));
+			goToIndex(Math.min(currentIndex + 1, viewLimit));
 		}
 	}
 </script>
@@ -461,6 +565,8 @@
 <div class="editor">
 	<div class="board-column">
 		<div class="ghost-host">
+			<!-- focusable (tabindex -1) so a freshly opened editor can receive
+			     focus on the board itself without scrolling to the FEN input -->
 			<div
 				class="board"
 				class:black-border={hasBlackBorder(boardPrefs())}
@@ -468,6 +574,7 @@
 				class:pointer-squares={clickMoving}
 				class:grab-squares={hoverPiece && selectedTool === null && !clickMoving}
 				class:grabbing-squares={draggingPiece}
+				tabindex="-1"
 				bind:this={boardElement}
 			></div>
 			{#if ghostPos && selectedTool}
@@ -494,10 +601,54 @@
 				disabled={mode === "moves"}
 				title={mode === "moves" ? "Switch to Position to edit the start FEN" : ""}
 			/>
+			{#if !boardOnBack}
+				<button
+					class="std-btn show-back-btn"
+					aria-pressed={showBack}
+					title={showBack
+						? "Showing the turned card (front + back). Click for the student's pre-turn view."
+						: "Showing the front as the student sees it. Click to also show the back's moves and annotations."}
+					onclick={() => setShowBack(!showBack)}
+				>
+					{showBack ? "Hide back" : "Show back"}
+				</button>
+			{/if}
 			<button class="std-btn flip-btn" onclick={flipBoard} title="Flip board"><FlipIcon /></button>
 		</div>
 	</div>
 	<div class="side-panel">
+		<!-- Above the stages: which side recorded moves and drawn annotations
+		     belong to; it governs both editor stages. A board on the card's
+		     back is hidden as a whole, so it has no separate back layer and
+		     the control disappears. -->
+		{#if !boardOnBack}
+		<div class="layer-row">
+			<span class="layer-label" id="layer-label">Moves and annotations for</span>
+			<div class="layer-segments" role="radiogroup" aria-labelledby="layer-label">
+				<button
+					role="radio"
+					aria-checked={!recordingAnswerEffective}
+					class:selected={!recordingAnswerEffective}
+					disabled={answerLocked}
+					title={answerLocked
+						? "Everything after the back's first move belongs to the back; go back before it to edit the front"
+						: "Front: visible from the start (shortcut: T toggles)"}
+					onclick={() => setRecording(false)}
+				>
+					Front
+				</button>
+				<button
+					role="radio"
+					aria-checked={recordingAnswerEffective}
+					class:selected={recordingAnswerEffective}
+					title="Back: only shows once the card is turned (shortcut: T toggles)"
+					onclick={() => setRecording(true)}
+				>
+					Back
+				</button>
+			</div>
+		</div>
+		{/if}
 		<!-- the two stages as peer modes: set up a position, record moves on it -->
 		<div class="stage-segments" role="tablist" aria-label="Editor stage">
 			<button
@@ -568,7 +719,7 @@
 						{#if row.white}
 							<button
 								class="move-btn"
-								class:current={Math.min(currentIndex, moves.length) === row.white.index + 1}
+								class:current={Math.min(currentIndex, viewLimit) === row.white.index + 1}
 								onclick={() => goToIndex(row.white.index + 1)}
 							>
 								{row.white.san}
@@ -579,7 +730,7 @@
 						{#if row.black}
 							<button
 								class="move-btn"
-								class:current={Math.min(currentIndex, moves.length) === row.black.index + 1}
+								class:current={Math.min(currentIndex, viewLimit) === row.black.index + 1}
 								onclick={() => goToIndex(row.black.index + 1)}
 							>
 								{row.black.san}
@@ -618,6 +769,10 @@
 	}
 	.board {
 		border-radius: 2px 2px 0 0;
+	}
+	/* programmatic focus target only (tabindex -1); no visible ring */
+	.board:focus {
+		outline: none;
 	}
 	/* the picked-up piece's square: yellow fill, not the default faint black */
 	/* fully opaque: a translucent fill blends differently with light and
@@ -720,13 +875,26 @@
 		padding: 3px 6px;
 	}
 	/* joins the FEN bar seamlessly: shared border via the -1px overlap */
-	.flip-btn {
+	.flip-btn,
+	.show-back-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		border-radius: 0;
-		padding: 3px 30px;
 		margin-left: -1px;
+	}
+	.flip-btn {
+		padding: 3px 30px;
+	}
+	/* fixed width so Show back / Hide back toggle without shifting the bar */
+	.show-back-btn {
+		width: 96px;
+		padding: 3px 0;
+		font-size: 0.85rem;
+		white-space: nowrap;
+	}
+	.show-back-btn[aria-pressed="true"] {
+		background-color: #e6e6e6;
 	}
 	.fen-input:disabled {
 		color: rgba(0, 0, 0, 0.4);
@@ -779,6 +947,53 @@
 	}
 	.stage-segments button:disabled .step-number {
 		color: rgba(0, 0, 0, 0.3);
+	}
+	/* which side receives recordings: label and Front|Back segments on one
+	   line, together spanning the same width as the stage tabs below */
+	/* sits a touch closer to the tabs than the panel's default gap */
+	.layer-row {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin-bottom: -4px;
+	}
+	/* bare text next to a boxed control reads left-shifted; the small indent
+	   optically aligns the label with the tabs' left edge */
+	.layer-label {
+		padding-left: 2px;
+		font-size: 0.85rem;
+		color: rgba(0, 0, 0, 0.6);
+		white-space: nowrap;
+	}
+	.layer-segments {
+		flex: 1 1 0;
+		display: flex;
+		gap: 2px;
+		background-color: #e6e6e6;
+		border-radius: 999px;
+		padding: 2px;
+	}
+	.layer-segments button {
+		flex: 1 1 0;
+		padding: 2px 0;
+		border: none;
+		border-radius: 999px;
+		background-color: transparent;
+		color: rgba(0, 0, 0, 0.55);
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.layer-segments button:hover:enabled:not(.selected) {
+		color: black;
+	}
+	.layer-segments button.selected {
+		background-color: white;
+		box-shadow: rgba(0, 0, 0, 0.18) 0 1px 2px;
+		color: black;
+	}
+	.layer-segments button:disabled {
+		color: rgba(0, 0, 0, 0.3);
+		cursor: default;
 	}
 	/* pinned to the board column's height, so a long move list scrolls inside
 	   the panel (.move-list) instead of growing the editor */

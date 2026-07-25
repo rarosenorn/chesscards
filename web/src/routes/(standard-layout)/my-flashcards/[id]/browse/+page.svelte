@@ -66,7 +66,7 @@
 
 	let noContentAttempted = $state(false);
 	$effect(() => {
-		if (draft.editingCardId && sideHasContent(draft.editFront)) noContentAttempted = false;
+		if (draft.editingCardId && (sideHasContent(draft.editFront) || sideHasContent(draft.editBack))) noContentAttempted = false;
 	})
 
 	const toEditableSide = side =>
@@ -108,7 +108,7 @@
 			invalidFenAttempted = true;
 			return;
 		}
-		if (!sideHasContent(draft.editFront)) {
+		if (!sideHasContent(draft.editFront) && !sideHasContent(draft.editBack)) {
 			noContentAttempted = true;
 			return;
 		}
@@ -360,11 +360,11 @@
 						<p class="edit-error">{invalidFenMessage(invalidBoardNums)}</p>
 					{/if}
 					{#if noContentAttempted}
-						<p class="edit-error">Front must have atleast 1 non-empty text field or 1 chessboard</p>
+						<p class="edit-error">The card must have atleast 1 non-empty text field or 1 chessboard</p>
 					{/if}
 					<CardSideEditor bind:this={editFrontEditor} side={draft.editFront} boardNumberOffset={0} showBoardNumbers={editShowBoardNumbers} dnd={cardDnd} extendEdge="top" />
 					<p class="side-indicator" style="margin-top: 10px;">Back</p>
-					<CardSideEditor bind:this={editBackEditor} side={draft.editBack} boardNumberOffset={editFrontBoardCount} showBoardNumbers={editShowBoardNumbers} dnd={cardDnd} extendEdge="bottom" />
+					<CardSideEditor bind:this={editBackEditor} side={draft.editBack} boardNumberOffset={editFrontBoardCount} showBoardNumbers={editShowBoardNumbers} dnd={cardDnd} extendEdge="bottom" isBack />
 				</div>
 			{:else}
 				<FlashcardBrowse card={selectedCard} />

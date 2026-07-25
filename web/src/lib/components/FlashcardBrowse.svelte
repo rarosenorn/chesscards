@@ -10,7 +10,7 @@
 	let showBoardNumbers = $derived(frontBoardCount + countBoards(card.back) > 1);
 </script>
 
-{#snippet side(side, boardNumberOffset)}
+{#snippet side(side, boardNumberOffset, authorView)}
 	{#each side as block, blockIndex}
 		{#if block.type === "text"}
 			<div class="text-block">
@@ -30,7 +30,7 @@
 								{boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1}
 							</p>
 						{/if}
-						<Chessboard board={chessboard} minWidth={block.content.length < 2 ? "450px" : "409px"} />
+						<Chessboard board={chessboard} {authorView} minWidth="409px" />
 					</div>
 				{/each}
 			</div>
@@ -39,9 +39,11 @@
 {/snippet}
 
 <div class="flashcard card-surface">
-	{@render side(card.front, 0)}
+	<!-- authorView on the front: its boards' back-layer moves get their
+	     "revealed when turned" tooltip -->
+	{@render side(card.front, 0, true)}
 	<hr class="divider">
-	{@render side(card.back, frontBoardCount)}
+	{@render side(card.back, frontBoardCount, false)}
 </div>
 
 <style>
@@ -61,12 +63,13 @@
 		border-top: 2px solid #e5e5e5;
 		margin: 24px 0;
 	}
+	/* boards breathe: extra space between board blocks and neighboring text */
 	.single-board-block {
 		display: flex;
 		position: relative;
 		flex-direction: column;
 		align-items: center;
-		padding-top: 10px;
+		margin: 26px 0;
 	}
 	/* a lone board keeps the same size as a 2-column grid cell, centered */
 	.single-board-block > .board-container {
@@ -80,7 +83,7 @@
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		gap: 20px;
 		position: relative;
-		padding-top: 10px;
+		margin: 26px 0;
 	}
 	.board-container {
 		position: relative;

@@ -2,25 +2,55 @@ import { ttGenerateText } from "./tiptap-utility.js"
 import { isValidFen } from "./isValidFen.js"
 
 // A board is { fen, moves: [san...], annotations: { [positionIndex]: { arrows, markers } },
-// orientation: "w" | "b" }. Boards saved before moves/annotations/orientation
-// existed are bare FEN strings or lack the newer fields.
+// solutionFrom, solutionAnnotations, orientation: "w" | "b" }.
+// The solution layer belongs to the back: moves[solutionFrom..] are hidden in
+// study until the card is turned (null = no hidden moves), and on turning
+// solutionAnnotations displaces annotations per position. Boards saved before
+// these fields existed are bare FEN strings or lack the newer fields.
 // In the editor a board also carries a client-only id (for keying, editing
 // state and drag and drop); getSideJson strips it before saving.
-const newBoard = fen => ({ id: crypto.randomUUID(), fen, moves: [], annotations: {}, orientation: "w" });
+const newBoard = fen => ({
+	id: crypto.randomUUID(),
+	fen,
+	moves: [],
+	annotations: {},
+	solutionFrom: null,
+	solutionAnnotations: {},
+	orientation: "w"
+});
 
 const normalizeBoard = board =>
 	typeof board === "string"
 		? newBoard(board)
-		: { id: board.id ?? crypto.randomUUID(), fen: board.fen, moves: board.moves ?? [], annotations: board.annotations ?? {}, orientation: board.orientation ?? "w" };
+		: {
+			id: board.id ?? crypto.randomUUID(),
+			fen: board.fen,
+			moves: board.moves ?? [],
+			annotations: board.annotations ?? {},
+			solutionFrom: board.solutionFrom ?? null,
+			solutionAnnotations: board.solutionAnnotations ?? {},
+			orientation: board.orientation ?? "w"
+		};
+
+// whether the board carries any back-layer content (hidden moves or
+// annotations revealed on turning)
+const boardHasBack = board =>
+	board.solutionFrom != null || Object.keys(board.solutionAnnotations ?? {}).length > 0;
+
+// empty solution layers are omitted from the stored JSON
+const boardForJson = ({ fen, moves, annotations, solutionFrom, solutionAnnotations, orientation }) => ({
+	fen, moves, annotations, orientation,
+	...(solutionFrom != null && { solutionFrom }),
+	...(Object.keys(solutionAnnotations ?? {}).length > 0 && { solutionAnnotations })
+});
 
 const getSideJson = side => {
 	const sideForJson = side.map(block => ({
 		type: block.type,
 		content:
 			block.type === "text" ? block.textEditor.getJson() :
-			block.type === "chessboards"
-				? block.content.map(({ fen, moves, annotations, orientation }) => ({ fen, moves, annotations, orientation }))
-				: null
+			block.type === "chessboards" ? block.content.map(boardForJson) :
+			null
 	}));
 	return JSON.stringify(sideForJson);
 }
@@ -80,4 +110,4 @@ const countBoards = side => side.reduce(
 
 const boardsBefore = (side, blockIndex) => countBoards(side.slice(0, blockIndex));
 
-export { newBoard, normalizeBoard, getSideJson, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }
+export { newBoard, normalizeBoard, boardHasBack, getSideJson, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }

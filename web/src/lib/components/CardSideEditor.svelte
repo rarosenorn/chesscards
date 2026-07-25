@@ -6,15 +6,21 @@
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import ChessboardEditor from "$lib/components/ChessboardEditor.svelte"
 	import CrossIcon from "$lib/icons/Cross.svelte"
-	import { boardsBefore, newBoard, syncTextBlocks } from "$lib/card-utils.js"
+	import { boardsBefore, newBoard, boardHasBack, syncTextBlocks } from "$lib/card-utils.js"
 	import { isValidFen } from "$lib/isValidFen.js"
 
 	// dnd: shared state object (createCardDnd) the page passes to both side
-	// editors, so blocks/boards drag between front and back
-	let { side, boardNumberOffset = 0, showBoardNumbers = false, dnd: cardDnd, extendEdge = null } = $props();
+	// editors, so blocks/boards drag between front and back.
+	// isBack: back-side boards are only visible once the card is turned, so
+	// their editors hide the back-layer toggle (nothing left to hide).
+	let { side, boardNumberOffset = 0, showBoardNumbers = false, dnd: cardDnd, extendEdge = null, isBack = false } = $props();
 
 	// board id -> mounted ChessboardEditor instance, for applyOpenEditors
 	const boardEditors = {};
+
+	// board id -> whether its collapsed view shows the turned card (back
+	// moves/annotations included); off = the student's pre-turn view
+	const showBackBoards = $state({});
 
 	// Applies every open board editor on this side, as if Ok was pressed —
 	// without closing them, so a submit causes no editor->board flash; the
@@ -83,19 +89,46 @@
 		document.querySelector(`[data-board-id="${boardId}"] .edit-btn`)?.focus();
 	}
 
-	const addTextBlock =
-		() => side.push({ id: crypto.randomUUID(), type: "text", textEditor: null });
+	const addTextBlock = async () => {
+		side.push({ id: crypto.randomUUID(), type: "text", textEditor: null });
+		// through the $state proxy, not the pushed literal: bind:this lands on
+		// the proxied block
+		const block = side[side.length - 1];
+		await tick();
+		block.textEditor?.focus();
+	}
+
+	// a freshly created board opens its editor with the board itself focused
+	// (not the FEN input — focusing it scrolls the page too far down)
+	const focusNewBoardEditor = async boardId => {
+		await tick();
+		document.querySelector(`[data-board-id="${boardId}"] .board`)?.focus();
+	}
 
 	const addChessboardBlock = () => {
 		const board = newBoard(startFen);
 		side.push({ id: crypto.randomUUID(), type: "chessboards", content: [board] });
 		openEditor(board.id);
+		focusNewBoardEditor(board.id);
 	}
 
 	const addChessboard = blockIndex => {
 		const board = newBoard(startFen);
 		side[blockIndex].content.push(board);
 		openEditor(board.id);
+		focusNewBoardEditor(board.id);
+	}
+
+	// t toggles an open board editor's front/back recording layer when focus
+	// is inside it (never while typing)
+	const handleLayerShortcut = e => {
+		if ((e.key !== "t" && e.key !== "T") || e.ctrlKey || e.metaKey || e.altKey) return;
+		if (e.target.closest?.("input, textarea, [contenteditable='true']")) return;
+		const boardEl = e.target.closest?.("[data-board-id]");
+		if (boardEl && isEditing(boardEl.dataset.boardId)) {
+			boardEditors[boardEl.dataset.boardId]?.toggleAnswer();
+			e.preventDefault();
+		}
 	}
 
 	const deleteBlock = blockIndex => {
@@ -282,6 +315,10 @@
 			suppressGrowAroundDragStart();
 			e.target.style.minWidth = "";
 		}
+		// a zone this drag would leave EMPTY keeps its space until the drop
+		// (the min-height hold in the template owns it) so the board can be
+		// dragged back; otherwise spaces close smoothly like block drags
+		const leftEmpty = !e.detail.items.some(item => !isShadow(item));
 		if (trigger === TRIGGERS.DRAGGED_LEFT) {
 			// leaving the origin keeps the shadow in its items (its space stays
 			// until the drag enters another zone) — just undo the library's size
@@ -289,9 +326,9 @@
 			// back without dropping) removes the shadow, so that zone's space
 			// must be held and released like on the entered-another path.
 			if (e.detail.items.some(isShadow)) unlockShrinking(e.target);
-			else releaseHeightSmoothly(e.target);
+			else if (!leftEmpty) releaseHeightSmoothly(e.target);
 		}
-		if (trigger === TRIGGERS.DRAGGED_ENTERED_ANOTHER) releaseHeightSmoothly(e.target);
+		if (trigger === TRIGGERS.DRAGGED_ENTERED_ANOTHER && !leftEmpty) releaseHeightSmoothly(e.target);
 		if (trigger === TRIGGERS.DRAG_STOPPED) {
 			setGrabbing(false);
 			settleFlip();
@@ -306,6 +343,8 @@
 		cleanupEmptyBlocks();
 	}
 </script>
+
+<svelte:window onkeydown={handleLayerShortcut} />
 
 <div
 	class="blocks-zone"
@@ -404,6 +443,7 @@
 									<ChessboardEditor
 										bind:this={boardEditors[board.id]}
 										{board}
+										boardOnBack={isBack}
 										restore={cardDnd.editorStates[board.id]}
 										onFenValidityChange={valid => {
 											if (valid) delete cardDnd.invalidBoards[board.id];
@@ -431,7 +471,12 @@
 									>
 										<CrossIcon />
 									</button>
-									<Chessboard {board} flushBottom>
+									<Chessboard
+										{board}
+										flushBottom
+										authorView={!isBack}
+										revealed={isBack ? true : !!showBackBoards[board.id]}
+									>
 										<div class="button-row">
 											<input
 												style="flex-grow: 1;"
@@ -443,6 +488,21 @@
 												disabled={board.moves.length > 0}
 												title={board.moves.length > 0 ? "Open the editor to change a board with moves" : ""}
 											/>
+											{#if !isBack}
+												<button
+													class="show-back-btn"
+													disabled={!boardHasBack(board)}
+													aria-pressed={!!showBackBoards[board.id]}
+													title={!boardHasBack(board)
+														? "This board has no back moves or annotations"
+														: showBackBoards[board.id]
+															? "Showing the turned card. Click for the student's pre-turn view."
+															: "Showing the front as the student sees it. Click to also show the back."}
+													onclick={() => showBackBoards[board.id] = !showBackBoards[board.id]}
+												>
+													{showBackBoards[board.id] ? "Hide back" : "Show back"}
+												</button>
+											{/if}
 											<button
 												style="padding: 3px 16px;"
 												onclick={() => duplicateChessboard(blockIndex, boardIndex)}
@@ -643,6 +703,22 @@
 	.board-container .button-row > input.invalid-fen {
 		border: 1px solid #c00;
 		outline-color: #c00;
+	}
+	/* fixed width so Show back / Hide back toggle without shifting the row */
+	.button-row .show-back-btn {
+		width: 96px;
+		padding: 3px 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		white-space: nowrap;
+	}
+	.button-row .show-back-btn:disabled {
+		color: rgba(0, 0, 0, 0.35);
+		cursor: default;
+	}
+	.button-row .show-back-btn[aria-pressed="true"]:enabled {
+		background-color: #e6e6e6;
 	}
 	.board-container:hover .delete-entity-btn {
 		opacity: 1;

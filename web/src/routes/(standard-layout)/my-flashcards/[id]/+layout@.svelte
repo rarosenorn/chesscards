@@ -20,6 +20,7 @@
 
 	const draftSides = () => [
 		...(cardDrafts.addCards ? [cardDrafts.addCards.front, cardDrafts.addCards.back] : []),
+		...(cardDrafts.addCards2 ? [cardDrafts.addCards2.blocks] : []),
 		...(cardDrafts.browse?.editingCardId ? [cardDrafts.browse.editFront, cardDrafts.browse.editBack] : [])
 	];
 
@@ -28,6 +29,8 @@
 		...(cardDrafts.addCards
 			&& (sideHasContent(cardDrafts.addCards.front) || sideHasContent(cardDrafts.addCards.back))
 			? ["Add cards"] : []),
+		...(cardDrafts.addCards2 && sideHasContent(cardDrafts.addCards2.blocks)
+			? ["Add cards 2"] : []),
 		...(cardDrafts.browse?.editingCardId != null ? ["Browse / edit"] : [])
 	];
 
@@ -63,13 +66,15 @@
 			goto(to);
 		});
 	});
-	// marketplace deck instances are readonly: study and browse only
+	// marketplace deck instances are readonly: study and browse only.
+	// "Add cards 2" is the single-list editor trial, kept next to the classic
+	// front/back editor for side-by-side comparison.
 	const paths = deck.isMarketplace
 		? ["study", "browse"]
-		: ["study", "browse", "add-cards", "settings"];
+		: ["study", "browse", "add-cards", "add-cards-2", "settings"];
 	const names = deck.isMarketplace
 		? ["Study", "Browse"]
-		: ["Study", "Browse / edit", "Add cards", "Settings"];
+		: ["Study", "Browse / edit", "Add cards", "Add cards 2", "Settings"];
 </script>
 
 <div class="deck-nav-container">

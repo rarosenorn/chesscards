@@ -1,8 +1,10 @@
 <script>
-	// `label` is the trigger button's text.
+	// `label` is the default trigger button's text; `trigger` (optional
+	// snippet receiving (toggle, open)) replaces it entirely.
 	// `menu` is a snippet that renders the menu items (buttons).
 	//   It receives a `close` function so an item can close the menu when clicked.
-	let { label = "Menu", menu } = $props()
+	// `align`: which edge of the trigger the menu sticks to.
+	let { label = "Menu", trigger, menu, align = "left" } = $props()
 
 	let open = $state(false)
 	let root // the wrapping element, used to detect outside clicks
@@ -31,12 +33,16 @@
 <svelte:window onclick={onWindowClick} onkeydown={onKeydown} />
 
 <div class="dropdown" bind:this={root}>
-	<button class="dropdown-trigger" onclick={toggle} aria-haspopup="menu" aria-expanded={open}>
-		{label}
-	</button>
+	{#if trigger}
+		{@render trigger(toggle, open)}
+	{:else}
+		<button class="dropdown-trigger" onclick={toggle} aria-haspopup="menu" aria-expanded={open}>
+			{label}
+		</button>
+	{/if}
 
 	{#if open}
-		<div class="dropdown-menu" role="menu">
+		<div class="dropdown-menu" class:align-right={align === "right"} role="menu">
 			{@render menu(close)}
 		</div>
 	{/if}
@@ -52,6 +58,7 @@
 		position: absolute;
 		top: calc(100% + 4px);
 		left: 0;
+		background-color: white;
 		border: 1px solid #ccc;
 		border-radius: 5px;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
@@ -60,5 +67,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: 5px;
+	}
+	.dropdown-menu.align-right {
+		left: auto;
+		right: 0;
 	}
 </style>

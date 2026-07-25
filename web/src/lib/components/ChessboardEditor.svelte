@@ -21,6 +21,8 @@
 	import standardSprite from "cm-chessboard/assets/pieces/standard.svg?raw"
 	import stauntySprite from "cm-chessboard/assets/pieces/staunty.svg?raw"
 	import FlipIcon from "$lib/icons/Flip.svelte"
+	import EyeIcon from "$lib/icons/Eye.svelte"
+	import EyeOffIcon from "$lib/icons/EyeOff.svelte"
 
 	const boardPrefs = getContext("boardPrefs") ?? (() => DEFAULT_BOARD_PREFS);
 	// the palette follows the user's piece set
@@ -482,6 +484,7 @@
 		boardElement.addEventListener("mouseup", handleBoardMouseUp);
 		boardElement.addEventListener("mousemove", handleBoardHoverCursor);
 		boardElement.addEventListener("mouseleave", clearHoverCursor);
+		boardElement.addEventListener("wheel", handleWheel, { passive: false });
 		// the FEN row matches the board's whole-pixel rendered width (border
 		// included) instead of overhanging it; offsetWidth + outer observation
 		// for the same transform/replacement reasons as Chessboard.svelte
@@ -500,6 +503,7 @@
 			boardElement.removeEventListener("mouseup", handleBoardMouseUp);
 			boardElement.removeEventListener("mousemove", handleBoardHoverCursor);
 			boardElement.removeEventListener("mouseleave", clearHoverCursor);
+			boardElement.removeEventListener("wheel", handleWheel);
 			board.destroy();
 			// hand the working state to the parent; it only keeps it if the
 			// editor is still open (not unmounting because of Ok/Cancel)
@@ -555,6 +559,29 @@
 			goToIndex(Math.min(currentIndex + 1, viewLimit));
 		}
 	}
+
+	// scroll steps through the moves like on the card boards (lichess-style);
+	// deltas accumulate so trackpads don't fire a step per micro-tick, and
+	// page scroll is swallowed over the board while it has moves to step.
+	// Attached manually: svelte's wheel handlers are passive, which forbids
+	// preventDefault.
+	let wheelAcc = 0;
+	let lastWheel = 0;
+	const handleWheel = e => {
+		if (mode !== "moves" || viewLimit === 0) return;
+		e.preventDefault();
+		const now = performance.now();
+		if (now - lastWheel > 250) wheelAcc = 0;
+		lastWheel = now;
+		wheelAcc += e.deltaY;
+		if (wheelAcc > 40) {
+			goToIndex(Math.min(currentIndex + 1, viewLimit));
+			wheelAcc = 0;
+		} else if (wheelAcc < -40) {
+			goToIndex(Math.max(Math.min(currentIndex, viewLimit) - 1, 0));
+			wheelAcc = 0;
+		}
+	}
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
@@ -601,6 +628,7 @@
 				disabled={mode === "moves"}
 				title={mode === "moves" ? "Switch to Position to edit the start FEN" : ""}
 			/>
+			<button class="std-btn flip-btn" onclick={flipBoard} title="Flip board"><FlipIcon /></button>
 			{#if !boardOnBack}
 				<button
 					class="std-btn show-back-btn"
@@ -610,10 +638,10 @@
 						: "Showing the front as the student sees it. Click to also show the back's moves and annotations."}
 					onclick={() => setShowBack(!showBack)}
 				>
-					{showBack ? "Hide back" : "Show back"}
+					{#if showBack}<EyeIcon />{:else}<EyeOffIcon />{/if}
+					<span>Back</span>
 				</button>
 			{/if}
-			<button class="std-btn flip-btn" onclick={flipBoard} title="Flip board"><FlipIcon /></button>
 		</div>
 	</div>
 	<div class="side-panel">
@@ -886,11 +914,12 @@
 	.flip-btn {
 		padding: 3px 30px;
 	}
-	/* fixed width so Show back / Hide back toggle without shifting the bar */
+	/* fixed width so the eye toggling open/closed never shifts the bar;
+	   font matches the saved boards' bar buttons (their default size) */
 	.show-back-btn {
-		width: 96px;
+		width: 84px;
 		padding: 3px 0;
-		font-size: 0.85rem;
+		gap: 5px;
 		white-space: nowrap;
 	}
 	.show-back-btn[aria-pressed="true"] {

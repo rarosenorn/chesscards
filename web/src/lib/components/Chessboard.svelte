@@ -240,9 +240,17 @@
 	.board.black-border.flush-bottom > :global(div) {
 		border-bottom-width: 4px;
 	}
+	/* Containment breaks a sizing feedback loop: the rendered svg and the
+	   --board-px-wide bar/move line all have fixed pixel widths, which would
+	   otherwise feed the surrounding cell's min-content — locking the cell
+	   at whatever width the board once rendered at (the cell then never
+	   shrinks, the board never re-renders smaller, and the drag shadow's
+	   correct size mismatches the real one, making drops snap dirty). With
+	   inline-size containment the cell sizes the board, never the reverse. */
 	.board-wrapper {
 		display: flex;
 		flex-direction: column;
+		contain: inline-size;
 	}
 	/* center the whole-pixel board box, and give everything below it (the
 	   slotted FEN/Duplicate/Edit bar, the move line) that exact width so
@@ -253,6 +261,9 @@
 	.board-wrapper > :global(.button-row),
 	.board-wrapper > .move-line {
 		width: var(--board-px, 100%);
+		/* a stale-wide --board-px (measured mid-transition) must never widen
+		   the row past the wrapper; the observer corrects it a frame later */
+		max-width: 100%;
 		box-sizing: border-box;
 		margin-left: auto;
 		margin-right: auto;

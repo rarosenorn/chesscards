@@ -6,6 +6,8 @@
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import ChessboardEditor from "$lib/components/ChessboardEditor.svelte"
 	import CrossIcon from "$lib/icons/Cross.svelte"
+	import EyeIcon from "$lib/icons/Eye.svelte"
+	import EyeOffIcon from "$lib/icons/EyeOff.svelte"
 	import { boardsBefore, newBoard, boardHasBack, syncTextBlocks } from "$lib/card-utils.js"
 	import { isValidFen } from "$lib/isValidFen.js"
 
@@ -479,7 +481,6 @@
 									>
 										<div class="button-row">
 											<input
-												style="flex-grow: 1;"
 												class:invalid-fen={board.fenInput !== undefined}
 												bind:value={
 													() => board.fenInput ?? board.fen,
@@ -500,18 +501,17 @@
 															: "Showing the front as the student sees it. Click to also show the back."}
 													onclick={() => showBackBoards[board.id] = !showBackBoards[board.id]}
 												>
-													{showBackBoards[board.id] ? "Hide back" : "Show back"}
+													{#if showBackBoards[board.id]}<EyeIcon />{:else}<EyeOffIcon />{/if}
+													<span>Back</span>
 												</button>
 											{/if}
 											<button
-												style="padding: 3px 16px;"
 												onclick={() => duplicateChessboard(blockIndex, boardIndex)}
 											>
 												Duplicate
 											</button>
 											<button
 												class="edit-btn"
-												style="padding: 3px 16px;"
 												onclick={() => openEditor(board.id)}
 											>
 												Edit
@@ -696,6 +696,31 @@
 	.board-container .button-row > * {
 		border-radius: 0;
 	}
+	/* the FEN input must shrink below its intrinsic size, or the row's
+	   minimum width exceeds the board's and overflows right (and inflates a
+	   lone board's min-content cell past grid size) */
+	.board-container .button-row > input {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.board-container .button-row > button {
+		padding: 3px 16px;
+	}
+	/* front boards (the rows with the Front/Back preview): the FEN gets half
+	   the bar and the three buttons fill the other half at their natural
+	   widths; buttons never shrink below their label — the input yields
+	   instead when space is truly tight */
+	.board-container .button-row:has(> .show-back-btn) > input {
+		flex: 0 1 45%;
+		box-sizing: border-box;
+	}
+	.board-container .button-row:has(> .show-back-btn) > button {
+		flex: 1 1 auto;
+		min-width: max-content;
+		box-sizing: border-box;
+		padding: 3px 12px;
+		white-space: nowrap;
+	}
 	.board-container .button-row > input:focus {
 		position: relative;
 		z-index: 1;
@@ -706,16 +731,25 @@
 	}
 	/* fixed width so Show back / Hide back toggle without shifting the row */
 	.button-row .show-back-btn {
-		width: 96px;
+		width: 76px;
 		padding: 3px 0;
 		display: flex;
+		gap: 5px;
 		align-items: center;
 		justify-content: center;
 		white-space: nowrap;
 	}
-	.button-row .show-back-btn:disabled {
+	/* disabled: greyed, and no hover/press feedback — it isn't clickable */
+	.button-row .show-back-btn:disabled,
+	.button-row .show-back-btn:disabled:hover,
+	.button-row .show-back-btn:disabled:active {
 		color: rgba(0, 0, 0, 0.35);
 		cursor: default;
+		transform: none;
+		border: 1px solid lightgrey;
+		border-bottom: 1px solid darkgrey;
+		background-color: #f5f5f5;
+		box-shadow: none;
 	}
 	.button-row .show-back-btn[aria-pressed="true"]:enabled {
 		background-color: #e6e6e6;

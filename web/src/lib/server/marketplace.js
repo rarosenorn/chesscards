@@ -55,7 +55,7 @@ const getPendingUploadRequests = async () => {
 		select r.id, r.name, r.theme, r.price, r.created_at "createdAt", u.email, count(c.id) "cardCount"
 		from marketplace_upload_requests r
 		join decks d on d.id = r.deck_id
-		join users u on u.id = r.user_id
+		join "user" u on u.id = r.user_id
 		left join cards c on c.deck_id = d.id
 		where r.status = 'pending'
 		group by r.id, r.name, r.theme, r.price, r.created_at, u.email
@@ -71,7 +71,7 @@ const getUploadRequestWithCards = async requestId => {
 			json_agg(json_build_object('id', c.id, 'front', c.front, 'back', c.back)) cards
 		from marketplace_upload_requests r
 		join decks d on d.id = r.deck_id
-		join users u on u.id = r.user_id
+		join "user" u on u.id = r.user_id
 		left join cards c on c.deck_id = d.id
 		where r.id = $1
 		group by r.id, r.status, r.theme, r.name, r.description, r.price, r.preview_card_ids, u.email`,

@@ -24,6 +24,9 @@ Study all cards in the chosen deck by getting cards from the deck contiuously. H
 ## study all button
 - Button for study all, which studies all your decks in some way for interleaving all, still adhering to subdeck progression.
 
+# editor: make the drag and drop work properly again, AI didnt revert properly so I think we lost some function, esp. between back and front
+# editor: do selectors for annotations like pieces with nice icons showing arrows and circle, selectable and between Start position Clean board and pieces above
+# editor: another delete block icon thats not ugly
 # Chesscards wiki with info on FSRS, card types etc.
 # Tutorial page on how to use editor
 # Reorder cards in deck builder, so you can decide which order the cards are, different from insertion order

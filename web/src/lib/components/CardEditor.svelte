@@ -6,7 +6,6 @@
 	// list back into front/back, so the stored cards stay ordinary
 	// front/back cards.
 	import { tick } from "svelte"
-	import { flip } from "svelte/animate"
 	import { dndzone, TRIGGERS, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action"
 	import TextEditor from "$lib/components/TextEditor.svelte"
 	import Chessboard from "$lib/components/Chessboard.svelte"
@@ -239,59 +238,17 @@
 	// come from a page-wide override, not the ghost itself
 	const setGrabbing = on => document.body.classList.toggle("dnd-grabbing", on);
 
-	// keep flips enabled just past the drop so its settle reshuffle animates
-	const settleFlip = () => setTimeout(() => cardDnd.dndAnimating = false, 450);
-
-	const suppressGrowAroundDragStart = () => {
-		cardDnd.suppressGrow = true;
-		setTimeout(() => cardDnd.suppressGrow = false, 100);
-	}
-
-	// Space for the shadow placeholder opens gradually when the drag enters a
-	// zone; read imperatively on mount so a later flag change can't retrigger
-	// it. Duration/easing matches the zones' min-height transition, so space
-	// opening in one zone and closing in another move in lockstep.
-	const growIn = (node, isShadowItem) => {
-		if (!isShadowItem || cardDnd.suppressGrow) return;
-		node.animate(
-			[{ height: "0px" }, { height: node.style.height }],
-			{ duration: 400, easing: "cubic-bezier(0.25, 0.1, 0.25, 1)" }
-		);
+	const endDrag = () => {
+		setGrabbing(false);
+		cardDnd.dragging = false;
 	}
 
 	// The library locks the origin zone's min size for the whole drag
-	// (preventShrinking), so it would only give up its space on drop. The
-	// width lock goes right away; the height lock is released the moment the
-	// dragged item is spaced into another zone (DRAGGED_LEFT) — the zones'
-	// min-height transition then closes the freed space smoothly instead of
-	// snapping.
+	// (preventShrinking), so it would only give up its space on drop. Both
+	// locks go the moment the dragged item is spaced into another zone: the
+	// space one zone frees and the space the other opens then change in the
+	// same frame, leaving the card's total height untouched.
 	const unlockShrinking = el => el.style.minHeight = "";
-
-	// When the drag moves into another zone the library drops its own size
-	// lock in the same frame the shadow leaves. Re-lock the losing zone at its
-	// current height (transitions off, committed with a forced reflow), then
-	// close it by exactly the dragged item's height — same frame, duration and
-	// curve as the space growing in the target zone, so the two mirror out and
-	// the combined height stays constant. Animating to zero instead would let
-	// the content clamp the transition and finish the visible close early.
-	let releaseEpoch = 0;
-	const releaseHeightSmoothly = el => {
-		// a newer release on the same zone bumps the epoch, cancelling the
-		// stale cleanup timeout
-		const epoch = ++releaseEpoch;
-		el.dataset.releaseEpoch = epoch;
-		const from = el.getBoundingClientRect().height;
-		const to = Math.max(from - cardDnd.dragHeight, 0);
-		el.style.transitionProperty = "none";
-		el.style.minHeight = from + "px";
-		void el.offsetHeight;
-		el.style.transitionProperty = "";
-		el.style.minHeight = to + "px";
-		// once settled, hand height control back to the content
-		setTimeout(() => {
-			if (Number(el.dataset.releaseEpoch) === epoch) el.style.minHeight = "";
-		}, 450);
-	}
 
 	const handleBlocksConsider = e => {
 		const { trigger } = e.detail.info;
@@ -300,31 +257,22 @@
 			syncTextBlocks(blocks);
 			measureDragHeight(e);
 			setGrabbing(true);
-			cardDnd.dndAnimating = true;
-			suppressGrowAroundDragStart();
+			cardDnd.dragging = true;
 			e.target.style.minWidth = "";
 		}
-		if (trigger === TRIGGERS.DRAGGED_LEFT) {
-			// leaving the origin keeps the shadow in its items (its space stays
-			// until the drag enters another zone) — just undo the library's size
-			// lock. Leaving a zone the item was spaced into mid-drag (crossing
-			// back without dropping) removes the shadow, so that zone's space
-			// must be held and released like on the entered-another path.
-			if (e.detail.items.some(isShadow)) unlockShrinking(e.target);
-			else releaseHeightSmoothly(e.target);
+		// leaving the origin keeps the shadow in the items, so its space stays
+		// until the drag enters another zone; leaving a zone the item was
+		// spaced into mid-drag drops the shadow and the space with it
+		if (trigger === TRIGGERS.DRAGGED_LEFT || trigger === TRIGGERS.DRAGGED_ENTERED_ANOTHER) {
+			unlockShrinking(e.target);
 		}
-		if (trigger === TRIGGERS.DRAGGED_ENTERED_ANOTHER) releaseHeightSmoothly(e.target);
-		if (trigger === TRIGGERS.DRAG_STOPPED) {
-			setGrabbing(false);
-			settleFlip();
-		}
+		if (trigger === TRIGGERS.DRAG_STOPPED) endDrag();
 		setItems(blocks, e.detail.items);
 	}
 
 	const handleBlocksFinalize = e => {
 		setItems(blocks, e.detail.items);
-		setGrabbing(false);
-		settleFlip();
+		endDrag();
 	}
 
 	const handleBoardsConsider = (block, e) => {
@@ -333,35 +281,23 @@
 			cardDnd.dragEditing = isEditing(e.detail.info.id);
 			measureDragHeight(e);
 			setGrabbing(true);
-			cardDnd.dndAnimating = true;
-			suppressGrowAroundDragStart();
+			cardDnd.dragging = true;
 			e.target.style.minWidth = "";
 		}
-		// a zone this drag would leave EMPTY keeps its space until the drop
-		// (the min-height hold in the template owns it) so the board can be
-		// dragged back; otherwise spaces close smoothly like block drags
+		// a zone this drag leaves EMPTY keeps its space until the drop so the
+		// board can be dragged back — its hold is the template's min-height
+		// and the library's own lock, neither of which may be released here
 		const leftEmpty = !e.detail.items.some(item => !isShadow(item));
-		if (trigger === TRIGGERS.DRAGGED_LEFT) {
-			// leaving the origin keeps the shadow in its items (its space stays
-			// until the drag enters another zone) — just undo the library's size
-			// lock. Leaving a zone the item was spaced into mid-drag (crossing
-			// back without dropping) removes the shadow, so that zone's space
-			// must be held and released like on the entered-another path.
-			if (e.detail.items.some(isShadow)) unlockShrinking(e.target);
-			else if (!leftEmpty) releaseHeightSmoothly(e.target);
+		if (!leftEmpty && (trigger === TRIGGERS.DRAGGED_LEFT || trigger === TRIGGERS.DRAGGED_ENTERED_ANOTHER)) {
+			unlockShrinking(e.target);
 		}
-		if (trigger === TRIGGERS.DRAGGED_ENTERED_ANOTHER && !leftEmpty) releaseHeightSmoothly(e.target);
-		if (trigger === TRIGGERS.DRAG_STOPPED) {
-			setGrabbing(false);
-			settleFlip();
-		}
+		if (trigger === TRIGGERS.DRAG_STOPPED) endDrag();
 		setItems(block.content, e.detail.items);
 	}
 
 	const handleBoardsFinalize = (block, e) => {
 		setItems(block.content, e.detail.items);
-		setGrabbing(false);
-		settleFlip();
+		endDrag();
 		cleanupEmptyBlocks();
 	}
 </script>
@@ -374,7 +310,7 @@
 	use:dndzone={{
 		items: blocks,
 		type: "card-blocks",
-		flipDurationMs: 150,
+		flipDurationMs: 0,
 		// aim with the cursor: blocks vary hugely in height, so the dragged
 		// element's center can be unreachably far from the pointer. Combined
 		// with the patched midpoint rule (patches/svelte-dnd-action…) an item
@@ -393,8 +329,6 @@
 			data-block-id={block.id}
 			class:shadow-placeholder={isShadow(block)}
 			style:height={isShadow(block) ? cardDnd.dragHeight + "px" : undefined}
-			use:growIn={isShadow(block)}
-			animate:flip={{ duration: cardDnd.dndAnimating ? 400 : 0 }}
 			onmousedown={guardBlockPress}
 			ontouchstart={guardBlockPress}
 		>
@@ -439,13 +373,13 @@
 						"single-board-block": block.content.length < 2,
 						"board-grid-block": block.content.length > 1
 					}}
-					style:min-height={block.content.length === 0 && cardDnd.dndAnimating
+					style:min-height={block.content.length === 0 && cardDnd.dragging
 						? cardDnd.dragHeight + "px"
 						: undefined}
 					use:dndzone={{
 						items: block.content,
 						type: "card-boards",
-						flipDurationMs: 150,
+						flipDurationMs: 0,
 						// cursor + patched midpoint rule, see the blocks zone
 						useCursorForDetection: true,
 						// keep the ghost exactly as picked up: morphing animates it
@@ -465,9 +399,7 @@
 							class:shadow-placeholder={isShadow(board)}
 							class:board-container-editing={layoutAsEditor(board)}
 							style:height={isShadow(board) ? cardDnd.dragHeight + "px" : undefined}
-							use:growIn={isShadow(board)}
-							animate:flip={{ duration: cardDnd.dndAnimating ? 400 : 0 }}
-							onmousedown={guardBoardPress}
+											onmousedown={guardBoardPress}
 							ontouchstart={guardBoardPress}
 							style:order={layoutAsEditor(board)
 								? 2 * (boardIndex - boardIndex % 2) + 1
@@ -597,8 +529,6 @@
 	.blocks-zone {
 		display: flex;
 		flex-direction: column;
-		/* smooths releasing the drag lock's freed space, see unlockShrinking */
-		transition: min-height 400ms cubic-bezier(0.25, 0.1, 0.25, 1);
 	}
 	/* a card with no blocks keeps invisible space so a block can always be
 	   dragged there (a hovering drag's shadow item removes the class itself) */
@@ -732,7 +662,6 @@
 		flex-direction: column;
 		align-items: center;
 		padding-top: 10px;
-		transition: min-height 400ms cubic-bezier(0.25, 0.1, 0.25, 1);
 	}
 	/* a lone board keeps the same size as a 2-column grid cell, centered;
 	   this also gives a drag's empty shadow box its proper width, so drops
@@ -750,7 +679,6 @@
 		gap: 20px;
 		position: relative;
 		padding-top: 10px;
-		transition: min-height 400ms cubic-bezier(0.25, 0.1, 0.25, 1);
 	}
 	.board-container {
 		position: relative;

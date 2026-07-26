@@ -4,17 +4,12 @@
 // back editors so drags and open board editors work across sides.
 export const createCardDnd = () => {
 	const cardDnd = $state({
-		// true while a drag (blocks or boards) is live, cleared shortly after
-		// the drop so its settle still animates; reorder flips only run during
-		// this window — everything else (deletes, editor toggles) is instant
-		dndAnimating: false,
+		// true while a drag (blocks or boards) is live; a block the drag empties
+		// holds its space for this window so the item can be dragged back
+		dragging: false,
 		// height of the element being dragged, measured at drag start; sizes the
 		// empty placeholder box rendered for the drag's shadow item
 		dragHeight: 0,
-		// true briefly around drag start: the shadow placeholder replacing the
-		// picked-up item must appear at full height, while placeholders mounting
-		// later (the drag entering another zone) grow in animated
-		suppressGrow: false,
 		// whether the board being dragged has an open editor; the shadow
 		// placeholder then keeps the editor's full-row layout (class + order)
 		dragEditing: false,

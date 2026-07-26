@@ -751,9 +751,6 @@
 		background-color: #f5f5f5;
 		box-shadow: none;
 	}
-	.button-row .show-back-btn[aria-pressed="true"]:enabled {
-		background-color: #e6e6e6;
-	}
 	.board-container:hover .delete-entity-btn {
 		opacity: 1;
 	}

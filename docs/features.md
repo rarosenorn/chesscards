@@ -67,3 +67,10 @@ Card type that is done first time you get it correct, again if not correct. For 
 
 # "fork" free deck?
 # link created account with socials, delink created account from socials
+
+## board editor: delimit front/back moves in the move list
+Show ALL moves in the editor's move list at all times (no hiding behind the
+eye), with some UI delimiting where the back begins — e.g. a divider line /
+"back" label between the front segment and the back segment. The eye then
+only governs the board preview, and the boundary is always visible while
+editing.

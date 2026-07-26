@@ -165,6 +165,9 @@
 
 	const commitMove = (san, fen) => {
 		playMoveSound(san);
+		// recording for the back must show it — otherwise the move would
+		// vanish into the hidden layer the moment it lands
+		if (recordingAnswerEffective) showBack = true;
 		// playing a move mid-list replaces everything after this position
 		moves = [...moves.slice(0, currentIndex), san];
 		for (const key of Object.keys(annotations)) {
@@ -341,33 +344,36 @@
 	);
 	let recordingAnswerEffective = $derived(!boardOnBack && (recordingAnswer || answerLocked));
 
-	// recording for the back forces the back visible
+	// the toggle only routes recordings; the eye opens by itself the moment
+	// something is actually recorded into the back (commitMove / capture)
 	const setRecording = back => {
 		recordingAnswer = back;
-		if (back) showBack = true;
 	}
 
-	// hiding the back also stops recording into it, and pulls the shown
-	// position back inside the front view
+	// hiding the back pulls the shown position back inside the front view;
+	// the recording toggle is left alone — the eye is only a view
 	const setShowBack = on => {
 		showBack = on;
-		if (!on) {
-			recordingAnswer = false;
-			if (solutionFrom != null) currentIndex = Math.min(currentIndex, solutionFrom);
-		}
+		if (!on && solutionFrom != null) currentIndex = Math.min(currentIndex, solutionFrom);
 	}
 
 	// for the card editor's T shortcut
 	export const toggleAnswer = () => {
 		if (!boardOnBack && !answerLocked) setRecording(!recordingAnswer);
 	}
-	// the layer recorded stuff goes to; the board shows this layer while
-	// recording the front (so a capture can never copy back arrows into the
-	// front), and the merged turned-card view while recording the back
-	let activeAnnotations = $derived(recordingAnswerEffective ? solutionAnnotations : annotations);
-	let displayedAnnotation = $derived(recordingAnswerEffective
+	// The eye governs what the board shows: back view = the turned card
+	// (back annotations displacing the front's per position), front view =
+	// front only. Drawn edits apply to the set being displayed — a position
+	// showing back annotations writes back to the back layer even while
+	// recording the front, so a capture can never copy back arrows into the
+	// front; fresh sets go to the recording toggle's layer.
+	let displayedAnnotation = $derived(showBack && !boardOnBack
 		? solutionAnnotations[annotationIndex] ?? annotations[annotationIndex]
 		: annotations[annotationIndex]);
+	const annotationTarget = () =>
+		!boardOnBack && (recordingAnswerEffective || (showBack && solutionAnnotations[annotationIndex]))
+			? solutionAnnotations
+			: annotations;
 
 	// Move-list rows, numbered sequentially (the FEN fullmove counter doesn't
 	// advance for flipped/manual moves): a black move joins the preceding row
@@ -402,10 +408,14 @@
 			arrows: board.getArrows(),
 			markers: board.getMarkers()
 		});
+		const target = annotationTarget();
 		if (hasAnnotations(annotation)) {
-			activeAnnotations[annotationIndex] = annotation;
+			target[annotationIndex] = annotation;
+			// recording for the back must show it — otherwise the drawing
+			// would vanish into the hidden layer the moment it is captured
+			if (target === solutionAnnotations) showBack = true;
 		} else {
-			delete activeAnnotations[annotationIndex];
+			delete target[annotationIndex];
 		}
 	})
 
@@ -921,9 +931,6 @@
 		padding: 3px 0;
 		gap: 5px;
 		white-space: nowrap;
-	}
-	.show-back-btn[aria-pressed="true"] {
-		background-color: #e6e6e6;
 	}
 	.fen-input:disabled {
 		color: rgba(0, 0, 0, 0.4);

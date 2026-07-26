@@ -273,10 +273,12 @@
 		background-color: white;
 		color: black;
 	}
+	/* 1px clear of the first block's hover border */
 	.side-indicator {
 		margin-left: 20px;
-		margin-bottom: 0px;
+		margin-bottom: 1px;
 		font-size: 1.12rem;
+		line-height: 1.2;
 		align-self: start;
 	}
 	.add-form {

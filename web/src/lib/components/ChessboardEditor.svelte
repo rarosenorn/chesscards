@@ -645,7 +645,7 @@
 				bind:value={currentFen}
 				oninput={handleFenInput}
 				disabled={mode === "moves"}
-				title={mode === "moves" ? "Switch to Position to edit the start FEN" : ""}
+				title={mode === "moves" ? "Switch to Set position to edit the start FEN" : ""}
 			/>
 			<button class="std-btn flip-btn" onclick={flipBoard}><FlipIcon /></button>
 			{#if !boardOnBack}
@@ -703,7 +703,7 @@
 				class:selected={mode === "setup"}
 				onclick={() => switchMode("setup")}
 			>
-				<span class="step-number">(1)</span> Position
+				<span class="step-number">(1)</span> Set position
 			</button>
 			<button
 				role="tab"

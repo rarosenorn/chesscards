@@ -39,8 +39,6 @@
 {/snippet}
 
 <div class="flashcard card-surface">
-	<!-- authorView on the front: its boards' back-layer moves get their
-	     "revealed when turned" tooltip -->
 	{@render side(card.front, 0, true)}
 	{@render side(card.back, frontBoardCount, false)}
 </div>

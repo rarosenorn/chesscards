@@ -32,11 +32,6 @@ const normalizeBoard = board =>
 			orientation: board.orientation ?? "w"
 		};
 
-// whether the board carries any back-layer content (hidden moves or
-// annotations revealed on turning)
-const boardHasBack = board =>
-	board.solutionFrom != null || Object.keys(board.solutionAnnotations ?? {}).length > 0;
-
 // empty solution layers are omitted from the stored JSON
 const boardForJson = ({ fen, moves, annotations, solutionFrom, solutionAnnotations, orientation }) => ({
 	fen, moves, annotations, orientation,
@@ -110,4 +105,4 @@ const countBoards = side => side.reduce(
 
 const boardsBefore = (side, blockIndex) => countBoards(side.slice(0, blockIndex));
 
-export { newBoard, normalizeBoard, boardHasBack, getSideJson, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }
+export { newBoard, normalizeBoard, getSideJson, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }

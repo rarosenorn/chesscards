@@ -42,7 +42,6 @@
 	<!-- authorView on the front: its boards' back-layer moves get their
 	     "revealed when turned" tooltip -->
 	{@render side(card.front, 0, true)}
-	<hr class="divider">
 	{@render side(card.back, frontBoardCount, false)}
 </div>
 
@@ -56,12 +55,6 @@
 	}
 	.text-block {
 		padding: 0 30px;
-	}
-	.divider {
-		width: 100%;
-		border: none;
-		border-top: 2px solid #e5e5e5;
-		margin: 24px 0;
 	}
 	/* boards breathe: extra space between board blocks and neighboring text */
 	.single-board-block {

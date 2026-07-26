@@ -127,7 +127,7 @@
 	<div class="type-segments" role="radiogroup" aria-labelledby="card-type-label">
 		{#each [
 			["basic", "Basic", "Basic card type: Card is scheduled following FSRS (Free Spaced Repetition Scheduler)"],
-			["tactic", "Tactic", "Tactic card type: If evaluated <i>Correct</i>, card is done. If evaluated <i>Incorrect</i>, card is scheduled for next day"]
+			["tactic", "Tactic", "Tactic card type: If evaluated <i>Correct</i>, card is not seen again. If evaluated <i>Incorrect</i>, card is scheduled for next day"]
 		] as [value, label, description]}
 			<button
 				class="std-btn"

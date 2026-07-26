@@ -63,12 +63,10 @@
 		: initial.solutionFrom != null || Object.keys(initial.solutionAnnotations ?? {}).length > 0);
 	// the view: front = only what the student sees before turning (back moves
 	// hidden, front annotations), back = the turned card (full line, back
-	// annotations displacing front's). Independent of the recording toggle,
-	// except that recording for the back forces the back visible — you can
-	// never record into a layer you cannot see.
-	let showBack = $state(resume
-		? resume.showBack
-		: initial.solutionFrom != null || Object.keys(initial.solutionAnnotations ?? {}).length > 0);
+	// annotations displacing front's). Independent of the recording toggle
+	// (though actually recording into a hidden back opens it). Defaults on —
+	// authors see the whole card unless they peek at the student view.
+	let showBack = $state(resume ? resume.showBack : true);
 
 	let fenIsValid = $derived(isValidFen(currentFen));
 	// any valid FEN can record moves — free-form setups (two kings, missing
@@ -383,14 +381,21 @@
 	// index so clicking can select the resulting position.
 	let moveRows = $derived.by(() => {
 		const rows = [];
-		replay.moveInfos.slice(0, viewLimit).forEach(({ san, color }, index) => {
+		let number = 0;
+		replay.moveInfos.forEach(({ san, color }, index) => {
 			const move = { san, index };
 			const last = rows[rows.length - 1];
-			if (color === "b" && last?.white && !last.black) {
+			// a black move joins the preceding row unless the back begins on
+			// it — rows never span the front/back boundary, so the divider
+			// can always sit between rows. Such a split row continues its
+			// move: it keeps the number ("1 e4 / Back / 1 … d5").
+			const continuesLast = color === "b" && last?.white && !last.black;
+			if (continuesLast && index !== solutionFrom) {
 				last.black = move;
 			} else {
+				if (!continuesLast) number += 1;
 				rows.push({
-					number: rows.length + 1,
+					number,
 					white: color === "w" ? move : null,
 					black: color === "b" ? move : null
 				});
@@ -398,6 +403,10 @@
 		});
 		return rows;
 	});
+
+	// the whole line is always listed; back moves are only clickable while
+	// the eye shows the back (the board never displays what the eye hides)
+	const moveIsBack = index => solutionFrom != null && index >= solutionFrom;
 
 	// the annotator draws on right-click; capture its state after the event settles.
 	// getArrows/getMarkers instead of getAnnotations: cm-chessboard 8.12.12 binds
@@ -638,14 +647,11 @@
 				disabled={mode === "moves"}
 				title={mode === "moves" ? "Switch to Position to edit the start FEN" : ""}
 			/>
-			<button class="std-btn flip-btn" onclick={flipBoard} title="Flip board"><FlipIcon /></button>
+			<button class="std-btn flip-btn" onclick={flipBoard}><FlipIcon /></button>
 			{#if !boardOnBack}
 				<button
 					class="std-btn show-back-btn"
 					aria-pressed={showBack}
-					title={showBack
-						? "Showing the turned card (front + back). Click for the student's pre-turn view."
-						: "Showing the front as the student sees it. Click to also show the back's moves and annotations."}
 					onclick={() => setShowBack(!showBack)}
 				>
 					{#if showBack}<EyeIcon />{:else}<EyeOffIcon />{/if}
@@ -661,16 +667,19 @@
 		     the control disappears. -->
 		{#if !boardOnBack}
 		<div class="layer-row">
-			<span class="layer-label" id="layer-label">Moves and annotations for</span>
-			<div class="layer-segments" role="radiogroup" aria-labelledby="layer-label">
+			<span
+				class="layer-label"
+				id="layer-label"
+				title="Moves and annotations for back will appear when card is turned"
+			>
+				Moves and annotations for
+			</span>
+			<div class="layer-segments" role="radiogroup" aria-labelledby="layer-label" title="Shortcut key: t">
 				<button
 					role="radio"
 					aria-checked={!recordingAnswerEffective}
 					class:selected={!recordingAnswerEffective}
 					disabled={answerLocked}
-					title={answerLocked
-						? "Everything after the back's first move belongs to the back; go back before it to edit the front"
-						: "Front: visible from the start (shortcut: T toggles)"}
 					onclick={() => setRecording(false)}
 				>
 					Front
@@ -679,7 +688,6 @@
 					role="radio"
 					aria-checked={recordingAnswerEffective}
 					class:selected={recordingAnswerEffective}
-					title="Back: only shows once the card is turned (shortcut: T toggles)"
 					onclick={() => setRecording(true)}
 				>
 					Back
@@ -716,7 +724,6 @@
 							<button
 								class="palette-piece"
 								class:selected={selectedTool === piece}
-								title="Click a square to place"
 								onclick={() => selectTool(piece)}
 							>
 								<svg viewBox="0 0 40 40">
@@ -730,7 +737,6 @@
 					<button
 						class="palette-piece trash"
 						class:selected={selectedTool === "trash"}
-						title="Click a square to remove its piece"
 						onclick={() => selectTool("trash")}
 					>
 						<TrashIcon />
@@ -738,7 +744,6 @@
 					<button
 						class="palette-piece"
 						class:selected={selectedTool === null}
-						title="Drag pieces on the board"
 						onclick={() => selectTool(null)}
 					>
 						<CursorArrowIcon />
@@ -752,12 +757,16 @@
 		{:else}
 			<div class="move-list" bind:this={moveListElement}>
 				{#each moveRows as row}
+					{#if solutionFrom != null && (row.white?.index ?? row.black?.index) === solutionFrom}
+						<div class="back-divider"><span>Back</span></div>
+					{/if}
 					<div class="move-row">
 						<span class="move-number">{row.number}</span>
 						{#if row.white}
 							<button
 								class="move-btn"
 								class:current={Math.min(currentIndex, viewLimit) === row.white.index + 1}
+								disabled={!showBack && moveIsBack(row.white.index)}
 								onclick={() => goToIndex(row.white.index + 1)}
 							>
 								{row.white.san}
@@ -769,6 +778,7 @@
 							<button
 								class="move-btn"
 								class:current={Math.min(currentIndex, viewLimit) === row.black.index + 1}
+								disabled={!showBack && moveIsBack(row.black.index)}
 								onclick={() => goToIndex(row.black.index + 1)}
 							>
 								{row.black.san}
@@ -994,12 +1004,16 @@
 		margin-bottom: -4px;
 	}
 	/* bare text next to a boxed control reads left-shifted; the small indent
-	   optically aligns the label with the tabs' left edge */
+	   optically aligns the label with the tabs' left edge. The dashed
+	   underline is the has-a-tooltip convention. */
 	.layer-label {
 		padding-left: 2px;
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
 		white-space: nowrap;
+		text-decoration: underline dashed rgba(0, 0, 0, 0.35);
+		text-underline-offset: 3px;
+		cursor: help;
 	}
 	.layer-segments {
 		flex: 1 1 0;
@@ -1132,8 +1146,29 @@
 		cursor: default;
 		color: rgba(0, 0, 0, 0.5);
 	}
-	button.move-btn:hover {
+	button.move-btn:hover:enabled {
 		background-color: gainsboro;
+	}
+	button.move-btn:disabled {
+		color: rgba(0, 0, 0, 0.35);
+		cursor: default;
+	}
+	/* the front/back boundary in the always-complete move list */
+	.back-divider {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin: 2px 0;
+	}
+	.back-divider::before,
+	.back-divider::after {
+		content: "";
+		flex: 1;
+		border-top: 1px solid rgba(0, 0, 0, 0.25);
+	}
+	.back-divider span {
+		font-size: 0.8rem;
+		color: rgba(0, 0, 0, 0.45);
 	}
 	.move-btn.current {
 		background-color: var(--accent);

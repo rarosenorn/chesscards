@@ -1,26 +1,4 @@
 # Currently working on
-## correct move card
-Instead of showing correct move in position on back, just show the arrow on the front board when you do "Show" and have explanation on back appear as to why.
-s
-
-for claude: 
-(Q = shows in question and answer mode, A = shows in answer mode)
-Features:
-
-2. 
-- Q and A toggle showing always be showing
-- Hide should be "Hide answer" and button should be still at bottom but to the left
-- Give the bottom row a little more padding towards the top
-- h dosent work as shortcut to hide
-- give space between board block and text in study and browse 26px, and board has top padding 10 for some reason, it shouldnt have (maybe its because of styling in editor mode to make space for something?) it shouldnt have in study mode anyways.
-- do min height 700px
-- can we do shortcut t to toggle focused board / block / editor between answer and question mode
-- dont focus the when when opening editor, just the board (the fen focus causes screen to jump too far down weirdly
-bugs:
-- When adding another board to a block and saving, both boards fen and button line below extend beyond the board to the right
-- Actually im thinking that either a whole chessboard block is either A or Q and boards in a block cant choose themselves. only the moves and annotations for a board in a block iff the whole block is Q. If the whole chessboard block is A, then doing A moves and annotations in boards doesnt make sense, because the boards arent showing in Q anyways. make sense?
-
-
 ## subdecks
 - Subdecks are parts of a deck grouped together for some level of internalization before moving to next subdeck
 - Subdecks because sometimes its good to have some mastery of part of a deck, before moving to the next part. For example, in endgames its better to have seen cards from basic endgames like king and rook vs king multiple times and have some mastery of that part, before moving to include cards from the next subdeck, which could include more advanced endgames. Then you would progress when you hit target on some variable in the previous subdeck. Ofcourse it should have settings to bypass in whatever way.

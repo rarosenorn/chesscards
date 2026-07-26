@@ -35,6 +35,10 @@
 	);
 	let positions = $derived(replay.fens.slice(0, visiblePlies + 1));
 	let hasMoves = $derived(positions.length > 1);
+	// author view lists the whole line at all times (a divider marks where
+	// the back begins); the eye only governs what the board itself shows,
+	// so back moves are inert while it is closed
+	let lineMoves = $derived(authorView ? replay.moveInfos : replay.moveInfos.slice(0, visiblePlies));
 
 	let currentIndex = $state(0);
 	// a different board (e.g. next flashcard) starts back at its start position
@@ -48,7 +52,7 @@
 	let moveLine = $derived.by(() => {
 		const pairs = [];
 		let pairOpen = false;
-		replay.moveInfos.slice(0, visiblePlies).forEach(({ san, color }, index) => {
+		lineMoves.forEach(({ san, color }, index) => {
 			if (color !== "b" || !pairOpen) {
 				pairs.push({ number: pairs.length + 1, ellipsis: color === "b", moves: [] });
 			}
@@ -186,7 +190,7 @@
 		onclick={hasMoves ? () => wrapperElement.focus({ preventScroll: true }) : undefined}
 	></div>
 	{@render children?.()}
-	{#if hasMoves}
+	{#if lineMoves.length > 0}
 		<div class="move-line">
 			<button
 				class="step-btn"
@@ -202,14 +206,21 @@
 			>›</button>
 			{#each moveLine as pair}
 				<span class="move-pair">
+					<!-- the boundary marker precedes the pair number when the
+					     back starts the pair ("Back: 2 e4"), and sits between
+					     the moves when it starts mid-pair ("2 e4 Back: e5") -->
+					{#if authorView && solutionFrom != null && pair.moves[0]?.index === solutionFrom}
+						<span class="back-divider">Back:</span>
+					{/if}
 					<span class="move-number">{pair.number}</span>
 					{#each pair.moves as move, moveIndex}
+						{#if authorView && solutionFrom != null && moveIndex > 0 && move.index === solutionFrom}
+							<span class="back-divider">Back:</span>
+						{/if}
 						<button
 							class="move-btn"
 							class:current={displayIndex === move.index + 1}
-							title={authorView && solutionFrom != null && move.index >= solutionFrom
-								? "Revealed when the card is turned"
-								: undefined}
+							disabled={authorView && !revealed && solutionFrom != null && move.index >= solutionFrom}
 							onclick={() => goTo(move.index + 1)}
 						>
 							{pair.ellipsis && moveIndex === 0 ? "…" + move.san : move.san}
@@ -312,7 +323,11 @@
 	}
 	.move-number {
 		font-size: 0.85rem;
-		color: rgba(0, 0, 0, 0.6);
+	}
+	/* the pair's two moves sit close together (the buttons' own padding
+	   still separates them and keeps the hover pill intact) */
+	.move-pair .move-btn + .move-btn {
+		margin-left: -4px;
 	}
 	.move-btn {
 		border: none;
@@ -321,11 +336,29 @@
 		padding: 1px 4px;
 		cursor: pointer;
 	}
-	.move-btn:hover {
+	.move-btn:hover:enabled {
 		background-color: gainsboro;
+	}
+	.move-btn:disabled {
+		color: rgba(0, 0, 0, 0.35);
+		cursor: default;
 	}
 	.move-btn.current {
 		background-color: var(--accent);
 		color: white;
+	}
+	/* the front/back boundary in the author view's always-complete line;
+	   tucked toward what precedes it, spaced from what it introduces */
+	.back-divider {
+		align-self: center;
+		font-size: 0.875rem;
+		color: rgba(0, 0, 0, 0.45);
+		margin-left: -2px;
+		margin-right: 3px;
+	}
+	/* mid-pair ("1 e4 Back: d5") the following move hugs closer — a button
+	   after the marker misses the pair's own tightening rule */
+	.move-pair .move-btn + .back-divider {
+		margin-right: -2px;
 	}
 </style>

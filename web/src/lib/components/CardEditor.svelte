@@ -14,7 +14,7 @@
 	import CrossIcon from "$lib/icons/Cross.svelte"
 	import EyeIcon from "$lib/icons/Eye.svelte"
 	import EyeOffIcon from "$lib/icons/EyeOff.svelte"
-	import { boardsBefore, newBoard, boardHasBack, syncTextBlocks } from "$lib/card-utils.js"
+	import { boardsBefore, newBoard, syncTextBlocks } from "$lib/card-utils.js"
 	import { isValidFen } from "$lib/isValidFen.js"
 
 	// dnd: shared drag/editing state object (createCardDnd), kept in the
@@ -22,7 +22,8 @@
 	let { blocks, showBoardNumbers = false, dnd: cardDnd } = $props();
 
 	// board id -> whether its collapsed view shows the turned card (back
-	// moves/annotations included); off = the student's pre-turn view
+	// moves/annotations included); defaults on, toggle off for the
+	// student's pre-turn view
 	const showBackBoards = $state({});
 
 	// board id -> mounted ChessboardEditor instance, for applyOpenEditors
@@ -71,7 +72,16 @@
 	// invalid text) — shown red, carried into the editor when opened, and
 	// caught by the card validators on submit. It is client-only state;
 	// getSideJson never picks it up.
+	// Editing also drops the recorded line, exactly like changing the
+	// position in the editor: the moves no longer apply, so they and their
+	// later-position annotations go (both layers keep position 0).
 	const setBoardFen = (board, value) => {
+		if (board.moves.length > 0) {
+			board.moves = [];
+			board.annotations = board.annotations[0] ? { 0: board.annotations[0] } : {};
+			board.solutionAnnotations = board.solutionAnnotations?.[0] ? { 0: board.solutionAnnotations[0] } : {};
+			board.solutionFrom = null;
+		}
 		if (isValidFen(value)) {
 			board.fen = value;
 			board.fenInput = undefined;
@@ -406,7 +416,6 @@
 					role="radio"
 					aria-checked={!block.answer}
 					class:selected={!block.answer}
-					title="Front: shown from the start (shortcut: T toggles)"
 					onclick={() => block.answer = false}
 				>
 					Front
@@ -415,7 +424,6 @@
 					role="radio"
 					aria-checked={block.answer}
 					class:selected={block.answer}
-					title="Back: revealed when the card is turned (shortcut: T toggles)"
 					onclick={() => block.answer = true}
 				>
 					Back
@@ -510,7 +518,7 @@
 										{board}
 										flushBottom
 										authorView={!block.answer}
-										revealed={block.answer ? true : !!showBackBoards[board.id]}
+										revealed={block.answer ? true : (showBackBoards[board.id] ?? true)}
 									>
 										<div class="button-row">
 											<input
@@ -519,22 +527,14 @@
 													() => board.fenInput ?? board.fen,
 													value => setBoardFen(board, value)
 												}
-												disabled={board.moves.length > 0}
-												title={board.moves.length > 0 ? "Open the editor to change a board with moves" : ""}
-											/>
+												/>
 											{#if !block.answer}
 												<button
 													class="show-back-btn"
-													disabled={!boardHasBack(board)}
-													aria-pressed={!!showBackBoards[board.id]}
-													title={!boardHasBack(board)
-														? "This board has no back moves or annotations"
-														: showBackBoards[board.id]
-															? "Showing the turned card. Click for the student's pre-turn view."
-															: "Showing the front as the student sees it. Click to also show the back."}
-													onclick={() => showBackBoards[board.id] = !showBackBoards[board.id]}
+													aria-pressed={showBackBoards[board.id] ?? true}
+													onclick={() => showBackBoards[board.id] = !(showBackBoards[board.id] ?? true)}
 												>
-													{#if showBackBoards[board.id]}<EyeIcon />{:else}<EyeOffIcon />{/if}
+													{#if showBackBoards[board.id] ?? true}<EyeIcon />{:else}<EyeOffIcon />{/if}
 													<span>Back</span>
 												</button>
 											{/if}
@@ -677,7 +677,7 @@
 	.block :global(:is(input, textarea, [contenteditable])) {
 		cursor: text;
 	}
-	.block :global(:is(button, select, a[href])) {
+	.block :global(:is(button:enabled, select, a[href])) {
 		cursor: pointer;
 	}
 	.block :global(input:disabled) {
@@ -815,18 +815,6 @@
 		align-items: center;
 		justify-content: center;
 		white-space: nowrap;
-	}
-	/* disabled: greyed, and no hover/press feedback — it isn't clickable */
-	.button-row .show-back-btn:disabled,
-	.button-row .show-back-btn:disabled:hover,
-	.button-row .show-back-btn:disabled:active {
-		color: rgba(0, 0, 0, 0.35);
-		cursor: default;
-		transform: none;
-		border: 1px solid lightgrey;
-		border-bottom: 1px solid darkgrey;
-		background-color: #f5f5f5;
-		box-shadow: none;
 	}
 	.board-container:hover .delete-entity-btn {
 		opacity: 1;

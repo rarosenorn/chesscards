@@ -162,9 +162,8 @@
 {#if currentCard}
 	<div class="flashcard card-surface">
 		<!-- turning reveals front boards' back layers (moves/annotations) in
-		     place, on top of showing the back side below the divider -->
+		     place, on top of showing the back side below -->
 		{@render side(currentCard.front, 0, isCardTurned)}
-		<hr class="divider">
 		{#if isCardTurned}
 			{@render side(currentCard.back, frontBoardCount, true)}
 		{/if}
@@ -172,7 +171,7 @@
 			<button
 				class="std-btn hide-answer-btn"
 				onclick={() => isCardTurned = false}
-				title="Shortcut key: H"
+				title="Shortcut key: h"
 			>
 				Hide answer
 			</button>
@@ -251,12 +250,6 @@
 	}
 	.text-block {
 		padding: 0 30px;
-	}
-	.divider {
-		width: 100%;
-		border: none;
-		border-top: 2px solid #e5e5e5;
-		margin: 24px 0;
 	}
 	/* boards breathe: extra space between board blocks and neighboring text */
 	.single-board-block {

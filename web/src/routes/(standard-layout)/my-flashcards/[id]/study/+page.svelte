@@ -251,8 +251,8 @@
 	.flashcard {
 		align-items: center;
 		margin-top: 34px;
-		min-height: 660px;
-		padding: 36px 30px 74px 30px;
+		min-height: 700px;
+		padding: 36px 30px 60px 30px;
 		position: relative;
 	}
 	/* quiet exit bottom-left, away from the rating row; flush with the

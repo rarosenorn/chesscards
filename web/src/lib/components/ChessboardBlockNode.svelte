@@ -3,7 +3,7 @@
 	import { dndzone, TRIGGERS, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action"
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
 	import { boardCaret, caretRange, setBoardCaret } from "$lib/block-caret-state.svelte.js"
-	import { COLS, CARET_GAP_PX, CARET_WIDTH_PX, cellRows, rowNearestY, nearestGapInRow } from "$lib/tiptap-chessboard-block/geometry.js"
+	import { COLS, CARET_GAP_PX, CARET_WIDTH_PX, CARET_HEIGHT_RATIO, cellRows, rowNearestY, nearestGapInRow } from "$lib/tiptap-chessboard-block/geometry.js"
 	import ChessboardNode from "$lib/components/ChessboardNode.svelte"
 	import { isInteractive } from "$lib/tiptap-chessboard.svelte.js"
 
@@ -182,8 +182,9 @@
 			const left = before
 				? ext.left - cellRect.left - CARET_GAP_PX
 				: ext.right - cellRect.left + CARET_GAP_PX - width;
-			el.style.top = ext.top - cellRect.top + "px";
-			el.style.height = ext.bottom - ext.top + "px";
+			const height = (ext.bottom - ext.top) * CARET_HEIGHT_RATIO;
+			el.style.top = ext.top - cellRect.top + (ext.bottom - ext.top - height) / 2 + "px";
+			el.style.height = height + "px";
 			el.style.width = width + "px";
 			el.style.left = Math.round((cellRect.left + left) * dpr) / dpr - cellRect.left + "px";
 		};

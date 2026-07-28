@@ -18,6 +18,10 @@ export const CARET_GAP_PX = 5;
 // pixels so every spot rasterizes identically at fractional zoom
 export const CARET_WIDTH_PX = 1.5;
 
+// the bar spans this share of the board+bar extent, vertically centered —
+// a little shorter than the board reads lighter
+export const CARET_HEIGHT_RATIO = 0.85;
+
 export const blockCells = blockId =>
 	[...document.querySelectorAll(`.board-block[data-block-id="${blockId}"] .board-cell`)];
 

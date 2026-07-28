@@ -1,5 +1,6 @@
 <script>
 	import { tick } from "svelte"
+	import { flip } from "svelte/animate"
 	import { dndzone, TRIGGERS, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action"
 	import TextEditor from "$lib/components/TextEditor.svelte"
 	import Chessboard from "$lib/components/Chessboard.svelte"
@@ -233,12 +234,89 @@
 		cardDnd.dragging = false;
 	}
 
+	// --- drag animation ---
+	// One duration and curve for everything that moves during a drag: items
+	// flipping aside, space opening where the drag enters, space closing where
+	// it left. Space and FLIP never run at once (holdFlipOff); an opening and a
+	// closing always do, and only cancel out if they share these. The bezier is
+	// flip's own default curve (cubicOut) written for CSS, and the zones'
+	// min-height transition must stay on the same pair.
+	const DND_MS = 180;
+	const DND_EASING = "cubic-bezier(0.215, 0.61, 0.355, 1)";
+
+	// A consider event tells us space is about to move before the DOM knows it,
+	// which is what FLIP needs: it is created during the same update and would
+	// otherwise animate items toward positions the opening space has not
+	// reached yet. The extra frame covers the close, which can only be measured
+	// after the update and so starts one behind the open.
+	const holdFlipOff = () => {
+		cardDnd.spaceAnimating++;
+		setTimeout(() => cardDnd.spaceAnimating--, DND_MS + 32);
+	}
+
+	const flipMs = $derived(cardDnd.dragging && !cardDnd.spaceAnimating ? DND_MS : 0);
+
+	// the placeholder for the picked-up item mounts in the flush this event
+	// triggers; the next frame is after it and before any zone the drag goes on
+	// to enter, so every later placeholder still opens animated
+	const suppressGrowForThisFlush = () => {
+		cardDnd.suppressGrow = true;
+		requestAnimationFrame(() => cardDnd.suppressGrow = false);
+	}
+
+	// space for a placeholder mounting mid-drag opens over DND_MS instead of
+	// appearing at full height, so what the drag pushes down flows rather than
+	// jumps. Read imperatively on mount: a later flag change can't retrigger it
+	const growIn = (node, isShadowItem) => {
+		if (!isShadowItem || cardDnd.suppressGrow) return;
+		node.animate(
+			[{ height: "0px" }, { height: node.style.height }],
+			{ duration: DND_MS, easing: DND_EASING }
+		);
+	}
+
 	// The library locks the origin zone's min size for the whole drag
-	// (preventShrinking), so it would only give up its space on drop. Both
-	// locks go the moment the dragged item is spaced into another zone: the
-	// space one zone frees and the space the other opens then change in the
-	// same frame, leaving the card's total height untouched.
+	// (preventShrinking), so it would only give up its space on drop. Where the
+	// shadow stays in the zone's items its space is held by the placeholder
+	// instead, and the lock can just go.
 	const unlockShrinking = el => el.style.minHeight = "";
+
+	// Closes the space a zone the drag has left is still holding, over the same
+	// window as the space opening wherever it went — the card's total height
+	// then never moves. The zone closes to what it measures once the item is
+	// out of its DOM, not to "its height minus the dragged one": where losing
+	// an item costs a zone less than that (two boards share a grid row, so
+	// losing one costs it no height at all) the difference sprang back on the
+	// drop. Transitions off while re-locking, so the measurement is never
+	// painted.
+	let releaseEpoch = 0;
+	const releaseHeightSmoothly = async el => {
+		const from = el.getBoundingClientRect().height;
+		await tick();
+		const epoch = ++releaseEpoch;
+		el.dataset.releaseEpoch = epoch;
+		el.style.transitionProperty = "none";
+		el.style.minHeight = "";
+		const to = el.getBoundingClientRect().height;
+		el.style.minHeight = from + "px";
+		void el.offsetHeight;
+		el.style.transitionProperty = "";
+		el.style.minHeight = to + "px";
+		// once settled, hand height control back to the content
+		setTimeout(() => {
+			if (Number(el.dataset.releaseEpoch) === epoch) el.style.minHeight = "";
+		}, DND_MS);
+	}
+
+	// the shadow arriving in a zone opens space there, and leaving one closes
+	// the space it held — except where it leaves the origin, which keeps the
+	// shadow in its items so the item's own space stays open for its return;
+	// re-entering there is then a plain reorder, and flips like one
+	const opensSpace = (trigger, current) =>
+		trigger === TRIGGERS.DRAGGED_ENTERED && !current.some(isShadow);
+	const closesSpace = (trigger, items) =>
+		trigger === TRIGGERS.DRAGGED_ENTERED_ANOTHER
+		|| (trigger === TRIGGERS.DRAGGED_LEFT && !items.some(isShadow));
 
 	const handleBlocksConsider = e => {
 		const { trigger } = e.detail.info;
@@ -246,18 +324,19 @@
 			// so any re-mount during drag rendering can't lose text
 			syncTextBlocks(side);
 			measureDragHeight(e);
+			suppressGrowForThisFlush();
 			setGrabbing(true);
 			cardDnd.dragging = true;
 			e.target.style.minWidth = "";
 		}
-		// leaving the origin keeps the shadow in the items, so its space stays
-		// until the drag enters another zone; leaving a zone the item was
-		// spaced into mid-drag drops the shadow and the space with it
-		if (trigger === TRIGGERS.DRAGGED_LEFT || trigger === TRIGGERS.DRAGGED_ENTERED_ANOTHER) {
-			unlockShrinking(e.target);
-		}
+		const closing = closesSpace(trigger, e.detail.items);
+		if (closing || opensSpace(trigger, side)) holdFlipOff();
+		// the shadow staying behind holds the origin's space by itself, so the
+		// library's lock is simply dropped there
+		if (trigger === TRIGGERS.DRAGGED_LEFT && !closing) unlockShrinking(e.target);
 		if (trigger === TRIGGERS.DRAG_STOPPED) endDrag();
 		setItems(side, e.detail.items);
+		if (closing) releaseHeightSmoothly(e.target);
 	}
 
 	const handleBlocksFinalize = e => {
@@ -270,6 +349,7 @@
 		if (trigger === TRIGGERS.DRAG_STARTED) {
 			cardDnd.dragEditing = isEditing(e.detail.info.id);
 			measureDragHeight(e);
+			suppressGrowForThisFlush();
 			setGrabbing(true);
 			cardDnd.dragging = true;
 			e.target.style.minWidth = "";
@@ -278,11 +358,12 @@
 		// board can be dragged back — its hold is the template's min-height
 		// and the library's own lock, neither of which may be released here
 		const leftEmpty = !e.detail.items.some(item => !isShadow(item));
-		if (!leftEmpty && (trigger === TRIGGERS.DRAGGED_LEFT || trigger === TRIGGERS.DRAGGED_ENTERED_ANOTHER)) {
-			unlockShrinking(e.target);
-		}
+		const closing = !leftEmpty && closesSpace(trigger, e.detail.items);
+		if (closing || opensSpace(trigger, block.content)) holdFlipOff();
+		if (trigger === TRIGGERS.DRAGGED_LEFT && !leftEmpty && !closing) unlockShrinking(e.target);
 		if (trigger === TRIGGERS.DRAG_STOPPED) endDrag();
 		setItems(block.content, e.detail.items);
+		if (closing) releaseHeightSmoothly(e.target);
 	}
 
 	const handleBoardsFinalize = (block, e) => {
@@ -320,6 +401,8 @@
 			class="block"
 			class:shadow-placeholder={isShadow(block)}
 			style:height={isShadow(block) ? cardDnd.dragHeight + "px" : undefined}
+			use:growIn={isShadow(block)}
+			animate:flip={{ duration: flipMs }}
 			onmousedown={guardBlockPress}
 			ontouchstart={guardBlockPress}
 		>
@@ -368,7 +451,9 @@
 							class:shadow-placeholder={isShadow(board)}
 							class:board-container-editing={layoutAsEditor(board)}
 							style:height={isShadow(board) ? cardDnd.dragHeight + "px" : undefined}
-											onmousedown={guardBoardPress}
+							use:growIn={isShadow(board)}
+							animate:flip={{ duration: flipMs }}
+							onmousedown={guardBoardPress}
 							ontouchstart={guardBoardPress}
 							style:order={layoutAsEditor(board)
 								? 2 * (boardIndex - boardIndex % 2) + 1
@@ -488,15 +573,24 @@
 	/* the extend-* variants stretch the drag hit-area to the card's edge
 	   without moving layout (padding out, negative margin back), so a drag
 	   hovering above the front side / below the back side still counts as
-	   that side's first/last position instead of "dragged outside" */
+	   that side's first/last position instead of "dragged outside".
+	   The two sides also reach toward each other: the add buttons and the
+	   Back label between them belonged to no zone, so a drag crossing from
+	   one side to the other spent ~110px outside every zone — the space it
+	   had opened collapsed and reopened, which is what made cross-side drags
+	   jump. Their hit-areas now meet in that band (deep enough to overlap a
+	   little: the library takes the first zone containing the cursor, which
+	   is stable — the front always wins there, never a flap between them) */
 	.blocks-zone.extend-top {
-		padding-top: 60px;
-		margin-top: -60px;
+		padding: 60px 0 56px 0;
+		margin: -60px 0 -56px 0;
 		--extend-top: 60px;
+		--extend-bottom: 56px;
 	}
 	.blocks-zone.extend-bottom {
-		padding-bottom: 110px;
-		margin-bottom: -110px;
+		padding: 56px 0 110px 0;
+		margin: -56px 0 -110px 0;
+		--extend-top: 56px;
 		--extend-bottom: 110px;
 	}
 	.blocks-zone {
@@ -504,6 +598,8 @@
 		flex-direction: column;
 		--extend-top: 0px;
 		--extend-bottom: 0px;
+		/* the space a drag frees closes over this, see releaseHeightSmoothly */
+		transition: min-height 180ms cubic-bezier(0.215, 0.61, 0.355, 1);
 	}
 	/* a side with no blocks keeps invisible space so a block can always be
 	   dragged there (a hovering drag's shadow item removes the class itself).
@@ -596,6 +692,7 @@
 		flex-direction: column;
 		align-items: center;
 		padding-top: 10px;
+		transition: min-height 180ms cubic-bezier(0.215, 0.61, 0.355, 1);
 	}
 	/* a lone board keeps the same size as a 2-column grid cell, centered;
 	   this also gives a drag's empty shadow box its proper width, so drops
@@ -613,6 +710,7 @@
 		gap: 20px;
 		position: relative;
 		padding-top: 10px;
+		transition: min-height 180ms cubic-bezier(0.215, 0.61, 0.355, 1);
 	}
 	.board-container {
 		position: relative;

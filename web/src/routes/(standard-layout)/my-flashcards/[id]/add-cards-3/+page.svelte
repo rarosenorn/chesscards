@@ -1,17 +1,16 @@
 <script>
-	// The add-cards page: each card side is a tiptap document in which a
-	// whole v1-style chessboard block is ONE embedded unit. The text caret
-	// sits between blocks and text lines, a virtual board caret works inside
-	// the blocks, and boards are managed with buttons and svelte-dnd
-	// dragging (within and between blocks). Submit converts each doc to the
-	// stored block-array format, so study/browse need no changes.
+	// Experimental "Add cards 3": the pure-PM trial. Each side is a single
+	// tiptap editor where text and chessboards live in one document (boards as
+	// PM nodes, dragged/reordered/undone by ProseMirror). Submit converts each
+	// doc to the stored block-array format, so study/browse need no changes.
+	// Deliberately minimal next to Add cards 1: no tab trap, no draft
+	// persistence across tabs, no board numbers/eye/duplicate, no FEN gating.
 	import { getContext, onMount } from "svelte"
 	import { enhance } from "$app/forms"
-	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
-	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
+	import CardSideDocEditor from "$lib/components/CardSideDocEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
-	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
-	import { docSideJsonBlocks, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
+	import { insertChessboard } from "$lib/tiptap-chessboard.svelte.js"
+	import { docSideJson, docHasContent } from "$lib/card-utils.js"
 
 	// the shared deck context (layout); new cards are pushed into it so
 	// browse/study see them without a reload
@@ -22,18 +21,8 @@
 
 	// shared board-editing state (see ChessboardNode.svelte): survives PM node
 	// view recreation on drags, and lets the submit apply open editors; board
-	// ids are unique, so one store serves both sides. invalidBoards mirrors
-	// v1's live FEN-validity reporting from open editors.
-	const boardUi = { editingIds: new Set(), editorStates: {}, applyEditors: {}, invalidBoards: {} };
-
-	// v1's board numbers: shown when the card has more than one board, the
-	// back side continuing the front's count (CSS counters read these)
-	let frontBoards = $state(0);
-	let backBoards = $state(0);
-	const recount = () => {
-		frontBoards = docCountBoardsBlocks(frontEditor?.getJson());
-		backBoards = docCountBoardsBlocks(backEditor?.getJson());
-	}
+	// ids are unique, so one store serves both sides
+	const boardUi = { editingIds: new Set(), editorStates: {}, applyEditors: {} };
 
 	// bound to the two CardSideDocEditor instances
 	let frontEditor, backEditor;
@@ -61,28 +50,17 @@
 		menu = { editor, focused: true };
 	});
 	const handleEditorBlur = editor => queueMicrotask(() => {
-		// a board drag steals focus for a beat (the dnd library focuses the
-		// dragged element); the bar must not flicker off over it
-		if (blockDnd.dragging) return;
 		if (menu.editor === editor && !editor.isFocused) menu = { editor, focused: false };
 	});
 	const handleEditorRefresh = editor => queueMicrotask(() => {
 		if (menu.editor === editor) menu = { ...menu, editor };
-		recount();
 	});
 
-	// + Chessboard inserts at the virtual caret's gap when one is active,
-	// otherwise as a new block in the last-focused editor
-	const addChessboard = () => {
-		const editor = menu.editor ?? frontEditor.getEditor();
-		if (!insertBoardAtCaret(editor, boardUi)) insertChessboardBlock(editor, boardUi);
-	}
+	// + Chessboard inserts into the last-focused editor
+	const addChessboard = () =>
+		insertChessboard(menu.editor ?? frontEditor.getEditor(), boardUi);
 
 	let formAttemptedAndInvalid = $state(false);
-
-	// v1's invalid-FEN gating: shown after a blocked submit, cleared as the
-	// docs change
-	let invalidFenNumbers = $state([]);
 
 	const handleKeyDown = e => {
 		if (e.ctrlKey || e.metaKey) {
@@ -90,7 +68,7 @@
 				e.preventDefault();
 				addCardForm.requestSubmit();
 			}
-			if (e.key === "u" || e.key === "o" || e.key === "k") {
+			if (e.key === "u" || e.key === "o") {
 				e.preventDefault();
 			}
 		}
@@ -131,60 +109,45 @@
 	{#if formAttemptedAndInvalid}
 		<p style="color: red; margin-left: 16px; margin-top: 4px; margin-bottom: 4px;">The card must have atleast 1 non-empty text field or 1 chessboard</p>
 	{/if}
-	<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} style="--board-offset: 0">
-	<CardSideBlockEditor
+	<CardSideDocEditor
 		bind:this={frontEditor}
 		{boardUi}
-		onDocChanged={() => { formAttemptedAndInvalid = false; invalidFenNumbers = []; }}
+		onDocChanged={() => formAttemptedAndInvalid = false}
 		onEditorFocus={handleEditorFocus}
 		onEditorBlur={handleEditorBlur}
 		onEditorTransaction={handleEditorRefresh}
 	/>
-	</div>
-	<p class="side-indicator" style="margin-top: 14px;">Back</p>
-	<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} style="--board-offset: {frontBoards}">
-	<CardSideBlockEditor
+	<!-- 4px + the container gap: the same 8px the Front label has under the
+	     menu bar's hr -->
+	<p class="side-indicator" style="margin-top: 4px;">Back</p>
+	<CardSideDocEditor
 		bind:this={backEditor}
 		{boardUi}
 		isBack
-		onDocChanged={() => { formAttemptedAndInvalid = false; invalidFenNumbers = []; }}
+		onDocChanged={() => formAttemptedAndInvalid = false}
 		onEditorFocus={handleEditorFocus}
 		onEditorBlur={handleEditorBlur}
 		onEditorTransaction={handleEditorRefresh}
 	/>
-	</div>
-	{#if invalidFenNumbers.length > 0}
-		<p style="color: red; align-self: end; margin: 4px 16px 0 0;">{invalidFenMessage(invalidFenNumbers)}</p>
-	{/if}
 	<form
 		bind:this={addCardForm}
 		class="add-form"
 		method="POST"
 		use:enhance={({ formData, cancel }) => {
 			// open board editors are applied as if Ok was pressed (they stay
-			// open through the submit, no visual flash); an invalid FEN — in
-			// an editor or pending in an inline input — blocks the submit
+			// open through the submit, no visual flash)
 			for (const apply of Object.values(boardUi.applyEditors)) apply();
 
 			const front = frontEditor.getJson();
 			const back = backEditor.getJson();
-			const frontCount = docCountBoardsBlocks(front);
-			invalidFenNumbers = [
-				...docInvalidBoardNumbersBlocks(front, 0, boardUi),
-				...docInvalidBoardNumbersBlocks(back, frontCount, boardUi)
-			];
-			if (invalidFenNumbers.length > 0) {
-				cancel();
-				return;
-			}
-			if (!docHasContentBlocks(front) && !docHasContentBlocks(back)) {
+			if (!docHasContent(front) && !docHasContent(back)) {
 				formAttemptedAndInvalid = true;
 				cancel();
 				return;
 			}
 
-			formData.set("front", docSideJsonBlocks(front));
-			formData.set("back", docSideJsonBlocks(back));
+			formData.set("front", docSideJson(front));
+			formData.set("back", docSideJson(back));
 			formData.set("cardType", cardType);
 
 			return async ({ result, update }) => {
@@ -291,8 +254,8 @@
 		border-radius: 8px 8px 0 0;
 	}
 	.side-indicator {
-		margin-left: 3px;
-		margin-bottom: 1px;
+		margin-left: 8px;
+		margin-bottom: 2px;
 		font-size: 1rem;
 		line-height: 1.2;
 		align-self: start;

@@ -30,7 +30,9 @@
 								{boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1}
 							</p>
 						{/if}
-						<Chessboard board={chessboard} {authorView} minWidth="409px" />
+						<!-- low floor: two squeezed boards must shrink, not overflow
+					     their cells and crush the gap between them -->
+					<Chessboard board={chessboard} {authorView} minWidth="280px" />
 					</div>
 				{/each}
 			</div>
@@ -40,43 +42,20 @@
 
 <div class="flashcard card-surface">
 	{@render side(card.front, 0, true)}
+	{#if card.back.length > 0}
+		<div class="side-gap"></div>
+	{/if}
 	{@render side(card.back, frontBoardCount, false)}
 </div>
 
 <style>
+	/* board/text layout inside the card comes from app.css ("card board
+	   layout"), shared with the study page */
 	.flashcard {
 		align-items: center;
 		margin-top: 32px;
 		margin-bottom: 40px;
 		min-height: 200px;
 		padding: 32px 30px 40px 30px;
-	}
-	.text-block {
-		padding: 0 30px;
-	}
-	/* boards breathe: extra space between board blocks and neighboring text */
-	.single-board-block {
-		display: flex;
-		position: relative;
-		flex-direction: column;
-		align-items: center;
-		margin: 26px 0;
-	}
-	/* a lone board keeps the same size as a 2-column grid cell, centered */
-	.single-board-block > .board-container {
-		width: calc(50% - 10px);
-		/* a board wider than the half-width cell (Chessboard minWidth) must
-		   grow the centered cell, not spill out one-sided */
-		min-width: min-content;
-	}
-	.board-grid-block {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		gap: 20px;
-		position: relative;
-		margin: 26px 0;
-	}
-	.board-container {
-		position: relative;
 	}
 </style>

@@ -335,32 +335,32 @@
 			{#if isShadow(block)}
 				<!-- empty sized box; see measureDragHeight -->
 			{:else}
-			<button
-				class="delete-entity-btn delete-entity-btn-on-line"
-				onclick={() => deleteBlock(blockIndex)}
-			>
-				<CrossIcon />
-			</button>
-			<!-- the block's side badge: a vertical index tab riding the right
-			     border, flush below the delete cross's corner; the hover
-			     border flows around it (the tab covers the line segment
-			     beneath itself) -->
-			<div class="layer-segments layer-tab" role="radiogroup" aria-label="Front or back">
+			<!-- header strip: the block's side badge and its delete cross on
+			     one line at the top-right, inside the hover border -->
+			<div class="block-header">
+				<div class="layer-segments layer-tab" role="radiogroup" aria-label="Front or back">
+					<button
+						role="radio"
+						aria-checked={!block.answer}
+						class:selected={!block.answer}
+						onclick={() => block.answer = false}
+					>
+						Front
+					</button>
+					<button
+						role="radio"
+						aria-checked={block.answer}
+						class:selected={block.answer}
+						onclick={() => block.answer = true}
+					>
+						Back
+					</button>
+				</div>
 				<button
-					role="radio"
-					aria-checked={!block.answer}
-					class:selected={!block.answer}
-					onclick={() => block.answer = false}
+					class="delete-entity-btn delete-entity-btn-on-line"
+					onclick={() => deleteBlock(blockIndex)}
 				>
-					Front
-				</button>
-				<button
-					role="radio"
-					aria-checked={block.answer}
-					class:selected={block.answer}
-					onclick={() => block.answer = true}
-				>
-					Back
+					<CrossIcon />
 				</button>
 			</div>
 			{#if block.type === "text"}
@@ -546,37 +546,31 @@
 	.block:hover {
 		border: 1px solid rgba(0, 0, 0, 0.2);
 	}
+	/* header strip: toggle and delete cross on one line, right-aligned,
+	   with equal air above and below */
+	.block-header {
+		display: flex;
+		justify-content: end;
+		align-items: center;
+		gap: 8px;
+		margin: 5px 0;
+		z-index: 1;
+	}
 	/* Front|Back segments, same language as the card-type and editor-stage
 	   segments: grey track, the selected side lifted white; always visible —
-	   it is the block's side badge. As a .layer-tab it is an index tab on
-	   the CARD's right edge: outside the card, its left side flush on the
-	   card border (21px = the card's 20px side padding + the block's own 1px
-	   border, which the % base excludes), aligned with its block's top, and
-	   never taller than the shortest possible block (an empty text block). */
-	.layer-tab {
-		position: absolute;
-		left: calc(100% + 21px);
-		top: 0;
-		z-index: 1;
-		max-height: 88px;
-		border: 1px solid #dcdcdc;
-		border-left: none;
-		border-radius: 0 10px 10px 0;
-		box-shadow: rgba(0, 0, 0, 0.08) 1px 1px 3px;
-	}
+	   it is the block's side badge */
 	.layer-segments {
 		display: flex;
-		flex-direction: column;
 		gap: 2px;
 		background-color: #e6e6e6;
 		padding: 2px;
+		border-radius: 999px;
 	}
 	.layer-segments button {
-		writing-mode: vertical-rl;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 4px 3px;
+		padding: 2px 10px;
 		border: none;
 		border-radius: 999px;
 		background-color: transparent;
@@ -592,9 +586,9 @@
 		box-shadow: rgba(0, 0, 0, 0.18) 0 1px 2px;
 		color: black;
 	}
+	/* in the header's flow, not on the border corner */
 	.delete-entity-btn-on-line {
-		top: -10px;
-		right: -10px;
+		position: static;
 	}
 	/* a chessboard block whose last board is dragged into another block stays
 	   visible (empty) for the whole drag — the board can still return home —
@@ -647,21 +641,21 @@
 	.delete-entity-btn:hover {
 		background-color: darkgrey;
 	}
-	.block:hover > .delete-entity-btn {
+	.block:hover .block-header .delete-entity-btn {
 		opacity: 1;
 	}
+	/* no own top padding: the header strip's 5px margin below is the whole
+	   gap, matching the 5px above it */
 	.text-block {
 		display: flex;
 		justify-content: start;
 		position: relative;
-		padding-top: 10px;
 	}
 	.single-board-block {
 		display: flex;
 		position: relative;
 		flex-direction: column;
 		align-items: center;
-		padding-top: 10px;
 	}
 	/* a lone board keeps the same size as a 2-column grid cell, centered;
 	   this also gives a drag's empty shadow box its proper width, so drops
@@ -678,7 +672,6 @@
 		grid-auto-flow: dense;
 		gap: 20px;
 		position: relative;
-		padding-top: 10px;
 	}
 	.board-container {
 		position: relative;

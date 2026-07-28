@@ -28,7 +28,7 @@
 	const unsavedPlaces = () => [
 		...(cardDrafts.addCards
 			&& (sideHasContent(cardDrafts.addCards.front) || sideHasContent(cardDrafts.addCards.back))
-			? ["Add cards"] : []),
+			? ["Add cards 1"] : []),
 		...(cardDrafts.addCards2 && sideHasContent(cardDrafts.addCards2.blocks)
 			? ["Add cards 2"] : []),
 		...(cardDrafts.browse?.editingCardId != null ? ["Browse / edit"] : [])
@@ -67,14 +67,15 @@
 		});
 	});
 	// marketplace deck instances are readonly: study and browse only.
-	// "Add cards 2" is the single-list editor trial, kept next to the classic
+	// "Add cards 2" (single Q/A list) and "Add cards 3" (one tiptap document
+	// per side, boards as PM nodes) are editor trials kept next to the classic
 	// front/back editor for side-by-side comparison.
 	const paths = deck.isMarketplace
 		? ["study", "browse"]
-		: ["study", "browse", "add-cards", "add-cards-2", "settings"];
+		: ["study", "browse", "add-cards", "add-cards-2", "add-cards-3", "add-cards-5", "settings"];
 	const names = deck.isMarketplace
 		? ["Study", "Browse"]
-		: ["Study", "Browse / edit", "Add cards", "Add cards 2", "Settings"];
+		: ["Study", "Browse / edit", "Add cards 1", "Add cards 2", "Add cards 3", "Add cards 5", "Settings"];
 </script>
 
 <div class="deck-nav-container">

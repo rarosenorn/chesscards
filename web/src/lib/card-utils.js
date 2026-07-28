@@ -39,6 +39,145 @@ const boardForJson = ({ fen, moves, annotations, solutionFrom, solutionAnnotatio
 	...(Object.keys(solutionAnnotations ?? {}).length > 0 && { solutionAnnotations })
 });
 
+// Add cards 3: a side is one tiptap doc (boards as PM nodes). Convert to the
+// stored block-array format so storage/study/browse are untouched: contiguous
+// non-board top-level nodes become one text block, each boardGrid a
+// chessboards block.
+const docToSide = doc => {
+	const blocks = [];
+	let textNodes = [];
+	const flushText = () => {
+		const content = { type: "doc", content: textNodes };
+		if (textNodes.length > 0 && ttGenerateText(content).trim().length > 0) {
+			blocks.push({ type: "text", content });
+		}
+		textNodes = [];
+	}
+	for (const node of doc.content ?? []) {
+		if (node.type === "boardGrid") {
+			flushText();
+			const boards = (node.content ?? []).map(n => n.attrs?.data).filter(Boolean);
+			if (boards.length > 0) blocks.push({ type: "chessboards", content: boards.map(boardForJson) });
+		} else {
+			textNodes.push(node);
+		}
+	}
+	flushText();
+	return blocks;
+}
+
+const docSideJson = doc => JSON.stringify(docToSide(doc));
+
+const docHasContent = doc => docToSide(doc).length > 0;
+
+// Add cards 4: boards are inline nodes inside paragraphs. A paragraph mixing
+// text and boards splits, in order, into text blocks and chessboards blocks;
+// board nodes are stripped from anything bound for a text block (the text
+// renderers don't know them).
+const stripBoards = node => node.content
+	? { ...node, content: node.content.filter(n => n.type !== "chessboard").map(stripBoards) }
+	: node;
+
+const docToSideInline = doc => {
+	const blocks = [];
+	let textNodes = [];
+	const flushText = () => {
+		const content = { type: "doc", content: textNodes };
+		if (textNodes.length > 0 && ttGenerateText(content).trim().length > 0) {
+			blocks.push({ type: "text", content });
+		}
+		textNodes = [];
+	}
+	for (const node of doc.content ?? []) {
+		if (node.type === "paragraph" && (node.content ?? []).some(n => n.type === "chessboard")) {
+			let run = [];
+			let boards = [];
+			const flushRun = () => {
+				if (run.length > 0) textNodes.push({ type: "paragraph", content: run });
+				run = [];
+			}
+			const flushBoards = () => {
+				if (boards.length > 0) {
+					flushText();
+					blocks.push({ type: "chessboards", content: boards.map(boardForJson) });
+				}
+				boards = [];
+			}
+			for (const child of node.content) {
+				if (child.type === "chessboard") {
+					flushRun();
+					if (child.attrs?.data) boards.push(child.attrs.data);
+				} else {
+					flushBoards();
+					run.push(child);
+				}
+			}
+			flushRun();
+			flushBoards();
+		} else {
+			textNodes.push(stripBoards(node));
+		}
+	}
+	flushText();
+	return blocks;
+}
+
+const docSideJsonInline = doc => JSON.stringify(docToSideInline(doc));
+
+const docHasContentInline = doc => docToSideInline(doc).length > 0;
+
+// Add cards 5: a chessboardBlock node's boards array maps 1:1 to a stored
+// chessboards block
+const docToSideBlocks = doc => {
+	const blocks = [];
+	let textNodes = [];
+	const flushText = () => {
+		const content = { type: "doc", content: textNodes };
+		if (textNodes.length > 0 && ttGenerateText(content).trim().length > 0) {
+			blocks.push({ type: "text", content });
+		}
+		textNodes = [];
+	}
+	for (const node of doc.content ?? []) {
+		if (node.type === "chessboardBlock") {
+			flushText();
+			const boards = node.attrs?.boards ?? [];
+			if (boards.length > 0) blocks.push({ type: "chessboards", content: boards.map(boardForJson) });
+		} else {
+			textNodes.push(node);
+		}
+	}
+	flushText();
+	return blocks;
+}
+
+const docSideJsonBlocks = doc => JSON.stringify(docToSideBlocks(doc));
+
+const docHasContentBlocks = doc => docToSideBlocks(doc).length > 0;
+
+const docCountBoardsBlocks = doc => (doc?.content ?? []).reduce(
+	(n, node) => node.type === "chessboardBlock" ? n + (node.attrs?.boards?.length ?? 0) : n, 0
+);
+
+// v1's invalid-FEN gating over a blocks doc: display numbers of boards whose
+// FEN is invalid — live in an open editor (ui.invalidBoards) or pending in
+// fenInput otherwise
+const docInvalidBoardNumbersBlocks = (doc, offset, ui) => {
+	const numbers = [];
+	let n = offset;
+	for (const node of doc?.content ?? []) {
+		if (node.type !== "chessboardBlock") continue;
+		for (const board of node.attrs?.boards ?? []) {
+			n += 1;
+			const invalid = ui.editingIds.has(board.id)
+				? ui.invalidBoards?.[board.id]
+				: board.fenInput != null && !isValidFen(board.fenInput);
+			if (invalid) numbers.push(n);
+		}
+	}
+	return numbers;
+}
+
 const getSideJson = side => {
 	const sideForJson = side.map(block => ({
 		type: block.type,
@@ -105,4 +244,4 @@ const countBoards = side => side.reduce(
 
 const boardsBefore = (side, blockIndex) => countBoards(side.slice(0, blockIndex));
 
-export { newBoard, normalizeBoard, getSideJson, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }
+export { newBoard, normalizeBoard, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }

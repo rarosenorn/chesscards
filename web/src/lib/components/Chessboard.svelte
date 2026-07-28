@@ -8,6 +8,7 @@
 	import { Markers } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { normalizeBoard } from "$lib/card-utils.js"
 	import { replayMoves, showAnnotations } from "$lib/board-utils.js"
+	import { boardCaret } from "$lib/block-caret-state.svelte.js"
 	import { playMoveSound } from "$lib/sounds.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
 
@@ -161,6 +162,10 @@
 	}
 
 	const handleKeyDown = e => {
+		// while the block editor's virtual board caret is active, arrows
+		// belong to it (the keydown also bubbles to ProseMirror's keymap —
+		// stepping moves here would double-act)
+		if (boardCaret.blockId != null) return;
 		if (e.key === "ArrowLeft") {
 			e.preventDefault();
 			previous();

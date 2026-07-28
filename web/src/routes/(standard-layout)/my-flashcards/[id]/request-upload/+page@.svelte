@@ -21,7 +21,16 @@
 	// step 1 = details form, step 2 = choose preview cards + send the request
 	let step = $state(1);
 
-	let descriptionEditor;
+	// null whenever step 2 is open: bind:this clears it on unmount
+	let descriptionEditor = $state(null);
+	// Step 2 unmounts the details panel, so the description editor is only
+	// alive on step 1: its content is captured on the way out, which is what
+	// the request sends and what step 1 is restored from — reading the editor
+	// itself from step 2 was reading null.
+	let descriptionJson = $state(null);
+	const captureDescription = () => {
+		if (descriptionEditor) descriptionJson = descriptionEditor.getJson();
+	}
 	// svelte-ignore state_referenced_locally -- default value only; the user edits it freely
 	let name = $state(data.deck.name);
 	let theme = $state("");
@@ -213,14 +222,21 @@
 		canvas.toBlob(resolve, "image/jpeg", 0.9);
 	})
 
-	// details beyond native form validation; checked before step 2 opens
+	// details beyond native form validation; checked before step 2 opens and
+	// again on submit, where only the captured description is left to check
+	const descriptionIsEmpty = () =>
+		descriptionEditor
+			? descriptionEditor.isEmpty()
+			: !descriptionJson || ttGenerateText(descriptionJson).trim().length === 0;
+
 	const detailsErrors = () => [
 		...(imageElement ? [] : ["A thumbnail image is required"]),
-		...(descriptionEditor?.isEmpty() ? ["A description is required"] : [])
+		...(descriptionIsEmpty() ? ["A description is required"] : [])
 	];
 
 	// the details <form>'s submit handler: its native validation has passed
 	const goNext = () => {
+		captureDescription();
 		errors = detailsErrors();
 		if (errors.length === 0) step = 2;
 	}
@@ -234,7 +250,7 @@
 			formData.set("name", name);
 			formData.set("theme", theme);
 			formData.set("price", price.toString());
-			formData.set("description", JSON.stringify(descriptionEditor.getJson()));
+			formData.set("description", JSON.stringify(descriptionJson));
 			formData.set("previewCardIds", JSON.stringify(previewIds));
 			formData.set("image", await cropImage(), "thumbnail.jpg");
 
@@ -249,8 +265,11 @@
 			} else {
 				errors = result.data?.errors ?? ["Something went wrong. Please try again."];
 			}
-		} catch {
-			// network failure or unparseable response
+		} catch (err) {
+			// network failure or unparseable response — and anything thrown
+			// while building the request, which this message disguises as one,
+			// so the real error goes to the console
+			console.error(err);
 			errors = ["Could not reach the server. Check your connection and try again."];
 		} finally {
 			submitting = false;
@@ -338,7 +357,7 @@
 
 			<p class="field-label">Description</p>
 			<div class="description-editor">
-				<TextEditor bind:this={descriptionEditor} />
+				<TextEditor bind:this={descriptionEditor} content={descriptionJson ?? ""} />
 			</div>
 
 			<label for="mp-theme">Theme</label>

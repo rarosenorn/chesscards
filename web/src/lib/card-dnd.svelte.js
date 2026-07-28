@@ -5,8 +5,18 @@
 export const createCardDnd = () => {
 	const cardDnd = $state({
 		// true while a drag (blocks or boards) is live; a block the drag empties
-		// holds its space for this window so the item can be dragged back
+		// holds its space for this window so the item can be dragged back, and
+		// items only flip into place inside it
 		dragging: false,
+		// > 0 while space is opening or closing somewhere on the card; FLIP is
+		// off for that window, since it would animate items toward a layout the
+		// space is still laying out (both sides count — a cross-side drag moves
+		// one card's worth of layout)
+		spaceAnimating: 0,
+		// true for the flush that mounts the placeholder replacing the picked-up
+		// item: that space is the item's own and was never gone, so it must not
+		// open animated like the ones a drag enters later
+		suppressGrow: false,
 		// height of the element being dragged, measured at drag start; sizes the
 		// empty placeholder box rendered for the drag's shadow item
 		dragHeight: 0,

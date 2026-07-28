@@ -56,6 +56,10 @@ body {
 .button-row > *:last-child {
 	border-radius: 0 4px 4px 0;
 }
+/* a lone button is no group: no straight edges */
+.button-row > *:first-child:last-child {
+	border-radius: 4px;
+}
 .std-btn {
 	padding: 6px 12px;
 	border-radius: 4px;
@@ -169,4 +173,60 @@ thead > th {
 svg.cm-chessboard {
 	display: block;
 	margin: 0 auto;
+}
+
+/* the whole page shows the closed hand while a chess piece is being dragged
+   (the ghost itself is pointer-events: none, so the cursor would otherwise
+   flicker to whatever sits beneath it) */
+body.piece-grabbing,
+body.piece-grabbing * {
+	cursor: grabbing !important;
+}
+
+/* --- card board layout, shared by study and browse (FlashcardBrowse) ---
+   scoped under .flashcard so the add-cards editor's own .board-grid-block
+   (ChessboardBlockNode) is untouched */
+.flashcard .text-block {
+	padding: 0 30px;
+}
+/* the sides read as two halves of one card: a divider line with the same
+   breathing room on both sides; the gap only renders once the answer
+   shows, so the line does too */
+.flashcard .side-gap {
+	align-self: stretch;
+	height: 0;
+	border-top: 1px solid rgba(0, 0, 0, 0.15);
+	margin: 20px 0;
+}
+/* boards breathe: extra space between board blocks and neighboring text */
+.flashcard .single-board-block {
+	display: flex;
+	position: relative;
+	flex-direction: column;
+	align-items: center;
+	margin: 16px 0;
+}
+/* a lone board keeps the same size as a 2-column grid cell, centered */
+.flashcard .single-board-block > .board-container {
+	width: calc(47% - 10px);
+	/* a board wider than the half-width cell (Chessboard minWidth) must
+	   grow the centered cell, not spill out one-sided */
+	min-width: min-content;
+}
+.flashcard .board-grid-block {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	/* matches .text-block's 30px side padding, so a row's left board sits
+	   flush with the text */
+	width: calc(100% - 60px);
+	margin-inline: auto;
+	/* rows sit closer than columns: the numbers above each board already
+	   add visual air between rows */
+	gap: 12px 20px;
+	position: relative;
+	margin-top: 16px;
+	margin-bottom: 16px;
+}
+.flashcard .board-container {
+	position: relative;
 }

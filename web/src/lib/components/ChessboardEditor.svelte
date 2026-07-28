@@ -149,6 +149,8 @@
 		["wk", "wq", "wr", "wb", "wn", "wp"],
 		["bk", "bq", "br", "bb", "bn", "bp"]
 	]
+	const pieceNames = { k: "king", q: "queen", r: "rook", b: "bishop", n: "knight", p: "pawn" };
+	const pieceLabel = piece => `${piece[0] === "w" ? "White" : "Black"} ${pieceNames[piece[1]]}`;
 
 	let boardElement;
 	let board = $state();
@@ -289,7 +291,9 @@
 		}
 	}
 
-	const handleSquareClick = ({ square }) => {
+	const handleSquareClick = ({ square, event }) => {
+		// left button only — the right button belongs to the annotator
+		if (event.button !== 0) return;
 		if (!square || !selectedTool || mode !== "setup") return;
 		clearMoves();
 		board.setPiece(square, selectedTool === "trash" ? null : selectedTool);
@@ -442,7 +446,13 @@
 	// dnd library's drag listener sits on the surrounding card item, so keep
 	// board presses from bubbling to it. Plain stopPropagation (bubble phase,
 	// on the board itself) leaves cm-chessboard's own listeners unaffected.
-	const stopDndPress = e => e.stopPropagation();
+	// preventDefault keeps focus where it is (the add-cards document), the
+	// same way the menu bar's buttons do — cm-chessboard's input runs on
+	// pointer events and doesn't need the mouse default.
+	const stopDndPress = e => {
+		e.stopPropagation();
+		e.preventDefault();
+	}
 
 	// pointer only over squares holding a piece (or always, while a palette
 	// tool is selected): the library's blanket input-enabled pointer is
@@ -451,6 +461,13 @@
 	// (lichess-style), so you see what you're about to place.
 	let hoverPiece = $state(false);
 	let draggingPiece = $state(false);
+	// the drag ghost rides the pointer over whatever happens to be beneath it
+	// (palette gaps, board margins), so the closed hand comes from a
+	// page-wide override for the drag's duration
+	$effect(() => {
+		document.body.classList.toggle("piece-grabbing", draggingPiece);
+		return () => document.body.classList.remove("piece-grabbing");
+	});
 	// a piece was click-selected (pressed and released in place) and awaits a
 	// destination click — pointer, not the drag cursors, until then
 	let clickMoving = $state(false);
@@ -579,6 +596,18 @@
 		}
 	}
 
+	// in moves mode the recorder owns arrow presses from inside the editor:
+	// handle them here and keep them from bubbling on to the block editor's
+	// virtual-caret keymap (in an add-cards board island, ProseMirror sits
+	// above us in the DOM and would step the caret too)
+	const claimArrows = e => {
+		if (mode !== "moves" || e.target.tagName === "INPUT") return;
+		if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+			e.stopPropagation();
+			handleKeyDown(e);
+		}
+	}
+
 	// scroll steps through the moves like on the card boards (lichess-style);
 	// deltas accumulate so trackpads don't fire a step per micro-tick, and
 	// page scroll is swallowed over the board while it has moves to step.
@@ -608,7 +637,8 @@
 <!-- hidden sprite the palette's <use href="#..."> references (see import) -->
 <div class="sprite-host" aria-hidden="true">{@html pieceSprite}</div>
 
-<div class="editor">
+<!-- svelte-ignore a11y_no_static_element_interactions -- keyboard routing, not an interactive control -->
+<div class="editor" onkeydown={claimArrows}>
 	<div class="board-column">
 		<div class="ghost-host">
 			<!-- focusable (tabindex -1) so a freshly opened editor can receive
@@ -724,6 +754,7 @@
 							<button
 								class="palette-piece"
 								class:selected={selectedTool === piece}
+								aria-label={pieceLabel(piece)}
 								onclick={() => selectTool(piece)}
 							>
 								<svg viewBox="0 0 40 40">
@@ -836,8 +867,11 @@
 		cursor: default;
 	}
 	/* with a tool selected the native cursor disappears over the board: the
-	   ghost's own arrow replaces it (lichess-style) */
-	.board.tool-squares :global(.cm-chessboard) {
+	   ghost's own arrow replaces it (lichess-style). Every element too —
+	   squares and pieces carry their own cursor rules, which would sit on
+	   top of the ghost (an element's cursor beats an inherited none) */
+	.board.tool-squares :global(.cm-chessboard),
+	.board.tool-squares :global(.cm-chessboard *) {
 		cursor: none;
 	}
 	/* during a click-move the next click acts, so the whole board shows a

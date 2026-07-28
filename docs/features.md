@@ -1,4 +1,13 @@
 # Currently working on
+## add cards page
+- when clicking on an open editor, the input becomes unfocused, it should still be focused.
+- in study and browse, flashcard text and boards should have same margin, e.g. left side of text and left side of left board (when 2 boards in row) should be flush
+- but the caret should only be ihdden on editor right side, not on next boards left side, in regards to what we just fixed.
+
+## do so if you own a deck and are in study mode, you can press e and you can edit the card like in browse. put edit button on right side of answers (mirror hide button) but only if user owns deck ofcourse
+
+## indicator whos turn it is on a board, like in 1001 endgame puzzles with a color filled square
+
 ## subdecks
 - Subdecks are parts of a deck grouped together for some level of internalization before moving to next subdeck
 - Subdecks because sometimes its good to have some mastery of part of a deck, before moving to the next part. For example, in endgames its better to have seen cards from basic endgames like king and rook vs king multiple times and have some mastery of that part, before moving to include cards from the next subdeck, which could include more advanced endgames. Then you would progress when you hit target on some variable in the previous subdeck. Ofcourse it should have settings to bypass in whatever way.
@@ -24,6 +33,7 @@ Study all cards in the chosen deck by getting cards from the deck contiuously. H
 ## study all button
 - Button for study all, which studies all your decks in some way for interleaving all, still adhering to subdeck progression.
 
+# allow PGN for board editor for both positions and moves import
 # editor: make the drag and drop work properly again, AI didnt revert properly so I think we lost some function, esp. between back and front
 # editor: do selectors for annotations like pieces with nice icons showing arrows and circle, selectable and between Start position Clean board and pieces above
 # editor: another delete block icon thats not ugly
@@ -55,3 +65,68 @@ eye), with some UI delimiting where the back begins — e.g. a divider line /
 "back" label between the front segment and the back segment. The eye then
 only governs the board preview, and the boundary is always visible while
 editing.
+
+# SPEC: add-cards editor — caret / deletion / merge behavior
+As implemented in `web/src/lib/tiptap-chessboard-block/` (2026-07-28). This is
+the reference for how the editor is SUPPOSED to behave — adjust this first,
+then make the code match.
+
+## Model
+- Each card side is a tiptap document; a chessboard block is ONE atom node
+  holding a boards array, laid out 2 per row. Text lines live around blocks.
+- The virtual board caret sits at gap indices inside one block (0 = before the
+  first board … boards.length = after the last). It renders as a bar 5px off
+  the board face, spanning board + FEN bar (never the number above or the
+  move line below), ~1.5px thick snapped to device pixels.
+- Horizontal navigation walks VISUAL stops (screen order, from DOM geometry):
+  each visual row contributes a "down" stop before its first board and an
+  "up" stop after every board; a same-row middle gap is a single stop. A row
+  break (2-wide wrap, or an open editor taking a full row) gives one gap two
+  stops picked by affinity, like a text line wrap.
+
+## Caret
+- Clicking a board parks the caret at its right. Shift+click extends a range;
+  dragging from the grid's empty space sweep-selects; shift+arrows likewise.
+- Opening a board editor (Edit button or insert): the document keeps focus and
+  the caret parks at the board's right — the editor-right stop EXISTS for
+  navigation but never renders a bar. The editor's left renders like any
+  board; the board below keeps its own left stop.
+- The selection tint covers board + bar exactly and bridges the gap between
+  two same-row selected boards. Plain arrows collapse a range to its edge.
+- While the caret is active, board move-nav (arrows) is off; inside a board
+  editor's moves mode the move recorder claims arrows first.
+- Focus never leaves the document for board presses, editor clicks on
+  non-text controls, or drags (the dnd library's focus steal is reverted);
+  the caret follows a dropped board.
+
+## Enter / typing at a gap
+- Enter before the first board: a line pushes in above, caret stays.
+- Enter mid-block: the block splits, text caret lands on the line between.
+- Enter after the last board: a line below, text caret in it.
+- Typing a character makes the line the keystroke would have made (above /
+  split / below) carrying the character.
+
+## Deletion
+- In-block Backspace/Delete removes the nearest board (or the active range).
+  A block emptied of boards dissolves into an empty line.
+- At a block edge: an empty neighboring line joins away (caret flows into the
+  block); a text line takes the caret; an adjacent block flows the caret
+  through.
+- From text beside a block: an empty line joins away; a non-empty line
+  deletes the block's nearest board and the text caret stays. At the document
+  edge with a block on the other side, the key is consumed — never left to
+  the browser's native delete, which selects the whole island.
+- Every deletion reparks the real selection collapsed (gap cursor when
+  possible) so remapping can never tint blocks as selected.
+
+## Merge (normalizer)
+- Two blocks left adjacent — the line between them deleted by any means —
+  merge into one. The first block's id survives; the caret remaps into the
+  merged block. The normalizer also dissolves empty blocks and assigns ids to
+  blocks born without one (paste).
+
+## Clipboard
+- Mod-c/x/v with the caret active: the board clipboard, within and across
+  blocks and sides. Pasting with a text caret joins a block that touches it
+  (nothing but the line boundary between), else creates a new block at the
+  caret's line. Native paste of block HTML regenerates all ids.

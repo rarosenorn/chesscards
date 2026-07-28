@@ -6,7 +6,7 @@
 
 	const tabs = [
 		{ path: "description", name: "Description" },
-		{ path: "cards", name: "Preview cards" }
+		{ path: "cards", name: "Sample cards" }
 	];
 </script>
 

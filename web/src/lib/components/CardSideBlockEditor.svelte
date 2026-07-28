@@ -120,6 +120,11 @@
 	.tiptap :global(p) {
 		margin: 0.6em 0;
 	}
+	/* the input's inside spacing reads equal top and bottom: the last
+	   line's bottom margin matches the first line's 7px top */
+	.tiptap :global(p:last-child) {
+		margin-bottom: 7px;
+	}
 
 	/* --- chessboard blocks: one giant letter per block --- */
 	.tiptap :global(.board-block) {

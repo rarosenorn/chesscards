@@ -255,11 +255,12 @@
 		padding: 36px 30px 90px 30px;
 		position: relative;
 	}
-	/* quiet exit bottom-left, away from the rating row */
+	/* quiet exit bottom-left, away from the rating row; flush with the
+	   boards' left edge (card padding 30 + grid inset 30) */
 	.hide-answer-btn {
 		position: absolute;
 		bottom: 10px;
-		left: 30px;
+		left: 60px;
 		padding: 4px 8px;
 	}
 	.flashcard-btn-row {

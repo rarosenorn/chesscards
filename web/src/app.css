@@ -187,7 +187,8 @@ body.piece-grabbing * {
    scoped under .flashcard so the add-cards editor's own .board-grid-block
    (ChessboardBlockNode) is untouched */
 .flashcard .text-block {
-	padding: 0 30px;
+	/* 2px more inset than the boards' 30px, so text sits a hair inside */
+	padding: 0 32px;
 }
 /* paragraph rhythm inside card text, matching the editor's 0.6em */
 .flashcard .text-block p {

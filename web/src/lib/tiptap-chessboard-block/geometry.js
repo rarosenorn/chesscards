@@ -14,13 +14,10 @@ export const COLS = 2;
 // the caret bar renders this far outside the board face
 export const CARET_GAP_PX = 5;
 
-// the caret bar's nominal thickness; rendered snapped to whole device
-// pixels so every spot rasterizes identically at fractional zoom
-export const CARET_WIDTH_PX = 1.5;
-
-// the bar spans this share of the board+bar extent, vertically centered —
-// a little shorter than the board reads lighter
-export const CARET_HEIGHT_RATIO = 0.85;
+// the caret bar's nominal thickness; rendered as whole device pixels (with
+// the ink lightened to compensate any overshoot) so every spot rasterizes
+// identically at fractional zoom
+export const CARET_WIDTH_PX = 1.25;
 
 export const blockCells = blockId =>
 	[...document.querySelectorAll(`.board-block[data-block-id="${blockId}"] .board-cell`)];

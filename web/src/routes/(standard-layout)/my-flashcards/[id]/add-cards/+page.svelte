@@ -278,6 +278,13 @@
 		background-color: white;
 		color: black;
 	}
+	/* the :active transform makes the button a stacking context, which would
+	   trap the tooltip beneath the card below — lift the button while the
+	   tooltip can be showing */
+	.type-segments button:hover,
+	.type-segments button:active {
+		z-index: 30;
+	}
 	/* pinned to the viewport top while the card scrolls; the holder spans the
 	   full card width (white, so content passes underneath cleanly) while the
 	   bar's buttons start where the editors do */

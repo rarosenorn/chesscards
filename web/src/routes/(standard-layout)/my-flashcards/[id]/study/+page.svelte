@@ -3,7 +3,7 @@
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating } from "ts-fsrs"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
-	import { countBoards, boardsBefore } from "$lib/card-utils.js"
+	import { countBoards, boardsBefore, sideHasContent } from "$lib/card-utils.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
@@ -167,7 +167,7 @@
 		     place, on top of showing the back side below -->
 		{@render side(currentCard.front, 0, isCardTurned)}
 		{#if isCardTurned}
-			{#if currentCard.back.length > 0}
+			{#if sideHasContent(currentCard.back)}
 				<div class="side-gap"></div>
 			{/if}
 			{@render side(currentCard.back, frontBoardCount, true)}

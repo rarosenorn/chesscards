@@ -1,6 +1,6 @@
 <script>
 	import { ttGenerateHTML } from "../tiptap-utility.js"
-	import { countBoards, boardsBefore } from "../card-utils.js"
+	import { countBoards, boardsBefore, sideHasContent } from "../card-utils.js"
 	import Chessboard from "./Chessboard.svelte"
 
 	let { card } = $props();
@@ -42,7 +42,9 @@
 
 <div class="flashcard card-surface">
 	{@render side(card.front, 0, true)}
-	{#if card.back.length > 0}
+	<!-- the divider only when the back has VISIBLE content — a card whose
+	     answer lives on the front boards' back layers gets no delimiter -->
+	{#if sideHasContent(card.back)}
 		<div class="side-gap"></div>
 	{/if}
 	{@render side(card.back, frontBoardCount, false)}

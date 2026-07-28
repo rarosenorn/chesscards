@@ -189,6 +189,16 @@ body.piece-grabbing * {
 .flashcard .text-block {
 	padding: 0 30px;
 }
+/* paragraph rhythm inside card text, matching the editor's 0.6em */
+.flashcard .text-block p {
+	margin: 0.6em 0;
+}
+.flashcard .text-block p:first-child {
+	margin-top: 0;
+}
+.flashcard .text-block p:last-child {
+	margin-bottom: 0;
+}
 /* the sides read as two halves of one card: a divider line with the same
    breathing room on both sides; the gap only renders once the answer
    shows, so the line does too */

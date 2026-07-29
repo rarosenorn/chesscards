@@ -128,10 +128,10 @@
 	// open editor's RIGHT exists but always renders hidden; the editor's
 	// left may carry a bar like any board.
 	const rowBreakAt = i => i % COLS === 0 || !!editingIds[items[i - 1]?.id] || !!editingIds[items[i]?.id];
-	const caretBefore = i => active && !range
+	const caretBefore = i => active && sideFocused && !range
 		&& boardCaret.index === i
 		&& (i === 0 || (rowBreakAt(i) && boardCaret.affinity === "down"));
-	const caretAfter = i => active && !range && !editingIds[items[i]?.id]
+	const caretAfter = i => active && sideFocused && !range && !editingIds[items[i]?.id]
 		&& boardCaret.index === i + 1
 		&& !(i + 1 < items.length && rowBreakAt(i + 1) && boardCaret.affinity === "down");
 	const inRange = i => !!range && i >= range.from && i < range.to;
@@ -224,6 +224,24 @@
 		if (!root) return;
 		root.classList.toggle("virtual-caret-active", active);
 		return () => root.classList.remove("virtual-caret-active");
+	});
+
+	// like a native caret, the bar only shows while its side has focus
+	// (the editor root contains the board islands, so a focused FEN input
+	// still counts); the caret STATE survives blur and re-shows on focus
+	let sideFocused = $state(false);
+	$effect(() => {
+		const root = gridEl?.closest(".ProseMirror");
+		if (!root) return;
+		// deferred: during focusout activeElement hasn't landed yet
+		const sync = () => queueMicrotask(() => sideFocused = root.contains(document.activeElement));
+		sync();
+		document.addEventListener("focusin", sync);
+		document.addEventListener("focusout", sync);
+		return () => {
+			document.removeEventListener("focusin", sync);
+			document.removeEventListener("focusout", sync);
+		};
 	});
 
 	// clicking a collapsed board face always parks the virtual caret to the

@@ -18,7 +18,7 @@
 	// inside the blocks (tiptap-chessboard-block/).
 	let element = $state()
 	let editor = $state(null)
-	let { boardUi, isBack = false, onDocChanged = null, onEditorFocus = null, onEditorBlur = null, onEditorTransaction = null } = $props();
+	let { boardUi, isBack = false, initialDoc = null, onDocChanged = null, onEditorFocus = null, onEditorBlur = null, onEditorTransaction = null } = $props();
 
 	export const getJson = () => editor?.getJSON();
 	export const getEditor = () => editor;
@@ -74,7 +74,7 @@
 				Dropcursor, BlockNavigation, Gapcursor, chessboardShortcut,
 				BlockNode.configure({ ui: boardUi, isBack })
 			],
-			content: "",
+			content: initialDoc ?? "",
 			editorProps: {
 				attributes: { spellcheck: "false" }
 			},

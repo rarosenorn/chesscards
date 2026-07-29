@@ -153,6 +153,25 @@ const docToSideBlocks = doc => {
 
 const docSideJsonBlocks = doc => JSON.stringify(docToSideBlocks(doc));
 
+// the inverse, for editing an existing card in the block editor: stored side
+// blocks become one document (chessboardBlock nodes get fresh client ids and
+// normalized boards); an empty side becomes a single empty line
+const sideToDoc = side => {
+	const content = [];
+	for (const block of side ?? []) {
+		if (block.type === "chessboards") {
+			content.push({
+				type: "chessboardBlock",
+				attrs: { id: crypto.randomUUID(), boards: block.content.map(normalizeBoard) }
+			});
+		} else if (block.type === "text") {
+			content.push(...(block.content?.content ?? []));
+		}
+	}
+	if (content.length === 0) content.push({ type: "paragraph" });
+	return { type: "doc", content };
+}
+
 const docHasContentBlocks = doc => docToSideBlocks(doc).length > 0;
 
 const docCountBoardsBlocks = doc => (doc?.content ?? []).reduce(
@@ -244,4 +263,4 @@ const countBoards = side => side.reduce(
 
 const boardsBefore = (side, blockIndex) => countBoards(side.slice(0, blockIndex));
 
-export { newBoard, normalizeBoard, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }
+export { newBoard, normalizeBoard, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }

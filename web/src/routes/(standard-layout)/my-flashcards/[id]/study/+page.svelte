@@ -5,10 +5,25 @@
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, sideHasContent } from "$lib/card-utils.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
+	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
+	import { updateCardContent } from "../browse/browse.remote.js"
 
 	let deck = getContext("deck");
+	// marketplace deck instances can only be viewed, not edited
+	const readonly = deck.isMarketplace;
+
+	// owners can edit the current card in place (like browse), via the Edit
+	// button on the answer row or the e key
+	let editingCard = $state(false);
+	let cardEditRef = $state();
+	const saveEdit = async (front, back) => {
+		await updateCardContent({ cardId: currentCard.id, front, back });
+		currentCard.front = JSON.parse(front);
+		currentCard.back = JSON.parse(back);
+		editingCard = false;
+	}
 
 	const scheduler = fsrs();
 
@@ -98,6 +113,18 @@
 	});
 
 	const handleKeyDown = e => {
+		// while editing, the card editor owns the keyboard (Ctrl+Enter saves)
+		if (editingCard) return;
+		if (
+			e.key === "e" && !e.ctrlKey && !e.metaKey && !e.altKey &&
+			!readonly && currentCard &&
+			e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA" &&
+			!e.target.isContentEditable
+		) {
+			e.preventDefault();
+			editingCard = true;
+			return;
+		}
 		if (!isCardTurned) {
 			if (e.key === " ") {
 				e.preventDefault();
@@ -161,7 +188,15 @@
 	{/each}
 {/snippet}
 
-{#if currentCard}
+{#if currentCard && editingCard}
+	<div class="flashcard-edit card-surface">
+		<CardBlockEdit bind:this={cardEditRef} card={currentCard} onSave={saveEdit} />
+	</div>
+	<div class="edit-toolbar">
+		<button class="std-btn" onclick={() => editingCard = false}>Cancel</button>
+		<button class="std-btn" onclick={() => cardEditRef?.save()}>Save</button>
+	</div>
+{:else if currentCard}
 	<div class="flashcard card-surface">
 		<!-- turning reveals front boards' back layers (moves/annotations) in
 		     place, on top of showing the back side below -->
@@ -180,6 +215,15 @@
 			>
 				Hide answer
 			</button>
+			{#if !readonly}
+				<button
+					class="std-btn edit-card-btn"
+					onclick={() => editingCard = true}
+					title="Shortcut key: e"
+				>
+					Edit card
+				</button>
+			{/if}
 		{/if}
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
@@ -262,6 +306,27 @@
 		bottom: 10px;
 		left: 60px;
 		padding: 4px 8px;
+	}
+	/* mirror of the hide button, owners only */
+	.edit-card-btn {
+		position: absolute;
+		bottom: 10px;
+		right: 60px;
+		padding: 4px 8px;
+	}
+	/* the in-place card editor: same surface as the card it replaces, the
+	   add-cards page's inner inset */
+	.flashcard-edit {
+		margin-top: 34px;
+		padding: 12px 30px;
+	}
+	.edit-toolbar {
+		display: flex;
+		justify-content: end;
+		gap: 8px;
+		width: 100%;
+		max-width: 900px;
+		margin: 8px auto 40px auto;
 	}
 	.flashcard-btn-row {
 		display: flex;

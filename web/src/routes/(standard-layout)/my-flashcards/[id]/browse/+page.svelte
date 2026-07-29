@@ -11,10 +11,8 @@
 	import { getContext } from "svelte"
 	import { SvelteSet } from "svelte/reactivity"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
-	import CardSideEditor from "$lib/components/CardSideEditor.svelte"
+	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
-	import { getSideJson, sideHasContent, countBoards, normalizeBoard, invalidBoardNumbers, invalidFenMessage } from "$lib/card-utils.js"
-	import { createCardDnd } from "$lib/card-dnd.svelte.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardContent, deleteCards } from "./browse.remote.js"
 
@@ -23,20 +21,16 @@
 	const readonly = deck.isMarketplace;
 
 	// in-progress edit lives in the deck layout's context so it survives tab
-	// navigation within the deck
+	// navigation within the deck: session is CardBlockEdit's persistence bag
 	const cardDrafts = getContext("cardDrafts");
 	if (!cardDrafts.browse) {
 		cardDrafts.browse = {
 			// id of the card open for editing; selecting another card falls back to view mode
 			editingCardId: null,
-			editFront: [],
-			editBack: [],
-			// shared by both side editors in edit mode so drags work between front and back
-			dnd: createCardDnd()
+			session: null
 		};
 	}
 	const draft = cardDrafts.browse;
-	const cardDnd = draft.dnd;
 
 	// returning to the tab mid-edit reselects the card being edited; captured
 	// non-reactively so Save/Cancel (clearing editingCardId) can't yank the
@@ -48,72 +42,24 @@
 	);
 
 	let isEditingSelected = $derived(selectedCard && draft.editingCardId === selectedCard.id);
-	let editFrontBoardCount = $derived(countBoards(draft.editFront));
-	let editShowBoardNumbers = $derived(editFrontBoardCount + countBoards(draft.editBack) > 1);
-
-	// errors follow the attempted-and-still-invalid pattern: shown after a
-	// blocked save, then tracking the live condition until it clears
-	let invalidFenAttempted = $state(false);
-	let invalidBoardNums = $derived(
-		draft.editingCardId
-			? [
-				...invalidBoardNumbers(draft.editFront, 0, cardDnd),
-				...invalidBoardNumbers(draft.editBack, editFrontBoardCount, cardDnd)
-			]
-			: []
-	);
-	$effect(() => { if (invalidBoardNums.length === 0) invalidFenAttempted = false })
-
-	let noContentAttempted = $state(false);
-	$effect(() => {
-		if (draft.editingCardId && (sideHasContent(draft.editFront) || sideHasContent(draft.editBack))) noContentAttempted = false;
-	})
-
-	const toEditableSide = side =>
-		(side ?? []).map(block => ({
-			id: crypto.randomUUID(),
-			type: block.type,
-			textEditor: null,
-			content: block.type === "chessboards"
-				? block.content.map(board => normalizeBoard($state.snapshot(board)))
-				: block.content
-		}));
 
 	const startEditing = () => {
-		draft.editFront = toEditableSide(selectedCard.front);
-		draft.editBack = toEditableSide(selectedCard.back);
-		invalidFenAttempted = false;
-		noContentAttempted = false;
+		draft.session = {
+			boardUi: { editingIds: new Set(), editorStates: {}, applyEditors: {}, invalidBoards: {} },
+			frontDoc: null,
+			backDoc: null
+		};
 		draft.editingCardId = selectedCard.id;
 	}
 
 	const stopEditing = () => {
 		draft.editingCardId = null;
-		// board ids are regenerated per edit session; drop any leftover open
-		// editors and their persisted state
-		draft.dnd.editingBoards = [];
-		draft.dnd.editorStates = {};
-		draft.dnd.invalidBoards = {};
+		draft.session = null;
 	}
 
-	// bound to the two CardSideEditor instances in edit mode
-	let editFrontEditor = $state(), editBackEditor = $state();
+	let cardEditRef = $state();
 
-	const saveCard = async () => {
-		// open board editors are applied as if Ok was pressed; an invalid FEN
-		// (in an editor or an inline input) blocks the save
-		editFrontEditor?.applyOpenEditors();
-		editBackEditor?.applyOpenEditors();
-		if (invalidBoardNums.length > 0) {
-			invalidFenAttempted = true;
-			return;
-		}
-		if (!sideHasContent(draft.editFront) && !sideHasContent(draft.editBack)) {
-			noContentAttempted = true;
-			return;
-		}
-		const front = getSideJson(draft.editFront);
-		const back = getSideJson(draft.editBack);
+	const saveCard = async (front, back) => {
 		await updateCardContent({ cardId: selectedCard.id, front, back });
 		selectedCard.front = JSON.parse(front);
 		selectedCard.back = JSON.parse(back);
@@ -253,9 +199,6 @@
 	onkeydown={e => {
 		if (e.key === "Escape") {
 			contextMenu = null;
-		} else if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && isEditingSelected) {
-			e.preventDefault();
-			saveCard();
 		} else if (
 			e.key === "e" && !e.ctrlKey && !e.metaKey && !e.altKey &&
 			!readonly && selectedCard && !isEditingSelected &&
@@ -355,16 +298,12 @@
 		{#if selectedCard}
 			{#if isEditingSelected}
 				<div class="card-edit card-surface">
-					<p class="side-indicator">Front</p>
-					{#if invalidFenAttempted && invalidBoardNums.length > 0}
-						<p class="edit-error">{invalidFenMessage(invalidBoardNums)}</p>
-					{/if}
-					{#if noContentAttempted}
-						<p class="edit-error">The card must have atleast 1 non-empty text field or 1 chessboard</p>
-					{/if}
-					<CardSideEditor bind:this={editFrontEditor} side={draft.editFront} boardNumberOffset={0} showBoardNumbers={editShowBoardNumbers} dnd={cardDnd} extendEdge="top" />
-					<p class="side-indicator" style="margin-top: 10px;">Back</p>
-					<CardSideEditor bind:this={editBackEditor} side={draft.editBack} boardNumberOffset={editFrontBoardCount} showBoardNumbers={editShowBoardNumbers} dnd={cardDnd} extendEdge="bottom" isBack />
+					<CardBlockEdit
+						bind:this={cardEditRef}
+						card={selectedCard}
+						session={draft.session}
+						onSave={saveCard}
+					/>
 				</div>
 			{:else}
 				<FlashcardBrowse card={selectedCard} />
@@ -373,7 +312,7 @@
 				<div class="card-toolbar">
 					{#if isEditingSelected}
 						<button class="std-btn" onclick={stopEditing}>Cancel</button>
-						<button class="std-btn" onclick={saveCard}>Save</button>
+						<button class="std-btn" onclick={() => cardEditRef?.save()}>Save</button>
 					{:else}
 						<button class="std-btn" onclick={startEditing}>Edit card</button>
 					{/if}
@@ -509,20 +448,11 @@
 		margin-top: 16px;
 		margin-bottom: 0;
 	}
+	/* same inner inset as the add-cards page, whose editor this hosts */
 	.card-edit {
 		margin-top: 16px;
 		margin-bottom: 0;
-		padding: 12px 20px;
-	}
-	.side-indicator {
-		margin-left: 20px;
-		margin-bottom: 0px;
-		font-size: 1.12rem;
-		align-self: start;
-	}
-	.edit-error {
-		color: red;
-		margin: 4px 0 4px 16px;
+		padding: 12px 30px;
 	}
 	.context-menu {
 		position: fixed;

@@ -84,6 +84,47 @@
 	// docs change
 	let invalidFenNumbers = $state([]);
 
+	// --- tab trap ---
+	// Tab cycles the three card-editing stops only — front text, back text,
+	// Add card — wrapping around. Everything the boards own (FEN inputs, the
+	// per-board buttons, an open board editor's controls) stays out of the
+	// cycle: they are reached by clicking or by the board caret, not by Tab.
+	// Escape releases the trap (WCAG 2.1.2) so native tabbing can leave the
+	// form; focusing a stop again re-arms it. Capture phase, so ProseMirror
+	// never sees the Tab first.
+	let trapEnabled = $state(true);
+	let container;
+
+	const trapStops = () => [
+		...[...container.querySelectorAll(".editor-wrap")].map(w => w.querySelector(".text-area > .ProseMirror")),
+		addCardForm?.querySelector("button")
+	].filter(el => el && !el.disabled && el.offsetParent !== null);
+
+	// focus inside a board sits inside the side's ProseMirror, so it counts as
+	// that side's stop — tabbing out of a board lands on the next stop
+	const stopOf = (stops, node) => stops.findIndex(el => el === node || el.contains(node));
+
+	const handleTrapKeydown = e => {
+		if (e.key === "Escape") {
+			trapEnabled = false;
+			document.activeElement?.blur();
+			return;
+		}
+		if (e.key !== "Tab" || !trapEnabled) return;
+		const stops = trapStops();
+		if (stops.length === 0) return;
+		e.preventDefault();
+		const i = stopOf(stops, e.target);
+		const next = e.shiftKey
+			? stops[i <= 0 ? stops.length - 1 : i - 1]
+			: stops[(i + 1) % stops.length];
+		next.focus();
+	}
+
+	const handleFocusIn = e => {
+		if (stopOf(trapStops(), e.target) !== -1) trapEnabled = true;
+	}
+
 	const handleKeyDown = e => {
 		if (e.ctrlKey || e.metaKey) {
 			if (e.key === "Enter") {
@@ -123,7 +164,13 @@
 		{/each}
 	</div>
 </div>
-<div class="container card-surface">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+	class="container card-surface"
+	bind:this={container}
+	onkeydowncapture={handleTrapKeydown}
+	onfocusin={handleFocusIn}
+>
 	<div class="menu-bar-holder">
 		<DocEditorMenuBar {menu} onAddChessboard={addChessboard} />
 	</div>

@@ -165,6 +165,19 @@ const splitBlockAt = (view, block, gap, text = null) => {
 	view.focus();
 }
 
+// A gap cursor parked next to a block becomes the virtual caret at that
+// block's near edge. Only when no virtual caret is live: the flows that park a
+// gap cursor on purpose (inserting a block, deleting into one) set their own.
+const adoptGapCursor = view => {
+	if (boardCaret.blockId != null || !view.hasFocus()) return;
+	const sel = view.state.selection;
+	if (!(sel instanceof GapCursor) || sel.$head.depth !== 0) return;
+	const after = sel.$head.nodeAfter;
+	const before = sel.$head.nodeBefore;
+	if (isBlock(after)) setBoardCaret(after.attrs.id, 0, "down");
+	else if (isBlock(before)) setBoardCaret(before.attrs.id, (before.attrs.boards ?? []).length, "up");
+}
+
 // --- keyboard handlers ---
 
 const vHorizontal = dir => ({ editor }) => {
@@ -511,6 +524,15 @@ export const BlockNavigation = Extension.create({
 					handleDOMEvents: {
 						mousedown: (view, event) => {
 							if (boardCaret.blockId != null && !event.target?.closest?.(".board-block")) clearBoardCaret();
+							return false;
+						},
+						// focus arriving from outside (tabbing in) lands PM's own
+						// selection beside a block as a gap cursor — a horizontal
+						// bar sitting where the board caret belongs. Adopt it: next
+						// to boards the virtual caret is the caret. Deferred, as PM
+						// settles the selection after the DOM focus event
+						focus: view => {
+							queueMicrotask(() => adoptGapCursor(view));
 							return false;
 						}
 					},

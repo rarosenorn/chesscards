@@ -76,39 +76,13 @@
 	// of the text in a field inside it. Making the root non-editable for the
 	// duration of the press restores normal input behavior; PM never sees
 	// these events anyway (the island stops them).
-	// Capture-phase pointerdown, the earliest hook before the browser decides
-	// how the press selects: by mousedown Firefox has already committed to
-	// dragging the island instead of selecting inside the field.
-	const isFirefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox");
-	const guardTextFieldPointer = e => {
-		const field = e.target?.closest?.("input, textarea");
-		if (isFirefox && field) freeTextFieldPress(field);
-	}
-	// Restored on the field's blur, NOT on mouseup: flipping contenteditable
-	// re-frames the subtree in Firefox, which erases the selection highlight
-	// (the selection itself survives) — so the flip must outlive the gesture.
-	const freeTextFieldPress = field => {
-		const root = gridEl?.closest(".ProseMirror");
-		if (!root || root.contentEditable === "false") return;
-		root.contentEditable = "false";
-		const restore = () => {
-			root.contentEditable = "true";
-			field.removeEventListener("blur", restore);
-		};
-		field.addEventListener("blur", restore);
-	}
-
 	const guardBoardPress = e => {
 		if (isInteractive(e.target)) {
 			e.stopImmediatePropagation();
 			// buttons still click with the default prevented, but no longer
 			// steal focus from the document (the menu-bar pattern); text
 			// fields must keep their native focusing
-			if (e.target.closest("input, textarea, select, [contenteditable='true']")) {
-				if (isFirefox) freeTextFieldPress();
-			} else {
-				e.preventDefault();
-			}
+			if (!e.target.closest("input, textarea, select, [contenteditable='true']")) e.preventDefault();
 			return;
 		}
 		e.preventDefault();
@@ -363,7 +337,6 @@
 			style:order={cellOrder(i)}
 			style:height={isShadow(board) ? blockDnd.dragHeight + "px" : undefined}
 			animate:flip={{ duration: blockDnd.dragging ? 150 : 0 }}
-			onpointerdowncapture={guardTextFieldPointer}
 			onmousedown={guardBoardPress}
 			ontouchstart={guardBoardPress}
 			onclick={e => handleCellClick(e, i)}

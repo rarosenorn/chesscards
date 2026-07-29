@@ -25,9 +25,9 @@
 		editingCard = false;
 	}
 
-	// same confirmation as browse's delete — the card and its review history go
-	// for good. Dropping it from deck.cards re-derives currentCard, so the next
-	// due card takes its place.
+	// the Delete key drops the card being studied, behind browse's confirmation
+	// — the card and its review history go for good. Removing it from
+	// deck.cards re-derives currentCard, so the next due card takes its place.
 	const deleteCurrentCard = async () => {
 		const { id } = currentCard;
 		const confirmed = await confirmModal({
@@ -142,6 +142,15 @@
 			editingCard = true;
 			return;
 		}
+		if (
+			e.key === "Delete" && !readonly && currentCard &&
+			e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA" &&
+			!e.target.isContentEditable
+		) {
+			e.preventDefault();
+			deleteCurrentCard();
+			return;
+		}
 		if (!isCardTurned) {
 			if (e.key === " ") {
 				e.preventDefault();
@@ -229,18 +238,13 @@
 				Hide answer
 			</button>
 			{#if !readonly}
-				<div class="card-actions">
-					<button
-						class="std-btn"
-						onclick={() => editingCard = true}
-						title="Shortcut key: e"
-					>
-						Edit card
-					</button>
-					<button class="std-btn" onclick={deleteCurrentCard}>
-						Delete card
-					</button>
-				</div>
+				<button
+					class="std-btn edit-card-btn"
+					onclick={() => editingCard = true}
+					title="Shortcut key: e"
+				>
+					Edit card
+				</button>
 			{/if}
 		{/if}
 		<div class="flashcard-btn-row">
@@ -326,14 +330,10 @@
 		padding: 4px 8px;
 	}
 	/* mirror of the hide button, owners only */
-	.card-actions {
+	.edit-card-btn {
 		position: absolute;
 		bottom: 10px;
 		right: 36px;
-		display: flex;
-		gap: 8px;
-	}
-	.card-actions button {
 		padding: 4px 8px;
 	}
 	/* the in-place card editor: same surface as the card it replaces, the

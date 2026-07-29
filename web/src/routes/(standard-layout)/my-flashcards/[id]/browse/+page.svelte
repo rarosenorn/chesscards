@@ -205,6 +205,13 @@
 		) {
 			e.preventDefault();
 			startEditing();
+		} else if (
+			e.key === "Delete" && !readonly && selectedCard && !isEditingSelected &&
+			e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA" &&
+			!e.target.isContentEditable
+		) {
+			e.preventDefault();
+			deleteCardsByIds(multiSelected.size > 0 ? [...multiSelected] : [selectedCard.id]);
 		}
 	}}
 />

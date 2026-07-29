@@ -58,6 +58,6 @@
 		margin-top: 32px;
 		margin-bottom: 40px;
 		min-height: 200px;
-		padding: 32px 30px 40px 30px;
+		padding: 24px 22px 32px 22px;
 	}
 </style>

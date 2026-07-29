@@ -291,22 +291,22 @@
 		align-items: center;
 		margin-top: 34px;
 		min-height: 700px;
-		padding: 36px 30px 60px 30px;
+		padding: 28px 22px 52px 22px;
 		position: relative;
 	}
 	/* quiet exit bottom-left, away from the rating row; flush with the
-	   boards' left edge (card padding 30 + grid inset 30) */
+	   boards' left edge (card padding 22 + grid inset 30) */
 	.hide-answer-btn {
 		position: absolute;
 		bottom: 10px;
-		left: 60px;
+		left: 52px;
 		padding: 4px 8px;
 	}
 	/* mirror of the hide button, owners only */
 	.edit-card-btn {
 		position: absolute;
 		bottom: 10px;
-		right: 60px;
+		right: 52px;
 		padding: 4px 8px;
 	}
 	/* the in-place card editor: same surface as the card it replaces, the

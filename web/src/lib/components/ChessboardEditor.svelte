@@ -190,6 +190,9 @@
 	}
 
 	const handleMoveInput = event => {
+		// a piece picked up by CLICK (not held): the flags below are reset
+		// before the setup handling runs, so capture it here
+		const wasClickMove = clickMoving;
 		// drag cursor lifecycle: closed hand for the whole drag (any square),
 		// back to open hand right at the drop — the hover state is recomputed
 		// for the drop square after the position commits, so the cursor is
@@ -218,8 +221,10 @@
 				case INPUT_EVENT_TYPE.validateMoveInput:
 					return true;
 				case INPUT_EVENT_TYPE.moveInputCanceled:
-					// dropping a piece outside the board removes it
-					if (event.reason === MOVE_CANCELED_REASON.movedOutOfBoard && event.squareFrom) {
+					// DRAGGING a piece off the board removes it; clicking a
+					// piece and then clicking away just cancels — same event,
+					// so the gesture decides
+					if (event.reason === MOVE_CANCELED_REASON.movedOutOfBoard && event.squareFrom && !wasClickMove) {
 						board.setPiece(event.squareFrom, null);
 					}
 					syncFenFromBoard();

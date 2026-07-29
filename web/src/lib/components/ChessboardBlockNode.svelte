@@ -76,7 +76,13 @@
 	// of the text in a field inside it. Making the root non-editable for the
 	// duration of the press restores normal input behavior; PM never sees
 	// these events anyway (the island stops them).
+	// Capture-phase pointerdown, the earliest hook before the browser decides
+	// how the press selects: by mousedown Firefox has already committed to
+	// dragging the island instead of selecting inside the field.
 	const isFirefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox");
+	const guardTextFieldPointer = e => {
+		if (isFirefox && e.target?.closest?.("input, textarea")) freeTextFieldPress();
+	}
 	const freeTextFieldPress = () => {
 		const root = gridEl?.closest(".ProseMirror");
 		if (!root || root.contentEditable === "false") return;
@@ -355,6 +361,7 @@
 			style:order={cellOrder(i)}
 			style:height={isShadow(board) ? blockDnd.dragHeight + "px" : undefined}
 			animate:flip={{ duration: blockDnd.dragging ? 150 : 0 }}
+			onpointerdowncapture={guardTextFieldPointer}
 			onmousedown={guardBoardPress}
 			ontouchstart={guardBoardPress}
 			onclick={e => handleCellClick(e, i)}

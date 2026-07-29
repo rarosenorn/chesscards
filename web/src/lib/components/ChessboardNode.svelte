@@ -178,6 +178,16 @@
 		flex: 1 1 auto;
 		min-width: 0;
 	}
+	/* the FEN field is a text input, not a button: the row's shared button
+	   mechanics (hover lift, press dip) don't apply to it */
+	.button-row > input:hover,
+	.button-row > input:active {
+		border: 1px solid lightgrey;
+		border-bottom: 1px solid darkgrey;
+		background-color: #f5f5f5;
+		box-shadow: none;
+		transform: none;
+	}
 	.button-row > input:focus {
 		position: relative;
 		z-index: 1;

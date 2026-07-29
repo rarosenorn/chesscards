@@ -5,7 +5,7 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view"
 import { GapCursor } from "@tiptap/pm/gapcursor"
 import { boardCaret, caretRange, setBoardCaret, clearBoardCaret, boardClipboard } from "$lib/block-caret-state.svelte.js"
 import { isBlock, withFreshIds } from "./node.svelte.js"
-import { nearestGapAtEdge, gapScreenX, cellRows, blockCells } from "./geometry.js"
+import { nearestGapAtEdge, nearestGapInRow, gapScreenX, cellRows, blockCells } from "./geometry.js"
 
 // The virtual board caret: PM sees one atom node per chessboard block, and
 // the per-board "letters" feel is simulated here. PM keeps focus and its
@@ -222,6 +222,23 @@ const vVertical = dir => ({ editor }) => {
 		const block = findBlock(state);
 		boardCaret.anchor = null;
 		const x = gapScreenX(boardCaret.blockId, boardCaret.index, boardCaret.affinity);
+		// a block wraps at COLS boards per row, so up/down walks its own rows
+		// first — keeping the x, like a text caret changing line — and only
+		// leaves the block from its top/bottom row
+		const rows = cellRows(blockCells(boardCaret.blockId));
+		// the gap sits on the left edge of the board at its index, except at a
+		// wrap end ("up"), where it hangs off the right edge of the one before
+		const anchorCell = boardCaret.affinity === "up" && boardCaret.index > 0
+			? boardCaret.index - 1
+			: boardCaret.index;
+		const rowIndex = rows.findIndex(row => row.cells.some(cell => cell.index === anchorCell));
+		const targetRow = rows[rowIndex + dir];
+		if (rowIndex !== -1 && targetRow) {
+			const gap = nearestGapInRow(targetRow, x);
+			boardCaret.index = gap.index;
+			boardCaret.affinity = gap.affinity;
+			return true;
+		}
 		const edgeRes = state.doc.resolve(dir > 0 ? block.pos + block.node.nodeSize : block.pos);
 		const neighborNode = dir > 0 ? edgeRes.nodeAfter : edgeRes.nodeBefore;
 		if (isBlock(neighborNode)) {

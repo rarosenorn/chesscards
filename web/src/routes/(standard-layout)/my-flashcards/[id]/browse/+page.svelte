@@ -164,7 +164,7 @@
 	const stateNames = ["New", "Learning", "Review", "Relearning"];
 
 	const formatDue = card => {
-		if (card.finished_at) return "Done";
+		if (card.finished_at) return "Never";
 		if (card.card_type === "tactic")
 			return Date.parse(card.due) > Date.now()
 				? new Date(card.due).toLocaleDateString()

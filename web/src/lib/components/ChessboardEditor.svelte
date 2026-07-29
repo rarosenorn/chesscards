@@ -1,5 +1,5 @@
 <script>
-	import { onMount, getContext } from "svelte"
+	import { onMount, getContext, tick } from "svelte"
 	import { playMoveSound } from "$lib/sounds.js"
 	import TrashIcon from "$lib/icons/Trash.svelte"
 	import CursorArrowIcon from "$lib/icons/CursorArrow.svelte"
@@ -139,7 +139,14 @@
 		if (isValidFen(currentFen)) {
 			acceptedFen = currentFen;
 			board.setPosition(currentFen.trim().split(/\s+/)[0], false);
-			if (fenPasted) switchMode("moves");
+			if (fenPasted) {
+				switchMode("moves");
+				// the FEN input disables itself in moves mode, and disabling the
+				// focused element drops focus to <body> — the board takes it, as
+				// it does for a freshly opened editor, so arrows and the wheel
+				// keep stepping without a click
+				tick().then(() => boardElement?.focus({ preventScroll: true }));
+			}
 		}
 		fenPasted = false;
 	}

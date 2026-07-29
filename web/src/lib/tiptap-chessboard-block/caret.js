@@ -481,6 +481,18 @@ export const BlockNavigation = Extension.create({
 			// made: above at block start, below at end, splitting between
 			new Plugin({
 				props: {
+					// pressing anywhere in the document outside a board island
+					// dismisses the virtual caret. The selection-transaction
+					// rule below can't cover this: the parked selection may
+					// already sit where the user clicks, so no transaction
+					// fires — and the text caret stays hidden while the
+					// virtual one is considered active
+					handleDOMEvents: {
+						mousedown: (view, event) => {
+							if (boardCaret.blockId != null && !event.target?.closest?.(".board-block")) clearBoardCaret();
+							return false;
+						}
+					},
 					handleKeyDown: (view, event) => {
 						if (boardCaret.blockId == null) return false;
 						if (event.ctrlKey || event.metaKey || event.altKey) return false;

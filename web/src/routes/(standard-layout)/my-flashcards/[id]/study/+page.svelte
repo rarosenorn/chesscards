@@ -7,8 +7,9 @@
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
+	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
-	import { updateCardContent } from "../browse/browse.remote.js"
+	import { updateCardContent, deleteCards } from "../browse/browse.remote.js"
 
 	let deck = getContext("deck");
 	// marketplace deck instances can only be viewed, not edited
@@ -22,6 +23,23 @@
 		currentCard.front = JSON.parse(front);
 		currentCard.back = JSON.parse(back);
 		editingCard = false;
+	}
+
+	// same confirmation as browse's delete — the card and its review history go
+	// for good. Dropping it from deck.cards re-derives currentCard, so the next
+	// due card takes its place.
+	const deleteCurrentCard = async () => {
+		const { id } = currentCard;
+		const confirmed = await confirmModal({
+			title: "Delete card",
+			message: "This permanently deletes the card and its review history.",
+			confirmLabel: "Delete",
+			danger: true
+		});
+		if (!confirmed) return;
+		await deleteCards({ cardIds: [id] });
+		deck.cards = deck.cards.filter(card => card.id !== id);
+		isCardTurned = false;
 	}
 
 	const scheduler = fsrs();
@@ -211,13 +229,18 @@
 				Hide answer
 			</button>
 			{#if !readonly}
-				<button
-					class="std-btn edit-card-btn"
-					onclick={() => editingCard = true}
-					title="Shortcut key: e"
-				>
-					Edit card
-				</button>
+				<div class="card-actions">
+					<button
+						class="std-btn"
+						onclick={() => editingCard = true}
+						title="Shortcut key: e"
+					>
+						Edit card
+					</button>
+					<button class="std-btn" onclick={deleteCurrentCard}>
+						Delete card
+					</button>
+				</div>
 			{/if}
 		{/if}
 		<div class="flashcard-btn-row">
@@ -303,10 +326,14 @@
 		padding: 4px 8px;
 	}
 	/* mirror of the hide button, owners only */
-	.edit-card-btn {
+	.card-actions {
 		position: absolute;
 		bottom: 10px;
 		right: 36px;
+		display: flex;
+		gap: 8px;
+	}
+	.card-actions button {
 		padding: 4px 8px;
 	}
 	/* the in-place card editor: same surface as the card it replaces, the

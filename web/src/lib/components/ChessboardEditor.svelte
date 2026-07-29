@@ -34,7 +34,9 @@
 	// boardOnBack: the board lives on the card's back — the whole board only
 	// shows once the card is turned, so a separate back layer makes no sense;
 	// the toggle disappears and everything records as the visible layer
-	let { board: boardData, restore, persistState, onFenValidityChange, onSave, onCancel, boardOnBack = false } = $props();
+	// startInMoves: the position was pasted in from somewhere else, so there is
+	// nothing to set up — open on the moves stage
+	let { board: boardData, restore, persistState, onFenValidityChange, onSave, onCancel, boardOnBack = false, startInMoves = false } = $props();
 
 	const emptyPlacement = "8/8/8/8/8/8/8/8"
 	const startPlacement = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
@@ -89,7 +91,8 @@
 		return () => onFenValidityChange?.(true);
 	})
 
-	let mode = $state(resume?.mode ?? (initial.moves.length > 0 ? "moves" : "setup"));
+	// svelte-ignore state_referenced_locally -- the open-time value, like initial/resume
+	let mode = $state(resume?.mode ?? (initial.moves.length > 0 || (startInMoves && isValidFen(currentFen)) ? "moves" : "setup"));
 	// position shown in moves mode; editing continues from the last move
 	let currentIndex = $state(resume?.currentIndex ?? initial.moves.length);
 	let replay = $derived(replayMoves({ fen: currentFen, moves }));
@@ -125,12 +128,20 @@
 		acceptedFen = currentFen;
 	}
 
+	// a pasted FEN is a position from elsewhere: nothing left to set up, so the
+	// editor moves on to recording. Typing the same characters must not switch
+	// mid-FEN, hence the flag rather than a check inside handleFenInput
+	let fenPasted = false;
+	const handleFenPaste = () => { fenPasted = true; }
+
 	const handleFenInput = () => {
 		clearMoves();
 		if (isValidFen(currentFen)) {
 			acceptedFen = currentFen;
 			board.setPosition(currentFen.trim().split(/\s+/)[0], false);
+			if (fenPasted) switchMode("moves");
 		}
+		fenPasted = false;
 	}
 
 	const setPlacement = placement => {
@@ -679,6 +690,7 @@
 				class:invalid={!fenIsValid}
 				bind:value={currentFen}
 				oninput={handleFenInput}
+				onpaste={handleFenPaste}
 				disabled={mode === "moves"}
 				title={mode === "moves" ? "Switch to Set position to edit the start FEN" : ""}
 			/>

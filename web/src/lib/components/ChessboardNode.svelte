@@ -43,6 +43,7 @@
 	// <body>; like v1, the board's Edit button takes the editor's place —
 	// unless the host asked for the caret instead (onCaretAfter)
 	const closeEditor = async () => {
+		openInMoves = false;
 		ui.editingIds.delete(board.id);
 		delete ui.editorStates[board.id];
 		onEditingChange(false);
@@ -90,6 +91,20 @@
 		onUpdate(next);
 	}
 
+	// A pasted FEN is a position from elsewhere: it lands on the board at once
+	// rather than waiting for blur, and the editor then opens on the moves
+	// stage — there is nothing left to set up. Typing the same characters keeps
+	// the commit-on-change contract, so the flag comes from the paste event.
+	let fenPasted = false;
+	let openInMoves = $state(false);
+	const handleFenInput = e => {
+		fenDraft = e.target.value;
+		if (!fenPasted) return;
+		fenPasted = false;
+		openInMoves = isValidFen(e.target.value);
+		commitFen(e.target.value);
+	}
+
 	// v1's eye: the collapsed front board previews the turned card by
 	// default; toggling off shows the student's pre-turn view
 	let showBack = $state(true);
@@ -113,6 +128,7 @@
 		bind:this={editorRef}
 		board={{ ...board, fenInput: fenDraft ?? board.fenInput ?? undefined }}
 		boardOnBack={isBack}
+		startInMoves={openInMoves}
 		onFenValidityChange={valid => {
 			if (!ui.invalidBoards) return;
 			if (valid) delete ui.invalidBoards[board.id];
@@ -136,7 +152,8 @@
 				<input
 					class:invalid-fen={fenInvalid}
 					value={shownFen}
-					oninput={e => fenDraft = e.target.value}
+					oninput={handleFenInput}
+					onpaste={() => fenPasted = true}
 					onchange={e => commitFen(e.target.value)}
 					onkeydown={e => { if (e.key === "Enter") e.target.blur() }}
 				/>

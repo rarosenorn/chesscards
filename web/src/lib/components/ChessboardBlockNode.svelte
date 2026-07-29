@@ -71,13 +71,36 @@
 	// handleCellClick) instead of moving the board. Other presses prevent
 	// the default so the document never loses focus — a drag would blur it,
 	// dropping the focus ring and disabling the menu bar mid-drag.
+	// Firefox treats a contenteditable="false" island inside an editable root
+	// as one atomic object: a drag starting in it selects the object instead
+	// of the text in a field inside it. Making the root non-editable for the
+	// duration of the press restores normal input behavior; PM never sees
+	// these events anyway (the island stops them).
+	const isFirefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox");
+	const freeTextFieldPress = () => {
+		const root = gridEl?.closest(".ProseMirror");
+		if (!root || root.contentEditable === "false") return;
+		root.contentEditable = "false";
+		const restore = () => {
+			root.contentEditable = "true";
+			window.removeEventListener("mouseup", restore);
+			window.removeEventListener("dragend", restore);
+		};
+		window.addEventListener("mouseup", restore);
+		window.addEventListener("dragend", restore);
+	}
+
 	const guardBoardPress = e => {
 		if (isInteractive(e.target)) {
 			e.stopImmediatePropagation();
 			// buttons still click with the default prevented, but no longer
 			// steal focus from the document (the menu-bar pattern); text
 			// fields must keep their native focusing
-			if (!e.target.closest("input, textarea, select, [contenteditable='true']")) e.preventDefault();
+			if (e.target.closest("input, textarea, select, [contenteditable='true']")) {
+				if (isFirefox) freeTextFieldPress();
+			} else {
+				e.preventDefault();
+			}
 			return;
 		}
 		e.preventDefault();
@@ -384,6 +407,19 @@
 		position: relative;
 		display: flex;
 		flex-direction: column;
+	}
+	/* svelte-dnd stamps inline user-select: none on every cell to keep board
+	   drags from smearing selections. Firefox honours an ancestor's "none"
+	   even inside a text field, so the FEN inputs become unselectable —
+	   override it (important: the library's is inline) and only suppress
+	   selection while a drag is actually running */
+	.board-cell {
+		user-select: auto !important;
+		-webkit-user-select: auto !important;
+	}
+	:global(body.dnd-grabbing) .board-cell {
+		user-select: none !important;
+		-webkit-user-select: none !important;
 	}
 	/* the empty box standing in for the dragged board */
 	.shadow-cell {

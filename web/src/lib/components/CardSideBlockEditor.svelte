@@ -212,6 +212,7 @@
 		cursor: text;
 		user-select: text;
 		-webkit-user-select: text;
+		-moz-user-select: text;
 	}
 	.tiptap :global(.board-block :is(button:enabled, select, a[href])) {
 		cursor: pointer;

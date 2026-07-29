@@ -170,8 +170,12 @@
 	/* --- chessboard blocks: one giant letter per block --- */
 	.tiptap :global(.board-block) {
 		position: relative;
-		margin: 10px 0;
-		padding: 4px 0;
+	}
+	/* the gap around a block is separation from neighbouring TEXT, so it
+	   comes from the neighbours: a board-only side has no stray padding */
+	.tiptap :global(:is(p, ul, ol) + .board-block),
+	.tiptap :global(.board-block + :is(p, ul, ol)) {
+		margin-top: 14px;
 	}
 	/* part of a range selection: tinted like selected text */
 	.tiptap :global(.board-block.board-block-selected)::before {

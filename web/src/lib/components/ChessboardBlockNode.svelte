@@ -369,7 +369,6 @@
 		/* rows sit closer than columns: the numbers above each board already
 		   add visual air between rows */
 		gap: 12px 20px;
-		padding: 4px 0;
 	}
 	/* a lone board keeps a 2-column cell's size, centered (like v1) */
 	.board-grid-block.single {

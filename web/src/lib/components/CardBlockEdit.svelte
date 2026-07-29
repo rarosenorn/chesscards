@@ -37,9 +37,9 @@
 	onMount(() => {
 		recount();
 		// Entering edit mode focuses the front, whose caret already sits
-		// parked at the document's start. Plain focus(), NOT focus("start"):
-		// tiptap resolves "start" to Selection.atStart, which on a
-		// board-first document selects everything (a blue flash).
+		// parked at the end of its document. Plain focus(), NOT
+		// focus("end"): tiptap resolves that to a text position, which on a
+		// board-last document selects everything (a blue flash).
 		frontEditor?.focus();
 	});
 

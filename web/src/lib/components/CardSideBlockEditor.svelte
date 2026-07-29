@@ -88,21 +88,25 @@
 			onBlur: ({ editor }) => onEditorBlur?.(editor),
 			onTransaction: ({ editor }) => onEditorTransaction?.(editor),
 		})
-		// A document starting with a chessboard block has no text for PM's
-		// default atStart selection to land on, so it falls back to selecting
-		// everything — every block would render tinted. Park a collapsed
-		// selection at the start instead. Synchronous, in the same task as
-		// the editor's creation: tiptap defers its own onCreate hook, which
-		// would let the all-selection paint for a frame (a blue flash).
+		// An existing card's document opens with the caret at its END (where
+		// you continue writing). It must be parked explicitly: PM's default
+		// selection has no text to land on when the document begins with a
+		// chessboard block, so it falls back to selecting everything — every
+		// block would render tinted. Synchronous, in the same task as the
+		// editor's creation: tiptap defers its own onCreate hook, which would
+		// let the all-selection paint for a frame (a blue flash).
 		// (no $-prefixed names: svelte reserves that prefix, even though it
 		// is prosemirror's convention for resolved positions)
 		if (initialDoc) {
 			const { state } = editor;
-			const start = state.doc.resolve(0);
-			const near = Selection.near(start, 1);
-			const sel = near.empty
-				? near
-				: GapCursor.valid(start) ? new GapCursor(start) : near;
+			const end = state.doc.resolve(state.doc.content.size);
+			// a gap cursor first: with a chessboard block last, Selection.near
+			// skips the atom and lands at the end of the text ABOVE it, which
+			// is not the document's end
+			const near = Selection.near(end, -1);
+			const sel = GapCursor.valid(end)
+				? new GapCursor(end)
+				: near.empty ? near : new GapCursor(end);
 			if (!state.selection.eq(sel)) editor.view.dispatch(state.tr.setSelection(sel));
 		}
 	})

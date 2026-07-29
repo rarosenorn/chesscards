@@ -261,7 +261,7 @@
 	   move line the same outer width. The dark background makes any svg
 	   rasterization slack at fractional zoom read as border, not white. */
 	.board.black-border > :global(div) {
-		border: 3px solid #404040;
+		border: 2px solid #404040;
 		background-color: #404040;
 		border-radius: 2px;
 	}
@@ -269,9 +269,9 @@
 		border-radius: 2px 2px 0 0;
 	}
 	/* a flush bar below overlaps 2px (CardSideEditor); widen the bottom
-	   border so the full 3px stay visible, matching the other sides */
+	   border so 2px stay visible, matching the other sides */
 	.board.black-border.flush-bottom > :global(div) {
-		border-bottom-width: 5px;
+		border-bottom-width: 4px;
 	}
 	/* Containment breaks a sizing feedback loop: the rendered svg and the
 	   --board-px-wide bar/move line all have fixed pixel widths, which would

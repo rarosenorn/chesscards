@@ -214,6 +214,16 @@
 		-webkit-user-select: text;
 		-moz-user-select: text;
 	}
+	/* While PM's own selection is a gap cursor (any parked board caret) it
+	   marks the root .ProseMirror-hideselection, whose stylesheet paints
+	   EVERY selection inside transparent — including the text you select in
+	   an island's FEN field. Firefox honours that inside form fields, Chrome
+	   doesn't. Give the islands their native highlight back. */
+	:global(.ProseMirror-hideselection) .tiptap :global(.board-block *::selection),
+	.tiptap :global(.ProseMirror-hideselection .board-block *::selection) {
+		background: Highlight;
+		color: HighlightText;
+	}
 	.tiptap :global(.board-block :is(button:enabled, select, a[href])) {
 		cursor: pointer;
 	}

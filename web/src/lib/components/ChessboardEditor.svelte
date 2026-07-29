@@ -961,6 +961,14 @@
 		border-radius: 0;
 		padding: 3px 6px;
 	}
+	/* the buttons overlap the input by 1px (the shared-border trick) and
+	   paint after it, so a focused input must rise above them or its ring
+	   is clipped on the right */
+	.fen-input:focus,
+	.fen-input:focus-visible {
+		position: relative;
+		z-index: 1;
+	}
 	/* joins the FEN bar seamlessly: shared border via the -1px overlap */
 	.flip-btn,
 	.show-back-btn {

@@ -81,19 +81,21 @@
 	// dragging the island instead of selecting inside the field.
 	const isFirefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox");
 	const guardTextFieldPointer = e => {
-		if (isFirefox && e.target?.closest?.("input, textarea")) freeTextFieldPress();
+		const field = e.target?.closest?.("input, textarea");
+		if (isFirefox && field) freeTextFieldPress(field);
 	}
-	const freeTextFieldPress = () => {
+	// Restored on the field's blur, NOT on mouseup: flipping contenteditable
+	// re-frames the subtree in Firefox, which erases the selection highlight
+	// (the selection itself survives) — so the flip must outlive the gesture.
+	const freeTextFieldPress = field => {
 		const root = gridEl?.closest(".ProseMirror");
 		if (!root || root.contentEditable === "false") return;
 		root.contentEditable = "false";
 		const restore = () => {
 			root.contentEditable = "true";
-			window.removeEventListener("mouseup", restore);
-			window.removeEventListener("dragend", restore);
+			field.removeEventListener("blur", restore);
 		};
-		window.addEventListener("mouseup", restore);
-		window.addEventListener("dragend", restore);
+		field.addEventListener("blur", restore);
 	}
 
 	const guardBoardPress = e => {

@@ -295,18 +295,18 @@
 		position: relative;
 	}
 	/* quiet exit bottom-left, away from the rating row; flush with the
-	   boards' left edge (card padding 26 + grid inset 30) */
+	   boards' left edge (card padding 26 + grid inset 10) */
 	.hide-answer-btn {
 		position: absolute;
 		bottom: 10px;
-		left: 56px;
+		left: 36px;
 		padding: 4px 8px;
 	}
 	/* mirror of the hide button, owners only */
 	.edit-card-btn {
 		position: absolute;
 		bottom: 10px;
-		right: 56px;
+		right: 36px;
 		padding: 4px 8px;
 	}
 	/* the in-place card editor: same surface as the card it replaces, the

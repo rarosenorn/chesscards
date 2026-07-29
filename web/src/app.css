@@ -187,8 +187,8 @@ body.piece-grabbing * {
    scoped under .flashcard so the add-cards editor's own .board-grid-block
    (ChessboardBlockNode) is untouched */
 .flashcard .text-block {
-	/* 2px more inset than the boards' 30px, so text sits a hair inside */
-	padding: 0 32px;
+	/* 2px more inset than the boards' 10px, so text sits a hair inside */
+	padding: 0 12px;
 }
 /* paragraph rhythm inside card text, matching the editor's 0.6em */
 .flashcard .text-block p {
@@ -215,11 +215,16 @@ body.piece-grabbing * {
 	position: relative;
 	flex-direction: column;
 	align-items: center;
+	/* stretch, or this flex item collapses to its content and the cell
+	   percentage below resolves against nothing — the board would then be
+	   sized by its min-width floor alone */
+	align-self: stretch;
 	margin: 16px 0;
 }
 /* a lone board keeps the same size as a 2-column grid cell, centered */
 .flashcard .single-board-block > .board-container {
-	width: calc(47% - 10px);
+	/* exactly one 2-column cell of the grid below */
+	width: calc(50% - 20px);
 	/* a board wider than the half-width cell (Chessboard minWidth) must
 	   grow the centered cell, not spill out one-sided */
 	min-width: min-content;
@@ -227,9 +232,9 @@ body.piece-grabbing * {
 .flashcard .board-grid-block {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-	/* matches .text-block's 30px side padding, so a row's left board sits
-	   flush with the text */
-	width: calc(100% - 60px);
+	/* matches .text-block's inset, so a row's left board sits flush with
+	   the text; a small inset keeps the boards as large as the card allows */
+	width: calc(100% - 20px);
 	margin-inline: auto;
 	/* rows sit closer than columns: the numbers above each board already
 	   add visual air between rows */

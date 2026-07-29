@@ -7,11 +7,11 @@
 
 	// The add-cards editing surface for an EXISTING card: both sides as
 	// block-editor documents initialized from the stored card, sharing one
-	// menu bar and board-editing ui. Hosts (browse, study) render their own
-	// Save/Cancel controls and call save(); Ctrl+Enter saves from inside.
-	// session (optional) is a bag { boardUi, frontDoc, backDoc } owned by
-	// the host, letting an in-progress edit survive host navigation.
-	let { card, session = null, onSave } = $props();
+	// menu bar, board-editing ui and the Cancel/Save row (placed like the
+	// add-cards page's Add card button); Ctrl+Enter saves too. session
+	// (optional) is a bag { boardUi, frontDoc, backDoc } owned by the host,
+	// letting an in-progress edit survive host navigation.
+	let { card, session = null, onSave, onCancel } = $props();
 
 	const bag = session ?? {
 		boardUi: { editingIds: new Set(), editorStates: {}, applyEditors: {}, invalidBoards: {} },
@@ -142,8 +142,19 @@
 		onEditorTransaction={handleEditorRefresh}
 	/>
 </div>
+<div class="edit-actions">
+	<button class="std-btn" onclick={onCancel}>Cancel</button>
+	<button class="std-btn" title="ctrl+enter" onclick={save}>Save</button>
+</div>
 
 <style>
+	/* flush with the editors' right edge, like add-cards' Add card */
+	.edit-actions {
+		align-self: end;
+		display: flex;
+		gap: 8px;
+		margin-top: 12px;
+	}
 	.menu-holder {
 		align-self: stretch;
 		margin-bottom: 4px;

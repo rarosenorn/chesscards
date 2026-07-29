@@ -17,7 +17,6 @@
 	// owners can edit the current card in place (like browse), via the Edit
 	// button on the answer row or the e key
 	let editingCard = $state(false);
-	let cardEditRef = $state();
 	const saveEdit = async (front, back) => {
 		await updateCardContent({ cardId: currentCard.id, front, back });
 		currentCard.front = JSON.parse(front);
@@ -190,11 +189,7 @@
 
 {#if currentCard && editingCard}
 	<div class="flashcard-edit card-surface">
-		<CardBlockEdit bind:this={cardEditRef} card={currentCard} onSave={saveEdit} />
-	</div>
-	<div class="edit-toolbar">
-		<button class="std-btn" onclick={() => editingCard = false}>Cancel</button>
-		<button class="std-btn" onclick={() => cardEditRef?.save()}>Save</button>
+		<CardBlockEdit card={currentCard} onSave={saveEdit} onCancel={() => editingCard = false} />
 	</div>
 {:else if currentCard}
 	<div class="flashcard card-surface">
@@ -319,14 +314,6 @@
 	.flashcard-edit {
 		margin-top: 34px;
 		padding: 12px 30px;
-	}
-	.edit-toolbar {
-		display: flex;
-		justify-content: end;
-		gap: 8px;
-		width: 100%;
-		max-width: 900px;
-		margin: 8px auto 40px auto;
 	}
 	.flashcard-btn-row {
 		display: flex;

@@ -18,10 +18,12 @@
 	const cardDrafts = $state({ addCards: null, browse: null });
 	setContext("cardDrafts", cardDrafts);
 
+	// v1-style drafts (block arrays with lazy text editors) needing a flush
+	// before navigation; the browse edit (CardBlockEdit) persists its own
+	// documents into its session bag on unmount instead
 	const draftSides = () => [
 		...(cardDrafts.addCards ? [cardDrafts.addCards.front, cardDrafts.addCards.back] : []),
-		...(cardDrafts.addCards2 ? [cardDrafts.addCards2.blocks] : []),
-		...(cardDrafts.browse?.editingCardId ? [cardDrafts.browse.editFront, cardDrafts.browse.editBack] : [])
+		...(cardDrafts.addCards2 ? [cardDrafts.addCards2.blocks] : [])
 	];
 
 	// tab names (as shown in the nav) holding unsaved work, for the warning

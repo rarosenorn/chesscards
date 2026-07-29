@@ -57,8 +57,6 @@
 		draft.session = null;
 	}
 
-	let cardEditRef = $state();
-
 	const saveCard = async (front, back) => {
 		await updateCardContent({ cardId: selectedCard.id, front, back });
 		selectedCard.front = JSON.parse(front);
@@ -299,24 +297,19 @@
 			{#if isEditingSelected}
 				<div class="card-edit card-surface">
 					<CardBlockEdit
-						bind:this={cardEditRef}
 						card={selectedCard}
 						session={draft.session}
 						onSave={saveCard}
+						onCancel={stopEditing}
 					/>
 				</div>
 			{:else}
 				<FlashcardBrowse card={selectedCard} />
-			{/if}
-			{#if !readonly}
-				<div class="card-toolbar">
-					{#if isEditingSelected}
-						<button class="std-btn" onclick={stopEditing}>Cancel</button>
-						<button class="std-btn" onclick={() => cardEditRef?.save()}>Save</button>
-					{:else}
+				{#if !readonly}
+					<div class="card-toolbar">
 						<button class="std-btn" onclick={startEditing}>Edit card</button>
-					{/if}
-				</div>
+					</div>
+				{/if}
 			{/if}
 		{/if}
 	</div>

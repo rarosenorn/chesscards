@@ -226,15 +226,19 @@
 		return () => root.classList.remove("virtual-caret-active");
 	});
 
-	// like a native caret, the bar only shows while its side has focus
-	// (the editor root contains the board islands, so a focused FEN input
-	// still counts); the caret STATE survives blur and re-shows on focus
+	// Like a native caret, the bar only shows while its side has focus (the
+	// editor root contains the board islands, so focus there counts) — but
+	// not while a text field (FEN input) owns the keyboard: one caret at a
+	// time. The caret STATE survives blur and re-shows on focus.
 	let sideFocused = $state(false);
 	$effect(() => {
 		const root = gridEl?.closest(".ProseMirror");
 		if (!root) return;
 		// deferred: during focusout activeElement hasn't landed yet
-		const sync = () => queueMicrotask(() => sideFocused = root.contains(document.activeElement));
+		const sync = () => queueMicrotask(() => {
+			const el = document.activeElement;
+			sideFocused = root.contains(el) && !el?.closest?.("input, textarea");
+		});
 		sync();
 		document.addEventListener("focusin", sync);
 		document.addEventListener("focusout", sync);

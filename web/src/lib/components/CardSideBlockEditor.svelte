@@ -174,9 +174,13 @@
 		cursor: grabbing !important;
 	}
 	/* the native text caret (and any parked gap cursor) hides while the
-	   virtual board caret is active */
+	   virtual board caret is active — but caret-color inherits, so the
+	   board islands' text fields (FEN inputs) get theirs back */
 	:global(.ProseMirror.virtual-caret-active) {
 		caret-color: transparent;
+	}
+	:global(.ProseMirror.virtual-caret-active :is(input, textarea)) {
+		caret-color: auto;
 	}
 	:global(.ProseMirror.virtual-caret-active .ProseMirror-gapcursor) {
 		display: none;

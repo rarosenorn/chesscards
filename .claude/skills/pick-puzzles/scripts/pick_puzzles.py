@@ -21,12 +21,12 @@ ROOT = Path(__file__).resolve().parents[4]
 DUCKDB = ROOT / "scratch" / "duckdb"
 DB = ROOT / "scratch" / "puzzles.duckdb"
 
-# (name, rating range, count)
+# (name, rating range, count) — two spare per bracket, to be picked over by hand
 BRACKETS = [
-    ("Simple", "Rating >= 1100 AND Rating < 1300", 3),
-    ("Intermediate", "Rating >= 1400 AND Rating < 1600", 3),
-    ("Hard", "Rating >= 1600 AND Rating < 1800", 2),
-    ("Very hard", "Rating >= 1800 AND Rating < 2000", 2),
+    ("Simple", "Rating >= 1100 AND Rating < 1300", 3 + 2),
+    ("Intermediate", "Rating >= 1400 AND Rating < 1600", 3 + 2),
+    ("Hard", "Rating >= 1600 AND Rating < 1800", 2 + 2),
+    ("Very hard", "Rating >= 1800 AND Rating < 2000", 2 + 2),
 ]
 CANDIDATES = 60        # rows pulled per bracket to have replacements for rejects
 MATE_NODES = 400_000   # search budget per puzzle; a mate in 4 needs ~250k
@@ -85,23 +85,57 @@ def _all_replies_mated(board, n, budget, memo):
     return True
 
 
+def _picture(board):
+    """The mating picture: where the mated king stands, and what mates it."""
+    return (chess.square_name(board.king(board.turn)),
+            tuple(sorted(board.piece_type_at(s) for s in board.checkers())))
+
+
+def _pictures(board, n, budget, memo, out):
+    """Every mating picture reachable in the forced-mate tree, over all defenses."""
+    for mv in _mating_moves(board, n, budget, memo):
+        board.push(mv)
+        try:
+            if board.is_checkmate():
+                out.add(_picture(board))
+            else:
+                for defense in board.legal_moves:
+                    board.push(defense)
+                    try:
+                        _pictures(board, n - 1, budget, memo, out)
+                    finally:
+                        board.pop()
+        finally:
+            board.pop()
+
+
 def sole_solution(board, solution):
-    """(ok, reason) — is `solution` the only way to mate from `board`?"""
+    """(ok, reason) — is `solution` the only way to mate, and always the same mate?"""
+    front = board.copy()
     board = board.copy()
     budget, memo = [MATE_NODES], {}
-    for i, mv in enumerate(solution):
-        if i % 2 == 0:                    # solver to move
-            remaining = (len(solution) - i + 1) // 2
-            try:
+    try:
+        for i, mv in enumerate(solution):
+            if i % 2 == 0:                # solver to move
+                remaining = (len(solution) - i + 1) // 2
                 alts = _mating_moves(board, remaining, budget, memo)
-            except OverBudget:
-                return False, f"mate search too deep (over {MATE_NODES} nodes)"
-            if mv not in alts:
-                return False, f"{board.san(mv)} is not a fastest mate"
-            if len(alts) > 1:
-                return False, (f"{len(alts)} mates in {remaining} "
-                               f"({', '.join(board.san(a) for a in alts)})")
-        board.push(mv)
+                if mv not in alts:
+                    return False, f"{board.san(mv)} is not a fastest mate"
+                if len(alts) > 1:
+                    return False, (f"{len(alts)} mates in {remaining} "
+                                   f"({', '.join(board.san(a) for a in alts)})")
+            board.push(mv)
+
+        # the defense is free to vary, but every defense must run into the same
+        # mating picture — otherwise the card teaches a pattern it doesn't always reach
+        pictures = set()
+        _pictures(front, (len(solution) + 1) // 2, budget, memo, pictures)
+    except OverBudget:
+        return False, f"mate search too deep (over {MATE_NODES} nodes)"
+    if len(pictures) > 1:
+        shown = "; ".join(f"K{sq} by {'/'.join(chess.piece_name(t) for t in ts)}"
+                          for sq, ts in sorted(pictures))
+        return False, f"{len(pictures)} different mates depending on the defense ({shown})"
     return True, ""
 
 

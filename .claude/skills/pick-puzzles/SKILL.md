@@ -15,8 +15,8 @@ scratch/venv/bin/python .claude/skills/pick-puzzles/scripts/pick_puzzles.py <the
 `arabianMate`, `dovetailMate`, `hookMate`. It is matched as a substring of the `Themes`
 column, so it must be spelled exactly as Lichess does.
 
-Takes a few minutes: every candidate is verified by an exhaustive mate search, and a
-mate-in-4 costs ~20s.
+Around a minute: every candidate is verified by an exhaustive mate search, and a mate-in-4
+costs ~15s.
 
 ## The rules the script enforces
 
@@ -29,14 +29,25 @@ puzzle whose recorded line is not the fastest mate is also rejected.
 Uniqueness means unique *fastest* mate. A slower alternative mate does not disqualify a
 puzzle; Lichess would reject that move at the board anyway.
 
-**Ten puzzles, four brackets.**
+**One mating picture.** The defense does not have to be forced, but every defense must run
+into the *same* mate: the whole forced-mate tree is walked, and each leaf must show the
+mated king on the same square, mated by the same piece type. This is what kills cards that
+teach the wrong thing — e.g. `Ne7+` where the king may go to h7 *or* h8 and both are mated
+by `Qh3#`: with the king on h8 the net is no longer Anastasia's. Two pictures, rejected.
 
-| Bracket      | Rating    | Count |
-|--------------|-----------|-------|
-| Simple       | 1100–1300 | 3     |
-| Intermediate | 1400–1600 | 3     |
-| Hard         | 1600–1800 | 2     |
-| Very hard    | 1800–2000 | 2     |
+This checks that the mate is *consistent*, not that it is the named pattern; that part
+still rides on the Lichess theme tag.
+
+**Ten puzzles, four brackets — plus two spare each.** The counts below are what the deck
+needs; the script picks two extra per bracket (18 rows) so the spares can be thrown out by
+hand.
+
+| Bracket      | Rating    | Wanted | Picked |
+|--------------|-----------|--------|--------|
+| Simple       | 1100–1300 | 3      | 5      |
+| Intermediate | 1400–1600 | 3      | 5      |
+| Hard         | 1600–1800 | 2      | 4      |
+| Very hard    | 1800–2000 | 2      | 4      |
 
 (1300–1400 is deliberately skipped, to keep the first two brackets clearly apart.)
 

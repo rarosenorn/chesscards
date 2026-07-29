@@ -11,6 +11,7 @@
 	import { UndoRedo, Dropcursor, Gapcursor } from "@tiptap/extensions"
 	import { Selection } from "@tiptap/pm/state"
 	import { GapCursor } from "@tiptap/pm/gapcursor"
+	import { setBoardCaret, clearBoardCaret } from "$lib/block-caret-state.svelte.js"
 	import { BlockNode, BlockNavigation, insertChessboardBlock, insertBoardAtCaret, configureBlockUiCleanup } from "$lib/tiptap-chessboard-block/index.js"
 
 	// One side of the add-cards editor: a tiptap document where a whole
@@ -28,6 +29,20 @@
 	// silently does nothing when the parked selection is a gap cursor (a
 	// board-first document), and would re-select everything for "start"
 	export const focus = () => editor?.view.focus();
+
+	// focus with the caret at the document's end. Ending with a chessboard
+	// block, that spot belongs to the virtual board caret (a bar beside the
+	// last board) rather than a gap cursor's horizontal line.
+	export const focusEnd = () => {
+		if (!editor) return;
+		const last = editor.state.doc.lastChild;
+		if (last?.type.name === "chessboardBlock" && last.attrs.id) {
+			setBoardCaret(last.attrs.id, (last.attrs.boards ?? []).length, "up");
+		} else {
+			clearBoardCaret();
+		}
+		editor.view.focus();
+	}
 	export const clear = () => editor?.commands.clearContent(true);
 
 	onMount(() => {

@@ -36,11 +36,11 @@
 	}
 	onMount(() => {
 		recount();
-		// Entering edit mode focuses the front, whose caret already sits
-		// parked at the end of its document. Plain focus(), NOT
-		// focus("end"): tiptap resolves that to a text position, which on a
-		// board-last document selects everything (a blue flash).
-		frontEditor?.focus();
+		// Entering edit mode focuses the front with the caret at its end (the
+		// board caret when a chessboard block sits last). Never tiptap's
+		// focus("end"): it resolves a text position, which on a board-last
+		// document selects everything (a blue flash).
+		frontEditor?.focusEnd();
 	});
 
 	// the menu-bar glue mirrors the add-cards page — see there for why every

@@ -9,6 +9,8 @@
 	import Italic from "@tiptap/extension-italic"
 	import { BulletList, OrderedList, ListItem } from "@tiptap/extension-list"
 	import { UndoRedo, Dropcursor, Gapcursor } from "@tiptap/extensions"
+	import { Selection } from "@tiptap/pm/state"
+	import { GapCursor } from "@tiptap/pm/gapcursor"
 	import { BlockNode, BlockNavigation, insertChessboardBlock, insertBoardAtCaret, configureBlockUiCleanup } from "$lib/tiptap-chessboard-block/index.js"
 
 	// One side of the add-cards editor: a tiptap document where a whole
@@ -22,7 +24,9 @@
 
 	export const getJson = () => editor?.getJSON();
 	export const getEditor = () => editor;
-	export const focus = () => editor?.commands.focus();
+	// pos "start" puts the caret at the document's beginning (entering an
+	// existing card's editor), omitted keeps wherever the selection sits
+	export const focus = pos => editor?.commands.focus(pos);
 	export const clear = () => editor?.commands.clearContent(true);
 
 	onMount(() => {
@@ -77,6 +81,21 @@
 			content: initialDoc ?? "",
 			editorProps: {
 				attributes: { spellcheck: "false" }
+			},
+			onCreate: ({ editor }) => {
+				// A document starting with a chessboard block has no text for
+				// PM's default atStart selection to land on, so it falls back
+				// to selecting everything — every block would render tinted.
+				// Park a collapsed selection at the start instead.
+				// (no $-prefixed names here: svelte reserves that prefix, even
+				// though it is prosemirror's convention for resolved positions)
+				const { state } = editor;
+				const start = state.doc.resolve(0);
+				const near = Selection.near(start, 1);
+				const sel = near.empty
+					? near
+					: GapCursor.valid(start) ? new GapCursor(start) : near;
+				if (!state.selection.eq(sel)) editor.view.dispatch(state.tr.setSelection(sel));
 			},
 			onUpdate: () => onDocChanged?.(),
 			onFocus: ({ editor }) => onEditorFocus?.(editor),

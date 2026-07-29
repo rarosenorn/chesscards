@@ -34,7 +34,12 @@
 		frontBoards = docCountBoardsBlocks(frontEditor?.getJson());
 		backBoards = docCountBoardsBlocks(backEditor?.getJson());
 	}
-	onMount(recount);
+	onMount(() => {
+		recount();
+		// entering edit mode puts the caret at the front's start, like
+		// clicking into a text field
+		frontEditor?.focus("start");
+	});
 
 	// the menu-bar glue mirrors the add-cards page — see there for why every
 	// handler defers a microtask

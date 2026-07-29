@@ -3,9 +3,10 @@
 // assets/chessboard.css and its BORDER_TYPE values.
 const PIECE_SETS = ["standard", "staunty"];
 const BOARD_THEMES = ["default", "default-contrast", "green", "blue", "chess-club", "chessboard-js", "black-and-white"];
-// black: the app's own 2px dark border (cm-chessboard border "none");
-// frame: cm-chessboard's wide border with coordinates in it
-const BORDER_TYPES = ["black", "frame"];
+// black: the app's own dark border (cm-chessboard border "none");
+// frame: cm-chessboard's wide border with coordinates in it;
+// none: no border at all
+const BORDER_TYPES = ["black", "frame", "none"];
 const ANIMATION_DURATIONS = [300, 150, 0];
 
 const DEFAULT_BOARD_PREFS = {

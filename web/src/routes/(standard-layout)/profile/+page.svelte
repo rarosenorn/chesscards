@@ -22,7 +22,7 @@
 		"black-and-white": "Black & white"
 	};
 	const pieceLabels = { standard: "Standard", staunty: "Staunty" };
-	const borderLabels = { black: "Black", frame: "Frame" };
+	const borderLabels = { black: "Black", frame: "Frame", none: "None" };
 	const animationLabels = { 300: "Normal", 150: "Fast", 0: "Off" };
 
 	// a position with some development so the preview shows the pieces well

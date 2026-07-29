@@ -36,9 +36,11 @@
 	}
 	onMount(() => {
 		recount();
-		// entering edit mode puts the caret at the front's start, like
-		// clicking into a text field
-		frontEditor?.focus("start");
+		// Entering edit mode focuses the front, whose caret already sits
+		// parked at the document's start. Plain focus(), NOT focus("start"):
+		// tiptap resolves "start" to Selection.atStart, which on a
+		// board-first document selects everything (a blue flash).
+		frontEditor?.focus();
 	});
 
 	// the menu-bar glue mirrors the add-cards page — see there for why every

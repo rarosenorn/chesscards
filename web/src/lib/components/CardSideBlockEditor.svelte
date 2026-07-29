@@ -24,9 +24,10 @@
 
 	export const getJson = () => editor?.getJSON();
 	export const getEditor = () => editor;
-	// pos "start" puts the caret at the document's beginning (entering an
-	// existing card's editor), omitted keeps wherever the selection sits
-	export const focus = pos => editor?.commands.focus(pos);
+	// the view, not commands.focus(): the latter resolves a text position and
+	// silently does nothing when the parked selection is a gap cursor (a
+	// board-first document), and would re-select everything for "start"
+	export const focus = () => editor?.view.focus();
 	export const clear = () => editor?.commands.clearContent(true);
 
 	onMount(() => {
@@ -82,26 +83,28 @@
 			editorProps: {
 				attributes: { spellcheck: "false" }
 			},
-			onCreate: ({ editor }) => {
-				// A document starting with a chessboard block has no text for
-				// PM's default atStart selection to land on, so it falls back
-				// to selecting everything — every block would render tinted.
-				// Park a collapsed selection at the start instead.
-				// (no $-prefixed names here: svelte reserves that prefix, even
-				// though it is prosemirror's convention for resolved positions)
-				const { state } = editor;
-				const start = state.doc.resolve(0);
-				const near = Selection.near(start, 1);
-				const sel = near.empty
-					? near
-					: GapCursor.valid(start) ? new GapCursor(start) : near;
-				if (!state.selection.eq(sel)) editor.view.dispatch(state.tr.setSelection(sel));
-			},
 			onUpdate: () => onDocChanged?.(),
 			onFocus: ({ editor }) => onEditorFocus?.(editor),
 			onBlur: ({ editor }) => onEditorBlur?.(editor),
 			onTransaction: ({ editor }) => onEditorTransaction?.(editor),
 		})
+		// A document starting with a chessboard block has no text for PM's
+		// default atStart selection to land on, so it falls back to selecting
+		// everything — every block would render tinted. Park a collapsed
+		// selection at the start instead. Synchronous, in the same task as
+		// the editor's creation: tiptap defers its own onCreate hook, which
+		// would let the all-selection paint for a frame (a blue flash).
+		// (no $-prefixed names: svelte reserves that prefix, even though it
+		// is prosemirror's convention for resolved positions)
+		if (initialDoc) {
+			const { state } = editor;
+			const start = state.doc.resolve(0);
+			const near = Selection.near(start, 1);
+			const sel = near.empty
+				? near
+				: GapCursor.valid(start) ? new GapCursor(start) : near;
+			if (!state.selection.eq(sel)) editor.view.dispatch(state.tr.setSelection(sel));
+		}
 	})
 	onDestroy(() => {
 		editor?.destroy()

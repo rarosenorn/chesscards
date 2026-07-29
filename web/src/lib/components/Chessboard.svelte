@@ -106,9 +106,26 @@
 		// too-wide measurement would stick (no further layout resize fires
 		// the observer). The outer element is observed as well, so a cell
 		// resize re-measures even if cm-chessboard replaces the inner box.
-		const syncWidth = () => wrapperElement.style.setProperty(
-			"--board-px", chessboardElement.firstElementChild.offsetWidth + "px"
-		);
+		// The bordered box is centered inside a fractional-width cell, so it
+		// can land on a half pixel — a 2px border then straddles the device
+		// grid and the left/right edges rasterize thinner/blurrier than the
+		// top/bottom. Nudge the whole wrapper (board, bar and move line move
+		// together, keeping their alignment) so the box starts on a whole
+		// device pixel.
+		const snapToPixelGrid = () => {
+			wrapperElement.style.transform = "";
+			const rect = chessboardElement.firstElementChild.getBoundingClientRect();
+			const dpr = window.devicePixelRatio || 1;
+			const dx = (Math.round(rect.left * dpr) - rect.left * dpr) / dpr;
+			const dy = (Math.round(rect.top * dpr) - rect.top * dpr) / dpr;
+			if (dx || dy) wrapperElement.style.transform = `translate(${dx}px, ${dy}px)`;
+		}
+		const syncWidth = () => {
+			wrapperElement.style.setProperty(
+				"--board-px", chessboardElement.firstElementChild.offsetWidth + "px"
+			);
+			snapToPixelGrid();
+		};
 		syncWidth();
 		const resizeObserver = new ResizeObserver(syncWidth);
 		resizeObserver.observe(chessboardElement.firstElementChild);

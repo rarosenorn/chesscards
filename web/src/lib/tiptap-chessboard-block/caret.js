@@ -480,6 +480,10 @@ export const BlockNavigation = Extension.create({
 			// typing at a virtual gap makes the line a keystroke would have
 			// made: above at block start, below at end, splitting between
 			new Plugin({
+				// the caret is a module singleton, so a view going away (leaving
+				// the editor, navigating off the page) must not leave it pointing
+				// at a block that no longer exists — boards elsewhere read it
+				view: () => ({ destroy: clearBoardCaret }),
 				props: {
 					// pressing anywhere in the document outside a board island
 					// dismisses the virtual caret. The selection-transaction

@@ -181,8 +181,10 @@
 	const handleKeyDown = e => {
 		// while the block editor's virtual board caret is active, arrows
 		// belong to it (the keydown also bubbles to ProseMirror's keymap —
-		// stepping moves here would double-act)
-		if (boardCaret.blockId != null) return;
+		// stepping moves here would double-act). Only boards living in a
+		// block can double-act: a board in study/browse has no editor above
+		// it, and must keep stepping even if a caret was left set elsewhere.
+		if (boardCaret.blockId != null && wrapperElement?.closest(".board-block")) return;
 		if (e.key === "ArrowLeft") {
 			e.preventDefault();
 			previous();

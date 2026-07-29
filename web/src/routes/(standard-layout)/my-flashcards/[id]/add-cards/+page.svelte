@@ -95,14 +95,23 @@
 	let trapEnabled = $state(true);
 	let container;
 
-	const trapStops = () => [
-		...[...container.querySelectorAll(".editor-wrap")].map(w => w.querySelector(".text-area > .ProseMirror")),
-		addCardForm?.querySelector("button")
-	].filter(el => el && !el.disabled && el.offsetParent !== null);
+	// tabbing into a side lands the caret at its end, in one step: focusEnd
+	// places the caret (the virtual board caret when a block sits last) before
+	// focusing, where a bare .focus() would land at the start and then jump
+	const trapStops = () => {
+		const [front, back] = [...container.querySelectorAll(".editor-wrap")]
+			.map(w => w.querySelector(".text-area > .ProseMirror"));
+		const submit = addCardForm?.querySelector("button");
+		return [
+			{ el: front, focus: () => frontEditor.focusEnd() },
+			{ el: back, focus: () => backEditor.focusEnd() },
+			{ el: submit, focus: () => submit.focus() }
+		].filter(stop => stop.el && !stop.el.disabled && stop.el.offsetParent !== null);
+	}
 
 	// focus inside a board sits inside the side's ProseMirror, so it counts as
 	// that side's stop — tabbing out of a board lands on the next stop
-	const stopOf = (stops, node) => stops.findIndex(el => el === node || el.contains(node));
+	const stopOf = (stops, node) => stops.findIndex(({ el }) => el === node || el.contains(node));
 
 	const handleTrapKeydown = e => {
 		if (e.key === "Escape") {

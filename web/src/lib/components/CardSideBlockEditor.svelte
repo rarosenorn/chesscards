@@ -160,8 +160,13 @@
 	.tiptap :global(.board-cell) {
 		cursor: grab;
 	}
+	/* the dnd library stamps inline user-select: none on each cell, which
+	   in Chrome also blocks drag-selecting text inside child inputs — give
+	   the islands' text fields their selection back */
 	.tiptap :global(.board-block :is(input, textarea)) {
 		cursor: text;
+		user-select: text;
+		-webkit-user-select: text;
 	}
 	.tiptap :global(.board-block :is(button:enabled, select, a[href])) {
 		cursor: pointer;

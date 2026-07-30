@@ -206,14 +206,12 @@ body.piece-grabbing * {
 	padding: 0 12px;
 	max-width: var(--card-text-measure);
 }
-/* a side with any wrapped text block reads from one left edge — every block
-   on it starts where the boards do, instead of each centering on its own
-   width and zigzagging down the card */
-.flashcard .card-side[data-text-align="left"] .text-block {
-	align-self: flex-start;
-}
-/* the same for boards, decided by the card's data: a lone board sits centered
-   only while every board block on the side is a lone board */
+/* Text needs no alignment rule of its own: the block is only as wide as its
+   text up to the measure, and the side centers it. Short text is therefore
+   centered, and wrapped text fills the measure and reads left-aligned from a
+   fixed edge — one declaration, no threshold. */
+/* boards are decided by the card's data: a lone board sits centered only
+   while every board block on the side is a lone board */
 .flashcard .card-side[data-board-align="left"] .single-board-block {
 	align-items: flex-start;
 }

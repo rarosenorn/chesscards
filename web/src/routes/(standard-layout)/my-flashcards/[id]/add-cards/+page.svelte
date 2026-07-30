@@ -11,7 +11,8 @@
 	import { browser } from "$app/environment"
 	import { page } from "$app/state"
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
-	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft } from "$lib/add-cards-draft.js"
+	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft, loadFrozenSides, saveFrozenSides } from "$lib/add-cards-draft.js"
+	import Snowflake from "$lib/icons/Snowflake.svelte"
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
@@ -33,6 +34,14 @@
 	const chooseCardType = value => {
 		cardType = value;
 		saveCardType(deckId, value);
+	}
+
+	// a frozen side keeps its content through the submit, for a run of cards
+	// off one position or one stem
+	let frozenSides = $state(browser ? loadFrozenSides(deckId) : { front: false, back: false });
+	const toggleFrozen = side => {
+		frozenSides[side] = !frozenSides[side];
+		saveFrozenSides(deckId, frozenSides);
 	}
 
 	// shared board-editing state (see ChessboardNode.svelte): survives PM node
@@ -193,6 +202,25 @@
 
 <svelte:window onkeydown={handleKeyDown} onpagehide={flushDraft} />
 
+{#snippet sideLabel(label, side, style = "")}
+	<p class="side-indicator" {style}>
+		{label}
+		<!-- Anki's frozen fields: a frozen side survives the submit, so a run
+		     of cards can share a position or a stem -->
+		<button
+			type="button"
+			class="freeze-btn"
+			class:frozen={frozenSides[side]}
+			aria-pressed={frozenSides[side]}
+			aria-label={frozenSides[side] ? `Unfreeze ${label} — it will clear after each card` : `Freeze ${label} — it will stay for the next card`}
+			onclick={() => toggleFrozen(side)}
+		>
+			<Snowflake />
+		</button>
+	</p>
+{/snippet}
+
+
 <div class="type-row">
 	<span id="card-type-label">Type</span>
 	<div class="type-segments" role="radiogroup" aria-labelledby="card-type-label">
@@ -223,7 +251,7 @@
 	<div class="menu-bar-holder">
 		<DocEditorMenuBar {menu} onAddChessboard={addChessboard} />
 	</div>
-	<p class="side-indicator">Front</p>
+	{@render sideLabel("Front", "front")}
 	{#if formAttemptedAndInvalid}
 		<p style="color: red; margin-left: 16px; margin-top: 4px; margin-bottom: 4px;">The card must have atleast 1 non-empty text field or 1 chessboard</p>
 	{/if}
@@ -238,7 +266,7 @@
 		onEditorTransaction={handleEditorRefresh}
 	/>
 	</div>
-	<p class="side-indicator" style="margin-top: 14px;">Back</p>
+	{@render sideLabel("Back", "back", "margin-top: 14px;")}
 	<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} style="--board-offset: {frontBoards}">
 	<CardSideBlockEditor
 		bind:this={backEditor}
@@ -293,12 +321,14 @@
 				deck.cards.push(result.data.card);
 				boardUi.editingIds.clear();
 				boardUi.editorStates = {};
-				frontEditor.clear();
-				backEditor.clear();
-				// the card is saved: clear() has already scheduled a write of
-				// the now-empty document, which drops the stored draft
+				// a frozen side stays for the next card, boards and all
+				if (!frozenSides.front) frontEditor.clear();
+				if (!frozenSides.back) backEditor.clear();
+				// the card is saved: the clears above have scheduled a write of
+				// what is left, which drops the draft when nothing is
 				flushDraft();
-				frontEditor.focus();
+				// land in the side that was emptied, not the one kept
+				(frozenSides.front && !frozenSides.back ? backEditor : frontEditor).focus();
 			}
 		}}
 	>
@@ -397,6 +427,34 @@
 		padding: 8px 30px 0 30px;
 		background: white;
 		border-radius: 8px 8px 0 0;
+	}
+	/* the snowflake sits with the side's name, quiet until it is holding
+	   something: off it is a hint, on it is the accent and clearly latched */
+	.freeze-btn {
+		margin-left: 6px;
+		padding: 2px;
+		border: none;
+		background: none;
+		border-radius: 4px;
+		font-size: 0.95rem;
+		line-height: 0;
+		vertical-align: -0.15em;
+		color: rgba(0, 0, 0, 0.28);
+		cursor: pointer;
+	}
+	.freeze-btn:hover {
+		color: rgba(0, 0, 0, 0.55);
+		background: rgba(0, 0, 0, 0.05);
+	}
+	.freeze-btn:active {
+		transform: translateY(1px);
+	}
+	.freeze-btn.frozen {
+		color: var(--accent);
+	}
+	.freeze-btn.frozen:hover {
+		color: var(--accent-hover);
+		background: var(--accent-subtle);
 	}
 	.side-indicator {
 		margin-left: 3px;

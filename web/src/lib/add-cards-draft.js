@@ -5,6 +5,7 @@
 // changes warning for this tab.
 const draftKey = deckId => `chesscards:add-cards-draft:${deckId}`;
 const cardTypeKey = deckId => `chesscards:card-type:${deckId}`;
+const frozenKey = deckId => `chesscards:frozen-sides:${deckId}`;
 
 // Anki-style mode: applies to every card added until changed
 const CARD_TYPES = ["basic", "tactic"];
@@ -61,4 +62,23 @@ const saveDraft = (deckId, front, back) => write(draftKey(deckId), JSON.stringif
 
 const clearDraft = deckId => remove(draftKey(deckId));
 
-export { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft }
+// A frozen side survives the submit that files a card, so a run of cards can
+// share a position or a stem (Anki's frozen fields). Like the card type, this
+// is how the deck is being written rather than what is in the card, so it
+// outlives the draft it applies to.
+const loadFrozenSides = deckId => {
+	try {
+		const stored = JSON.parse(read(frozenKey(deckId)));
+		return { front: stored?.front === true, back: stored?.back === true };
+	} catch {
+		return { front: false, back: false };
+	}
+}
+
+const saveFrozenSides = (deckId, frozen) =>
+	write(frozenKey(deckId), JSON.stringify({ front: !!frozen.front, back: !!frozen.back }));
+
+export {
+	DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft,
+	loadFrozenSides, saveFrozenSides
+}

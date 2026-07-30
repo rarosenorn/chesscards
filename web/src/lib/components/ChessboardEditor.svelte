@@ -1043,6 +1043,15 @@
 	}
 	.stage-segments button:hover:enabled:not(.selected) {
 		color: black;
+		background-color: rgba(0, 0, 0, 0.05);
+	}
+	/* the std-btn key press, borrowed for the segments: the tab dips 1px,
+	   instantly (no transition), and a selected one's depth flattens away */
+	.stage-segments button:active:enabled {
+		transform: translateY(1px);
+	}
+	.stage-segments button.selected:active:enabled {
+		box-shadow: none;
 	}
 	.stage-segments button.selected {
 		background-color: white;
@@ -1101,6 +1110,14 @@
 	}
 	.layer-segments button:hover:enabled:not(.selected) {
 		color: black;
+		background-color: rgba(0, 0, 0, 0.05);
+	}
+	/* same press as the stage tabs above */
+	.layer-segments button:active:enabled {
+		transform: translateY(1px);
+	}
+	.layer-segments button.selected:active:enabled {
+		box-shadow: none;
 	}
 	.layer-segments button.selected {
 		background-color: white;

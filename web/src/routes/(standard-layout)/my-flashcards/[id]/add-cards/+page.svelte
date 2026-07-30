@@ -221,11 +221,13 @@
 			class="freeze-btn"
 			class:frozen={frozenSides[side]}
 			aria-pressed={frozenSides[side]}
-			title="Toggle freeze (f9)"
 			aria-label={frozenSides[side] ? `Unfreeze ${label} — it will clear after each card` : `Freeze ${label} — it will stay for the next card`}
 			onclick={() => toggleFrozen(side)}
 		>
 			<Snowflake />
+			<!-- the card type pills' tooltip, not a title: the native one is
+			     placed by the browser and lands nowhere near this button -->
+			<span class="tooltip" aria-hidden="true">Toggle freeze (f9)</span>
 		</button>
 	</p>
 {/snippet}
@@ -477,6 +479,36 @@
 	}
 	.freeze-btn:active {
 		transform: translateY(1px);
+	}
+	/* hangs from the button's right edge — it sits at the card's right margin,
+	   so a left-anchored box would run off the page */
+	.freeze-btn .tooltip {
+		position: absolute;
+		top: calc(100% + 6px);
+		right: 0;
+		width: max-content;
+		background-color: black;
+		color: white;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: normal;
+		padding: 5px 10px;
+		border-radius: 4px;
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transition: opacity 100ms ease 300ms, visibility 0ms 300ms;
+		z-index: 30;
+	}
+	.freeze-btn:hover .tooltip {
+		opacity: 1;
+		visibility: visible;
+	}
+	/* the :active transform makes the button a stacking context, which would
+	   trap the tooltip under the editor below — lift it while it can show */
+	.freeze-btn:hover,
+	.freeze-btn:active {
+		z-index: 30;
 	}
 	/* the row spans the editor below it: the side's name at one end, its
 	   freeze toggle at the other, both inset 3px from the card's text column */

@@ -506,6 +506,8 @@ export const BlockNavigation = Extension.create({
 	},
 
 	addProseMirrorPlugins() {
+		// the live view, for the deferred gap-cursor adoption below
+		let pluginView = null;
 		return [
 			// typing at a virtual gap makes the line a keystroke would have
 			// made: above at block start, below at end, splitting between
@@ -513,7 +515,10 @@ export const BlockNavigation = Extension.create({
 				// the caret is a module singleton, so a view going away (leaving
 				// the editor, navigating off the page) must not leave it pointing
 				// at a block that no longer exists — boards elsewhere read it
-				view: () => ({ destroy: clearBoardCaret }),
+				view: view => {
+					pluginView = view;
+					return { destroy: () => { pluginView = null; clearBoardCaret(); } };
+				},
 				props: {
 					// pressing anywhere in the document outside a board island
 					// dismisses the virtual caret. The selection-transaction
@@ -567,8 +572,14 @@ export const BlockNavigation = Extension.create({
 				// selection merely remapped through a doc change does not, and
 				// neither does our own explicit reparking (boardCaretKeep)
 				appendTransaction: transactions => {
-					if (boardCaret.blockId == null) return null;
-					if (transactions.some(tr => tr.selectionSet && !tr.getMeta("boardCaretKeep"))) clearBoardCaret();
+					if (!transactions.some(tr => tr.selectionSet && !tr.getMeta("boardCaretKeep"))) return null;
+					clearBoardCaret();
+					// undo/redo restores the selection its step recorded; when
+					// that is a gap beside a block, adopt it as the virtual
+					// caret rather than leave PM's own horizontal bar sitting
+					// where the board caret belongs (as on focus — deferred
+					// the same way, the selection settles after this)
+					queueMicrotask(() => pluginView && adoptGapCursor(pluginView));
 					return null;
 				}
 			}),

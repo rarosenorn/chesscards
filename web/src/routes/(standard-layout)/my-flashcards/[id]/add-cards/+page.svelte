@@ -436,7 +436,7 @@
 		border: none;
 		background: none;
 		border-radius: 4px;
-		font-size: 0.95rem;
+		font-size: 1.25rem;
 		line-height: 0;
 		vertical-align: -0.15em;
 		color: rgba(0, 0, 0, 0.28);

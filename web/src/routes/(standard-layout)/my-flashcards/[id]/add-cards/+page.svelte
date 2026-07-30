@@ -480,12 +480,13 @@
 	.freeze-btn:active {
 		transform: translateY(1px);
 	}
-	/* hangs from the button's right edge — it sits at the card's right margin,
-	   so a left-anchored box would run off the page */
+	/* hangs down-right from the button, like every other tooltip on the page;
+	   it overhangs the card's right edge, which is fine on a desktop width
+	   (one for the responsive pass) */
 	.freeze-btn .tooltip {
 		position: absolute;
 		top: calc(100% + 6px);
-		right: 0;
+		left: 0;
 		width: max-content;
 		background-color: black;
 		color: white;

@@ -452,7 +452,7 @@
 		   the row keeps its height (and vertical-align is inert on a flex
 		   item, which this is) */
 		position: relative;
-		top: 2px;
+		top: 1px;
 		cursor: pointer;
 	}
 	/* off, the flake is drained of its colour — greyscaled rather than

@@ -10,9 +10,10 @@
 	/* the measure card text wraps at, ~86 characters a line. Past the 45–75
 	   ideal, but a card is 900px wide for its boards and a stricter cap
 	   leaves the text marooned in white space; the 1.5 line height carries
-	   the longer line. The editors wrap at the same width, so a line breaks
-	   where you wrote it — they do not centre, though: a moving caret makes
-	   centred text unpleasant to type into. */
+	   the longer line. The editors deliberately do NOT cap: their input is a
+	   bordered box, and text stopping short of the border reads as broken
+	   rather than as a margin. The cost is that a line breaks later while
+	   you write it than it will on the card. */
 	--card-text-measure: 45rem;
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the

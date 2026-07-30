@@ -155,13 +155,6 @@
 		   --board-offset (set by the page) */
 		counter-reset: board var(--board-offset, 0);
 	}
-	/* text wraps at the card's measure, so a line you write breaks where it
-	   will when the card is read; boards are left at full width. No centring
-	   here even where the card would centre the side — the caret and every
-	   line start would move as you type. */
-	.tiptap :global(:is(p, ul, ol)) {
-		max-width: var(--card-text-measure);
-	}
 	.tiptap :global(p:first-child) {
 		margin: 7px 0 0.6em 0;
 	}

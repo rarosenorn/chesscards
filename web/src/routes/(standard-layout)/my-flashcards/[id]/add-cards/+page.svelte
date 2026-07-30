@@ -43,6 +43,15 @@
 		frozenSides[side] = !frozenSides[side];
 		saveFrozenSides(deckId, frozenSides);
 	}
+	// F9 with neither side focused acts on the whole card. Both sides are put
+	// in the SAME state rather than each being flipped, which would merely
+	// swap them whenever they differ: anything unfrozen freezes everything,
+	// and only an already-frozen pair thaws.
+	const toggleFrozenBoth = () => {
+		const next = !(frozenSides.front && frozenSides.back);
+		frozenSides = { front: next, back: next };
+		saveFrozenSides(deckId, frozenSides);
+	}
 
 	// shared board-editing state (see ChessboardNode.svelte): survives PM node
 	// view recreation on drags, and lets the submit apply open editors; board
@@ -186,11 +195,13 @@
 	const handleKeyDown = e => {
 		// F9 freezes the side being written: the side whose editor holds focus
 		// — asked of the DOM, so focus inside a board island still counts as
-		// its side. Anywhere else falls back to the front.
+		// its side. With neither side focused it acts on both.
 		if (e.key === "F9") {
 			e.preventDefault();
 			const wraps = [...(container?.querySelectorAll(".editor-wrap") ?? [])];
-			toggleFrozen(wraps.findIndex(w => w.contains(document.activeElement)) === 1 ? "back" : "front");
+			const focused = wraps.findIndex(w => w.contains(document.activeElement));
+			if (focused === -1) toggleFrozenBoth();
+			else toggleFrozen(focused === 1 ? "back" : "front");
 			return;
 		}
 		if (e.ctrlKey || e.metaKey) {

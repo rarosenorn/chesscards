@@ -174,7 +174,9 @@
 	// Focus taken by a click or a scroll must not draw the keyboard ring:
 	// Chrome counts a programmatic focus() as :focus-visible whenever the last
 	// input was a key, so switching tabs with s/b and then scrolling a board
-	// would light it up. Tabbing to the board still shows it.
+	// would light it up. The flag lasts as long as the focus does — stepping
+	// through moves with the arrows is not a new arrival — and only clears on
+	// blur, so the ring belongs to focus that arrived by tabbing.
 	let pointerFocus = $state(false);
 	const takeFocus = () => {
 		pointerFocus = true;
@@ -203,7 +205,6 @@
 	}
 
 	const handleKeyDown = e => {
-		pointerFocus = false;
 		// while the block editor's virtual board caret is active, arrows
 		// belong to it (the keydown also bubbles to ProseMirror's keymap —
 		// stepping moves here would double-act). Only boards living in a

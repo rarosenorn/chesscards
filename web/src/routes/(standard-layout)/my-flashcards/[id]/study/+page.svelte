@@ -318,7 +318,11 @@
 		align-items: center;
 		margin-top: 34px;
 		min-height: 700px;
-		padding: 32px 26px 56px 26px;
+		/* the bottom padding is the answer bar's landing strip: the bar is
+		   absolute (66px from the card's bottom edge at its tallest, with the
+		   due-time labels) and content flows under it otherwise. 84px keeps a
+		   card whose content fills the height clear of it by 18px. */
+		padding: 32px 26px 84px 26px;
 		position: relative;
 	}
 	/* quiet exit bottom-left, away from the rating row; flush with the

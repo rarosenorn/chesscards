@@ -130,8 +130,10 @@
 	// renders before the next board instead. A row break is a natural
 	// 2-per-row wrap or either neighbor being an open (full-row) editor —
 	// one index, two distinct stops, like a text line wrap. The stop at an
-	// open editor's RIGHT exists but always renders hidden; the editor's
-	// left may carry a bar like any board.
+	// open editor's RIGHT exists but always renders hidden — clicking the
+	// editor parks the caret there, ready for typing, without drawing a bar
+	// beside a panel that is itself the focus; the editor's left may carry a
+	// bar like any board.
 	const rowBreakAt = i => i % COLS === 0 || !!editingIds[items[i - 1]?.id] || !!editingIds[items[i]?.id];
 	const caretBefore = i => active && sideFocused && !range
 		&& boardCaret.index === i
@@ -253,14 +255,15 @@
 		};
 	});
 
-	// clicking a collapsed board face always parks the virtual caret to the
-	// board's right — one predictable landing spot; shift+click extends the
-	// range from the existing caret to the clicked side instead (the anchor
-	// is captured on mousedown, before PM's own selection handling clears
-	// the caret state)
+	// clicking a board always parks the virtual caret to the board's right and
+	// hands focus back to the document — one predictable landing spot, whether
+	// the board is a collapsed face or open in its editor (whose controls, all
+	// interactive, keep their own clicks). shift+click extends the range from
+	// the existing caret to the clicked side instead (the anchor is captured
+	// on mousedown, before PM's own selection handling clears the caret state)
 	let shiftAnchor = null;
 	const handleCellClick = (e, i) => {
-		if (editingIds[items[i]?.id] || isInteractive(e.target)) return;
+		if (isInteractive(e.target)) return;
 		if (shiftAnchor != null) {
 			const rect = e.currentTarget.getBoundingClientRect();
 			const after = e.clientX > rect.left + rect.width / 2;

@@ -184,6 +184,15 @@
 	}
 
 	const handleKeyDown = e => {
+		// F9 freezes the side being written: the side whose editor holds focus
+		// — asked of the DOM, so focus inside a board island still counts as
+		// its side. Anywhere else falls back to the front.
+		if (e.key === "F9") {
+			e.preventDefault();
+			const wraps = [...(container?.querySelectorAll(".editor-wrap") ?? [])];
+			toggleFrozen(wraps.findIndex(w => w.contains(document.activeElement)) === 1 ? "back" : "front");
+			return;
+		}
 		if (e.ctrlKey || e.metaKey) {
 			if (e.key === "Enter") {
 				e.preventDefault();
@@ -212,6 +221,7 @@
 			class="freeze-btn"
 			class:frozen={frozenSides[side]}
 			aria-pressed={frozenSides[side]}
+			title="Toggle freeze (f9)"
 			aria-label={frozenSides[side] ? `Unfreeze ${label} — it will clear after each card` : `Freeze ${label} — it will stay for the next card`}
 			onclick={() => toggleFrozen(side)}
 		>
@@ -439,22 +449,30 @@
 		font-size: 1.25rem;
 		line-height: 0;
 		vertical-align: -0.15em;
-		color: rgba(0, 0, 0, 0.28);
 		cursor: pointer;
 	}
+	/* off, the flake is drained of its colour — greyscaled rather than
+	   repainted, which keeps its shading instead of flattening it to a
+	   silhouette; on, it is simply itself */
+	.freeze-btn :global(svg) {
+		filter: grayscale(1) brightness(0.78);
+		transition: filter 110ms ease;
+	}
+	.freeze-btn:hover :global(svg) {
+		filter: grayscale(0.65) brightness(0.9);
+	}
+	.freeze-btn.frozen :global(svg),
+	.freeze-btn.frozen:hover :global(svg) {
+		filter: none;
+	}
 	.freeze-btn:hover {
-		color: rgba(0, 0, 0, 0.55);
 		background: rgba(0, 0, 0, 0.05);
+	}
+	.freeze-btn.frozen:hover {
+		background: var(--accent-subtle);
 	}
 	.freeze-btn:active {
 		transform: translateY(1px);
-	}
-	.freeze-btn.frozen {
-		color: var(--accent);
-	}
-	.freeze-btn.frozen:hover {
-		color: var(--accent-hover);
-		background: var(--accent-subtle);
 	}
 	/* the row spans the editor below it: the side's name at one end, its
 	   freeze toggle at the other, both inset 3px from the card's text column */

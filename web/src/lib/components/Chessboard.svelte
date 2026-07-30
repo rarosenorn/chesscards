@@ -335,16 +335,18 @@
 	/* the side to move, as a piece-coloured square: no wording to translate,
 	   and it reads at a glance beside the number */
 	.side-to-move {
-		width: 0.72rem;
-		height: 0.72rem;
-		border-radius: 2px;
+		/* whole pixels, not rem: at a fractional size the border rasterizes
+		   thicker on two sides and the square reads as a rectangle */
+		width: 14px;
+		height: 14px;
 		background: white;
-		/* a hairline, or a white square vanishes into the card surface */
-		border: 1px solid #7a7a7a;
+		/* the border carries the white square — without it the square would
+		   vanish into the card surface — so it is drawn, not hinted at */
+		border: 2px solid #262626;
+		box-sizing: border-box;
 	}
 	.side-to-move.black {
 		background: #262626;
-		border-color: #262626;
 	}
 	.board-wrapper > :global(.button-row),
 	.board-wrapper > .move-line {

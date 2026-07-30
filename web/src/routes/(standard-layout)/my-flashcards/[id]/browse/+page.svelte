@@ -27,19 +27,23 @@
 		cardDrafts.browse = {
 			// id of the card open for editing; selecting another card falls back to view mode
 			editingCardId: null,
+			// id of the card being previewed, so the tab reopens where it was left
+			selectedCardId: null,
 			session: null
 		};
 	}
 	const draft = cardDrafts.browse;
 
-	// returning to the tab mid-edit reselects the card being edited; captured
-	// non-reactively so Save/Cancel (clearing editingCardId) can't yank the
-	// selection back to the first card
+	// returning to the tab reselects where it was left — the card being
+	// edited, or failing that the one being previewed. Captured non-reactively
+	// so Save/Cancel (clearing editingCardId) can't yank the selection back to
+	// the first card, and mirrored below so the next visit finds it.
 	// svelte-ignore state_referenced_locally
-	const restoredCardId = draft.editingCardId;
+	const restoredCardId = draft.editingCardId ?? draft.selectedCardId;
 	let selectedCard = $derived(
 		deck.cards.find(card => card.id === restoredCardId) ?? deck.cards[0]
 	);
+	$effect(() => { draft.selectedCardId = selectedCard?.id ?? null; });
 
 	let isEditingSelected = $derived(selectedCard && draft.editingCardId === selectedCard.id);
 

@@ -3,10 +3,7 @@
 	// TODO do so all chessboards on a card (both front and back) has numbers (D. 1? D. for diagram) or just 1?) incrementally automatically for referencing
 	import { getContext, onMount, tick } from "svelte"
 	import { enhance, applyAction } from "$app/forms"
-	import { browser } from "$app/environment"
-	import { page } from "$app/state"
 	import CardSideEditor from "$lib/components/CardSideEditor.svelte"
-	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType } from "$lib/add-cards-draft.js"
 	import { getSideJson, sideHasContent, countBoards, invalidBoardNumbers, invalidFenMessage } from "$lib/card-utils.js"
 	import { createCardDnd } from "$lib/card-dnd.svelte.js"
 
@@ -23,21 +20,15 @@
 		cardDrafts.addCards = {
 			front: getInitialSideState(),
 			back: getInitialSideState(),
+			// Anki-style mode: applies to every card added until changed
+			cardType: "basic",
 			// shared by both side editors so drags work between front and back
 			dnd: createCardDnd()
 		};
 	}
 	const draft = cardDrafts.addCards;
+	draft.cardType ??= "basic";
 	const cardDnd = draft.dnd;
-
-	// the card type is the deck's stored preference (add-cards-draft.js), the
-	// same one the add-cards tab reads and writes
-	const deckId = page.params.id;
-	let cardType = $state(browser ? loadCardType(deckId) : DEFAULT_CARD_TYPE);
-	const chooseCardType = value => {
-		cardType = value;
-		saveCardType(deckId, value);
-	}
 
 	// Card is valid if it has atleast 1 non-empty text field or 1 chessboard
 	// on either side — outline decks (question-only or answer-only) are fine
@@ -140,9 +131,9 @@
 			<button
 				class="std-btn"
 				role="radio"
-				aria-checked={cardType === value}
-				class:selected={cardType === value}
-				onclick={() => chooseCardType(value)}
+				aria-checked={draft.cardType === value}
+				class:selected={draft.cardType === value}
+				onclick={() => draft.cardType = value}
 			>
 				{label}
 				<span class="tooltip" aria-hidden="true">{@html description}</span>
@@ -188,7 +179,7 @@
 
 			formData.set("front", getSideJson(draft.front));
 			formData.set("back", getSideJson(draft.back));
-			formData.set("cardType", cardType);
+			formData.set("cardType", draft.cardType);
 
 			return async ({ result, update }) => {
 				// no invalidation: the deck context is updated by the push

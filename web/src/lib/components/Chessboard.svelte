@@ -50,10 +50,12 @@
 	$effect(() => { void board; currentIndex = 0; });
 	let displayIndex = $derived(Math.min(currentIndex, positions.length - 1));
 
-	// Whose move it is in the position on screen — the FEN's side field, so it
-	// follows stepping through the line rather than only the start position.
-	// The board alone cannot show this, and a card's own text may not say it.
-	let blackToMove = $derived(positions[displayIndex]?.split(" ")[1] === "b");
+	// Whose move it is in the board's START position — the puzzle's premise,
+	// which the position alone cannot show and a card's text may not say.
+	// Deliberately not the position on screen: it is a property of the
+	// diagram, and a marker flipping as you step would pull the eye. The
+	// moves are on show while stepping anyway.
+	let blackToMove = $derived(positions[0]?.split(" ")[1] === "b");
 
 	// One-line move list, grouped so the line only wraps between pairs: each
 	// pair is a number ("…" appended when black starts it, e.g. black moving
@@ -342,7 +344,7 @@
 		background: white;
 		/* the border carries the white square — without it the square would
 		   vanish into the card surface — so it is drawn, not hinted at */
-		border: 2px solid #262626;
+		border: 1px solid #262626;
 		box-sizing: border-box;
 	}
 	.side-to-move.black {

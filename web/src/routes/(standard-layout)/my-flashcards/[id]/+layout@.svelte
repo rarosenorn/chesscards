@@ -20,6 +20,13 @@
 	const cardDrafts = $state({ addCards: null, browse: null });
 	setContext("cardDrafts", cardDrafts);
 
+	// Which card is showing its answer in study. Here, so leaving the tab and
+	// coming back does not put a revealed answer back behind its question:
+	// you have seen it, and the grade should say so. Keyed by card id, so it
+	// lapses the moment the card does.
+	const studyState = $state({ turnedCardId: null });
+	setContext("studyState", studyState);
+
 	// v1-style drafts (block arrays with lazy text editors) needing a flush
 	// before navigation; the browse edit (CardBlockEdit) persists its own
 	// documents into its session bag on unmount instead
@@ -85,6 +92,7 @@
 	// stand down wherever the keyboard is already spoken for — a text field, a
 	// card editor, or any modifier combo — the way study's own e/h/1-4 do.
 	const TAB_KEYS = { s: "study", b: "browse", a: "add-cards" };
+	const shortcutFor = path => Object.keys(TAB_KEYS).find(key => TAB_KEYS[key] === path);
 	const handleKeyDown = e => {
 		if (e.ctrlKey || e.metaKey || e.altKey) return;
 		const path = TAB_KEYS[e.key.toLowerCase()];
@@ -108,11 +116,16 @@
 	</div>
 	<div class="tabs">
 		{#each paths as path, i}
-			<a 
+			<a
 				href="/my-flashcards/{page.params.id}/{path}"
-				aria-current={page.url.pathname === `/my-flashcards/${page.params.id}/${path}`} 
+				aria-current={page.url.pathname === `/my-flashcards/${page.params.id}/${path}`}
 			>
 				{names[i]}
+				<!-- the app's own tooltip, not a title: the browser places
+				     those itself and they land off the mark -->
+				{#if shortcutFor(path)}
+					<span class="tooltip" aria-hidden="true">Shortcut key: {shortcutFor(path)}</span>
+				{/if}
 			</a>
 		{/each}
 	</div>
@@ -153,6 +166,34 @@
 	}
 	.tabs > a:hover {
 		background-color: rgba(0, 0, 0, 0.05);
+	}
+	/* the card type pills' tooltip, hung under the tab */
+	.tabs .tooltip {
+		position: absolute;
+		top: calc(100% + 6px);
+		left: 0;
+		width: max-content;
+		background-color: black;
+		color: white;
+		font-size: 13px;
+		font-weight: 500;
+		padding: 5px 10px;
+		border-radius: 4px;
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transition: opacity 100ms ease 300ms, visibility 0ms 300ms;
+		z-index: 30;
+	}
+	.tabs > a:hover .tooltip {
+		opacity: 1;
+		visibility: visible;
+	}
+	/* the :active transform below makes the tab a stacking context, which
+	   would trap the tooltip beneath the page — lift it while it can show */
+	.tabs > a:hover,
+	.tabs > a:active {
+		z-index: 30;
 	}
 	/* the std-btn key press: the tab dips into its bottom edge while held */
 	.tabs > a:active {

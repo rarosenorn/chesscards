@@ -45,11 +45,19 @@
 
 	const scheduler = fsrs();
 
-	let isCardTurned = $state(false);
-
 	let currentCard = $derived(deck.cards.find(card =>
 		!card.finished_at && Date.parse(card.due) <= Date.now()
 	));
+
+	// A revealed answer belongs to the deck layout, not to this page, so
+	// switching tabs and coming back does not hide it again — you have seen
+	// it, and the grade should say so. Read once for the initial value, then
+	// mirrored back on every change; the id keeps it from carrying over to
+	// whichever card comes next.
+	const studyState = getContext("studyState");
+	// svelte-ignore state_referenced_locally
+	let isCardTurned = $state(currentCard != null && studyState.turnedCardId === currentCard.id);
+	$effect(() => { studyState.turnedCardId = isCardTurned ? currentCard?.id ?? null : null; });
 
 	let isTactic = $derived(currentCard?.card_type === "tactic");
 

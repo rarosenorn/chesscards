@@ -176,7 +176,11 @@
 		return card.state === 0 ? "New" : new Date(card.due).toLocaleDateString();
 	}
 
-	const handleTableNav = async e => {
+	// Up/Down move through the cards. Page-level, not on the table: the
+	// preview's boards take focus when clicked or scrolled, and from there
+	// the table is not an ancestor, so a listener on it would never see the
+	// keys. The board itself only claims Left/Right, for its moves.
+	const navigateCards = e => {
 		if (e.key === "ArrowUp") {
 			e.preventDefault();
 			selectedCard =
@@ -209,6 +213,12 @@
 		) {
 			e.preventDefault();
 			startEditing();
+		} else if (
+			(e.key === "ArrowUp" || e.key === "ArrowDown") && selectedCard && !isEditingSelected &&
+			e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA" &&
+			!e.target.isContentEditable
+		) {
+			navigateCards(e);
 		} else if (
 			e.key === "Delete" && !readonly && selectedCard && !isEditingSelected &&
 			e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA" &&
@@ -263,7 +273,6 @@
 		<table
 			role="grid"
 			tabindex="0"
-			onkeydown={handleTableNav}
 			autofocus
 		>
 			<thead>

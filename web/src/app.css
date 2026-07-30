@@ -7,6 +7,13 @@
 	--accent-hover: #2b6dab;
 	--accent-subtle: #ebf3fa;
 	--accent-subtle-strong: #d4e5f5;
+	/* the measure card text wraps at, ~86 characters a line. Past the 45–75
+	   ideal, but a card is 900px wide for its boards and a stricter cap
+	   leaves the text marooned in white space; the 1.5 line height carries
+	   the longer line. The editors wrap at the same width, so a line breaks
+	   where you wrote it — they do not centre, though: a moving caret makes
+	   centred text unpleasant to type into. */
+	--card-text-measure: 45rem;
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the
    window scrollbar: that shifts the viewport width and makes the responsive
@@ -196,9 +203,7 @@ body.piece-grabbing * {
 .flashcard .text-block {
 	/* 2px more inset than the boards' 10px, so text sits a hair inside */
 	padding: 0 12px;
-	/* the measure: past ~70 characters the eye loses the line on the way
-	   back. The card stays wide for the boards; only the text is capped. */
-	max-width: 36rem;
+	max-width: var(--card-text-measure);
 }
 /* a side with any wrapped text block reads from one left edge — every block
    on it starts where the boards do, instead of each centering on its own

@@ -2,6 +2,7 @@
 	import { getContext } from "svelte"
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating } from "ts-fsrs"
+	import { textAlignment, boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, sideHasContent } from "$lib/card-utils.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
@@ -185,6 +186,11 @@
 <svelte:window onkeydown={handleKeyDown} />
 
 {#snippet side(side, boardNumberOffset, revealed)}
+<div
+	class="card-side"
+	data-board-align={boardAlignment(side)}
+	use:textAlignment={[side, revealed]}
+>
 	{#each side as block, blockIndex}
 		{#if block.type === "text"}
 			<div class="text-block">
@@ -212,6 +218,7 @@
 			</div>
 		{/if}
 	{/each}
+</div>
 {/snippet}
 
 {#if currentCard && editingCard}

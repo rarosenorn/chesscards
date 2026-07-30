@@ -1,4 +1,5 @@
 <script>
+	import { textAlignment, boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "../tiptap-utility.js"
 	import { countBoards, boardsBefore, sideHasContent } from "../card-utils.js"
 	import Chessboard from "./Chessboard.svelte"
@@ -11,6 +12,11 @@
 </script>
 
 {#snippet side(side, boardNumberOffset, authorView)}
+<div
+	class="card-side"
+	data-board-align={boardAlignment(side)}
+	use:textAlignment={[side, authorView]}
+>
 	{#each side as block, blockIndex}
 		{#if block.type === "text"}
 			<div class="text-block">
@@ -33,6 +39,7 @@
 			</div>
 		{/if}
 	{/each}
+</div>
 {/snippet}
 
 <div class="flashcard card-surface">

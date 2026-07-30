@@ -171,6 +171,16 @@
 	// trackpads don't fire a step per micro-tick, and page scroll is always
 	// swallowed over a board with moves. Attached manually: svelte's wheel
 	// handlers are passive, which forbids preventDefault.
+	// Focus taken by a click or a scroll must not draw the keyboard ring:
+	// Chrome counts a programmatic focus() as :focus-visible whenever the last
+	// input was a key, so switching tabs with s/b and then scrolling a board
+	// would light it up. Tabbing to the board still shows it.
+	let pointerFocus = $state(false);
+	const takeFocus = () => {
+		pointerFocus = true;
+		wrapperElement.focus({ preventScroll: true });
+	}
+
 	let wheelAcc = 0;
 	let lastWheel = 0;
 	const handleWheel = e => {
@@ -178,7 +188,7 @@
 		e.preventDefault();
 		// the gesture takes the board over, so hand it the keyboard too:
 		// stepping on can continue with the arrow keys, as after a click
-		wrapperElement.focus({ preventScroll: true });
+		takeFocus();
 		const now = performance.now();
 		if (now - lastWheel > 250) wheelAcc = 0;
 		lastWheel = now;
@@ -193,6 +203,7 @@
 	}
 
 	const handleKeyDown = e => {
+		pointerFocus = false;
 		// while the block editor's virtual board caret is active, arrows
 		// belong to it (the keydown also bubbles to ProseMirror's keymap —
 		// stepping moves here would double-act). Only boards living in a
@@ -213,6 +224,8 @@
 <div
 	style="min-width: {minWidth}"
 	class="board-wrapper"
+	class:pointer-focus={pointerFocus}
+	onblur={() => pointerFocus = false}
 	bind:this={wrapperElement}
 	tabindex={hasMoves ? 0 : undefined}
 	role="group"
@@ -238,7 +251,7 @@
 		class:black-border={hasBlackBorder(boardPrefs())}
 		class:flush-bottom={flushBottom}
 		bind:this={chessboardElement}
-		onclick={hasMoves ? () => wrapperElement.focus({ preventScroll: true }) : undefined}
+		onclick={hasMoves ? takeFocus : undefined}
 	></div>
 	{@render children?.()}
 	{#if lineMoves.length > 0}
@@ -309,6 +322,9 @@
 	   shrinks, the board never re-renders smaller, and the drag shadow's
 	   correct size mismatches the real one, making drops snap dirty). With
 	   inline-size containment the cell sizes the board, never the reverse. */
+	.board-wrapper.pointer-focus:focus-visible {
+		outline: none;
+	}
 	.board-wrapper {
 		display: flex;
 		flex-direction: column;

@@ -278,7 +278,7 @@
 		onEditorTransaction={handleEditorRefresh}
 	/>
 	</div>
-	{@render sideLabel("Back", "back", "margin-top: 14px;")}
+	{@render sideLabel("Back", "back", "margin-top: 10px;")}
 	<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} style="--board-offset: {frontBoards}">
 	<CardSideBlockEditor
 		bind:this={backEditor}

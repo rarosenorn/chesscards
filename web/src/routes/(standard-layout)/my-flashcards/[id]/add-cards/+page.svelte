@@ -428,10 +428,10 @@
 		background: white;
 		border-radius: 8px 8px 0 0;
 	}
-	/* the snowflake sits with the side's name, quiet until it is holding
-	   something: off it is a hint, on it is the accent and clearly latched */
+	/* the snowflake sits at the far end of the side's label row, inset from
+	   the right edge exactly as the name is from the left. Quiet until it is
+	   holding something: off it is a hint, on it is the accent and latched */
 	.freeze-btn {
-		margin-left: 6px;
 		padding: 2px;
 		border: none;
 		background: none;
@@ -456,12 +456,18 @@
 		color: var(--accent-hover);
 		background: var(--accent-subtle);
 	}
+	/* the row spans the editor below it: the side's name at one end, its
+	   freeze toggle at the other, both inset 3px from the card's text column */
 	.side-indicator {
+		align-self: stretch;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 		margin-left: 3px;
+		margin-right: 3px;
 		margin-bottom: 1px;
 		font-size: 1rem;
 		line-height: 1.2;
-		align-self: start;
 	}
 	/* flush with the editors' right edge */
 	.add-form {

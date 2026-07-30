@@ -21,7 +21,11 @@
 	// true the full line shows and solutionAnnotations displaces annotations
 	// per position. `authorView` (editors/browse) tints the answer segment of
 	// the move line so authors see what study hides.
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, children } = $props();
+	// `number` is the board's display number, shown in the strip above it when
+	// the card has more than one board (the block editor numbers with a CSS
+	// counter instead — see CardSideBlockEditor — because numbering there runs
+	// across blocks in document order).
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -45,6 +49,11 @@
 	// a different board (e.g. next flashcard) starts back at its start position
 	$effect(() => { void board; currentIndex = 0; });
 	let displayIndex = $derived(Math.min(currentIndex, positions.length - 1));
+
+	// Whose move it is in the position on screen — the FEN's side field, so it
+	// follows stepping through the line rather than only the start position.
+	// The board alone cannot show this, and a card's own text may not say it.
+	let blackToMove = $derived(positions[displayIndex]?.split(" ")[1] === "b");
 
 	// One-line move list, grouped so the line only wraps between pairs: each
 	// pair is a number ("…" appended when black starts it, e.g. black moving
@@ -205,6 +214,19 @@
 	aria-label={hasMoves ? "Chessboard, use arrow keys to step through moves" : "Chessboard"}
 	onkeydown={hasMoves ? handleKeyDown : undefined}
 >
+	<!-- The strip above every board: its number (when the card has more than
+	     one) and the side to move, which takes the number's place on a lone
+	     board. Always rendered, at a fixed height, so a board does not shift
+	     when the number comes and goes. -->
+	<div class="board-header">
+		{#if number != null}<span class="board-number">{number}</span>{/if}
+		<span
+			class="side-to-move"
+			class:black={blackToMove}
+			role="img"
+			aria-label={blackToMove ? "Black to move" : "White to move"}
+		></span>
+	</div>
 	<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- keyboard stepping lives on the focusable wrapper -->
 	<div
 		class="board"
@@ -292,6 +314,37 @@
 	   edges align instead of the bar overhanging the board */
 	.board > :global(div) {
 		margin: 0 auto;
+	}
+	/* the strip shares the board's exact width, so the number sits over the
+	   board's left edge rather than the cell's */
+	.board-header {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		/* the number's line box: held even when there is no number, so a board
+		   sits at the same height whether or not the card numbers its boards */
+		min-height: 1.26rem;
+		margin-bottom: 2px;
+		width: var(--board-px, 100%);
+		max-width: 100%;
+		margin-left: auto;
+		margin-right: auto;
+		padding-left: 6px;
+		box-sizing: border-box;
+	}
+	/* the side to move, as a piece-coloured square: no wording to translate,
+	   and it reads at a glance beside the number */
+	.side-to-move {
+		width: 0.72rem;
+		height: 0.72rem;
+		border-radius: 2px;
+		background: white;
+		/* a hairline, or a white square vanishes into the card surface */
+		border: 1px solid #7a7a7a;
+	}
+	.side-to-move.black {
+		background: #262626;
+		border-color: #262626;
 	}
 	.board-wrapper > :global(.button-row),
 	.board-wrapper > .move-line {

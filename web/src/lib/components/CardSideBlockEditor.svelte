@@ -190,15 +190,16 @@
 	/* v1's board numbers, shown when the card has more than one board
 	   (.show-board-numbers on the page's wrapper); CSS counters number
 	   across blocks in document order */
-	/* styled like study/browse's .board-number (app.css) */
-	:global(.show-board-numbers) .tiptap :global(.board-cell)::before {
+	/* drawn into the strip the board already carries for its side-to-move
+	   square (Chessboard's .board-header), where the numbered pages put it —
+	   styled like study/browse's .board-number (app.css) */
+	:global(.show-board-numbers) .tiptap :global(.board-header)::before {
 		counter-increment: board;
 		content: counter(board);
 		font-size: 1.05rem;
 		font-weight: 600;
+		line-height: 1;
 		color: #404040;
-		padding-left: 6px;
-		margin-bottom: 2px;
 	}
 
 	/* cursor semantics: boards drag (svelte-dnd), everything else is normal */

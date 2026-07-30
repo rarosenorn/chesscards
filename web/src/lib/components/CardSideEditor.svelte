@@ -462,11 +462,6 @@
 							{#if isShadow(board)}
 								<!-- empty sized box; see measureDragHeight -->
 							{:else}
-							{#if showBoardNumbers}
-								<p class="board-number">
-									{boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1}
-								</p>
-							{/if}
 							{#if showsEditor(board)}
 								{#key board}
 									<ChessboardEditor
@@ -505,6 +500,7 @@
 										flushBottom
 										authorView={!isBack}
 										revealed={isBack ? true : (showBackBoards[board.id] ?? true)}
+										number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null}
 									>
 										<div class="button-row">
 											<input

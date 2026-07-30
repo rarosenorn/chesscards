@@ -199,14 +199,14 @@
 			>
 				{#each block.content as chessboard, boardIndex}
 					<div class="board-container">
-						{#if showBoardNumbers}
-							<p class="board-number">
-								{boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1}
-							</p>
-						{/if}
 						<!-- low floor: two squeezed boards must shrink, not overflow
 					     their cells and crush the gap between them -->
-					<Chessboard board={chessboard} {revealed} minWidth="280px" />
+					<Chessboard
+						board={chessboard}
+						{revealed}
+						minWidth="280px"
+						number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null}
+					/>
 					</div>
 				{/each}
 			</div>

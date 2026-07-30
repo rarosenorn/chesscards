@@ -446,7 +446,7 @@
 		border: none;
 		background: none;
 		border-radius: 4px;
-		font-size: 1.25rem;
+		font-size: 1.15rem;
 		line-height: 0;
 		vertical-align: -0.15em;
 		cursor: pointer;

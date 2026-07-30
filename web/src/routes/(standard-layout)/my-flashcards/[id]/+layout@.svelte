@@ -80,7 +80,25 @@
 	const names = deck.isMarketplace
 		? ["Study", "Browse"]
 		: ["Study", "Browse / edit", "Add cards 1", "Add cards 2", "Add cards 3", "Add cards 5", "Settings"];
+
+	// s/b/a jump between the deck's three working tabs. Bare letters, so they
+	// stand down wherever the keyboard is already spoken for — a text field, a
+	// card editor, or any modifier combo — the way study's own e/h/1-4 do.
+	const TAB_KEYS = { s: "study", b: "browse", a: "add-cards" };
+	const handleKeyDown = e => {
+		if (e.ctrlKey || e.metaKey || e.altKey) return;
+		const path = TAB_KEYS[e.key.toLowerCase()];
+		if (!path || !paths.includes(path)) return;
+		const target = e.target;
+		if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable) return;
+		const to = `/my-flashcards/${page.params.id}/${path}`;
+		if (page.url.pathname === to) return;
+		e.preventDefault();
+		goto(to);
+	}
 </script>
+
+<svelte:window onkeydown={handleKeyDown} />
 
 <div class="deck-nav-container">
 	<div class="breadcrumbs">

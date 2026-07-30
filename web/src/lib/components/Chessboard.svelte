@@ -176,6 +176,9 @@
 	const handleWheel = e => {
 		if (!hasMoves) return;
 		e.preventDefault();
+		// the gesture takes the board over, so hand it the keyboard too:
+		// stepping on can continue with the arrow keys, as after a click
+		wrapperElement.focus({ preventScroll: true });
 		const now = performance.now();
 		if (now - lastWheel > 250) wheelAcc = 0;
 		lastWheel = now;

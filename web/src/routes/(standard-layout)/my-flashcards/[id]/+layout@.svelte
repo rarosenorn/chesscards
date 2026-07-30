@@ -11,10 +11,12 @@
 	let deck = $state(data.deck);
 	setContext("deck", deck);
 
-	// In-progress card state for the add-cards and browse tabs. It lives here,
-	// in the layout that stays mounted across tab navigation, so switching
-	// tabs doesn't wipe a half-written card; leaving the deck discards it
-	// (after the warning below).
+	// In-progress card state for the editor-trial and browse tabs. It lives
+	// here, in the layout that stays mounted across tab navigation, so
+	// switching tabs doesn't wipe a half-written card; leaving the deck
+	// discards it (after the warning below). The Add cards 1 tab is not in
+	// here: it keeps its draft in localStorage (add-cards-draft.js), which
+	// survives leaving the deck and a reload, so it needs no warning.
 	const cardDrafts = $state({ addCards: null, browse: null });
 	setContext("cardDrafts", cardDrafts);
 
@@ -30,7 +32,7 @@
 	const unsavedPlaces = () => [
 		...(cardDrafts.addCards
 			&& (sideHasContent(cardDrafts.addCards.front) || sideHasContent(cardDrafts.addCards.back))
-			? ["Add cards 1"] : []),
+			? ["Add cards 5"] : []),
 		...(cardDrafts.addCards2 && sideHasContent(cardDrafts.addCards2.blocks)
 			? ["Add cards 2"] : []),
 		...(cardDrafts.browse?.editingCardId != null ? ["Browse / edit"] : [])

@@ -7,7 +7,11 @@
 	// stored block-array format, so study/browse need no changes.
 	import { getContext, onMount } from "svelte"
 	import { enhance } from "$app/forms"
+	import { beforeNavigate } from "$app/navigation"
+	import { browser } from "$app/environment"
+	import { page } from "$app/state"
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
+	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft } from "$lib/add-cards-draft.js"
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
@@ -17,8 +21,19 @@
 	// browse/study see them without a reload
 	const deck = getContext("deck");
 
+	// The card being written and the card type are kept in localStorage per
+	// deck (add-cards-draft.js), so both survive a tab switch, leaving the deck
+	// and a reload. Read before the editors mount, so each side opens on its
+	// stored document; the server render has no storage and uses the defaults.
+	const deckId = page.params.id;
+	const storedDraft = browser ? loadDraft(deckId) : null;
+
 	// Anki-style mode: applies to every card added until changed
-	let cardType = $state("basic");
+	let cardType = $state(browser ? loadCardType(deckId) : DEFAULT_CARD_TYPE);
+	const chooseCardType = value => {
+		cardType = value;
+		saveCardType(deckId, value);
+	}
 
 	// shared board-editing state (see ChessboardNode.svelte): survives PM node
 	// view recreation on drags, and lets the submit apply open editors; board
@@ -38,6 +53,31 @@
 	// bound to the two CardSideDocEditor instances
 	let frontEditor, backEditor;
 	let addCardForm;
+
+	// The draft is written on a short debounce — a keystroke is not worth a
+	// synchronous storage write — and flushed whenever the page can go away:
+	// navigation unmounts the editors, pagehide covers a reload or a close.
+	// An empty card stores nothing, so a submitted or emptied draft leaves no
+	// stale entry behind.
+	let saveTimer;
+	const persistDraft = () => {
+		const front = frontEditor?.getJson();
+		const back = backEditor?.getJson();
+		if (!front || !back) return;
+		if (docHasContentBlocks(front) || docHasContentBlocks(back)) saveDraft(deckId, front, back);
+		else clearDraft(deckId);
+	}
+	const flushDraft = () => {
+		clearTimeout(saveTimer);
+		persistDraft();
+	}
+	const handleDocChanged = () => {
+		formAttemptedAndInvalid = false;
+		invalidFenNumbers = [];
+		clearTimeout(saveTimer);
+		saveTimer = setTimeout(persistDraft, 250);
+	}
+	beforeNavigate(flushDraft);
 
 	// The shared menu bar acts on whichever editor is focused; reassigned
 	// (fresh object) so the bar's active states stay live. focused is an
@@ -151,7 +191,7 @@
 	})
 </script>
 
-<svelte:window onkeydown={handleKeyDown} />
+<svelte:window onkeydown={handleKeyDown} onpagehide={flushDraft} />
 
 <div class="type-row">
 	<span id="card-type-label">Type</span>
@@ -165,7 +205,7 @@
 				role="radio"
 				aria-checked={cardType === value}
 				class:selected={cardType === value}
-				onclick={() => cardType = value}
+				onclick={() => chooseCardType(value)}
 			>
 				{label}
 				<span class="tooltip" aria-hidden="true">{@html description}</span>
@@ -191,7 +231,8 @@
 	<CardSideBlockEditor
 		bind:this={frontEditor}
 		{boardUi}
-		onDocChanged={() => { formAttemptedAndInvalid = false; invalidFenNumbers = []; }}
+		initialDoc={storedDraft?.front}
+		onDocChanged={handleDocChanged}
 		onEditorFocus={handleEditorFocus}
 		onEditorBlur={handleEditorBlur}
 		onEditorTransaction={handleEditorRefresh}
@@ -203,7 +244,8 @@
 		bind:this={backEditor}
 		{boardUi}
 		isBack
-		onDocChanged={() => { formAttemptedAndInvalid = false; invalidFenNumbers = []; }}
+		initialDoc={storedDraft?.back}
+		onDocChanged={handleDocChanged}
 		onEditorFocus={handleEditorFocus}
 		onEditorBlur={handleEditorBlur}
 		onEditorTransaction={handleEditorRefresh}
@@ -253,6 +295,9 @@
 				boardUi.editorStates = {};
 				frontEditor.clear();
 				backEditor.clear();
+				// the card is saved: clear() has already scheduled a write of
+				// the now-empty document, which drops the stored draft
+				flushDraft();
 				frontEditor.focus();
 			}
 		}}

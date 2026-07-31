@@ -9,7 +9,11 @@
 	// The Svelte face of a chessboard PM node (mounted by tiptap-chessboard's
 	// node view). board comes from the node's attrs; every change goes back out
 	// through onUpdate as a whole-object replacement, which dispatches an attr
-	// transaction — so undo covers board edits.
+	// transaction — so undo covers board edits. An open board editor syncs its
+	// working state out the same way but outside history (the document — and
+	// everything derived from it, like the duplicate check — follows each edit
+	// live); Cancel restores the opening snapshot, Save re-records the whole
+	// edit as one undo step.
 	// ui: shared { editingIds, editorStates, applyEditors } living outside the
 	// node views, so an open editor survives the view being destroyed and
 	// recreated (PM does that on drags) and the page can apply open editors on
@@ -18,6 +22,11 @@
 
 	// svelte-ignore state_referenced_locally -- seeding local state from the shared set on mount is the point
 	let isEditing = $state(ui.editingIds.has(board.id));
+	// a board born with its editor open (insert) never passes openEditor: its
+	// Cancel snapshot is the freshly inserted board itself. ??= so a node view
+	// recreated mid-edit (drags) keeps the true opening state instead
+	// svelte-ignore state_referenced_locally -- the mount-time board is the snapshot wanted
+	if (isEditing) (ui.savedBoards ??= {})[board.id] ??= $state.snapshot(board);
 	// The initial report is deferred one microtask (still pre-paint): it runs
 	// during render, where a parent mutating its state would throw. Open/close
 	// report synchronously — the wrapper's full-row class must change in the
@@ -29,6 +38,9 @@
 	let editBtn = $state();
 
 	const openEditor = () => {
+		// the state to return to on Cancel — kept in the shared ui so it
+		// survives the node view being destroyed and recreated mid-edit
+		(ui.savedBoards ??= {})[board.id] = $state.snapshot(board);
 		ui.editingIds.add(board.id);
 		onEditingChange(true);
 		isEditing = true;
@@ -46,6 +58,7 @@
 		openInMoves = false;
 		ui.editingIds.delete(board.id);
 		delete ui.editorStates[board.id];
+		delete ui.savedBoards?.[board.id];
 		onEditingChange(false);
 		isEditing = false;
 		await tick();
@@ -138,12 +151,23 @@
 		persistState={state => {
 			if (ui.editingIds.has(board.id)) ui.editorStates[board.id] = state;
 		}}
+		onLiveChange={data => onUpdate({ ...data, id: board.id }, { history: false })}
 		onSave={data => {
 			fenDraft = null;
+			// the live syncs kept the document current but out of history; put
+			// the opening state back first, so this one recorded step spans the
+			// whole edit and a single undo reverts it
+			const saved = ui.savedBoards?.[board.id];
+			if (saved) onUpdate(saved, { history: false });
 			onUpdate({ ...data, id: board.id });
 			closeEditor();
 		}}
-		onCancel={closeEditor}
+		onCancel={() => {
+			fenDraft = null;
+			const saved = ui.savedBoards?.[board.id];
+			if (saved) onUpdate(saved, { history: false });
+			closeEditor();
+		}}
 	/>
 {:else}
 	<div class="board-area">

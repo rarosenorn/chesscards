@@ -96,11 +96,15 @@ export const BlockNode = Node.create({
 				blockId: node.attrs.id,
 				isBack: this.options.isBack,
 				ui: this.options.ui,
-				// whole-array attr replacement — one undo step per change
-				onUpdate: boards => {
+				// whole-array attr replacement — one undo step per change. An
+				// open board editor's live syncs pass history: false: the doc
+				// follows every edit, but only Save lands in the undo stack
+				onUpdate: (boards, { history = true } = {}) => {
 					const pos = getPos();
 					if (pos == null) return;
-					editor.view.dispatch(editor.view.state.tr.setNodeAttribute(pos, "boards", boards));
+					const tr = editor.view.state.tr.setNodeAttribute(pos, "boards", boards);
+					if (!history) tr.setMeta("addToHistory", false);
+					editor.view.dispatch(tr);
 				},
 				onEditingChange: setEditing,
 				// clicking a board parks the caret virtually (also how a closed

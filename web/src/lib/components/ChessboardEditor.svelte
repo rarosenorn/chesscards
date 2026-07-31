@@ -1,5 +1,5 @@
 <script>
-	import { onMount, getContext, tick } from "svelte"
+	import { onMount, getContext, tick, untrack } from "svelte"
 	import { playMoveSound } from "$lib/sounds.js"
 	import TrashIcon from "$lib/icons/Trash.svelte"
 	import CursorArrowIcon from "$lib/icons/CursorArrow.svelte"
@@ -36,7 +36,7 @@
 	// the toggle disappears and everything records as the visible layer
 	// startInMoves: the position was pasted in from somewhere else, so there is
 	// nothing to set up — open on the moves stage
-	let { board: boardData, restore, persistState, onFenValidityChange, onSave, onCancel, boardOnBack = false, startInMoves = false } = $props();
+	let { board: boardData, restore, persistState, onFenValidityChange, onSave, onCancel, onLiveChange = null, boardOnBack = false, startInMoves = false } = $props();
 
 	const emptyPlacement = "8/8/8/8/8/8/8/8"
 	const startPlacement = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
@@ -596,6 +596,21 @@
 		solutionAnnotations: $state.snapshot(solutionAnnotations),
 		orientation
 	});
+
+	// the working state, reported to the host as it changes, so the document
+	// stays live while the editor is open (Cancel restores from the host's own
+	// snapshot). The mount-time run reports nothing: that state is the host's.
+	// The callback is called untracked — the host recreates it on the very
+	// re-render each report causes, and tracking it would loop the effect.
+	let liveReported = false;
+	$effect(() => {
+		const data = getBoardData();
+		if (!liveReported) {
+			liveReported = true;
+			return;
+		}
+		untrack(() => onLiveChange?.(data));
+	})
 
 	const save = () => onSave(getBoardData())
 

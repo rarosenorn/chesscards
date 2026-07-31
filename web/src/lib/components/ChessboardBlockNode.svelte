@@ -26,7 +26,7 @@
 		items = boards.map(b => ({ ...b }));
 	});
 
-	const commit = () => onUpdate($state.snapshot(items).map(({ [SHADOW_ITEM_MARKER_PROPERTY_NAME]: _drop, ...b }) => b));
+	const commit = opts => onUpdate($state.snapshot(items).map(({ [SHADOW_ITEM_MARKER_PROPERTY_NAME]: _drop, ...b }) => b), opts);
 
 	const isShadow = item => !!item[SHADOW_ITEM_MARKER_PROPERTY_NAME];
 
@@ -352,7 +352,7 @@
 					{isBack}
 					{ui}
 					boardMinWidth="280px"
-					onUpdate={data => { items[i] = { ...data, id: board.id }; commit(); }}
+					onUpdate={(data, opts) => { items[i] = { ...data, id: board.id }; commit(opts); }}
 					onEditingChange={value => setEditing(board.id, value)}
 					onDuplicate={() => duplicateBoard(i)}
 					onCaretAfter={() => { setBoardCaret(blockId, i + 1, "up"); onCaretActivated?.(); }}

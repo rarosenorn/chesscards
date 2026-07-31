@@ -348,15 +348,14 @@
 
 
 <style>
-	/* Sized so the card does not grow when the answer shows: it holds a line
-	   of text plus one board (number strip, board, move line) on the front,
-	   the divider, and a line of text on the back — 557px of content between
-	   the paddings. Board/text layout inside the card comes from app.css
-	   ("card board layout"), shared with browse */
+	/* The card is as tall as what it holds: the question alone at first, then
+	   it grows by the answer when that shows. The floor matches browse, so a
+	   one-line card is still a card and not a strip. Board/text layout inside
+	   the card comes from app.css ("card board layout"), shared with browse */
 	.flashcard {
 		align-items: center;
 		margin-top: 34px;
-		min-height: 621px;
+		min-height: 200px;
 		padding: 32px 26px;
 	}
 	/* The controls under the card: every button on one centred row, on one

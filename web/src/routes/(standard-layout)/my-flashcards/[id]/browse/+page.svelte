@@ -462,12 +462,21 @@
 		display: flex;
 		flex-direction: column;
 	}
+	/* a band above the header row rather than a pill floating over it: square,
+	   flush to the pane, ruled in the table's own line, and its text starting
+	   on the first column's left edge */
 	.search-input {
-		margin: 8px 6px;
-		padding: 3px 16px;
-		border: 1px solid #ccc;
-		border-radius: 8px;
+		margin: 0;
+		padding: 6px 8px;
+		border: none;
+		border-bottom: 1px solid #dcdcdc;
+		border-radius: 0;
 		font-size: 0.9rem;
+	}
+	/* inset, so taking focus never moves the row below by a pixel */
+	.search-input:focus {
+		outline: 1px solid var(--accent);
+		outline-offset: -1px;
 	}
 	.table-container {
 		flex-grow: 1;

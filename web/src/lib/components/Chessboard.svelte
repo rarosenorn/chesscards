@@ -47,6 +47,12 @@
 	let lineMoves = $derived(authorView ? replay.moveInfos : replay.moveInfos.slice(0, visiblePlies));
 
 	let currentIndex = $state(0);
+	// Stepping is the only thing a board animates for, and goTo below is the
+	// only way to step — so it says so outright. Inferring it from what
+	// changed cannot: a swapped-in card, a reveal that lengthens the line and
+	// a re-render all reach the same effect with a new position to show, and
+	// tweening any of them reads as the pieces shuffling into place.
+	let stepping = false;
 	// a different board (e.g. next flashcard) starts back at its start position
 	$effect(() => { void board; currentIndex = 0; });
 	let displayIndex = $derived(Math.min(currentIndex, positions.length - 1));
@@ -77,7 +83,6 @@
 
 	let chessboardElement = $state();
 	let cmBoard = $state();
-	let renderedIndex = 0;
 	let renderedBoard = null;
 
 	// on reveal the solution layer displaces the question annotations wherever
@@ -95,13 +100,13 @@
 		if (cmBoard.getOrientation() !== normalized.orientation) {
 			cmBoard.setOrientation(normalized.orientation, false);
 		}
-		// only animate actual navigation within this board — not FEN edits of
-		// the shown position, and not a swapped-in board (browse reuses the
-		// component across cards; tweening one card's position into the next
-		// card's reads as pieces shuffling around)
-		cmBoard.setPosition(fen, renderedBoard === normalized && displayIndex !== renderedIndex);
+		// Only a step animates, and only within the board it stepped on: study
+		// and browse reuse this component across cards, and tweening one
+		// card's position into the next card's reads as the pieces shuffling
+		// around rather than a new card arriving.
+		cmBoard.setPosition(fen, stepping && renderedBoard === normalized);
+		stepping = false;
 		renderedBoard = normalized;
-		renderedIndex = displayIndex;
 		showAnnotations(cmBoard, annotation);
 	})
 
@@ -161,6 +166,7 @@
 		if (index !== displayIndex) {
 			const crossed = index > displayIndex ? index - 1 : displayIndex - 1;
 			playMoveSound(replay.moveInfos[crossed]?.san);
+			stepping = true;
 		}
 		currentIndex = index;
 	}

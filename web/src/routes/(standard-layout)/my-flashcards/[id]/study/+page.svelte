@@ -61,7 +61,19 @@
 
 	let isTactic = $derived(currentCard?.card_type === "tactic");
 
-	let preview = $derived(isTactic ? null : scheduler.repeat(currentCard, new Date()));
+	// The clock the due-time previews are measured from. It has to be taken
+	// when the answer is revealed, not when this component runs: `new Date()`
+	// is a plain value, so a page left open for a quarter of an hour would
+	// otherwise offer "1 minute from fifteen minutes ago" — a negative label
+	// under Again. The previews are only on screen while turned, so revealing
+	// is the one moment that needs a fresh reading.
+	let previewAt = $state(Date.now());
+	const showAnswer = () => {
+		previewAt = Date.now();
+		isCardTurned = true;
+	}
+
+	let preview = $derived(isTactic ? null : scheduler.repeat(currentCard, new Date(previewAt)));
 
 	let frontBoardCount = $derived(currentCard ? countBoards(currentCard.front) : 0);
 	// board numbers are only shown when the card has several boards to reference
@@ -163,7 +175,7 @@
 		if (!isCardTurned) {
 			if (e.key === " ") {
 				e.preventDefault();
-				isCardTurned = true;
+				showAnswer();
 			}
 		} else if (e.key === "h" || e.key === "H") {
 			isCardTurned = false;
@@ -263,9 +275,9 @@
 		{/if}
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
-				<button 
+				<button
 					class="std-btn"
-					onclick={() => isCardTurned = true}
+					onclick={showAnswer}
 					title="Shortcut key: Space"
 				>
 					Show

@@ -632,6 +632,7 @@
 		position: absolute;
 		left: 50%;
 		transform: translateX(-50%);
+		margin-top: 2px;
 		font-size: 0.85rem;
 		color: red;
 	}

@@ -588,6 +588,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		position: relative;
 		margin-left: 3px;
 		margin-right: 3px;
 		margin-bottom: 1px;
@@ -625,7 +626,12 @@
 		align-items: center;
 		gap: 10px;
 	}
+	/* centered on the row, positioned so the label and the freeze toggle
+	   keep their places whether or not the link is showing */
 	.duplicates-link {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
 		font-size: 0.85rem;
 		color: red;
 	}

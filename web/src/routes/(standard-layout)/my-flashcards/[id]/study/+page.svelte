@@ -261,6 +261,10 @@
 			{/if}
 			{@render side(currentCard.back, frontBoardCount, true)}
 		{/if}
+	</div>
+	<!-- the controls sit under the card, not on it: the card is the material
+	     being studied, and nothing about grading it belongs inside that frame -->
+	<div class="card-actions">
 		{#if isCardTurned}
 			<button
 				class="std-btn hide-answer-btn"
@@ -344,33 +348,44 @@
 <style>
 	/* Sized so the card does not grow when the answer shows: it holds a line
 	   of text plus one board (number strip, board, move line) on the front,
-	   the divider, and a line of text on the back — 581px of content, then
-	   the bottom padding below. Board/text layout inside the card comes from
-	   app.css ("card board layout"), shared with browse */
+	   the divider, and a line of text on the back — 549px of content between
+	   the paddings. Board/text layout inside the card comes from app.css
+	   ("card board layout"), shared with browse */
 	.flashcard {
 		align-items: center;
 		margin-top: 34px;
-		min-height: 668px;
-		/* the bottom padding is the answer bar's landing strip: the bar is
-		   absolute (66px from the card's bottom edge at its tallest, with the
-		   due-time labels) and content flows under it otherwise. 84px keeps a
-		   card whose content fills the height clear of it by 18px. */
-		padding: 32px 26px 84px 26px;
-		position: relative;
+		min-height: 613px;
+		padding: 32px 26px;
 	}
-	/* quiet exit bottom-left, away from the rating row; flush with the
-	   boards' left edge (card padding 26 + grid inset 10) */
+	/* The controls under the card: grading centered, the two card-level
+	   actions pushed to the outer edges so neither competes with it. The
+	   middle column is auto-width, so the ratings stay centered on the card
+	   whether or not the side buttons are there; the outer columns are equal,
+	   so the Show button sits where Good will. Bottom-aligned, since the
+	   rating buttons carry a due-time label above them. */
+	.card-actions {
+		width: 100%;
+		max-width: 900px;
+		margin: 12px auto 0;
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: end;
+		/* flush with the boards' left and right edges (card padding 26 +
+		   grid inset 10) */
+		padding: 0 36px;
+		box-sizing: border-box;
+	}
+	/* all three name their row: the grading row comes last in the markup, so
+	   auto-placement would otherwise start a second row for it */
 	.hide-answer-btn {
-		position: absolute;
-		bottom: 10px;
-		left: 36px;
+		grid-area: 1 / 1;
+		justify-self: start;
 		padding: 4px 8px;
 	}
 	/* mirror of the hide button, owners only */
 	.edit-card-btn {
-		position: absolute;
-		bottom: 10px;
-		right: 36px;
+		grid-area: 1 / 3;
+		justify-self: end;
 		padding: 4px 8px;
 	}
 	/* the in-place card editor: same surface as the card it replaces, the
@@ -380,12 +395,12 @@
 		padding: 12px 30px;
 	}
 	.flashcard-btn-row {
+		grid-area: 1 / 2;
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
+		align-items: end;
 		gap: 20px;
-		position: absolute;
-		bottom: 10px;
 	}
 	.flashcard-btn-row p {
 		text-align: center;

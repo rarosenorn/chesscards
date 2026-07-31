@@ -1,19 +1,32 @@
-import { error, fail, redirect } from "@sveltejs/kit"
+import { fail, redirect } from "@sveltejs/kit"
+import { createEmptyCard } from "ts-fsrs"
 import * as decks from "$lib/server/decks.js"
 import * as marketplace from "$lib/server/marketplace.js"
 
 export const load = async ({ locals, params, parent }) => {
-	// marketplace deck instances are readonly: no settings page for them
+	// a marketplace deck instance has nothing here but its study progress: the
+	// deck's name, cards and marketplace listing are its author's
 	const { deck } = await parent();
-	if (deck.isMarketplace) error(404);
 
 	return {
 		pageTitle: "Deck",
-		uploadRequest: await marketplace.getUploadRequestForDeck(locals.userId, params.id)
+		uploadRequest: deck.isMarketplace
+			? null
+			: await marketplace.getUploadRequestForDeck(locals.userId, params.id)
 	}
 }
 
 export const actions = {
+	// the id is either a personal deck or a marketplace deck instance, as in
+	// the deck layout's load; both resets are scoped to the user by their join
+	reset: async ({ params, locals }) => {
+		const FSRSValues = Object.values(createEmptyCard());
+		const cards = await decks.userIdOwnsDeckId(locals.userId, params.id)
+			? await decks.resetDeckSchedule(locals.userId, params.id, FSRSValues)
+			: await marketplace.resetInstanceSchedule(locals.userId, params.id, FSRSValues);
+
+		return { cards };
+	},
 	delete: async ({ request, locals }) => {
 		const data = await request.formData();
 		await decks.remove(data.get("id"), locals.userId);

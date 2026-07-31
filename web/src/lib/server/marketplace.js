@@ -281,6 +281,33 @@ const updateInstanceCardStudyState = async (userId, card) => {
 	return rowCount === 1;
 }
 
+// the instance's own copy of decks.resetDeckSchedule: the cards belong to the
+// marketplace deck, but the progress over them is the user's to restart
+const resetInstanceSchedule = async (userId, instanceId, FSRSValues) => {
+	const basic = await pool.query(`
+		update marketplace_card_instances ci set
+			finished_at = null,
+			due = $3, stability = $4, difficulty = $5, elapsed_days = $6, scheduled_days = $7,
+			reps = $8, lapses = $9, learning_steps = $10, state = $11, last_review = $12
+		from marketplace_deck_instances i
+		where ci.marketplace_deck_instance_id = i.id and i.id = $2 and i.user_id = $1
+			and ci.card_type = 'basic'`,
+		[userId, instanceId, ...FSRSValues]
+	);
+	const tactic = await pool.query(`
+		update marketplace_card_instances ci set
+			finished_at = null, due = now(),
+			stability = null, difficulty = null, elapsed_days = null, scheduled_days = null,
+			reps = null, lapses = null, learning_steps = null, state = null, last_review = null
+		from marketplace_deck_instances i
+		where ci.marketplace_deck_instance_id = i.id and i.id = $2 and i.user_id = $1
+			and ci.card_type = 'tactic'`,
+		[userId, instanceId]
+	);
+
+	return basic.rowCount + tactic.rowCount;
+}
+
 const createInstanceReviewLog = async (userId, instanceCardId, log) => {
 	await pool.query(`
 		insert into review_logs(user_id, marketplace_card_instance_id, rating, state, due, stability, difficulty, elapsed_days, last_elapsed_days, scheduled_days, learning_steps, review)
@@ -289,4 +316,4 @@ const createInstanceReviewLog = async (userId, instanceCardId, log) => {
 	)
 }
 
-export { themes, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, getInstanceById, updateInstanceCardStudyState, createInstanceReviewLog }
+export { themes, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, getInstanceById, updateInstanceCardStudyState, resetInstanceSchedule, createInstanceReviewLog }

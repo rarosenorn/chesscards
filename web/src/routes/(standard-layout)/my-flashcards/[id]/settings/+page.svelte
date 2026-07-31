@@ -2,11 +2,21 @@
 	import { enhance } from "$app/forms"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import FormErrors from "$lib/components/FormErrors.svelte"
-	import { typedConfirmModal } from "$lib/modals.svelte.js"
+	import { confirmModal, typedConfirmModal } from "$lib/modals.svelte.js"
 
 	let { data, form } = $props();
 
 	let deleteForm;
+	let resetForm;
+
+	const confirmReset = async () => {
+		const confirmed = await confirmModal({
+			title: "Reset deck",
+			message: "Every card goes back to new and the whole deck comes up for review again. The review history is kept.",
+			confirmLabel: "Reset deck"
+		});
+		if (confirmed) resetForm.requestSubmit();
+	}
 
 	const confirmDelete = async () => {
 		const confirmed = await typedConfirmModal({
@@ -20,6 +30,7 @@
 </script>
 
 <StandardLayout>
+	{#if !data.deck.isMarketplace}
 	<section>
 		<h3>Deck name</h3>
 		<FormErrors form={form} />
@@ -60,7 +71,26 @@
 			</a>
 		{/if}
 	</section>
+	{/if}
 
+	<section>
+		<h3>Study progress</h3>
+		<p class="section-note">
+			Puts every card back to new: scheduling starts over, finished tactics
+			return, and the whole deck is due again. The review history is kept —
+			your statistics still count every review you have done.
+		</p>
+		{#if form?.cards != null}
+			<p class="status status-approved">
+				Reset {form.cards} card{form.cards === 1 ? "" : "s"}.
+			</p>
+		{/if}
+		<form bind:this={resetForm} method="POST" action="?/reset" use:enhance>
+			<button type="button" class="std-btn" onclick={confirmReset}>Reset deck</button>
+		</form>
+	</section>
+
+	{#if !data.deck.isMarketplace}
 	<section class="danger-zone">
 		<h3>Danger zone</h3>
 		<form
@@ -77,6 +107,7 @@
 			<button type="button" class="delete-button" onclick={confirmDelete}>Delete deck</button>
 		</form>
 	</section>
+	{/if}
 </StandardLayout>
 
 <style>

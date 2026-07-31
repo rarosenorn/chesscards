@@ -141,6 +141,35 @@ const deleteCards = async (userId, cardIds) => {
 	return rowCount;
 }
 
+// Every card in the deck back to new — the reset updateCardType performs on a
+// single card, applied to the whole deck (and holding each card's own type,
+// which is content rather than progress). Review history is untouched: it
+// lives in review_logs, keyed by card, and outlives the card's own progress.
+// The two statements are the tactic/basic split scheduleValues makes, in
+// update form: a tactic card is due immediately and carries no FSRS state.
+const resetDeckSchedule = async (userId, deckId, FSRSValues) => {
+	const basic = await pool.query(`
+		update cards c set
+			finished_at = null,
+			due = $3, stability = $4, difficulty = $5, elapsed_days = $6, scheduled_days = $7,
+			reps = $8, lapses = $9, learning_steps = $10, state = $11, last_review = $12
+		from decks d
+		where c.deck_id = d.id and d.id = $2 and d.user_id = $1 and c.card_type = 'basic'`,
+		[userId, deckId, ...FSRSValues]
+	);
+	const tactic = await pool.query(`
+		update cards c set
+			finished_at = null, due = now(),
+			stability = null, difficulty = null, elapsed_days = null, scheduled_days = null,
+			reps = null, lapses = null, learning_steps = null, state = null, last_review = null
+		from decks d
+		where c.deck_id = d.id and d.id = $2 and d.user_id = $1 and c.card_type = 'tactic'`,
+		[userId, deckId]
+	);
+
+	return basic.rowCount + tactic.rowCount;
+}
+
 const updateCardStudyState = async (userId, card) => {
 	const { rows } = await pool.query(`
 		update cards
@@ -157,4 +186,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, createReviewLog }
+export { create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog }

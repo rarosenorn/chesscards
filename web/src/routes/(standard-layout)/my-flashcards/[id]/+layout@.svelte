@@ -77,15 +77,16 @@
 			goto(to);
 		});
 	});
-	// marketplace deck instances are readonly: study and browse only.
+	// marketplace deck instances are readonly, so no editing tabs; settings is
+	// there for the one thing that is theirs, resetting their study progress.
 	// "Add cards 2" (single Q/A list) and "Add cards 3" (one tiptap document
 	// per side, boards as PM nodes) are editor trials kept next to the classic
 	// front/back editor for side-by-side comparison.
 	const paths = deck.isMarketplace
-		? ["study", "browse"]
+		? ["study", "browse", "settings"]
 		: ["study", "browse", "add-cards", "add-cards-2", "add-cards-3", "add-cards-5", "settings"];
 	const names = deck.isMarketplace
-		? ["Study", "Browse"]
+		? ["Study", "Browse", "Settings"]
 		: ["Study", "Browse / edit", "Add cards 1", "Add cards 2", "Add cards 3", "Add cards 5", "Settings"];
 
 	// s/b/a jump between the deck's three working tabs. Bare letters, so they

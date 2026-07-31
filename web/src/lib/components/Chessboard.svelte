@@ -77,6 +77,7 @@
 	let chessboardElement = $state();
 	let cmBoard = $state();
 	let renderedIndex = 0;
+	let renderedBoard = null;
 
 	// on reveal the solution layer displaces the question annotations wherever
 	// it has an entry for the position
@@ -93,8 +94,12 @@
 		if (cmBoard.getOrientation() !== normalized.orientation) {
 			cmBoard.setOrientation(normalized.orientation, false);
 		}
-		// only animate actual navigation, not e.g. FEN edits of the shown position
-		cmBoard.setPosition(fen, displayIndex !== renderedIndex);
+		// only animate actual navigation within this board — not FEN edits of
+		// the shown position, and not a swapped-in board (browse reuses the
+		// component across cards; tweening one card's position into the next
+		// card's reads as pieces shuffling around)
+		cmBoard.setPosition(fen, renderedBoard === normalized && displayIndex !== renderedIndex);
+		renderedBoard = normalized;
 		renderedIndex = displayIndex;
 		showAnnotations(cmBoard, annotation);
 	})

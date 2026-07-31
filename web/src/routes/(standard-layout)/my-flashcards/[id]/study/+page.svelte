@@ -377,16 +377,15 @@
 		padding: 0 36px;
 		box-sizing: border-box;
 	}
-	/* Both name their row: the grading row comes last in the markup, so
-	   auto-placement would otherwise start a second row for it. These are
-	   about the card rather than the answer, so they keep a wider gap from
-	   the ratings than the ratings keep from each other. */
+	/* Names its row: the grading row comes last in the markup, so
+	   auto-placement would otherwise start a second row for it. The row runs
+	   on one rhythm — the ratings' own 20px carries through to these two. */
 	.side-actions {
 		grid-area: 1 / 3;
 		justify-self: start;
 		display: flex;
-		gap: 8px;
-		margin-left: 36px;
+		gap: 20px;
+		margin-left: 20px;
 	}
 	.side-actions .std-btn {
 		padding: 4px 8px;

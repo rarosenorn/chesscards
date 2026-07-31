@@ -11,6 +11,14 @@
 	let deck = $state(data.deck);
 	setContext("deck", deck);
 
+	// The tabs study and edit this copy in place — a graded card, a renamed
+	// deck — so a fresh server load (settings resetting the deck's progress,
+	// say) has to land in the same object rather than replace it: every tab
+	// took this exact one out of context and would go on reading the old
+	// cards. Only a re-run of the layout's load changes data.deck, so this
+	// does not fight the local edits between them.
+	$effect(() => { Object.assign(deck, data.deck) });
+
 	// In-progress card state for the editor-trial and browse tabs. It lives
 	// here, in the layout that stays mounted across tab navigation, so
 	// switching tabs doesn't wipe a half-written card; leaving the deck

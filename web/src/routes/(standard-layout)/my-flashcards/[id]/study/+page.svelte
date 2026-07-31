@@ -265,6 +265,57 @@
 	<!-- the controls sit under the card, not on it: the card is the material
 	     being studied, and nothing about grading it belongs inside that frame -->
 	<div class="card-actions">
+		<div class="flashcard-btn-row">
+			{#if !isCardTurned}
+				<button
+					class="std-btn"
+					onclick={showAnswer}
+					title="Shortcut key: Space"
+				>
+					Show
+				</button>
+			{:else}
+					{#snippet evalBtn(text, rating, title)}
+						<div class="eval-btn">
+							<button
+								onclick={() => evaluateCard(rating)}
+								class="std-btn"
+								title={"Shortcut key: " + title}
+							>
+								{text}
+							</button>
+							<p>{getTimeUntilDuePreviewText(rating)}</p>
+						</div>
+					{/snippet}
+					{#if isTactic}
+						<div class="eval-btn">
+							<button
+								onclick={() => evaluateTactic(false)}
+								class="std-btn"
+								title="Shortcut key: 1"
+							>
+								Incorrect
+							</button>
+							<p>1d</p>
+						</div>
+						<div class="eval-btn">
+							<button
+								onclick={() => evaluateTactic(true)}
+								class="std-btn"
+								title="Shortcut key: Space or 2"
+							>
+								Correct
+							</button>
+							<p>Never</p>
+						</div>
+					{:else}
+						{@render evalBtn("Again", Rating.Again, "1")}
+						{@render evalBtn("Hard", Rating.Hard, "2")}
+						{@render evalBtn("Good", Rating.Good, "Space or 3")}
+						{@render evalBtn("Easy", Rating.Easy, "4")}
+					{/if}
+			{/if}
+		</div>
 		{#if isCardTurned}
 			<div class="side-actions">
 				<button
@@ -285,57 +336,6 @@
 				{/if}
 			</div>
 		{/if}
-		<div class="flashcard-btn-row">
-			{#if !isCardTurned}
-				<button
-					class="std-btn"
-					onclick={showAnswer}
-					title="Shortcut key: Space"
-				>
-					Show
-				</button>
-			{:else}
-					{#snippet evalBtn(text, rating, title)}
-						<div class="eval-btn">
-							<p>{getTimeUntilDuePreviewText(rating)}</p>
-							<button 
-								onclick={() => evaluateCard(rating)}
-								class="std-btn"
-								title={"Shortcut key: " + title}
-							>
-								{text}
-							</button>
-						</div>
-					{/snippet}
-					{#if isTactic}
-						<div class="eval-btn">
-							<p>1d</p>
-							<button
-								onclick={() => evaluateTactic(false)}
-								class="std-btn"
-								title="Shortcut key: 1"
-							>
-								Incorrect
-							</button>
-						</div>
-						<div class="eval-btn">
-							<p>Never</p>
-							<button
-								onclick={() => evaluateTactic(true)}
-								class="std-btn"
-								title="Shortcut key: Space or 2"
-							>
-								Correct
-							</button>
-						</div>
-					{:else}
-						{@render evalBtn("Again", Rating.Again, "1")}
-						{@render evalBtn("Hard", Rating.Hard, "2")}
-						{@render evalBtn("Good", Rating.Good, "Space or 3")}
-						{@render evalBtn("Easy", Rating.Easy, "4")}
-					{/if}
-			{/if}
-		</div>
 	</div>
 {:else}
 	<div class="deck-done">
@@ -359,33 +359,23 @@
 		min-height: 613px;
 		padding: 32px 26px;
 	}
-	/* The controls under the card: grading centered on the card, with Hide
-	   and Edit trailing it. The middle column is auto-width and the outer
-	   columns are equal, so the ratings hold the centre whether or not the
-	   side buttons are there — the Show button sits where Good will.
-	   Bottom-aligned, since the rating buttons carry a due-time label above
-	   them. */
+	/* The controls under the card: every button on one centred row, on one
+	   20px rhythm. Top-aligned, so the buttons line up with each other while
+	   the due-time labels hang below the rating ones. */
 	.card-actions {
 		width: 100%;
 		max-width: 900px;
 		margin: 4px auto 0;
-		display: grid;
-		grid-template-columns: 1fr auto 1fr;
-		align-items: end;
-		/* flush with the boards' left and right edges (card padding 26 +
-		   grid inset 10) */
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		gap: 20px;
 		padding: 0 36px;
 		box-sizing: border-box;
 	}
-	/* Names its row: the grading row comes last in the markup, so
-	   auto-placement would otherwise start a second row for it. The row runs
-	   on one rhythm — the ratings' own 20px carries through to these two. */
 	.side-actions {
-		grid-area: 1 / 3;
-		justify-self: start;
 		display: flex;
 		gap: 20px;
-		margin-left: 20px;
 	}
 	.side-actions .std-btn {
 		padding: 4px 8px;
@@ -397,15 +387,15 @@
 		padding: 12px 30px;
 	}
 	.flashcard-btn-row {
-		grid-area: 1 / 2;
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
-		align-items: end;
+		align-items: flex-start;
 		gap: 20px;
 	}
 	.flashcard-btn-row p {
 		text-align: center;
+		margin-top: 3px;
 		font-size: 0.9rem;
 		font-weight: 350;
 	}

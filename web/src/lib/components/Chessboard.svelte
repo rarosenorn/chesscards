@@ -20,7 +20,8 @@
 	// solutionFrom on stay hidden and only the question annotations show; when
 	// true the full line shows and solutionAnnotations displaces annotations
 	// per position. `authorView` (editors/browse) tints the answer segment of
-	// the move line so authors see what study hides.
+	// the move line so authors see what study hides; study turns it on with
+	// the reveal, where it marks the same boundary in a line already shown.
 	// `number` is the board's display number, shown in the strip above it when
 	// the card has more than one board (the block editor numbers with a CSS
 	// counter instead — see CardSideBlockEditor — because numbering there runs

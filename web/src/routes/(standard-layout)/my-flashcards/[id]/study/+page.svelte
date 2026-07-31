@@ -205,7 +205,7 @@
 </script>
 <svelte:window onkeydown={handleKeyDown} />
 
-{#snippet side(side, boardNumberOffset, revealed)}
+{#snippet side(side, boardNumberOffset, revealed, marksBack = false)}
 <div
 	class="card-side"
 	data-board-align={boardAlignment(side)}
@@ -226,9 +226,15 @@
 					<div class="board-container">
 						<!-- low floor: two squeezed boards must shrink, not overflow
 					     their cells and crush the gap between them -->
+					<!-- the "Back:" marker rides on the reveal: it names the moves
+					     the question was hiding, so before the reveal there is
+					     nothing to name (and it would spell out the answer);
+					     back-side boards hide nothing, so they never mark, as
+					     in browse -->
 					<Chessboard
 						board={chessboard}
 						{revealed}
+						authorView={marksBack}
 						minWidth="280px"
 						number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null}
 					/>
@@ -248,7 +254,7 @@
 	<div class="flashcard card-surface">
 		<!-- turning reveals front boards' back layers (moves/annotations) in
 		     place, on top of showing the back side below -->
-		{@render side(currentCard.front, 0, isCardTurned)}
+		{@render side(currentCard.front, 0, isCardTurned, isCardTurned)}
 		{#if isCardTurned}
 			{#if sideHasContent(currentCard.back)}
 				<div class="side-gap"></div>

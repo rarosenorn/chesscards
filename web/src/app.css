@@ -232,7 +232,18 @@ body.piece-grabbing * {
 	align-self: stretch;
 	height: 0;
 	border-top: 1px solid rgba(0, 0, 0, 0.15);
-	margin: 20px 0;
+	margin: 12px 0;
+}
+/* A side's blocks breathe against each other, not against the side's own
+   edges: the card padding above and the divider below already set that
+   distance, and a block margin on top of them stacks (no collapsing in
+   this flex column) — which is why a board above the divider used to sit
+   36px clear of it against the back text's 20px. */
+.flashcard .card-side > :first-child {
+	margin-top: 0;
+}
+.flashcard .card-side > :last-child {
+	margin-bottom: 0;
 }
 /* boards breathe: extra space between board blocks and neighboring text */
 .flashcard .single-board-block {

@@ -324,14 +324,15 @@
 
 
 <style>
-	/* fits two lines of text plus one board row with a little slack; the
-	   taller bottom padding keeps content clear of the button row. Board/
-	   text layout inside the card comes from app.css ("card board layout"),
-	   shared with browse */
+	/* Sized so the card does not grow when the answer shows: it holds a line
+	   of text plus one board (number strip, board, move line) on the front,
+	   the divider, and a line of text on the back — 581px of content, then
+	   the bottom padding below. Board/text layout inside the card comes from
+	   app.css ("card board layout"), shared with browse */
 	.flashcard {
 		align-items: center;
 		margin-top: 34px;
-		min-height: 700px;
+		min-height: 668px;
 		/* the bottom padding is the answer bar's landing strip: the bar is
 		   absolute (66px from the card's bottom edge at its tallest, with the
 		   due-time labels) and content flows under it otherwise. 84px keeps a

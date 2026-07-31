@@ -7,14 +7,6 @@
 	--accent-hover: #2b6dab;
 	--accent-subtle: #ebf3fa;
 	--accent-subtle-strong: #d4e5f5;
-	/* the measure card text wraps at, ~86 characters a line. Past the 45–75
-	   ideal, but a card is 900px wide for its boards and a stricter cap
-	   leaves the text marooned in white space; the 1.5 line height carries
-	   the longer line. The editors deliberately do NOT cap: their input is a
-	   bordered box, and text stopping short of the border reads as broken
-	   rather than as a margin. The cost is that a line breaks later while
-	   you write it than it will on the card. */
-	--card-text-measure: 45rem;
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the
    window scrollbar: that shifts the viewport width and makes the responsive
@@ -202,9 +194,16 @@ body.piece-grabbing * {
 	align-items: center;
 }
 .flashcard .text-block {
-	/* 2px more inset than the boards' 10px, so text sits a hair inside */
-	padding: 0 12px;
-	max-width: var(--card-text-measure);
+	/* the boards' own inset, so text and boards share one edge and the card
+	   reads as a single column. Wrapping therefore runs to the card's width —
+	   ~100 characters at 900px, past the 45–75 ideal, and the 1.5 line height
+	   is what carries it. The alternative was text stopping short of the
+	   boards' edge, which reads as broken rather than as a margin; a stricter
+	   measure would only be honest if the boards narrowed with it, and they
+	   are the reason the card is this wide. The editors are uncapped for the
+	   same reason, so a line now breaks where it will on the card. */
+	padding: 0 10px;
+	max-width: 100%;
 }
 /* Text needs no alignment rule of its own: the block is only as wide as its
    text up to the measure, and the side centers it. Short text is therefore

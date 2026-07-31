@@ -261,10 +261,7 @@
 			{/if}
 			{@render side(currentCard.back, frontBoardCount, true)}
 		{/if}
-	</div>
-	<!-- the controls sit under the card, not on it: the card is the material
-	     being studied, and nothing about grading it belongs inside that frame -->
-	<div class="card-actions">
+		<div class="card-actions">
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
 				<button
@@ -277,6 +274,7 @@
 			{:else}
 					{#snippet evalBtn(text, rating, title)}
 						<div class="eval-btn">
+							<p>{getTimeUntilDuePreviewText(rating)}</p>
 							<button
 								onclick={() => evaluateCard(rating)}
 								class="std-btn"
@@ -284,11 +282,11 @@
 							>
 								{text}
 							</button>
-							<p>{getTimeUntilDuePreviewText(rating)}</p>
 						</div>
 					{/snippet}
 					{#if isTactic}
 						<div class="eval-btn">
+							<p>1d</p>
 							<button
 								onclick={() => evaluateTactic(false)}
 								class="std-btn"
@@ -296,9 +294,9 @@
 							>
 								Incorrect
 							</button>
-							<p>1d</p>
 						</div>
 						<div class="eval-btn">
+							<p>Never</p>
 							<button
 								onclick={() => evaluateTactic(true)}
 								class="std-btn"
@@ -306,7 +304,6 @@
 							>
 								Correct
 							</button>
-							<p>Never</p>
 						</div>
 					{:else}
 						{@render evalBtn("Again", Rating.Again, "1")}
@@ -336,6 +333,7 @@
 				{/if}
 			</div>
 		{/if}
+		</div>
 	</div>
 {:else}
 	<div class="deck-done">
@@ -358,19 +356,18 @@
 		min-height: 200px;
 		padding: 32px 26px;
 	}
-	/* The controls under the card: every button on one centred row, on one
-	   20px rhythm. Top-aligned, so the buttons line up with each other while
-	   the due-time labels hang below the rating ones. */
+	/* The controls close the card, one centred row on one 20px rhythm. The
+	   card grows to hold them, so they never overlay content and need no
+	   reserved strip; the top margin is their distance from the answer, and
+	   the card's own bottom padding closes below them. Bottom-aligned, since
+	   the due-time labels sit above the rating buttons. */
 	.card-actions {
-		width: 100%;
-		max-width: 900px;
-		margin: 4px auto 0;
+		align-self: stretch;
+		margin-top: 24px;
 		display: flex;
 		justify-content: center;
-		align-items: flex-start;
+		align-items: flex-end;
 		gap: 20px;
-		padding: 0 36px;
-		box-sizing: border-box;
 	}
 	.side-actions {
 		display: flex;
@@ -389,12 +386,12 @@
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
-		align-items: flex-start;
+		align-items: flex-end;
 		gap: 20px;
 	}
 	.flashcard-btn-row p {
 		text-align: center;
-		margin-top: 3px;
+		margin-bottom: 3px;
 		font-size: 0.9rem;
 		font-weight: 350;
 	}

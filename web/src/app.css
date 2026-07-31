@@ -233,13 +233,14 @@ body.piece-grabbing * {
 	margin-bottom: 0;
 }
 /* the sides read as two halves of one card: a divider line with the same
-   breathing room on both sides; the gap only renders once the answer
-   shows, so the line does too */
+   breathing room on both sides, a little less than the 24px the card's own
+   rim keeps, so the line reads as the lighter break of the two; the gap only
+   renders once the answer shows, so the line does too */
 .flashcard .side-gap {
 	align-self: stretch;
 	height: 0;
 	border-top: 1px solid rgba(0, 0, 0, 0.15);
-	margin: 24px 0;
+	margin: 18px 0;
 }
 /* A side's blocks breathe against each other, not against the side's own
    edges: the card padding above and the divider below already set that

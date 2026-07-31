@@ -62,8 +62,8 @@
 		margin-top: 32px;
 		margin-bottom: 40px;
 		min-height: 200px;
-		/* the divider's own 24px on every edge, so a side sits the same
-		   distance from the card's rim as from the line between them */
+		/* the card's rim, a little wider than the divider's 18px between the
+		   sides — same relation as on the study card */
 		padding: 24px 26px;
 	}
 </style>

@@ -357,10 +357,10 @@
 		align-items: center;
 		margin-top: 34px;
 		min-height: 200px;
-		/* the top matches the divider's own 24px, so the question sits evenly
-		   between the card's edge and the line under it; the row below sets
-		   its own distance from the content, so the card closes under it at
-		   the same 10px it always did */
+		/* the top is the card's rim, wider than the divider's 18px below the
+		   question: the edge of the card is the heavier boundary. The row
+		   below sets its own distance from the content, so the card closes
+		   under it at the same 10px it always did */
 		padding: 24px 26px 10px 26px;
 	}
 	/* The controls close the card, one centred row on one 20px rhythm. The

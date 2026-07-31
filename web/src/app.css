@@ -185,6 +185,14 @@ body.piece-grabbing * {
 /* --- card board layout, shared by study and browse (FlashcardBrowse) ---
    scoped under .flashcard so the add-cards editor's own .board-grid-block
    (ChessboardBlockNode) is untouched */
+/* Narrower than the other card surfaces, and it has to come after them to
+   win on equal specificity. The card's width is a board-sizing decision:
+   the boards are half of it, so this and the column gap below are the two
+   numbers that set how large a board renders. */
+.flashcard {
+	max-width: 820px;
+	--board-col-gap: 20px;
+}
 /* one side of a card: the blocks stack here rather than directly in the
    card, so the side can carry its own reading axis (see side-alignment.js) */
 .flashcard .card-side {
@@ -258,8 +266,9 @@ body.piece-grabbing * {
 }
 /* a lone board keeps the same size as a 2-column grid cell, centered */
 .flashcard .single-board-block > .board-container {
-	/* exactly one 2-column cell of the grid below */
-	width: calc(50% - 20px);
+	/* exactly one 2-column cell of the grid below: half the side, less half
+	   the grid's 20px inset and half the gap between the columns */
+	width: calc(50% - 10px - var(--board-col-gap) / 2);
 	/* a board wider than the half-width cell (Chessboard minWidth) must
 	   grow the centered cell, not spill out one-sided */
 	min-width: min-content;
@@ -273,7 +282,7 @@ body.piece-grabbing * {
 	margin-inline: auto;
 	/* rows sit closer than columns: the numbers above each board already
 	   add visual air between rows */
-	gap: 12px 20px;
+	gap: 12px var(--board-col-gap);
 	position: relative;
 	margin-top: 16px;
 	margin-bottom: 16px;

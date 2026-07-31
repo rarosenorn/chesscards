@@ -354,16 +354,23 @@
 		align-items: center;
 		margin-top: 34px;
 		min-height: 200px;
-		padding: 32px 26px;
+		/* the top matches the divider's own 16px, so the question sits evenly
+		   between the card's edge and the line under it; the row below sets
+		   its own distance from the content, so the card closes under it at
+		   the same 10px it always did */
+		padding: 16px 26px 10px 26px;
 	}
 	/* The controls close the card, one centred row on one 20px rhythm. The
 	   card grows to hold them, so they never overlay content and need no
-	   reserved strip; the top margin is their distance from the answer, and
-	   the card's own bottom padding closes below them. Bottom-aligned, since
-	   the due-time labels sit above the rating buttons. */
+	   reserved strip. The auto margin drops the row to the card's floor —
+	   on a card too short to fill the minimum height, the slack belongs
+	   above the buttons, not below them — and the padding holds their
+	   distance from the content once the card is full. Bottom-aligned,
+	   since the due-time labels sit above the rating buttons. */
 	.card-actions {
 		align-self: stretch;
-		margin-top: 24px;
+		margin-top: auto;
+		padding-top: 24px;
 		display: flex;
 		justify-content: center;
 		align-items: flex-end;

@@ -32,13 +32,13 @@
 			selectedCardId: null,
 			session: null,
 			// the sorted column and its direction, so the tab reopens sorted too
-			sortColumn: null,
+			sortColumn: "order",
 			sortDescending: false
 		};
 	}
 	const draft = cardDrafts.browse;
 	// a draft written before sorting existed carries neither field
-	draft.sortColumn ??= null;
+	draft.sortColumn ??= "order";
 	draft.sortDescending ??= false;
 
 	// returning to the tab reselects where it was left — the card being
@@ -91,10 +91,15 @@
 			: deck.cards
 	);
 
+	// the deck's own order, which the Order column shows and sorts by — the
+	// place a stored per-card order will land
+	let deckOrder = $derived(new Map(deck.cards.map((card, index) => [card.id, index])));
+
 	// What each sortable column sorts on. A null sorts last whichever way the
 	// column runs: those rows show "—", and a blank belongs at the end rather
 	// than crowding whichever end is being read.
 	const sortValues = {
+		order: card => deckOrder.get(card.id),
 		front: card => getFrontIndicator(card.front)?.toLowerCase() ?? null,
 		type: card => (card.card_type === "tactic" ? 1 : 0),
 		// the due date itself, so ascending is soonest-due first — the order
@@ -113,24 +118,19 @@
 		return (x < y ? -1 : 1) * (descending ? -1 : 1);
 	}
 
-	// Sorting is a view over the deck's own order, which is what no sorted
-	// column means (and where a stored card order would come in). Sort is
-	// stable, so the deck order still decides ties.
+	// A column is always sorted — Order ascending is the deck's own order, the
+	// table's default. Sort is stable, so that order still decides ties.
 	let filteredCards = $derived(
-		draft.sortColumn
-			? [...matchedCards].sort(compareBy(draft.sortColumn, draft.sortDescending))
-			: matchedCards
+		[...matchedCards].sort(compareBy(draft.sortColumn, draft.sortDescending))
 	);
 
-	// each header cycles ascending, descending, then back to the deck's order
+	// a header sorts ascending, and flips direction from there; the way back to
+	// the deck's order is the Order column, not a third click
 	const toggleSort = column => {
-		if (draft.sortColumn !== column) {
-			draft.sortColumn = column;
-			draft.sortDescending = false;
-		} else if (!draft.sortDescending) {
-			draft.sortDescending = true;
+		if (draft.sortColumn === column) {
+			draft.sortDescending = !draft.sortDescending;
 		} else {
-			draft.sortColumn = null;
+			draft.sortColumn = column;
 			draft.sortDescending = false;
 		}
 		multiSelected = new SvelteSet(selectedCard ? [selectedCard.id] : []);
@@ -355,7 +355,7 @@
 		>
 			<thead>
 				<tr>
-					{#each [["front", "Front", ""], ["type", "Type", "col-type"], ["due", "Due", "col-due"], ["reps", "Reps", "col-reps"], ["state", "State", "col-state"]] as [column, label, cls]}
+					{#each [["order", "Order", "col-order"], ["front", "Front", ""], ["type", "Type", "col-type"], ["due", "Due", "col-due"], ["reps", "Reps", "col-reps"], ["state", "State", "col-state"]] as [column, label, cls]}
 						<th
 							class={cls}
 							aria-sort={draft.sortColumn !== column
@@ -383,6 +383,7 @@
 						onmouseenter={() => handleRowMouseEnter(cardIndex)}
 						oncontextmenu={e => handleRowContextMenu(e, card, cardIndex)}
 					>
+						<td class="col-order">{deckOrder.get(card.id) + 1}</td>
 						<td>
 							{#if indicator}
 								{indicator}
@@ -390,7 +391,7 @@
 								<span class="board-only">{boardCount > 1 ? "{{chessboards}}" : "{{chessboard}}"}</span>
 							{/if}
 						</td>
-						<td>
+						<td class:type-cell={!readonly}>
 							{#if readonly}
 								{card.card_type === "tactic" ? "Tactic" : "Basic"}
 							{:else}
@@ -525,8 +526,11 @@
 	th:last-child {
 		border-right: none;
 	}
+	.col-order {
+		width: 62px;
+	}
 	.col-type {
-		width: 70px;
+		width: 86px;
 	}
 	.col-due {
 		width: 100px;
@@ -547,24 +551,36 @@
 		border-right: 1px solid #ececec;
 		border-bottom: 1px solid #ececec;
 	}
-	/* reads as the plain cell text it replaces until pointed at; the ring is a
-	   shadow so picking a type never nudges the row's other columns */
+	/* the select is the cell: it fills the padding out to the borders, so the
+	   box it becomes on hover is the whole white cell. Until then it reads as
+	   the plain cell text it replaces — the border is already there, colourless,
+	   and the arrow's room already reserved, so nothing shifts when it appears */
+	.type-cell {
+		padding: 0;
+	}
 	.type-select {
+		display: block;
 		width: 100%;
 		appearance: none;
-		border: none;
-		border-radius: 3px;
-		padding: 0;
+		border: 1px solid transparent;
+		border-radius: 0;
+		/* 2px + the border matches the 3px other cells pad with, so a row is
+		   no taller for holding a dropdown */
+		padding: 2px 20px 2px 8px;
 		background-color: transparent;
+		background-repeat: no-repeat;
+		background-position: right 6px center;
+		background-size: 8px 5px;
 		font: inherit;
 		color: inherit;
 		cursor: pointer;
 	}
-	.type-select:hover,
-	.type-select:focus {
+	/* hover only: the box belongs to pointing at the cell and picking from it,
+	   and must not linger on the click's leftover focus */
+	.type-select:hover {
+		border-color: black;
 		background-color: white;
-		box-shadow: 0 0 0 1px darkgrey;
-		outline: none;
+		background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='black'/%3E%3C/svg%3E");
 	}
 	td:last-child {
 		border-right: none;

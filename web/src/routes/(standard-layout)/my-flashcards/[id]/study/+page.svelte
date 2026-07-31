@@ -264,10 +264,7 @@
 			{/if}
 			{@render side(currentCard.back, frontBoardCount, true)}
 		{/if}
-	</div>
-	<!-- the controls sit under the card: grading is about the card, not part
-	     of it, and the card's own height stays the answer's to fill -->
-	<div class="card-actions">
+		<div class="card-actions">
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
 				<button
@@ -280,6 +277,7 @@
 			{:else}
 					{#snippet evalBtn(text, rating, title)}
 						<div class="eval-btn">
+							<p>{getTimeUntilDuePreviewText(rating)}</p>
 							<button
 								onclick={() => evaluateCard(rating)}
 								class="std-btn"
@@ -287,11 +285,11 @@
 							>
 								{text}
 							</button>
-							<p>{getTimeUntilDuePreviewText(rating)}</p>
 						</div>
 					{/snippet}
 					{#if isTactic}
 						<div class="eval-btn">
+							<p>1d</p>
 							<button
 								onclick={() => evaluateTactic(false)}
 								class="std-btn"
@@ -299,9 +297,9 @@
 							>
 								Incorrect
 							</button>
-							<p>1d</p>
 						</div>
 						<div class="eval-btn">
+							<p>Never</p>
 							<button
 								onclick={() => evaluateTactic(true)}
 								class="std-btn"
@@ -309,7 +307,6 @@
 							>
 								Correct
 							</button>
-							<p>Never</p>
 						</div>
 					{:else}
 						{@render evalBtn("Again", Rating.Again, "1")}
@@ -339,6 +336,7 @@
 				{/if}
 			</div>
 		{/if}
+		</div>
 	</div>
 {:else}
 	<div class="deck-done">
@@ -352,29 +350,34 @@
 
 <style>
 	/* The card grows past its floor by whatever it holds: the question alone
-	   at first, then the answer when that shows. Floor and controls together
-	   come to 621px — the height that held a line of text, a board and a
-	   line of text back when the card was fixed — so the page keeps that
-	   shape while the card itself is free to grow. Board/text layout inside
-	   the card comes from app.css ("card board layout"), shared with browse */
+	   at first, then the answer when that shows. The floor is browse's card
+	   floor plus what the controls add here — 24px of air, the 59px row, and
+	   14px less rim below them (10px, not 24) — so a card holding the usual
+	   text/board/answer neither resizes on reveal nor strands the buttons
+	   mid-card. Board/text layout inside the card comes from app.css ("card
+	   board layout"), shared with browse */
 	.flashcard {
 		align-items: center;
 		margin-top: 34px;
-		min-height: var(--flashcard-min-height);
-		/* the card's rim, wider than the divider's 18px between the sides:
-		   the edge of the card is the heavier boundary */
-		padding: 24px 26px;
+		min-height: calc(var(--flashcard-min-height) + 69px);
+		/* the top is the card's rim, wider than the divider's 18px between
+		   the sides; the row below closes the card at the 10px it has always
+		   kept from the bottom edge */
+		padding: 24px 26px 10px 26px;
 	}
-	/* One centred row under the card, on one 20px rhythm and on the card's
-	   own width. Top-aligned, so the buttons line up with each other while
-	   the due-time labels hang below the rating ones. */
+	/* The controls close the card, one centred row on one 20px rhythm. The
+	   auto margin drops the row to the card's floor — on a card shorter than
+	   the minimum height the slack belongs above the buttons, not below them
+	   — and the padding holds their distance from the content once the card
+	   is full. Bottom-aligned, since the due-time labels sit above the
+	   rating buttons. */
 	.card-actions {
-		width: 100%;
-		max-width: var(--flashcard-width);
-		margin: 4px auto 0;
+		align-self: stretch;
+		margin-top: auto;
+		padding-top: 24px;
 		display: flex;
 		justify-content: center;
-		align-items: flex-start;
+		align-items: flex-end;
 		gap: 20px;
 	}
 	.side-actions {
@@ -394,12 +397,12 @@
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
-		align-items: flex-start;
+		align-items: flex-end;
 		gap: 20px;
 	}
 	.flashcard-btn-row p {
 		text-align: center;
-		margin-top: 3px;
+		margin-bottom: 3px;
 		font-size: 0.9rem;
 		font-weight: 350;
 	}

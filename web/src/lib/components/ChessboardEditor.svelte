@@ -141,10 +141,8 @@
 			board.setPosition(currentFen.trim().split(/\s+/)[0], false);
 			if (fenPasted) {
 				switchMode("moves");
-				// the FEN input disables itself in moves mode, and disabling the
-				// focused element drops focus to <body> — the board takes it, as
-				// it does for a freshly opened editor, so arrows and the wheel
-				// keep stepping without a click
+				// a pasted position is ready to record on: hand the board the
+				// keyboard, so arrows and the wheel keep stepping without a click
 				tick().then(() => boardElement?.focus({ preventScroll: true }));
 			}
 		}
@@ -256,6 +254,8 @@
 		// Either side may move: a piece of the side not to move gets the turn
 		// flipped first, and the move is stored with the flipped-move prefix so
 		// replay repeats the flip.
+		// no position to move from while the FEN input holds an invalid FEN
+		if (!fenIsValid) return false;
 		switch (event.type) {
 			case INPUT_EVENT_TYPE.moveInputStarted:
 				return true;
@@ -459,7 +459,9 @@
 	// (and the view: front/back switches which layer is shown)
 	$effect(() => {
 		if (!board) return;
-		if (mode === "moves") {
+		// mid-typing an invalid FEN there is no position to show — the board
+		// keeps the last accepted one, as it does in setup
+		if (mode === "moves" && fenIsValid) {
 			board.setPosition(positions[Math.min(currentIndex, viewLimit)], true);
 		}
 		showAnnotations(board, displayedAnnotation);
@@ -698,8 +700,6 @@
 				bind:value={currentFen}
 				oninput={handleFenInput}
 				onpaste={handleFenPaste}
-				disabled={mode === "moves"}
-				title={mode === "moves" ? "Switch to Set position to edit the start FEN" : ""}
 			/>
 			<button class="std-btn flip-btn" onclick={flipBoard}><FlipIcon /></button>
 			{#if !boardOnBack}
@@ -1007,9 +1007,6 @@
 		padding: 3px 0;
 		gap: 5px;
 		white-space: nowrap;
-	}
-	.fen-input:disabled {
-		color: rgba(0, 0, 0, 0.4);
 	}
 	.fen-input.invalid {
 		border: 1px solid #c00;

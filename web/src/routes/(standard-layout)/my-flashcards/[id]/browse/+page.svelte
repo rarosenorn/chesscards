@@ -650,14 +650,13 @@
 		height: 100%;
 		overflow-y: auto;
 	}
-	/* sits bottom-right under the card it acts on */
-	/* matches .card-surface's max-width so the buttons sit flush with the
-	   card's right edge */
+	/* sits bottom-right under the card it acts on, on the card's own width so
+	   the buttons stay flush with its right edge */
 	.card-toolbar {
 		display: flex;
 		justify-content: end;
 		gap: 8px;
-		max-width: 900px;
+		max-width: var(--flashcard-width);
 		margin: 8px auto 40px auto;
 	}
 	.selected-card-container :global(.flashcard) {

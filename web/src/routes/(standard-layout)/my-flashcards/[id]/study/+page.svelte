@@ -349,14 +349,15 @@
 
 
 <style>
-	/* The card is as tall as what it holds: the question alone at first, then
-	   it grows by the answer when that shows. The floor matches browse, so a
-	   one-line card is still a card and not a strip. Board/text layout inside
-	   the card comes from app.css ("card board layout"), shared with browse */
+	/* The card grows past its floor by whatever it holds: the question alone
+	   at first, then the answer when that shows. The floor is the card's own
+	   width, so a sparse card still reads as a card rather than a strip and
+	   sparse cards do not vary wildly in height. Board/text layout inside the
+	   card comes from app.css ("card board layout"), shared with browse */
 	.flashcard {
 		align-items: center;
 		margin-top: 34px;
-		min-height: 200px;
+		min-height: var(--flashcard-width);
 		/* the top is the card's rim, wider than the divider's 18px below the
 		   question: the edge of the card is the heavier boundary. The row
 		   below sets its own distance from the content, so the card closes

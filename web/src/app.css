@@ -7,6 +7,11 @@
 	--accent-hover: #2b6dab;
 	--accent-subtle: #ebf3fa;
 	--accent-subtle-strong: #d4e5f5;
+	/* how wide a flashcard renders, wherever one is shown. It is a board
+	   size in disguise — a board is half the card — so anything that has to
+	   line up with a card's edge reads it from here rather than repeating
+	   the number (browse's toolbar does). */
+	--flashcard-width: 820px;
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the
    window scrollbar: that shifts the viewport width and makes the responsive
@@ -190,7 +195,7 @@ body.piece-grabbing * {
    the boards are half of it, so this and the column gap below are the two
    numbers that set how large a board renders. */
 .flashcard {
-	max-width: 820px;
+	max-width: var(--flashcard-width);
 	--board-col-gap: 20px;
 }
 /* one side of a card: the blocks stack here rather than directly in the

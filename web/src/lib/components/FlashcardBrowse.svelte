@@ -61,7 +61,9 @@
 		align-items: center;
 		margin-top: 32px;
 		margin-bottom: 40px;
-		min-height: 200px;
+		/* the same floor the study card keeps, so a card does not change
+		   size between the two views */
+		min-height: var(--flashcard-width);
 		/* the card's rim, a little wider than the divider's 18px between the
 		   sides — same relation as on the study card */
 		padding: 24px 26px;

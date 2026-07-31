@@ -354,11 +354,11 @@
 		align-items: center;
 		margin-top: 34px;
 		min-height: 200px;
-		/* the top matches the divider's own 16px, so the question sits evenly
+		/* the top matches the divider's own 24px, so the question sits evenly
 		   between the card's edge and the line under it; the row below sets
 		   its own distance from the content, so the card closes under it at
 		   the same 10px it always did */
-		padding: 16px 26px 10px 26px;
+		padding: 24px 26px 10px 26px;
 	}
 	/* The controls close the card, one centred row on one 20px rhythm. The
 	   card grows to hold them, so they never overlay content and need no

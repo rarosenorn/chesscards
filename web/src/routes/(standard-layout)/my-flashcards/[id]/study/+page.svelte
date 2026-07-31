@@ -264,7 +264,10 @@
 			{/if}
 			{@render side(currentCard.back, frontBoardCount, true)}
 		{/if}
-		<div class="card-actions">
+	</div>
+	<!-- the controls sit under the card: grading is about the card, not part
+	     of it, and the card's own height stays the answer's to fill -->
+	<div class="card-actions">
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
 				<button
@@ -336,7 +339,6 @@
 				{/if}
 			</div>
 		{/if}
-		</div>
 	</div>
 {:else}
 	<div class="deck-done">
@@ -350,31 +352,26 @@
 
 <style>
 	/* The card grows past its floor by whatever it holds: the question alone
-	   at first, then the answer when that shows. The floor is the card's own
-	   width, so a sparse card still reads as a card rather than a strip and
-	   sparse cards do not vary wildly in height. Board/text layout inside the
-	   card comes from app.css ("card board layout"), shared with browse */
+	   at first, then the answer when that shows. Floor and controls together
+	   come to 621px — the height that held a line of text, a board and a
+	   line of text back when the card was fixed — so the page keeps that
+	   shape while the card itself is free to grow. Board/text layout inside
+	   the card comes from app.css ("card board layout"), shared with browse */
 	.flashcard {
 		align-items: center;
 		margin-top: 34px;
-		min-height: var(--flashcard-width);
-		/* the top is the card's rim, wider than the divider's 18px below the
-		   question: the edge of the card is the heavier boundary. The row
-		   below sets its own distance from the content, so the card closes
-		   under it at the same 10px it always did */
-		padding: 24px 26px 10px 26px;
+		min-height: var(--flashcard-min-height);
+		/* the card's rim, wider than the divider's 18px between the sides:
+		   the edge of the card is the heavier boundary */
+		padding: 24px 26px;
 	}
-	/* The controls close the card, one centred row on one 20px rhythm. The
-	   card grows to hold them, so they never overlay content and need no
-	   reserved strip. The auto margin drops the row to the card's floor —
-	   on a card too short to fill the minimum height, the slack belongs
-	   above the buttons, not below them — and the padding holds their
-	   distance from the content once the card is full. Bottom-aligned,
-	   since the due-time labels sit above the rating buttons. */
+	/* One centred row under the card, on one 20px rhythm and on the card's
+	   own width. Bottom-aligned, since the due-time labels sit above the
+	   rating buttons. */
 	.card-actions {
-		align-self: stretch;
-		margin-top: auto;
-		padding-top: 24px;
+		width: 100%;
+		max-width: var(--flashcard-width);
+		margin: 4px auto 0;
 		display: flex;
 		justify-content: center;
 		align-items: flex-end;

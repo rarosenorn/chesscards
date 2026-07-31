@@ -12,6 +12,12 @@
 	   line up with a card's edge reads it from here rather than repeating
 	   the number (browse's toolbar does). */
 	--flashcard-width: 820px;
+	/* the card's floor. Under the study card sit 63px of controls (the row
+	   plus its margin), so card and controls together come to the 621px that
+	   held a line of text, a board and a line of text back when the card was
+	   a fixed height. Browse shows no controls and keeps the same floor, so
+	   a card is the same size in both views. */
+	--flashcard-min-height: 558px;
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the
    window scrollbar: that shifts the viewport width and makes the responsive

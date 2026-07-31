@@ -280,7 +280,6 @@
 			{:else}
 					{#snippet evalBtn(text, rating, title)}
 						<div class="eval-btn">
-							<p>{getTimeUntilDuePreviewText(rating)}</p>
 							<button
 								onclick={() => evaluateCard(rating)}
 								class="std-btn"
@@ -288,11 +287,11 @@
 							>
 								{text}
 							</button>
+							<p>{getTimeUntilDuePreviewText(rating)}</p>
 						</div>
 					{/snippet}
 					{#if isTactic}
 						<div class="eval-btn">
-							<p>1d</p>
 							<button
 								onclick={() => evaluateTactic(false)}
 								class="std-btn"
@@ -300,9 +299,9 @@
 							>
 								Incorrect
 							</button>
+							<p>1d</p>
 						</div>
 						<div class="eval-btn">
-							<p>Never</p>
 							<button
 								onclick={() => evaluateTactic(true)}
 								class="std-btn"
@@ -310,6 +309,7 @@
 							>
 								Correct
 							</button>
+							<p>Never</p>
 						</div>
 					{:else}
 						{@render evalBtn("Again", Rating.Again, "1")}
@@ -366,15 +366,15 @@
 		padding: 24px 26px;
 	}
 	/* One centred row under the card, on one 20px rhythm and on the card's
-	   own width. Bottom-aligned, since the due-time labels sit above the
-	   rating buttons. */
+	   own width. Top-aligned, so the buttons line up with each other while
+	   the due-time labels hang below the rating ones. */
 	.card-actions {
 		width: 100%;
 		max-width: var(--flashcard-width);
 		margin: 4px auto 0;
 		display: flex;
 		justify-content: center;
-		align-items: flex-end;
+		align-items: flex-start;
 		gap: 20px;
 	}
 	.side-actions {
@@ -394,12 +394,12 @@
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
-		align-items: flex-end;
+		align-items: flex-start;
 		gap: 20px;
 	}
 	.flashcard-btn-row p {
 		text-align: center;
-		margin-bottom: 3px;
+		margin-top: 3px;
 		font-size: 0.9rem;
 		font-weight: 350;
 	}

@@ -340,12 +340,14 @@
 
 <div class="browse-container">
 	<div class="left-pane">
-		<input
-			class="search-input"
-			placeholder="Search cards"
-			bind:value={searchInput}
-			onkeydown={e => { if (e.key === "Enter") applySearch(); }}
-		/>
+		<div class="search-row">
+			<input
+				class="search-input"
+				placeholder="Search cards"
+				bind:value={searchInput}
+				onkeydown={e => { if (e.key === "Enter") applySearch(); }}
+			/>
+		</div>
 		<div class="table-container">
 		<!-- svelte-ignore a11y_autofocus -- table is the page's primary interaction target; focus enables arrow-key nav immediately -->
 		<table
@@ -462,21 +464,34 @@
 		display: flex;
 		flex-direction: column;
 	}
-	/* a band above the header row rather than a pill floating over it: square,
-	   flush to the pane, ruled in the table's own line, and its text starting
-	   on the first column's left edge */
-	.search-input {
-		margin: 0;
-		padding: 6px 8px;
-		border: none;
+	/* The search gets a band of its own: white air holds it off the grey tab
+	   strip above, and the table is ruled off below, so it belongs to neither.
+	   Without it the field was white on white, flush against the tabs. */
+	.search-row {
+		flex: none;
+		padding: 8px;
 		border-bottom: 1px solid #dcdcdc;
+	}
+	/* square like the table it heads, but a field you can see the edges of */
+	.search-input {
+		width: 100%;
+		box-sizing: border-box;
+		margin: 0;
+		padding: 5px 8px 5px 29px;
+		border: 1px solid #ccc;
 		border-radius: 0;
 		font-size: 0.9rem;
+		background-color: white;
+		background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23888' stroke-width='1.7' stroke-linecap='round'%3E%3Ccircle cx='6.8' cy='6.8' r='4.6'/%3E%3Cpath d='M10.3 10.3 14 14'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: left 8px center;
+		background-size: 13px 13px;
 	}
-	/* inset, so taking focus never moves the row below by a pixel */
+	/* the accent border the text editors take on focus, and no wider, so the
+	   field never nudges the table below */
 	.search-input:focus {
-		outline: 1px solid var(--accent);
-		outline-offset: -1px;
+		outline: none;
+		border-color: var(--accent);
 	}
 	.table-container {
 		flex-grow: 1;

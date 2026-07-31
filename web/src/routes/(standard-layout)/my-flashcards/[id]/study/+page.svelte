@@ -266,22 +266,24 @@
 	     being studied, and nothing about grading it belongs inside that frame -->
 	<div class="card-actions">
 		{#if isCardTurned}
-			<button
-				class="std-btn hide-answer-btn"
-				onclick={() => isCardTurned = false}
-				title="Shortcut key: h"
-			>
-				Hide answer
-			</button>
-			{#if !readonly}
+			<div class="side-actions">
 				<button
-					class="std-btn edit-card-btn"
-					onclick={() => editingCard = true}
-					title="Shortcut key: e"
+					class="std-btn"
+					onclick={() => isCardTurned = false}
+					title="Shortcut key: h"
 				>
-					Edit card
+					Hide
 				</button>
-			{/if}
+				{#if !readonly}
+					<button
+						class="std-btn"
+						onclick={() => editingCard = true}
+						title="Shortcut key: e"
+					>
+						Edit
+					</button>
+				{/if}
+			</div>
 		{/if}
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
@@ -357,16 +359,16 @@
 		min-height: 613px;
 		padding: 32px 26px;
 	}
-	/* The controls under the card: grading centered, the two card-level
-	   actions pushed to the outer edges so neither competes with it. The
-	   middle column is auto-width, so the ratings stay centered on the card
-	   whether or not the side buttons are there; the outer columns are equal,
-	   so the Show button sits where Good will. Bottom-aligned, since the
-	   rating buttons carry a due-time label above them. */
+	/* The controls under the card: grading centered on the card, with Hide
+	   and Edit trailing it. The middle column is auto-width and the outer
+	   columns are equal, so the ratings hold the centre whether or not the
+	   side buttons are there — the Show button sits where Good will.
+	   Bottom-aligned, since the rating buttons carry a due-time label above
+	   them. */
 	.card-actions {
 		width: 100%;
 		max-width: 900px;
-		margin: 12px auto 0;
+		margin: 4px auto 0;
 		display: grid;
 		grid-template-columns: 1fr auto 1fr;
 		align-items: end;
@@ -375,17 +377,18 @@
 		padding: 0 36px;
 		box-sizing: border-box;
 	}
-	/* all three name their row: the grading row comes last in the markup, so
-	   auto-placement would otherwise start a second row for it */
-	.hide-answer-btn {
-		grid-area: 1 / 1;
-		justify-self: start;
-		padding: 4px 8px;
-	}
-	/* mirror of the hide button, owners only */
-	.edit-card-btn {
+	/* Both name their row: the grading row comes last in the markup, so
+	   auto-placement would otherwise start a second row for it. These are
+	   about the card rather than the answer, so they keep a wider gap from
+	   the ratings than the ratings keep from each other. */
+	.side-actions {
 		grid-area: 1 / 3;
-		justify-self: end;
+		justify-self: start;
+		display: flex;
+		gap: 8px;
+		margin-left: 36px;
+	}
+	.side-actions .std-btn {
 		padding: 4px 8px;
 	}
 	/* the in-place card editor: same surface as the card it replaces, the

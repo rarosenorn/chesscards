@@ -66,6 +66,6 @@
 		min-height: var(--flashcard-min-height);
 		/* the card's rim, a little wider than the divider's 18px between the
 		   sides — same relation as on the study card */
-		padding: 24px 36px;
+		padding: 24px 40px;
 	}
 </style>

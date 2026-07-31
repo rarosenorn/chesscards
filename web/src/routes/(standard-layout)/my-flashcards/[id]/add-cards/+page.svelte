@@ -16,7 +16,8 @@
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
-	import { docSideJsonBlocks, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
+	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
+	import { ttGenerateText } from "$lib/tiptap-utility.js"
 
 	// the shared deck context (layout); new cards are pushed into it so
 	// browse/study see them without a reload
@@ -96,6 +97,46 @@
 		saveTimer = setTimeout(persistDraft, 250);
 	}
 	beforeNavigate(flushDraft);
+
+	// --- Anki's duplicate front ---
+	// The front is compared with the front of every card in the deck, in the
+	// stored form, as it is typed. Kept as strings, not documents: nothing here
+	// needs the doc back, and a state proxy over every board on every keystroke
+	// would be paid for nothing.
+	const emptySideJson = canonicalSideJson([]);
+	let frontSideJson = $state(emptySideJson);
+	let frontText = $state("");
+	const readFront = () => {
+		const side = docToSideBlocks(frontEditor?.getJson());
+		frontSideJson = canonicalSideJson(side);
+		frontText = side
+			.filter(block => block.type === "text")
+			.map(block => ttGenerateText(block.content))
+			.join(" ")
+			.trim();
+	}
+	const handleFrontChanged = () => {
+		readFront();
+		handleDocChanged();
+	}
+	// recomputed as cards are added, so a frozen front starts duplicating the
+	// card it just made — as in Anki
+	const existingFronts = $derived(new Set(deck.cards.map(card => canonicalSideJson(card.front))));
+	// an empty front duplicates nothing (every board-less card's front is empty)
+	const duplicateFront = $derived(
+		frontSideJson !== emptySideJson && existingFronts.has(frontSideJson)
+	);
+
+	// --- added toast ---
+	// bumped per add: the key remounts the note, so a second add inside the two
+	// seconds replays the fade from the start instead of finishing the first
+	let toastNonce = $state(0);
+	let toastTimer;
+	const showAddedToast = () => {
+		toastNonce += 1;
+		clearTimeout(toastTimer);
+		toastTimer = setTimeout(() => { toastNonce = 0 }, 2000);
+	}
 
 	// The shared menu bar acts on whichever editor is focused; reassigned
 	// (fresh object) so the bar's active states stay live. focused is an
@@ -216,6 +257,8 @@
 	}
 
 	onMount(() => {
+		// a restored draft is checked without waiting for a keystroke
+		readFront();
 		frontEditor.focus();
 	})
 </script>
@@ -224,7 +267,15 @@
 
 {#snippet sideLabel(label, side, style = "")}
 	<p class="side-indicator" {style}>
-		{label}
+		<span class="side-name">
+			{label}
+			<!-- the duplicated cards, found by the front's own text. A front of
+			     nothing but boards is still flagged red, but has no text to
+			     search on, so it gets no link -->
+			{#if side === "front" && duplicateFront && frontText.length > 0}
+				<a class="duplicates-link" href="/my-flashcards/{deckId}/browse?q={encodeURIComponent(frontText)}">Show duplicates</a>
+			{/if}
+		</span>
 		<!-- Anki's frozen fields: a frozen side survives the submit, so a run
 		     of cards can share a position or a stem -->
 		<button
@@ -283,7 +334,8 @@
 		bind:this={frontEditor}
 		{boardUi}
 		initialDoc={storedDraft?.front}
-		onDocChanged={handleDocChanged}
+		duplicate={duplicateFront}
+		onDocChanged={handleFrontChanged}
 		onEditorFocus={handleEditorFocus}
 		onEditorBlur={handleEditorBlur}
 		onEditorTransaction={handleEditorRefresh}
@@ -352,9 +404,15 @@
 				flushDraft();
 				// land in the side that was emptied, not the one kept
 				(frozenSides.front && !frozenSides.back ? backEditor : frontEditor).focus();
+				showAddedToast();
 			}
 		}}
 	>
+		{#key toastNonce}
+			{#if toastNonce > 0}
+				<span class="added-toast" role="status">Card added</span>
+			{/if}
+		{/key}
 		<button
 			class="std-btn"
 			title="ctrl+enter"
@@ -539,5 +597,37 @@
 	.add-form {
 		align-self: end;
 		margin-top: 12px;
+		position: relative;
+	}
+	/* a sticky note beside the button that made it, gone before it is read
+	   twice; it hangs out of the form so the button never moves */
+	.added-toast {
+		position: absolute;
+		right: calc(100% + 12px);
+		top: 50%;
+		transform: translateY(-50%);
+		white-space: nowrap;
+		background: #fff9a8;
+		border: 2px solid black;
+		color: black;
+		font-size: 0.85rem;
+		padding: 3px 10px;
+		pointer-events: none;
+		animation: added-toast 2s ease forwards;
+	}
+	@keyframes added-toast {
+		0%, 65% { opacity: 1; }
+		100% { opacity: 0; }
+	}
+	/* the label and, when the front is a duplicate, its way to the cards it
+	   repeats — the row's other end belongs to the freeze toggle */
+	.side-name {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+	.duplicates-link {
+		font-size: 0.85rem;
+		color: red;
 	}
 </style>

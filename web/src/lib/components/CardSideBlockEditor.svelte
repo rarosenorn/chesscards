@@ -21,7 +21,7 @@
 	// inside the blocks (tiptap-chessboard-block/).
 	let element = $state()
 	let editor = $state(null)
-	let { boardUi, isBack = false, initialDoc = null, onDocChanged = null, onEditorFocus = null, onEditorBlur = null, onEditorTransaction = null } = $props();
+	let { boardUi, isBack = false, initialDoc = null, duplicate = false, onDocChanged = null, onEditorFocus = null, onEditorBlur = null, onEditorTransaction = null } = $props();
 
 	export const getJson = () => editor?.getJSON();
 	export const getEditor = () => editor;
@@ -130,7 +130,7 @@
 	})
 </script>
 
-<div class="tiptap">
+<div class="tiptap" class:duplicate>
 	<div bind:this={element} class="text-area"></div>
 </div>
 
@@ -144,6 +144,12 @@
 	   of Chrome's black UA outline on the contenteditable */
 	.tiptap:focus-within {
 		border-color: var(--accent);
+	}
+	/* the side duplicates an existing card's: red outranks the focus ring,
+	   the side being typed in is exactly the one holding focus */
+	.tiptap.duplicate,
+	.tiptap.duplicate:focus-within {
+		border-color: red;
 	}
 	.tiptap :global(.ProseMirror) {
 		outline: none;

@@ -153,6 +153,20 @@ const docToSideBlocks = doc => {
 
 const docSideJsonBlocks = doc => JSON.stringify(docToSideBlocks(doc));
 
+// Anki's duplicate check compares a side being written with the sides already
+// stored, and a stored side has been through a jsonb column, which keeps no
+// key order: the same block comes back with its keys rearranged, so the plain
+// serializations never match. Compare a form with every object's keys sorted.
+const canonicalJson = value => {
+	if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+	if (value && typeof value === "object") {
+		return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`;
+	}
+	return JSON.stringify(value);
+}
+
+const canonicalSideJson = side => canonicalJson(side ?? []);
+
 // the inverse, for editing an existing card in the block editor: stored side
 // blocks become one document (chessboardBlock nodes get fresh client ids and
 // normalized boards); an empty side becomes a single empty line
@@ -263,4 +277,4 @@ const countBoards = side => side.reduce(
 
 const boardsBefore = (side, blockIndex) => countBoards(side.slice(0, blockIndex));
 
-export { newBoard, normalizeBoard, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }
+export { newBoard, normalizeBoard, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }

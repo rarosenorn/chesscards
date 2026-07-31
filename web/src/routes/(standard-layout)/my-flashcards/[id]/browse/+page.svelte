@@ -8,8 +8,9 @@
 	// TODO responsive ideas: medium deck table stacked on card table
 	// small (phone) only deck and card table stacked, selected card in popover
 
-	import { getContext } from "svelte"
+	import { getContext, untrack } from "svelte"
 	import { SvelteSet } from "svelte/reactivity"
+	import { page } from "$app/state"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
@@ -90,6 +91,23 @@
 		anchorIndex = null;
 		if (!filteredCards.includes(selectedCard)) selectedCard = filteredCards[0];
 	}
+
+	// ?q= opens the tab on a search (add-cards' "Show duplicates" link), over
+	// whatever card the last visit left selected. The URL is the only thing the
+	// effect watches — the search box is touched inside untrack, and the query
+	// applied is remembered — so arriving again with a different q searches
+	// again, while editing the box, which changes no URL, is left alone.
+	let appliedQuery = null;
+	$effect(() => {
+		const q = page.url.searchParams.get("q");
+		untrack(() => {
+			if (q === appliedQuery) return;
+			appliedQuery = q;
+			if (q === null) return;
+			searchInput = q;
+			applySearch();
+		});
+	});
 
 	// multi-selection is separate from selectedCard (the previewed card)
 	let multiSelected = $state(new SvelteSet());

@@ -15,7 +15,7 @@
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
-	import { updateCardContent, deleteCards } from "./browse.remote.js"
+	import { updateCardContent, updateCardType, deleteCards } from "./browse.remote.js"
 
 	let deck = getContext("deck");
 	// marketplace deck instances can only be viewed, not edited
@@ -30,10 +30,16 @@
 			editingCardId: null,
 			// id of the card being previewed, so the tab reopens where it was left
 			selectedCardId: null,
-			session: null
+			session: null,
+			// the sorted column and its direction, so the tab reopens sorted too
+			sortColumn: null,
+			sortDescending: false
 		};
 	}
 	const draft = cardDrafts.browse;
+	// a draft written before sorting existed carries neither field
+	draft.sortColumn ??= null;
+	draft.sortDescending ??= false;
 
 	// returning to the tab reselects where it was left — the card being
 	// edited, or failing that the one being previewed. Captured non-reactively
@@ -79,11 +85,62 @@
 			.join(" ")
 			.toLowerCase();
 
-	let filteredCards = $derived(
+	let matchedCards = $derived(
 		searchFilter
 			? deck.cards.filter(card => getCardText(card).includes(searchFilter.toLowerCase()))
 			: deck.cards
 	);
+
+	// What each sortable column sorts on. A null sorts last whichever way the
+	// column runs: those rows show "—", and a blank belongs at the end rather
+	// than crowding whichever end is being read.
+	const sortValues = {
+		front: card => getFrontIndicator(card.front)?.toLowerCase() ?? null,
+		type: card => (card.card_type === "tactic" ? 1 : 0),
+		// the due date itself, so ascending is soonest-due first — the order
+		// study takes them in — with cards finished for good last
+		due: card => (card.finished_at ? null : Date.parse(card.due)),
+		reps: card => card.reps,
+		// the FSRS states run New, Learning, Review, Relearning in value order
+		state: card => (card.card_type === "tactic" ? null : card.state)
+	};
+
+	const compareBy = (column, descending) => (a, b) => {
+		const [x, y] = [sortValues[column](a), sortValues[column](b)];
+		if (x === y) return 0;
+		if (x == null) return 1;
+		if (y == null) return -1;
+		return (x < y ? -1 : 1) * (descending ? -1 : 1);
+	}
+
+	// Sorting is a view over the deck's own order, which is what no sorted
+	// column means (and where a stored card order would come in). Sort is
+	// stable, so the deck order still decides ties.
+	let filteredCards = $derived(
+		draft.sortColumn
+			? [...matchedCards].sort(compareBy(draft.sortColumn, draft.sortDescending))
+			: matchedCards
+	);
+
+	// each header cycles ascending, descending, then back to the deck's order
+	const toggleSort = column => {
+		if (draft.sortColumn !== column) {
+			draft.sortColumn = column;
+			draft.sortDescending = false;
+		} else if (!draft.sortDescending) {
+			draft.sortDescending = true;
+		} else {
+			draft.sortColumn = null;
+			draft.sortDescending = false;
+		}
+		multiSelected = new SvelteSet(selectedCard ? [selectedCard.id] : []);
+		anchorIndex = selectedCard ? filteredCards.indexOf(selectedCard) : null;
+	}
+
+	const changeCardType = async (card, cardType) => {
+		if (card.card_type === cardType) return;
+		Object.assign(card, await updateCardType({ cardId: card.id, cardType }));
+	}
 
 	const applySearch = () => {
 		searchFilter = searchInput.trim();
@@ -194,6 +251,12 @@
 		return card.state === 0 ? "New" : new Date(card.due).toLocaleDateString();
 	}
 
+	// The keys the page claims (e, Up/Down, Delete) belong to a focused field
+	// first — including the type dropdown, whose own arrows pick the type
+	const inField = el =>
+		el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT"
+			|| el.isContentEditable;
+
 	// Up/Down move through the cards. Page-level, not on the table: the
 	// preview's boards take focus when clicked or scrolled, and from there
 	// the table is not an ancestor, so a listener on it would never see the
@@ -226,21 +289,18 @@
 		} else if (
 			e.key === "e" && !e.ctrlKey && !e.metaKey && !e.altKey &&
 			!readonly && selectedCard && !isEditingSelected &&
-			e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA" &&
-			!e.target.isContentEditable
+			!inField(e.target)
 		) {
 			e.preventDefault();
 			startEditing();
 		} else if (
 			(e.key === "ArrowUp" || e.key === "ArrowDown") && selectedCard && !isEditingSelected &&
-			e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA" &&
-			!e.target.isContentEditable
+			!inField(e.target)
 		) {
 			navigateCards(e);
 		} else if (
 			e.key === "Delete" && !readonly && selectedCard && !isEditingSelected &&
-			e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA" &&
-			!e.target.isContentEditable
+			!inField(e.target)
 		) {
 			e.preventDefault();
 			deleteCardsByIds(multiSelected.size > 0 ? [...multiSelected] : [selectedCard.id]);
@@ -295,11 +355,21 @@
 		>
 			<thead>
 				<tr>
-					<th>Front</th>
-					<th class="col-type">Type</th>
-					<th class="col-due">Due</th>
-					<th class="col-reps">Reps</th>
-					<th class="col-state">State</th>
+					{#each [["front", "Front", ""], ["type", "Type", "col-type"], ["due", "Due", "col-due"], ["reps", "Reps", "col-reps"], ["state", "State", "col-state"]] as [column, label, cls]}
+						<th
+							class={cls}
+							aria-sort={draft.sortColumn !== column
+								? "none"
+								: draft.sortDescending ? "descending" : "ascending"}
+						>
+							<button class="sort-btn" onclick={() => toggleSort(column)}>
+								{label}
+								{#if draft.sortColumn === column}
+									<span class="sort-arrow">{draft.sortDescending ? "▾" : "▴"}</span>
+								{/if}
+							</button>
+						</th>
+					{/each}
 				</tr>
 			</thead>
 			<tbody>
@@ -320,7 +390,23 @@
 								<span class="board-only">{boardCount > 1 ? "{{chessboards}}" : "{{chessboard}}"}</span>
 							{/if}
 						</td>
-						<td>{card.card_type === "tactic" ? "Tactic" : "Basic"}</td>
+						<td>
+							{#if readonly}
+								{card.card_type === "tactic" ? "Tactic" : "Basic"}
+							{:else}
+								<!-- the press is kept off the row: picking a type is not
+								     selecting or sweeping through cards -->
+								<select
+									class="type-select"
+									value={card.card_type}
+									onmousedown={e => e.stopPropagation()}
+									onchange={e => changeCardType(card, e.currentTarget.value)}
+								>
+									<option value="basic">Basic</option>
+									<option value="tactic">Tactic</option>
+								</select>
+							{/if}
+						</td>
 						<td>{formatDue(card)}</td>
 						<td>{card.reps ?? "—"}</td>
 						<td>{card.card_type === "tactic" ? "—" : stateNames[card.state]}</td>
@@ -410,9 +496,31 @@
 		font-weight: 600;
 		font-size: 0.8rem;
 		color: rgba(0, 0, 0, 0.6);
-		padding: 4px 8px;
 		border-bottom: 1px solid #dcdcdc;
 		border-right: 1px solid #e5e5e5;
+		/* the sort button carries the padding, so the whole header is the
+		   click target rather than just its words */
+		padding: 0;
+	}
+	.sort-btn {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		width: 100%;
+		padding: 4px 8px;
+		border: none;
+		background-color: transparent;
+		font: inherit;
+		color: inherit;
+		text-align: left;
+		cursor: pointer;
+	}
+	.sort-btn:hover {
+		background-color: #f2f2f2;
+	}
+	.sort-arrow {
+		font-size: 0.7rem;
+		line-height: 1;
 	}
 	th:last-child {
 		border-right: none;
@@ -438,6 +546,25 @@
 		color: #333;
 		border-right: 1px solid #ececec;
 		border-bottom: 1px solid #ececec;
+	}
+	/* reads as the plain cell text it replaces until pointed at; the ring is a
+	   shadow so picking a type never nudges the row's other columns */
+	.type-select {
+		width: 100%;
+		appearance: none;
+		border: none;
+		border-radius: 3px;
+		padding: 0;
+		background-color: transparent;
+		font: inherit;
+		color: inherit;
+		cursor: pointer;
+	}
+	.type-select:hover,
+	.type-select:focus {
+		background-color: white;
+		box-shadow: 0 0 0 1px darkgrey;
+		outline: none;
 	}
 	td:last-child {
 		border-right: none;

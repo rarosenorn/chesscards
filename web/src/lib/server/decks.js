@@ -69,31 +69,54 @@ const remove = async (id, userId) => {
 	return rowCount === 1;
 }
 
+// pg returns numeric as string and timestamptz as Date; normalize to the
+// shape the json_agg deck load produces (ts-fsrs treats a truthy string
+// stability/difficulty as an existing — and invalid — memory state)
+const normalizeCard = card => ({
+	...card,
+	stability: card.stability === null ? null : Number(card.stability),
+	difficulty: card.difficulty === null ? null : Number(card.difficulty),
+	due: card.due.toISOString(),
+	last_review: card.last_review?.toISOString() ?? null
+});
+
+// the scheduling columns of a card of this type, in the order the queries
+// below list them: a tactic card is due immediately and carries no FSRS state
+// (the tactic_cards_have_no_fsrs_state constraint holds it to that)
+const scheduleValues = (cardType, FSRSValues) => cardType === "tactic"
+	? [new Date(), null, null, null, null, null, null, null, null, null]
+	: FSRSValues;
+
 const addCard = async (userId, deckId, front, back, cardType, FSRSValues) => {
 	if (!await userIdOwnsDeckId(userId, deckId)) {
 		throw new Error("Unauthorized");
 	}
 
-	// tactic cards are due immediately and carry no FSRS state
-	const values = cardType === "tactic"
-		? [new Date(), null, null, null, null, null, null, null, null, null]
-		: FSRSValues;
 	const { rows } = await pool.query(`insert into cards(
 			deck_id, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
 		) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-		returning *`, [deckId, front, back, cardType, ...values]);
+		returning *`, [deckId, front, back, cardType, ...scheduleValues(cardType, FSRSValues)]);
 
-	// pg returns numeric as string and timestamptz as Date; normalize to the
-	// shape the json_agg deck load produces (ts-fsrs treats a truthy string
-	// stability/difficulty as an existing — and invalid — memory state)
-	const card = rows[0];
-	return {
-		...card,
-		stability: card.stability === null ? null : Number(card.stability),
-		difficulty: card.difficulty === null ? null : Number(card.difficulty),
-		due: card.due.toISOString(),
-		last_review: card.last_review?.toISOString() ?? null
-	};
+	return normalizeCard(rows[0]);
+}
+
+// Switching type restarts the card: the two types keep incompatible
+// scheduling (a tactic card has no FSRS state at all), so there is nothing to
+// carry across — the review history in review_logs stays, the card's own
+// progress does not.
+const updateCardType = async (userId, cardId, cardType, FSRSValues) => {
+	const { rows } = await pool.query(`
+		update cards c set
+			card_type = $3, finished_at = null,
+			due = $4, stability = $5, difficulty = $6, elapsed_days = $7, scheduled_days = $8,
+			reps = $9, lapses = $10, learning_steps = $11, state = $12, last_review = $13
+		from decks d
+		where c.id = $2 and c.deck_id = d.id and d.user_id = $1
+		returning c.*`,
+		[userId, cardId, cardType, ...scheduleValues(cardType, FSRSValues)]
+	);
+
+	return rows[0] ? normalizeCard(rows[0]) : null;
 }
 
 const updateCardContent = async (userId, cardId, front, back) => {
@@ -134,4 +157,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardContent, deleteCards, updateCardStudyState, createReviewLog }
+export { create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, createReviewLog }

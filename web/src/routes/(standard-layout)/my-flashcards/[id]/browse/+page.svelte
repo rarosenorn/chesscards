@@ -365,7 +365,7 @@
 							<button class="sort-btn" onclick={() => toggleSort(column)}>
 								{label}
 								{#if draft.sortColumn === column}
-									<span class="sort-arrow">{draft.sortDescending ? "▾" : "▴"}</span>
+									<span class="sort-arrow" class:descending={draft.sortDescending}></span>
 								{/if}
 							</button>
 						</th>
@@ -506,6 +506,8 @@
 	.sort-btn {
 		display: flex;
 		align-items: center;
+		/* the arrow rides the cell's right edge, clear of the label */
+		justify-content: space-between;
 		gap: 4px;
 		width: 100%;
 		padding: 4px 8px;
@@ -519,9 +521,17 @@
 	.sort-btn:hover {
 		background-color: #f2f2f2;
 	}
+	/* cut from a box rather than set as a glyph: the edges stay straight and
+	   the point sharp at this size, which ▴/▾ soften into a blur */
 	.sort-arrow {
-		font-size: 0.7rem;
-		line-height: 1;
+		flex: none;
+		width: 9px;
+		height: 6px;
+		background-color: black;
+		clip-path: polygon(50% 0, 100% 100%, 0 100%);
+	}
+	.sort-arrow.descending {
+		clip-path: polygon(0 0, 100% 0, 50% 100%);
 	}
 	th:last-child {
 		border-right: none;
@@ -575,9 +585,17 @@
 		color: inherit;
 		cursor: pointer;
 	}
-	/* hover only: the box belongs to pointing at the cell and picking from it,
-	   and must not linger on the click's leftover focus */
+	/* pointing at the cell, not the click's leftover focus, is what raises the
+	   box — so it does not linger on the row last changed */
 	.type-select:hover {
+		border-color: black;
+		background-color: white;
+		background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='black'/%3E%3C/svg%3E");
+	}
+	/* the list is down: the cell stays the box it was opened as, even with the
+	   pointer away on the options. Its own rule — an :open a browser does not
+	   know must not take the hover styling down with it */
+	.type-select:open {
 		border-color: black;
 		background-color: white;
 		background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='black'/%3E%3C/svg%3E");

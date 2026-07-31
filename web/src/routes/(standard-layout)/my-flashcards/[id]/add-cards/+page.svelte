@@ -431,6 +431,7 @@
 		padding: 12px 30px;
 		gap: 4px;
 		max-width: 880px;
+		position: relative;
 	}
 	/* card-type bar above the card, sharing its column width */
 	.type-row {
@@ -597,15 +598,13 @@
 	.add-form {
 		align-self: end;
 		margin-top: 12px;
-		position: relative;
 	}
-	/* a sticky note beside the button that made it, gone before it is read
-	   twice; it hangs out of the form so the button never moves */
+	/* a sticky note in the card's bottom-left corner, gone before it is read
+	   twice; positioned against the card so the button row never moves */
 	.added-toast {
 		position: absolute;
-		right: calc(100% + 12px);
-		top: 50%;
-		transform: translateY(-50%);
+		left: 12px;
+		bottom: 12px;
 		white-space: nowrap;
 		background: #fff9a8;
 		border: 2px solid black;

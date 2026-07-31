@@ -1,5 +1,5 @@
 <script>
-	import { boardAlignment } from "$lib/side-alignment.js"
+	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "../tiptap-utility.js"
 	import { countBoards, boardsBefore, sideHasContent } from "../card-utils.js"
 	import Chessboard from "./Chessboard.svelte"
@@ -41,7 +41,10 @@
 </div>
 {/snippet}
 
-<div class="flashcard card-surface">
+<div
+	class="flashcard card-surface"
+	data-boards={boardsAllAlone(card) ? "solo" : null}
+>
 	{@render side(card.front, 0, true)}
 	<!-- the divider only when the back has VISIBLE content — a card whose
 	     answer lives on the front boards' back layers gets no delimiter -->
@@ -59,6 +62,8 @@
 		margin-top: 32px;
 		margin-bottom: 40px;
 		min-height: 200px;
-		padding: 28px 26px 36px 26px;
+		/* the divider's own 24px on every edge, so a side sits the same
+		   distance from the card's rim as from the line between them */
+		padding: 24px 26px;
 	}
 </style>

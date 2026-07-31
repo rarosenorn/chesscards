@@ -273,6 +273,12 @@ body.piece-grabbing * {
 	   grow the centered cell, not spill out one-sided */
 	min-width: min-content;
 }
+/* Nothing on this card sits in a two-board row, so no board has a column to
+   line up with and the half-width cell is only a habit — the boards take a
+   fifth more of the card. */
+.flashcard[data-boards="solo"] .single-board-block > .board-container {
+	width: calc((50% - 10px - var(--board-col-gap) / 2) * 1.2);
+}
 .flashcard .board-grid-block {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

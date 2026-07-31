@@ -14,4 +14,10 @@ const boardAlignment = side =>
 		? "left"
 		: "center";
 
-export { boardAlignment }
+// A card whose every board stands alone, front and back. Such a card never
+// puts two boards on a row, so nothing has to line up with a grid column and
+// its boards can take more of the card's width (see "solo" in app.css).
+const boardsAllAlone = card =>
+	boardAlignment(card.front) === "center" && boardAlignment(card.back) === "center";
+
+export { boardAlignment, boardsAllAlone }

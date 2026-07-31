@@ -2,7 +2,7 @@
 	import { getContext } from "svelte"
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating } from "ts-fsrs"
-	import { boardAlignment } from "$lib/side-alignment.js"
+	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, sideHasContent } from "$lib/card-utils.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
@@ -251,7 +251,10 @@
 		<CardBlockEdit card={currentCard} onSave={saveEdit} onCancel={() => editingCard = false} />
 	</div>
 {:else if currentCard}
-	<div class="flashcard card-surface">
+	<div
+		class="flashcard card-surface"
+		data-boards={boardsAllAlone(currentCard) ? "solo" : null}
+	>
 		<!-- turning reveals front boards' back layers (moves/annotations) in
 		     place, on top of showing the back side below -->
 		{@render side(currentCard.front, 0, isCardTurned, isCardTurned)}

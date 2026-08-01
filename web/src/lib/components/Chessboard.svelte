@@ -98,7 +98,15 @@
 		const annotation = displayedAnnotation;
 		if (!cmBoard) return;
 		if (cmBoard.getOrientation() !== normalized.orientation) {
-			cmBoard.setOrientation(normalized.orientation, false);
+			// not setOrientation(): its queued board-turn ritual (empty the
+			// board, flip, refill) runs even "un-animated", and on a card swap
+			// it plays out as the old pieces shuffling around before the new
+			// card lands. Here orientation only ever changes because a
+			// different board swapped in — a fact of the new diagram, not a
+			// change to watch — so write it and redraw in place.
+			cmBoard.state.orientation = normalized.orientation;
+			cmBoard.view.redrawBoard();
+			cmBoard.view.redrawPieces();
 		}
 		// Only a step animates, and only within the board it stepped on: study
 		// and browse reuse this component across cards, and tweening one

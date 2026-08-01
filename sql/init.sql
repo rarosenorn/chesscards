@@ -22,7 +22,11 @@ create table "user" (
 	"boardTheme" text default 'default' not null,
 	"borderType" text default 'black' not null,
 	"showCoordinates" boolean default true not null,
-	"animationDuration" integer default 300 not null
+	"animationDuration" integer default 300 not null,
+	-- what the profile's stage-progression control shows: 'all'/'none' were
+	-- bulk-applied to every deck; touching one deck's own toggle puts this
+	-- back to 'per-deck' (decks keep their own flags either way)
+	"stageProgressionMode" text default 'all' not null check ("stageProgressionMode" in ('per-deck', 'all', 'none'))
 );
 
 create table "session" (
@@ -73,7 +77,21 @@ create table decks (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid references "user" ("id") on delete cascade not null,
 	name text not null,
+	-- introduce new cards stage by stage (all seen + most graduated unlocks
+	-- the next); off = every stage is open, Anki style
+	stage_progression boolean not null default true,
 	unique(user_id, name)
+);
+
+-- Every card belongs to a stage and every deck has at least one; a deck that
+-- wants no progression is simply a deck of one stage. The name is optional
+-- ("Stage 2" vs "Stage 2 — Rook endgames"). Positions (stage in deck, card in
+-- stage) are kept dense 1..n by the server ops that move things.
+create table stages (
+	id uuid primary key default gen_random_uuid(),
+	deck_id uuid references decks(id) on delete cascade not null,
+	name text,
+	position smallint not null
 );
 
 -- Tactic cards are graded Correct/Incorrect instead of FSRS: Correct finishes
@@ -83,6 +101,9 @@ create table decks (
 create table cards (
 	id uuid primary key default gen_random_uuid(),
 	deck_id uuid references decks(id) on delete cascade not null,
+	-- no cascade: deleting a stage first moves its cards elsewhere
+	stage_id uuid references stages(id) not null,
+	position smallint not null,
 	front jsonb not null,
 	back jsonb,
 	card_type text not null default 'basic' check (card_type in ('basic', 'tactic')),
@@ -111,9 +132,19 @@ create table marketplace_decks (
 	image_type text not null
 );
 
+-- the deck's stage structure, copied from the source deck at upload approval
+create table marketplace_stages (
+	id uuid primary key default gen_random_uuid(),
+	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
+	name text,
+	position smallint not null
+);
+
 create table marketplace_cards (
 	id uuid default gen_random_uuid() primary key,
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
+	stage_id uuid references marketplace_stages(id) not null,
+	position smallint not null,
 	front jsonb not null,
 	back jsonb,
 	card_type text not null default 'basic' check (card_type in ('basic', 'tactic')),
@@ -124,7 +155,9 @@ create table marketplace_cards (
 create table marketplace_deck_instances (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid references "user" ("id") on delete cascade not null,
-	marketplace_deck_id uuid references marketplace_decks(id) not null
+	marketplace_deck_id uuid references marketplace_decks(id) not null,
+	-- each studier follows (or ignores) the deck's stages for themselves
+	stage_progression boolean not null default true
 );
 
 create table marketplace_card_instances (

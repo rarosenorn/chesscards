@@ -5,6 +5,7 @@
 	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, sideHasContent } from "$lib/card-utils.js"
+	import { isSeen, unlockedStageIds, stageProgress } from "$lib/stages.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
@@ -45,9 +46,43 @@
 
 	const scheduler = fsrs();
 
-	let currentCard = $derived(deck.cards.find(card =>
-		!card.finished_at && Date.parse(card.due) <= Date.now()
-	));
+	// --- the queue ---
+	// Due reviews come first, shuffled once per visit (the keys live for the
+	// component, so grading doesn't reshuffle what's left); new and learning
+	// cards follow in the deck's stage/card order — a failed card's earlier
+	// position brings it back before the news that come after it. A tactic
+	// has no FSRS state: unseen it queues as new, seen-but-unfinished it
+	// queues with the reviews.
+	const shuffleKeys = new Map();
+	const shuffleKey = id => {
+		if (!shuffleKeys.has(id)) shuffleKeys.set(id, Math.random());
+		return shuffleKeys.get(id);
+	}
+	const isReviewState = card => card.card_type === "tactic"
+		? isSeen(card)
+		: card.state === 2 || card.state === 3;
+
+	let stagePositions = $derived(new Map(deck.stages.map(stage => [stage.id, stage.position])));
+	const byDeckOrder = (a, b) =>
+		stagePositions.get(a.stage_id) - stagePositions.get(b.stage_id) || a.position - b.position;
+
+	// Progression gates only the introduction of unseen cards: anything
+	// already met keeps its reviews coming even if its stage has fallen
+	// back behind the bar (cards moved, stages regrouped).
+	let unlockedStages = $derived(unlockedStageIds(deck.stages, deck.cards));
+	const gated = card =>
+		deck.stageProgression && !isSeen(card) && !unlockedStages.has(card.stage_id);
+
+	let currentCard = $derived.by(() => {
+		const due = deck.cards.filter(card =>
+			!card.finished_at && Date.parse(card.due) <= Date.now() && !gated(card)
+		);
+		const reviews = due.filter(isReviewState);
+		if (reviews.length) {
+			return reviews.reduce((min, card) => shuffleKey(card.id) < shuffleKey(min.id) ? card : min);
+		}
+		return due.sort(byDeckOrder)[0];
+	});
 
 	// A revealed answer belongs to the deck layout, not to this page, so
 	// switching tabs and coming back does not hide it again — you have seen
@@ -96,7 +131,11 @@
 		const card = {
 			...currentCard,
 			due: correct ? currentCard.due : new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-			finished_at: correct ? now.toISOString() : null
+			finished_at: correct ? now.toISOString() : null,
+			// the tactic's "seen" mark: with no FSRS state, last_review is what
+			// tells an attempted card from an untouched one (stage progression
+			// reads it)
+			last_review: now.toISOString()
 		};
 		const log = {
 			rating: correct ? Rating.Good : Rating.Again,
@@ -139,15 +178,34 @@
 		return withUnit(Math.round(minutes / 60 / 24 / 365 * 10) / 10, "year");
 	}
 
-	// earliest upcoming due among the deck's unfinished cards (null when
-	// empty or all finished); only meaningful when no card is currently due
+	// earliest upcoming due among the deck's unfinished, ungated cards (null
+	// when empty or all finished); only meaningful when no card is currently
+	// due — a locked stage's cards have no date to promise, its unlock note
+	// below speaks for them
 	let nextDue = $derived.by(() => {
-		const unfinished = deck.cards.filter(card => !card.finished_at);
+		const unfinished = deck.cards.filter(card => !card.finished_at && !gated(card));
 		return unfinished.length
 			? unfinished.reduce((min, card) =>
 				Date.parse(card.due) < Date.parse(min.due) ? card : min
 			).due
 			: null;
+	});
+
+	// when the queue runs dry against a locked stage, say what unlocks it:
+	// the first locked stage and how far the one before it has to go
+	let lockedNote = $derived.by(() => {
+		if (!deck.stageProgression) return null;
+		const sorted = [...deck.stages].sort((a, b) => a.position - b.position);
+		const index = sorted.findIndex(stage => !unlockedStages.has(stage.id));
+		if (index < 1) return null;
+		const locked = sorted[index];
+		const before = sorted[index - 1];
+		const progress = stageProgress(deck.cards.filter(card => card.stage_id === before.id));
+		return {
+			locked: `Stage ${locked.position}${locked.name ? ` — ${locked.name}` : ""}`,
+			before: `Stage ${before.position}${before.name ? ` — ${before.name}` : ""}`,
+			progress
+		};
 	});
 
 	const handleKeyDown = e => {
@@ -340,7 +398,16 @@
 	</div>
 {:else}
 	<div class="deck-done">
-		<p>Congratulations you finished this deck for now! <span class="party"><PartyPopper /></span></p>
+		{#if lockedNote}
+			<p>All caught up here for now.</p>
+			<p class="next-review">
+				{lockedNote.locked} unlocks when {lockedNote.before} passes:
+				{lockedNote.progress.seen} of {lockedNote.progress.total} seen,
+				{lockedNote.progress.graduated} of {lockedNote.progress.graduatedNeeded} graduated.
+			</p>
+		{:else}
+			<p>Congratulations you finished this deck for now! <span class="party"><PartyPopper /></span></p>
+		{/if}
 		{#if nextDue}
 			<p class="next-review">Next review in {formatTimeUntilLong(nextDue)}</p>
 		{/if}

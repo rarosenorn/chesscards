@@ -27,6 +27,17 @@
 			]
 		},
 		{
+			title: "Jewel — cobalt's cousins in other hues",
+			schemes: [
+				{ name: "Deep emerald", accent: "#047857", hover: "#036649", subtle: "#e6f4f0", strong: "#c6e7dd" },
+				{ name: "Petrol", accent: "#0e7490", hover: "#0b5f77", subtle: "#e7f3f6", strong: "#c9e4ec" },
+				{ name: "Royal purple", accent: "#6d28d9", hover: "#5b21b6", subtle: "#f2ecfd", strong: "#e0d3f9" },
+				{ name: "Wine", accent: "#9f1239", hover: "#881337", subtle: "#fbecf1", strong: "#f3cfdb" },
+				{ name: "Deep rose", accent: "#be185d", hover: "#9d174d", subtle: "#fcecf3", strong: "#f5cfe0" },
+				{ name: "Burnt orange", accent: "#c2410c", hover: "#a3360a", subtle: "#fcefe7", strong: "#f6d6c2" }
+			]
+		},
+		{
 			title: "Muted",
 			schemes: [
 				{ name: "Forest green", accent: "#4a7c59", hover: "#3e6a4b", subtle: "#edf4ee", strong: "#d5e6da" },

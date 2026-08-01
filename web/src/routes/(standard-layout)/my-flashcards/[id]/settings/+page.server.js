@@ -27,6 +27,15 @@ export const actions = {
 
 		return { cards };
 	},
+	// the same personal/instance split as reset; either way the change is a
+	// per-deck exception that puts the profile's bulk mode back to "per deck"
+	progression: async ({ params, request, locals }) => {
+		const data = await request.formData();
+		const value = data.get("value") === "true";
+		await decks.userIdOwnsDeckId(locals.userId, params.id)
+			? await decks.updateStageProgression(locals.userId, params.id, value)
+			: await marketplace.updateInstanceStageProgression(locals.userId, params.id, value);
+	},
 	delete: async ({ request, locals }) => {
 		const data = await request.formData();
 		await decks.remove(data.get("id"), locals.userId);

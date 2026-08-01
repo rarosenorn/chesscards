@@ -1,8 +1,12 @@
 import { fail } from "@sveltejs/kit"
 import { pool } from "$lib/server/pool.js"
+import * as decks from "$lib/server/decks.js"
 import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS } from "$lib/board-prefs.js"
 
-export const load = async () => ({ pageTitle: "Settings" });
+export const load = async ({ locals }) => ({
+	pageTitle: "Settings",
+	stageProgressionMode: await decks.getStageProgressionMode(locals.userId)
+});
 
 export const actions = {
 	name: async ({ request, locals }) => {
@@ -39,5 +43,16 @@ export const actions = {
 		);
 
 		return { saved: "board" };
+	},
+	// "all"/"none" write every deck's flag right away; "per deck" leaves the
+	// decks as they are and just hands the say back to their own toggles
+	stageProgression: async ({ request, locals }) => {
+		const data = await request.formData();
+		const mode = data.get("stage-progression-mode");
+		if (!["per-deck", "all", "none"].includes(mode)) {
+			return fail(400, { errors: ["Invalid stage progression setting"] });
+		}
+		await decks.setStageProgressionMode(locals.userId, mode);
+		return { saved: "stage-progression" };
 	}
 }

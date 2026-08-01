@@ -74,6 +74,20 @@
 	</section>
 	{/if}
 
+	<section>
+		<h3>Stage progression</h3>
+		<p class="section-note">
+			New cards arrive stage by stage — the next stage unlocks once the one
+			before is learned. Off, every card is available from the start.
+		</p>
+		<form method="POST" action="?/progression" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
+			<label class="progression-toggle">
+				<input type="checkbox" name="value" value="true" checked={data.deck.stageProgression} />
+				Follow stage progression
+			</label>
+		</form>
+	</section>
+
 	<!-- the danger zone is the one section a marketplace instance also gets:
 	     resetting is its only destructive act, deleting stays the owner's -->
 	<section class="danger-zone">
@@ -161,6 +175,13 @@
 	.upload-btn {
 		text-decoration: none;
 		color: inherit;
+	}
+	.progression-toggle {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 0.95rem;
+		cursor: pointer;
 	}
 	.danger-actions {
 		display: flex;

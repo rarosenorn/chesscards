@@ -11,6 +11,10 @@
 
 	let displayName = $state(data.user.displayName ?? "");
 	let prefs = $state({ ...data.boardPrefs });
+	let stageProgressionMode = $state(data.stageProgressionMode ?? "all");
+	// a deck's own toggle knocks the mode back to per-deck server-side; a
+	// revisit shows it, this stays bound to what was loaded meanwhile
+	const modeLabels = { "per-deck": "Per deck", "all": "All decks", "none": "No decks" };
 
 	const themeLabels = {
 		"default": "Default",
@@ -184,6 +188,29 @@
 			</div>
 			<div class="preview-board" class:black-border={hasBlackBorder(prefs)} bind:this={previewElement}></div>
 		</div>
+	</form>
+	<form
+		method="POST"
+		action="?/stageProgression"
+		use:enhance={keepState}
+		onchange={e => e.currentTarget.requestSubmit()}
+	>
+		<fieldset>
+			<legend>Stage progression</legend>
+			<div class="pills">
+				{#each ["per-deck", "all", "none"] as mode}
+					<label class="pill" class:selected={stageProgressionMode === mode}>
+						<input type="radio" name="stage-progression-mode" value={mode} bind:group={stageProgressionMode} />
+						{modeLabels[mode]}
+					</label>
+				{/each}
+			</div>
+			<p class="hint">
+				With stage progression a deck's new cards arrive stage by stage.
+				"All decks" and "No decks" set every deck at once; changing one
+				deck's own setting afterwards puts this back to per deck.
+			</p>
+		</fieldset>
 	</form>
 	<div class="account-actions">
 		<button class="quiet-btn" onclick={logout}>Log out</button>

@@ -104,7 +104,7 @@
 				color: rgba(255, 255, 255, 0.85);
 				text-decoration: none;
 				font-family: var(--wordmark-font, inherit);
-				font-weight: 600;
+				font-weight: 500;
 			}
 			.nav-link:hover {
 				color: white;
@@ -133,7 +133,7 @@
 				color: rgba(255, 255, 255, 0.85);
 				text-decoration: none;
 				font-family: var(--wordmark-font, inherit);
-				font-weight: 600;
+				font-weight: 500;
 			}
 			a:hover {
 				color: white;

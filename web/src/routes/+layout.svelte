@@ -59,7 +59,7 @@
 	}
 	#topbar {
 		height: 72px;
-		background-color: rgb(252, 252, 252);
+		background-color: var(--accent);
 		display: flex;
 		justify-content: space-between;
 		box-sizing: border-box;
@@ -74,7 +74,7 @@
 				display: flex;
 				align-items: center;
 				text-decoration: none;
-				color: rgba(0, 0, 0, 0.6);
+				color: white;
 				position: relative;
 				bottom: 2px;
 
@@ -91,25 +91,26 @@
 			gap: 6px;
 			.nav-link {
 				padding: 8px;
-				color: rgba(0, 0, 0, 0.6);
+				color: rgba(255, 255, 255, 0.85);
 				text-decoration: none;
 			}
 			.nav-link:hover {
-				color: black;
+				color: white;
 				text-decoration: underline;
 			}
+			/* inverted on the blue bar: the filled accent button would vanish */
 			.primary-btn {
 				padding: 7px 16px;
 				border-radius: 5px;
 				font-size: 1rem;
 				text-decoration: none;
 				cursor: pointer;
-				background-color: var(--accent);
-				border: 1px solid var(--accent);
-				color: white;
+				background-color: white;
+				border: 1px solid white;
+				color: var(--accent);
 			}
 			.primary-btn:hover {
-				background-color: var(--accent-hover);
+				background-color: rgba(255, 255, 255, 0.9);
 			}
 		}
 		nav {
@@ -117,11 +118,11 @@
 			gap: 10px;
 			a {
 				padding: 12px 8px;
-				color: rgba(0, 0, 0, 0.6);
+				color: rgba(255, 255, 255, 0.85);
 				text-decoration: none;
 			}
 			a:hover {
-				color: black;
+				color: white;
 				text-decoration: underline;
 			}
 		}

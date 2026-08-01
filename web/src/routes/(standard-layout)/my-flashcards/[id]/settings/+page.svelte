@@ -78,34 +78,31 @@
 	     resetting is its only destructive act, deleting stays the owner's -->
 	<section class="danger-zone">
 		<h3>Danger zone</h3>
-		<p class="section-note">
-			Puts every card back to new: scheduling starts over, finished tactics
-			return, and the whole deck is due again. The review history is kept —
-			your statistics still count every review you have done.
-		</p>
 		{#if form?.cards != null}
 			<p class="status status-approved">
 				Reset {form.cards} card{form.cards === 1 ? "" : "s"}.
 			</p>
 		{/if}
-		<form bind:this={resetForm} method="POST" action="?/reset" use:enhance>
-			<button type="button" class="danger-button" onclick={confirmReset}>Reset deck</button>
-		</form>
-		{#if !data.deck.isMarketplace}
-		<form
-			bind:this={deleteForm}
-			method="POST"
-			action="?/delete"
-			use:enhance={() => {
-				return ({ update }) => {
-					update({ invalidateAll: false })
-				}
-			}}
-		>
-			<input type="hidden" name="id" value={data.deck.id} />
-			<button type="button" class="danger-button" onclick={confirmDelete}>Delete deck</button>
-		</form>
-		{/if}
+		<div class="danger-actions">
+			<form bind:this={resetForm} method="POST" action="?/reset" use:enhance>
+				<button type="button" class="danger-button" onclick={confirmReset}>Reset deck</button>
+			</form>
+			{#if !data.deck.isMarketplace}
+			<form
+				bind:this={deleteForm}
+				method="POST"
+				action="?/delete"
+				use:enhance={() => {
+					return ({ update }) => {
+						update({ invalidateAll: false })
+					}
+				}}
+			>
+				<input type="hidden" name="id" value={data.deck.id} />
+				<button type="button" class="danger-button" onclick={confirmDelete}>Delete deck</button>
+			</form>
+			{/if}
+		</div>
 	</section>
 </StandardLayout>
 
@@ -164,6 +161,10 @@
 	.upload-btn {
 		text-decoration: none;
 		color: inherit;
+	}
+	.danger-actions {
+		display: flex;
+		gap: 8px;
 	}
 	.danger-button {
 		color: #c62828;

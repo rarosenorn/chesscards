@@ -14,6 +14,7 @@
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
+	import { canonicalSideJson } from "$lib/card-utils.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardContent, updateCardType, deleteCards } from "./browse.remote.js"
 
@@ -77,6 +78,10 @@
 
 	let searchInput = $state("");
 	let searchFilter = $state("");
+	// the canonical front the duplicates filter matches on (add-cards' "Show
+	// duplicates" link) — exact equality, boards included, unlike the text
+	// search; running a search replaces it
+	let dupFilter = $state(null);
 
 	const getCardText = card =>
 		[...card.front, ...(card.back ?? [])]
@@ -86,9 +91,11 @@
 			.toLowerCase();
 
 	let matchedCards = $derived(
-		searchFilter
-			? deck.cards.filter(card => getCardText(card).includes(searchFilter.toLowerCase()))
-			: deck.cards
+		dupFilter
+			? deck.cards.filter(card => canonicalSideJson(card.front) === dupFilter)
+			: searchFilter
+				? deck.cards.filter(card => getCardText(card).includes(searchFilter.toLowerCase()))
+				: deck.cards
 	);
 
 	// the deck's own order, which the Order column shows and sorts by — the
@@ -142,22 +149,53 @@
 		Object.assign(card, await updateCardType({ cardId: card.id, cardType }));
 	}
 
-	const applySearch = () => {
-		searchFilter = searchInput.trim();
+	const resetSelection = () => {
 		multiSelected = new SvelteSet();
 		anchorIndex = null;
 		if (!filteredCards.includes(selectedCard)) selectedCard = filteredCards[0];
 	}
 
-	// ?q= opens the tab on a search (add-cards' "Show duplicates" link), over
-	// whatever card the last visit left selected. The URL is the only thing the
-	// effect watches — the search box is touched inside untrack, and the query
-	// applied is remembered — so arriving again with a different q searches
-	// again, while editing the box, which changes no URL, is left alone.
+	const applySearch = () => {
+		searchFilter = searchInput.trim();
+		dupFilter = null;
+		resetSelection();
+	}
+
+	// filter to the cards whose front exactly equals this card's — the card a
+	// stale link points at may be gone, in which case nothing is filtered
+	const applyDupFilter = cardId => {
+		const card = deck.cards.find(c => c.id === cardId);
+		if (!card) return;
+		dupFilter = canonicalSideJson(card.front);
+		searchInput = "";
+		searchFilter = "";
+		resetSelection();
+	}
+
+	const clearDupFilter = () => {
+		dupFilter = null;
+		resetSelection();
+	}
+
+	// ?q= opens the tab on a search, ?dupOf= on the exact-duplicates filter
+	// (add-cards' "Show duplicates" link), over whatever card the last visit
+	// left selected. The URL is the only thing the effect watches — the search
+	// box is touched inside untrack, and the params applied are remembered —
+	// so arriving again with a different param filters again, while editing
+	// the box, which changes no URL, is left alone.
 	let appliedQuery = null;
+	let appliedDupOf = null;
 	$effect(() => {
 		const q = page.url.searchParams.get("q");
+		const dupOf = page.url.searchParams.get("dupOf");
 		untrack(() => {
+			if (dupOf !== appliedDupOf) {
+				appliedDupOf = dupOf;
+				if (dupOf !== null) {
+					applyDupFilter(dupOf);
+					return;
+				}
+			}
 			if (q === appliedQuery) return;
 			appliedQuery = q;
 			if (q === null) return;
@@ -347,6 +385,11 @@
 				bind:value={searchInput}
 				onkeydown={e => { if (e.key === "Enter") applySearch(); }}
 			/>
+			{#if dupFilter}
+				<button class="dup-chip" onclick={clearDupFilter} aria-label="Clear the exact-duplicates filter">
+					Exact duplicates <span class="dup-chip-x" aria-hidden="true">×</span>
+				</button>
+			{/if}
 		</div>
 		<div class="table-container">
 		<!-- svelte-ignore a11y_autofocus -- table is the page's primary interaction target; focus enables arrow-key nav immediately -->
@@ -469,8 +512,33 @@
 	   Without it the field was white on white, flush against the tabs. */
 	.search-row {
 		flex: none;
+		display: flex;
+		align-items: center;
+		gap: 6px;
 		padding: 8px;
 		border-bottom: 1px solid #dcdcdc;
+	}
+	.search-input {
+		flex: 1;
+	}
+	/* the active duplicates filter, worn as a pill the click removes */
+	.dup-chip {
+		flex: none;
+		margin: 0;
+		padding: 4px 10px;
+		border: 1px solid #ccc;
+		border-radius: 999px;
+		background-color: #f2f2f2;
+		font-size: 0.85rem;
+		white-space: nowrap;
+		cursor: pointer;
+	}
+	.dup-chip:hover {
+		background-color: #e8e8e8;
+	}
+	.dup-chip-x {
+		margin-left: 2px;
+		color: rgba(0, 0, 0, 0.55);
 	}
 	/* square like the table it heads, but a field you can see the edges of */
 	.search-input {

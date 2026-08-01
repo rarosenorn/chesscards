@@ -17,7 +17,6 @@
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
 	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
-	import { ttGenerateText } from "$lib/tiptap-utility.js"
 
 	// the shared deck context (layout); new cards are pushed into it so
 	// browse/study see them without a reload
@@ -105,23 +104,18 @@
 	// would be paid for nothing.
 	const emptySideJson = canonicalSideJson([]);
 	let frontSideJson = $state(emptySideJson);
-	let frontText = $state("");
 	const readFront = () => {
 		const side = docToSideBlocks(frontEditor?.getJson());
 		frontSideJson = canonicalSideJson(side);
-		frontText = side
-			.filter(block => block.type === "text")
-			.map(block => ttGenerateText(block.content))
-			.join(" ")
-			.trim();
 	}
 	const handleFrontChanged = () => {
 		readFront();
 		handleDocChanged();
 	}
 	// recomputed as cards are added, so a frozen front starts duplicating the
-	// card it just made — as in Anki
-	const existingFronts = $derived(new Set(deck.cards.map(card => canonicalSideJson(card.front))));
+	// card it just made — as in Anki. A map to one card carrying that front:
+	// its id is what the Show duplicates link hands browse to filter on.
+	const existingFronts = $derived(new Map(deck.cards.map(card => [canonicalSideJson(card.front), card.id])));
 	// an empty front duplicates nothing (every board-less card's front is empty)
 	const duplicateFront = $derived(
 		frontSideJson !== emptySideJson && existingFronts.has(frontSideJson)
@@ -269,11 +263,10 @@
 	<p class="side-indicator" {style}>
 		<span class="side-name">
 			{label}
-			<!-- the duplicated cards, found by the front's own text. A front of
-			     nothing but boards is still flagged red, but has no text to
-			     search on, so it gets no link -->
-			{#if side === "front" && duplicateFront && frontText.length > 0}
-				<a class="duplicates-link" href="/my-flashcards/{deckId}/browse?q={encodeURIComponent(frontText)}">Show duplicates</a>
+			<!-- the duplicated cards: browse filters on the exact front of the
+			     card this one duplicates, boards and all -->
+			{#if side === "front" && duplicateFront}
+				<a class="duplicates-link" href="/my-flashcards/{deckId}/browse?dupOf={existingFronts.get(frontSideJson)}">Show duplicates</a>
 			{/if}
 		</span>
 		<!-- Anki's frozen fields: a frozen side survives the submit, so a run

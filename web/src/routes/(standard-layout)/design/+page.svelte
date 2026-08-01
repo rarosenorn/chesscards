@@ -13,6 +13,9 @@
 			schemes: [
 				{ name: "Ink blue", accent: "#44608c", hover: "#38507a", subtle: "#eef2f7", strong: "#d8e1ee" },
 				{ name: "Denim ink", accent: "#4a6ba0", hover: "#3d5a89", subtle: "#eff3f9", strong: "#d9e2f1" },
+				{ name: "Denim +1", accent: "#4e70a7", hover: "#415e8e", subtle: "#eff3f9", strong: "#dae3f2" },
+				{ name: "Denim +2", accent: "#5274ab", hover: "#456293", subtle: "#f0f4fa", strong: "#dbe4f3" },
+				{ name: "Denim +3", accent: "#5678b0", hover: "#496698", subtle: "#f0f4fa", strong: "#dce5f4" },
 				{ name: "Steel blue", accent: "#527ab3", hover: "#45689b", subtle: "#f0f4fa", strong: "#dbe5f4" }
 			]
 		},

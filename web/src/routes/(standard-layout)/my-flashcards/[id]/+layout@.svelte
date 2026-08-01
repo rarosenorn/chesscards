@@ -87,15 +87,14 @@
 	});
 	// marketplace deck instances are readonly, so no editing tabs; settings is
 	// there for the one thing that is theirs, resetting their study progress.
-	// "Add cards 2" (single Q/A list), "Add cards 3" (one tiptap document per
-	// side) and "Add cards 5" are editor trials kept next to the block editor
-	// for side-by-side comparison
+	// the editor trials (add-cards-2/-3/-5) keep their routes but not their
+	// tabs: the block editor won, and only it is offered
 	const paths = deck.isMarketplace
 		? ["study", "browse", "settings"]
-		: ["study", "browse", "add-cards", "add-cards-2", "add-cards-3", "add-cards-5", "settings"];
+		: ["study", "browse", "add-cards", "settings"];
 	const names = deck.isMarketplace
 		? ["Study", "Cards", "Settings"]
-		: ["Study", "Cards", "Add cards", "Add cards 2", "Add cards 3", "Add cards 5", "Settings"];
+		: ["Study", "Cards", "Add cards", "Settings"];
 
 	// s/b/a jump between the deck's three working tabs. Bare letters, so they
 	// stand down wherever the keyboard is already spoken for — a text field, a

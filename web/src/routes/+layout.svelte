@@ -103,6 +103,7 @@
 				padding: 8px;
 				color: rgba(255, 255, 255, 0.85);
 				text-decoration: none;
+				font-family: var(--wordmark-font, inherit);
 			}
 			.nav-link:hover {
 				color: white;
@@ -130,6 +131,7 @@
 				padding: 12px 8px;
 				color: rgba(255, 255, 255, 0.85);
 				text-decoration: none;
+				font-family: var(--wordmark-font, inherit);
 			}
 			a:hover {
 				color: white;

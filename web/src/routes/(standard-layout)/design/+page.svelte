@@ -13,11 +13,15 @@
 			schemes: [
 				{ name: "Current blue", accent: "#3381ca", hover: "#2b6dab", subtle: "#ebf3fa", strong: "#d4e5f5" },
 				{ name: "Royal blue", accent: "#2b6be6", hover: "#2258c4", subtle: "#ecf2fd", strong: "#d3e1fb" },
+				{ name: "Cobalt", accent: "#1d4ed8", hover: "#1841b4", subtle: "#eaeffc", strong: "#cfdbf9" },
+				{ name: "Indigo", accent: "#4f46e5", hover: "#423bc2", subtle: "#efeefd", strong: "#dcdafa" },
+				{ name: "Azure", accent: "#0284c7", hover: "#026da5", subtle: "#e7f4fb", strong: "#c8e6f5" },
 				{ name: "Emerald", accent: "#18a34b", hover: "#148a3f", subtle: "#e9f7ee", strong: "#cdeeda" },
 				{ name: "Teal", accent: "#0f9b8e", hover: "#0c8177", subtle: "#e8f7f5", strong: "#cdeeea" },
 				{ name: "Purple", accent: "#7b3ff2", hover: "#6733cf", subtle: "#f3eefe", strong: "#e3d7fc" },
 				{ name: "Crimson", accent: "#d92643", hover: "#b81f38", subtle: "#fdeef0", strong: "#f9d4da" },
-				{ name: "Orange", accent: "#e86412", hover: "#c5540f", subtle: "#fdf1e8", strong: "#fadcc6" }
+				{ name: "Orange", accent: "#e86412", hover: "#c5540f", subtle: "#fdf1e8", strong: "#fadcc6" },
+				{ name: "Yellow", accent: "#fad718", hover: "#e3c214", subtle: "#fdfae4", strong: "#faf0b0" }
 			]
 		},
 		{

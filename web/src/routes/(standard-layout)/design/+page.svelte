@@ -16,6 +16,9 @@
 				{ name: "Denim +1", accent: "#4e70a7", hover: "#415e8e", subtle: "#eff3f9", strong: "#dae3f2" },
 				{ name: "Denim +2", accent: "#5274ab", hover: "#456293", subtle: "#f0f4fa", strong: "#dbe4f3" },
 				{ name: "Denim +3", accent: "#5678b0", hover: "#496698", subtle: "#f0f4fa", strong: "#dce5f4" },
+				{ name: "Denim sat +1", accent: "#4169aa", hover: "#365a92", subtle: "#eef3f9", strong: "#d7e2f2" },
+				{ name: "Denim sat +2", accent: "#3867b2", hover: "#2f5798", subtle: "#edf2fa", strong: "#d4e1f4" },
+				{ name: "Denim sat +3", accent: "#2f65bc", hover: "#27559f", subtle: "#ecf2fb", strong: "#d2e0f6" },
 				{ name: "Steel blue", accent: "#527ab3", hover: "#45689b", subtle: "#f0f4fa", strong: "#dbe5f4" },
 				{ name: "Royal navy", accent: "#002366", hover: "#001b4d", subtle: "#e8ecf5", strong: "#c9d3ea" }
 			]

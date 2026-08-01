@@ -2,7 +2,7 @@
 	import { enhance } from "$app/forms"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import FormErrors from "$lib/components/FormErrors.svelte"
-	import { confirmModal, typedConfirmModal } from "$lib/modals.svelte.js"
+	import { typedConfirmModal } from "$lib/modals.svelte.js"
 
 	let { data, form } = $props();
 
@@ -10,9 +10,10 @@
 	let resetForm;
 
 	const confirmReset = async () => {
-		const confirmed = await confirmModal({
+		const confirmed = await typedConfirmModal({
 			title: "Reset deck",
-			message: "Every card goes back to new and the whole deck comes up for review again. The review history is kept.",
+			message: "Resetting deck deletes all progress",
+			requiredText: data.deck.name,
 			confirmLabel: "Reset deck"
 		});
 		if (confirmed) resetForm.requestSubmit();
@@ -73,8 +74,10 @@
 	</section>
 	{/if}
 
-	<section>
-		<h3>Study progress</h3>
+	<!-- the danger zone is the one section a marketplace instance also gets:
+	     resetting is its only destructive act, deleting stays the owner's -->
+	<section class="danger-zone">
+		<h3>Danger zone</h3>
 		<p class="section-note">
 			Puts every card back to new: scheduling starts over, finished tactics
 			return, and the whole deck is due again. The review history is kept —
@@ -86,13 +89,9 @@
 			</p>
 		{/if}
 		<form bind:this={resetForm} method="POST" action="?/reset" use:enhance>
-			<button type="button" class="std-btn" onclick={confirmReset}>Reset deck</button>
+			<button type="button" class="danger-button" onclick={confirmReset}>Reset deck</button>
 		</form>
-	</section>
-
-	{#if !data.deck.isMarketplace}
-	<section class="danger-zone">
-		<h3>Danger zone</h3>
+		{#if !data.deck.isMarketplace}
 		<form
 			bind:this={deleteForm}
 			method="POST"
@@ -104,10 +103,10 @@
 			}}
 		>
 			<input type="hidden" name="id" value={data.deck.id} />
-			<button type="button" class="delete-button" onclick={confirmDelete}>Delete deck</button>
+			<button type="button" class="danger-button" onclick={confirmDelete}>Delete deck</button>
 		</form>
+		{/if}
 	</section>
-	{/if}
 </StandardLayout>
 
 <style>
@@ -166,7 +165,7 @@
 		text-decoration: none;
 		color: inherit;
 	}
-	.delete-button {
+	.danger-button {
 		color: #c62828;
 		background-color: white;
 		border: 1px solid #c62828;
@@ -174,7 +173,7 @@
 		padding: 6px 14px;
 		cursor: pointer;
 	}
-	.delete-button:hover {
+	.danger-button:hover {
 		color: white;
 		background-color: #c62828;
 	}

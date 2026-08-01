@@ -11,7 +11,8 @@
 	import { browser } from "$app/environment"
 	import { page } from "$app/state"
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
-	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft, loadFrozenSides, saveFrozenSides } from "$lib/add-cards-draft.js"
+	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft, loadFrozenSides, saveFrozenSides, loadStageId, saveStageId } from "$lib/add-cards-draft.js"
+	import { stageLabel } from "$lib/stages.js"
 	import Snowflake from "$lib/icons/Snowflake.svelte"
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
@@ -34,6 +35,21 @@
 	const chooseCardType = value => {
 		cardType = value;
 		saveCardType(deckId, value);
+	}
+
+	// which stage the cards are filed into — like the type, a sticky mode of
+	// writing the deck; a stored stage that has since been deleted falls back
+	// to the last one
+	let stagesSorted = $derived([...deck.stages].sort((a, b) => a.position - b.position));
+	let stageId = $state(browser ? loadStageId(deckId) : null);
+	let validStageId = $derived(
+		stagesSorted.some(stage => stage.id === stageId)
+			? stageId
+			: stagesSorted[stagesSorted.length - 1]?.id
+	);
+	const chooseStage = value => {
+		stageId = value;
+		saveStageId(deckId, value);
 	}
 
 	// a frozen side keeps its content through the submit, for a run of cards
@@ -307,6 +323,16 @@
 			</button>
 		{/each}
 	</div>
+	{#if stagesSorted.length > 1}
+		<label class="stage-picker">
+			Stage
+			<select value={validStageId} onchange={e => chooseStage(e.currentTarget.value)}>
+				{#each stagesSorted as stage (stage.id)}
+					<option value={stage.id}>{stageLabel(stage)}</option>
+				{/each}
+			</select>
+		</label>
+	{/if}
 </div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
@@ -380,6 +406,7 @@
 			formData.set("front", docSideJsonBlocks(front));
 			formData.set("back", docSideJsonBlocks(back));
 			formData.set("cardType", cardType);
+			formData.set("stageId", validStageId ?? "");
 
 			return async ({ result, update }) => {
 				// no invalidation: the deck context is updated by the push
@@ -436,6 +463,21 @@
 		gap: 12px;
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
+	}
+	/* the stage the cards file into, off to the right of the type it pairs with */
+	.stage-picker {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-left: 12px;
+	}
+	.stage-picker select {
+		font-size: 0.85rem;
+		padding: 3px 6px;
+		border: 1px solid rgba(0, 0, 0, 0.25);
+		border-radius: 4px;
+		background-color: white;
+		cursor: pointer;
 	}
 	.type-segments {
 		display: flex;

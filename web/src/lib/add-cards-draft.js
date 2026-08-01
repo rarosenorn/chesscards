@@ -6,6 +6,7 @@
 const draftKey = deckId => `chesscards:add-cards-draft:${deckId}`;
 const cardTypeKey = deckId => `chesscards:card-type:${deckId}`;
 const frozenKey = deckId => `chesscards:frozen-sides:${deckId}`;
+const stageKey = deckId => `chesscards:add-cards-stage:${deckId}`;
 
 // Anki-style mode: applies to every card added until changed
 const CARD_TYPES = ["basic", "tactic"];
@@ -78,7 +79,14 @@ const loadFrozenSides = deckId => {
 const saveFrozenSides = (deckId, frozen) =>
 	write(frozenKey(deckId), JSON.stringify({ front: !!frozen.front, back: !!frozen.back }));
 
+// which stage new cards are filed into, like the card type a mode of writing
+// the deck; the page falls back to the last stage when the stored one is gone
+const loadStageId = deckId => read(stageKey(deckId));
+
+const saveStageId = (deckId, stageId) => write(stageKey(deckId), stageId);
+
 export {
 	DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft,
-	loadFrozenSides, saveFrozenSides
+	loadFrozenSides, saveFrozenSides,
+	loadStageId, saveStageId
 }

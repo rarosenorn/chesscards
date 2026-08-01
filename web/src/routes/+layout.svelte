@@ -1,6 +1,7 @@
 <script>
 	import { setContext } from "svelte"
 	import { browser } from "$app/environment"
+	import { SCHEME_KEY, FONT_KEY, readPreview, applySchemeVars, applyFontVar } from "$lib/design-preview.js"
 	import favicon from '$lib/assets/favicon.svg';
 	import Logo from "$lib/assets/Logo.svelte"
 	import ModalHost from "$lib/components/ModalHost.svelte"
@@ -15,21 +16,13 @@
 	// (a getter so consumers stay reactive to profile changes)
 	setContext("boardPrefs", () => data.boardPrefs ?? DEFAULT_BOARD_PREFS);
 
-	// a color scheme being tried on /color-schemes rides along on every page
-	// until reset there — the stored values override app.css's accent vars
+	// design tryouts (/design): a scheme or wordmark font being tried rides
+	// along on every page until reset there
 	if (browser) {
-		try {
-			const scheme = JSON.parse(localStorage.getItem("chesscards:scheme-preview"));
-			if (scheme?.accent) {
-				const root = document.documentElement.style;
-				root.setProperty("--accent", scheme.accent);
-				root.setProperty("--accent-hover", scheme.hover);
-				root.setProperty("--accent-subtle", scheme.subtle);
-				root.setProperty("--accent-subtle-strong", scheme.strong);
-			}
-		} catch {
-			// an unreadable entry just means no preview
-		}
+		const scheme = readPreview(SCHEME_KEY);
+		if (scheme?.accent) applySchemeVars(scheme);
+		const font = readPreview(FONT_KEY);
+		if (font?.family) applyFontVar(font.family);
 	}
 </script>
 
@@ -97,7 +90,7 @@
 
 				span {
 					margin-left: 5px;
-					font-family: roboto-mono;
+					font-family: var(--wordmark-font, roboto-mono);
 					font-size: 1.7rem;
 				}
 			}

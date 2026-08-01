@@ -14,6 +14,9 @@ const GRADUATED_SHARE = 0.8;
 // (the user-facing word is "chapter"; "stage" stays the code's name)
 const stageLabel = stage => `Chapter ${stage.position}${stage.name ? ` — ${stage.name}` : ""}`;
 
+// the abbreviated form the Cards table's chapter bars wear
+const stageLabelShort = stage => `Ch.${stage.position}${stage.name ? ` - ${stage.name}` : ""}`;
+
 // a tactic card carries no FSRS state; its grades stamp last_review
 // (seen) and finished_at (done for good, its graduation)
 const isSeen = card => card.card_type === "tactic"
@@ -47,4 +50,4 @@ const stageProgress = cards => ({
 	total: cards.length
 });
 
-export { GRADUATED_SHARE, stageLabel, isSeen, isGraduated, stagePasses, unlockedStageIds, stageProgress }
+export { GRADUATED_SHARE, stageLabel, stageLabelShort, isSeen, isGraduated, stagePasses, unlockedStageIds, stageProgress }

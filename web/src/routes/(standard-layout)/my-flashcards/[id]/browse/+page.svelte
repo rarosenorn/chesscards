@@ -15,7 +15,7 @@
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
 	import { canonicalSideJson } from "$lib/card-utils.js"
-	import { unlockedStageIds, stageLabel } from "$lib/stages.js"
+	import { unlockedStageIds, stageLabel, stageLabelShort } from "$lib/stages.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardContent, updateCardType, deleteCards, createStage, renameStage, deleteStage, moveCards } from "./browse.remote.js"
 
@@ -723,7 +723,7 @@
 								{:else}
 									<button class="stage-toggle" onmousedown={e => e.stopPropagation()} onclick={() => draft.collapsed[group.stage.id] = !group.collapsed}>
 										<span class="collapse-arrow" class:collapsed={group.collapsed}></span>
-										<span class="stage-name">{stageLabel(group.stage)}</span>
+										<span class="stage-name">{stageLabelShort(group.stage)}</span>
 										{#if deck.stageProgression && !unlockedStages.has(group.stage.id)}
 											<svg class="stage-lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
 												<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>

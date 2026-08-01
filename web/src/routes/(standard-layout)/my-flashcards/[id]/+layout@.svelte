@@ -169,7 +169,7 @@
 		padding-bottom: 3px;
 	}
 	.tabs [aria-current]:not([aria-current="false"]) {
-		color: white !important;
+		color: var(--accent-text) !important;
 		background-color: var(--accent) !important;
 	}
 	.tabs > a:hover {

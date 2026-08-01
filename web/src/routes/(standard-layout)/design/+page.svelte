@@ -9,6 +9,25 @@
 	// pulled toward grey
 	const schemeGroups = [
 		{
+			title: "Jewel — rich hues that carry white text",
+			schemes: [
+				{ name: "Deep emerald", accent: "#047857", hover: "#036649", subtle: "#e6f4f0", strong: "#c6e7dd" },
+				{ name: "Racing green", accent: "#166534", hover: "#115229", subtle: "#e8f3ec", strong: "#cbe5d3" },
+				{ name: "Pine", accent: "#115e59", hover: "#0d4b47", subtle: "#e7f2f1", strong: "#c9e3e1" },
+				{ name: "Petrol", accent: "#0e7490", hover: "#0b5f77", subtle: "#e7f3f6", strong: "#c9e4ec" },
+				{ name: "Sapphire", accent: "#0369a1", hover: "#02537f", subtle: "#e6f2f8", strong: "#c5e2f0" },
+				{ name: "Midnight indigo", accent: "#312e81", hover: "#27256a", subtle: "#eeeef7", strong: "#d6d5ea" },
+				{ name: "Royal purple", accent: "#6d28d9", hover: "#5b21b6", subtle: "#f2ecfd", strong: "#e0d3f9" },
+				{ name: "Grape", accent: "#7e22ce", hover: "#6b1cb0", subtle: "#f4ecfc", strong: "#e4d2f7" },
+				{ name: "Fuchsia", accent: "#a21caf", hover: "#86178f", subtle: "#f9edfa", strong: "#eed2f0" },
+				{ name: "Deep rose", accent: "#be185d", hover: "#9d174d", subtle: "#fcecf3", strong: "#f5cfe0" },
+				{ name: "Wine", accent: "#9f1239", hover: "#881337", subtle: "#fbecf1", strong: "#f3cfdb" },
+				{ name: "Ruby", accent: "#b91c1c", hover: "#9b1717", subtle: "#fbeeee", strong: "#f4d2d2" },
+				{ name: "Burnt orange", accent: "#c2410c", hover: "#a3360a", subtle: "#fcefe7", strong: "#f6d6c2" },
+				{ name: "Copper", accent: "#b45309", hover: "#954507", subtle: "#f9f1e7", strong: "#f0dcc2" }
+			]
+		},
+		{
 			title: "Straight",
 			schemes: [
 				{ name: "Current blue", accent: "#3381ca", hover: "#2b6dab", subtle: "#ebf3fa", strong: "#d4e5f5" },
@@ -22,19 +41,19 @@
 				{ name: "Teal", accent: "#0f9b8e", hover: "#0c8177", subtle: "#e8f7f5", strong: "#cdeeea" },
 				{ name: "Purple", accent: "#7b3ff2", hover: "#6733cf", subtle: "#f3eefe", strong: "#e3d7fc" },
 				{ name: "Crimson", accent: "#d92643", hover: "#b81f38", subtle: "#fdeef0", strong: "#f9d4da" },
-				{ name: "Orange", accent: "#e86412", hover: "#c5540f", subtle: "#fdf1e8", strong: "#fadcc6" },
-				{ name: "Yellow", accent: "#fad718", hover: "#e3c214", subtle: "#fdfae4", strong: "#faf0b0" }
+				{ name: "Orange", accent: "#e86412", hover: "#c5540f", subtle: "#fdf1e8", strong: "#fadcc6" }
 			]
 		},
 		{
-			title: "Jewel — cobalt's cousins in other hues",
+			title: "Light — dark text on the accent",
 			schemes: [
-				{ name: "Deep emerald", accent: "#047857", hover: "#036649", subtle: "#e6f4f0", strong: "#c6e7dd" },
-				{ name: "Petrol", accent: "#0e7490", hover: "#0b5f77", subtle: "#e7f3f6", strong: "#c9e4ec" },
-				{ name: "Royal purple", accent: "#6d28d9", hover: "#5b21b6", subtle: "#f2ecfd", strong: "#e0d3f9" },
-				{ name: "Wine", accent: "#9f1239", hover: "#881337", subtle: "#fbecf1", strong: "#f3cfdb" },
-				{ name: "Deep rose", accent: "#be185d", hover: "#9d174d", subtle: "#fcecf3", strong: "#f5cfe0" },
-				{ name: "Burnt orange", accent: "#c2410c", hover: "#a3360a", subtle: "#fcefe7", strong: "#f6d6c2" }
+				{ name: "Sunshine", accent: "#fad718", hover: "#e3c214", subtle: "#fdfae4", strong: "#faf0b0", text: "#1a1a1a" },
+				{ name: "Amber", accent: "#fbbf24", hover: "#eaa908", subtle: "#fef6e3", strong: "#fce8b3", text: "#1a1a1a" },
+				{ name: "Tangerine", accent: "#fb923c", hover: "#ee7d1f", subtle: "#fef3e9", strong: "#fdddc2", text: "#1a1a1a" },
+				{ name: "Lime", accent: "#a3e635", hover: "#8fd41e", subtle: "#f6fce8", strong: "#e5f7c0", text: "#1a1a1a" },
+				{ name: "Mint", accent: "#4ade80", hover: "#2fc767", subtle: "#ecfbf2", strong: "#c9f2da", text: "#1a1a1a" },
+				{ name: "Sky", accent: "#38bdf8", hover: "#1baaef", subtle: "#eaf8fe", strong: "#c5ecfc", text: "#1a1a1a" },
+				{ name: "Coral", accent: "#fb7185", hover: "#f4506a", subtle: "#fef0f2", strong: "#fdd3da", text: "#1a1a1a" }
 			]
 		},
 		{
@@ -152,7 +171,7 @@
 					>
 						<!-- the banner, a selected table row, a subtle fill and the two
 						     solids: the places the accent actually shows up, in miniature -->
-						<span class="mini-banner" style="background-color: {scheme.accent}">Chesscards</span>
+						<span class="mini-banner" style="background-color: {scheme.accent}; color: {scheme.text ?? 'white'}">Chesscards</span>
 						<span class="mini-row" style="background-color: {scheme.strong}">selected row</span>
 						<span class="mini-row" style="background-color: {scheme.subtle}">subtle fill</span>
 						<span class="swatches">
@@ -259,6 +278,7 @@
 	   nav-link size */
 	.font-banner {
 		background-color: var(--accent);
+		color: var(--accent-text);
 		font-size: 1.35rem;
 		display: flex;
 		align-items: baseline;
@@ -270,7 +290,7 @@
 		/* the weight the real menu wears, so the sample tells the truth about
 		   families lacking a 500 cut */
 		font-weight: 500;
-		color: rgba(255, 255, 255, 0.85);
+		color: color-mix(in srgb, var(--accent-text) 85%, transparent);
 	}
 	.mini-row {
 		display: block;

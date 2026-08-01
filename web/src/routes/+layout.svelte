@@ -84,7 +84,7 @@
 				display: flex;
 				align-items: center;
 				text-decoration: none;
-				color: white;
+				color: var(--accent-text);
 				position: relative;
 				bottom: 2px;
 
@@ -103,28 +103,28 @@
 			gap: 6px;
 			.nav-link {
 				padding: 8px;
-				color: rgba(255, 255, 255, 0.85);
+				color: color-mix(in srgb, var(--accent-text) 85%, transparent);
 				text-decoration: none;
 				font-family: var(--wordmark-font, inherit);
 				font-weight: 500;
 			}
 			.nav-link:hover {
-				color: white;
+				color: var(--accent-text);
 				text-decoration: underline;
 			}
-			/* inverted on the blue bar: the filled accent button would vanish */
+			/* inverted on the accent bar: the filled accent button would vanish */
 			.primary-btn {
 				padding: 7px 16px;
 				border-radius: 5px;
 				font-size: 1rem;
 				text-decoration: none;
 				cursor: pointer;
-				background-color: white;
-				border: 1px solid white;
+				background-color: var(--accent-text);
+				border: 1px solid var(--accent-text);
 				color: var(--accent);
 			}
 			.primary-btn:hover {
-				background-color: rgba(255, 255, 255, 0.9);
+				background-color: color-mix(in srgb, var(--accent-text) 90%, transparent);
 			}
 		}
 		nav {
@@ -132,13 +132,13 @@
 			gap: 6px;
 			a {
 				padding: 12px 8px;
-				color: rgba(255, 255, 255, 0.85);
+				color: color-mix(in srgb, var(--accent-text) 85%, transparent);
 				text-decoration: none;
 				font-family: var(--wordmark-font, inherit);
 				font-weight: 500;
 			}
 			a:hover {
-				color: white;
+				color: var(--accent-text);
 				text-decoration: underline;
 			}
 		}

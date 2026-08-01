@@ -7,6 +7,9 @@
 	--accent-hover: #2b6dab;
 	--accent-subtle: #ebf3fa;
 	--accent-subtle-strong: #d4e5f5;
+	/* what text on an accent surface wears: white on the deep accents, near
+	   black should a light accent ever take over */
+	--accent-text: #ffffff;
 	/* how wide a flashcard renders, wherever one is shown. It is a board
 	   size in disguise — a board is half the card — so anything that has to
 	   line up with a card's edge reads it from here rather than repeating

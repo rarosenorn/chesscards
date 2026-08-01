@@ -114,7 +114,7 @@
 		border: 1px solid var(--accent);
 		border-radius: 5px;
 		background-color: var(--accent);
-		color: white;
+		color: var(--accent-text);
 		padding: 6px 16px;
 		cursor: pointer;
 	}

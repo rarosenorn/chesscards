@@ -292,7 +292,7 @@
 	.pill.selected {
 		background-color: var(--accent);
 		border-color: var(--accent);
-		color: white;
+		color: var(--accent-text);
 	}
 	/* the radio itself is visually hidden; keyboard focus shows on the pill */
 	.pill input {

@@ -24,11 +24,13 @@ const applySchemeVars = scheme => {
 	root.setProperty("--accent-hover", scheme.hover);
 	root.setProperty("--accent-subtle", scheme.subtle);
 	root.setProperty("--accent-subtle-strong", scheme.strong);
+	// light accents bring their own near-black; the default is app.css's white
+	root.setProperty("--accent-text", scheme.text ?? "#ffffff");
 }
 
 const clearSchemeVars = () => {
 	const root = document.documentElement.style;
-	for (const name of ["--accent", "--accent-hover", "--accent-subtle", "--accent-subtle-strong"]) {
+	for (const name of ["--accent", "--accent-hover", "--accent-subtle", "--accent-subtle-strong", "--accent-text"]) {
 		root.removeProperty(name);
 	}
 }

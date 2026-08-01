@@ -29,3 +29,44 @@ export const deleteCards =
 			error(403, "Unauthorized");
 		}
 	})
+
+// The stage ops renumber positions across the deck, so each returns the
+// fresh deck for the client to assign into the shared context — mirroring
+// the renumbering locally would just re-implement the server.
+const freshDeck = async (locals, deckId) => {
+	const deck = await decks.getById(locals.userId, deckId);
+	if (!deck) error(403, "Unauthorized");
+	return deck;
+}
+
+export const createStage =
+	command("unchecked", async ({ deckId, name }) => {
+		const { locals } = getRequestEvent();
+		if (!await decks.createStage(locals.userId, deckId, name ?? null)) {
+			error(403, "Unauthorized");
+		}
+		return freshDeck(locals, deckId);
+	})
+
+export const renameStage =
+	command("unchecked", async ({ deckId, stageId, name }) => {
+		const { locals } = getRequestEvent();
+		if (!await decks.renameStage(locals.userId, stageId, name || null)) {
+			error(403, "Unauthorized");
+		}
+		return freshDeck(locals, deckId);
+	})
+
+export const deleteStage =
+	command("unchecked", async ({ deckId, stageId }) => {
+		const { locals } = getRequestEvent();
+		await decks.deleteStage(locals.userId, stageId);
+		return freshDeck(locals, deckId);
+	})
+
+export const moveCards =
+	command("unchecked", async ({ deckId, cardIds, stageId, index }) => {
+		const { locals } = getRequestEvent();
+		await decks.moveCards(locals.userId, deckId, cardIds, stageId, index ?? null);
+		return freshDeck(locals, deckId);
+	})

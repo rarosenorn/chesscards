@@ -135,10 +135,20 @@ const approveUploadRequest = async requestId => {
 			"insert into marketplace_decks(user_id, name, description, price, theme, image, image_type) values($1, $2, $3, $4, $5, $6, $7) returning id",
 			[request.user_id, request.name, request.description, request.price, request.theme, request.image, request.image_type]
 		);
+		// the stage structure travels with the cards, matched up by position
+		await client.query(
+			"insert into marketplace_stages(marketplace_deck_id, name, position) select $1, name, position from stages where deck_id = $2",
+			[mpDeck.id, request.deck_id]
+		);
 		// array_position gives the preview cards their requested order and
 		// leaves non-preview cards (and since-deleted preview ids) at null
-		await client.query(
-			"insert into marketplace_cards(marketplace_deck_id, front, back, preview_order, card_type) select $1, front, back, array_position($3::uuid[], id), card_type from cards where deck_id = $2",
+		await client.query(`
+			insert into marketplace_cards(marketplace_deck_id, stage_id, position, front, back, preview_order, card_type)
+			select $1, ms.id, c.position, c.front, c.back, array_position($3::uuid[], c.id), c.card_type
+			from cards c
+			join stages s on s.id = c.stage_id
+			join marketplace_stages ms on ms.marketplace_deck_id = $1 and ms.position = s.position
+			where c.deck_id = $2`,
 			[mpDeck.id, request.deck_id, request.preview_card_ids]
 		);
 		await client.query(
@@ -244,28 +254,44 @@ const getInstancesWithoutCards = async userId => {
 // render them unchanged
 const getInstanceById = async (userId, instanceId) => {
 	const { rows } = await pool.query(`
-		select i.id, md.name, json_agg(json_build_object(
-			'id', ci.id,
-			'marketplace_deck_instance_id', ci.marketplace_deck_instance_id,
-			'front', mc.front, 'back', mc.back,
-			'due', ci.due, 'stability', ci.stability, 'difficulty', ci.difficulty,
-			'elapsed_days', ci.elapsed_days, 'scheduled_days', ci.scheduled_days,
-			'reps', ci.reps, 'lapses', ci.lapses, 'learning_steps', ci.learning_steps,
-			'state', ci.state, 'last_review', ci.last_review,
-			'card_type', ci.card_type, 'finished_at', ci.finished_at
-		)) cards
+		select i.id, md.name, i.stage_progression "stageProgression",
+			coalesce((select json_agg(json_build_object('id', ms.id, 'name', ms.name, 'position', ms.position) order by ms.position)
+				from marketplace_stages ms where ms.marketplace_deck_id = md.id), '[]'::json) stages,
+			coalesce(json_agg(json_build_object(
+				'id', ci.id,
+				'marketplace_deck_instance_id', ci.marketplace_deck_instance_id,
+				'stage_id', mc.stage_id, 'position', mc.position,
+				'front', mc.front, 'back', mc.back,
+				'due', ci.due, 'stability', ci.stability, 'difficulty', ci.difficulty,
+				'elapsed_days', ci.elapsed_days, 'scheduled_days', ci.scheduled_days,
+				'reps', ci.reps, 'lapses', ci.lapses, 'learning_steps', ci.learning_steps,
+				'state', ci.state, 'last_review', ci.last_review,
+				'card_type', ci.card_type, 'finished_at', ci.finished_at
+			) order by ms.position, mc.position) filter (where ci.id is not null), '[]'::json) cards
 		from marketplace_deck_instances i
 		join marketplace_decks md on md.id = i.marketplace_deck_id
 		left join marketplace_card_instances ci on ci.marketplace_deck_instance_id = i.id
 		left join marketplace_cards mc on mc.id = ci.marketplace_card_id
+		left join marketplace_stages ms on ms.id = mc.stage_id
 		where i.user_id = $1 and i.id = $2
 		group by i.id, md.name`,
 		[userId, instanceId]
 	);
 
-	if (rows[0] && rows[0].cards[0]?.id === null) rows[0].cards = [];
-
 	return rows[0];
+}
+
+// the studier's own progression switch; flipping it is the same kind of
+// per-deck exception a personal deck's toggle is
+const updateInstanceStageProgression = async (userId, instanceId, value) => {
+	const { rowCount } = await pool.query(
+		"update marketplace_deck_instances set stage_progression = $3 where id = $2 and user_id = $1",
+		[userId, instanceId, value]);
+	if (rowCount === 1) {
+		await pool.query(`update "user" set "stageProgressionMode" = 'per-deck' where id = $1`, [userId]);
+	}
+
+	return rowCount === 1;
 }
 
 // Updates FSRS state on a card instance; the join enforces ownership
@@ -316,4 +342,4 @@ const createInstanceReviewLog = async (userId, instanceCardId, log) => {
 	)
 }
 
-export { themes, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, getInstanceById, updateInstanceCardStudyState, resetInstanceSchedule, createInstanceReviewLog }
+export { themes, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, getInstanceById, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }

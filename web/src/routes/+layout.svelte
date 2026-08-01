@@ -90,7 +90,9 @@
 
 				span {
 					margin-left: 5px;
-					font-family: var(--wordmark-font, roboto-mono);
+					/* the wordmark keeps its own face; the tryout font (the
+					   --wordmark-font override) dresses only the menu links */
+					font-family: roboto-mono;
 					font-size: 1.7rem;
 				}
 			}

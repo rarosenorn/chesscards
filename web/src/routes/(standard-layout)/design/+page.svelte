@@ -272,10 +272,11 @@
 	.scheme-card:hover {
 		border-color: #999;
 	}
-	/* the applied card wears the accent as its mark */
+	/* the applied card's mark stays the app's own blue: an outline in the
+	   scheme being tried would vanish on the light ones */
 	.scheme-card.applied {
-		border-color: var(--accent);
-		outline: 1px solid var(--accent);
+		border-color: #3381ca;
+		outline: 1px solid #3381ca;
 	}
 	.mini-banner {
 		display: block;

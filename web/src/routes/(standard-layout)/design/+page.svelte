@@ -32,13 +32,39 @@
 		}
 	];
 
-	const fonts = [
-		{ family: "Space Mono", note: "quirky, made for display" },
-		{ family: "JetBrains Mono", note: "clean, techy" },
-		{ family: "IBM Plex Mono", note: "typewriter neutral" },
-		{ family: "Fira Mono", note: "humanist, soft" },
-		{ family: "Red Hat Mono", note: "rounded, friendly" },
-		{ family: "Victor Mono", note: "narrow, elegant" }
+	const fontGroups = [
+		{
+			title: "Sans",
+			fonts: [
+				{ family: "Montserrat", note: "geometric, confident" },
+				{ family: "Poppins", note: "round geometric, friendly" },
+				{ family: "Inter", note: "the app's body font" },
+				{ family: "Lato", note: "warm, classic web" },
+				{ family: "Nunito", note: "soft, rounded" },
+				{ family: "Raleway", note: "elegant, thin" },
+				{ family: "Rubik", note: "sturdy, slightly rounded" },
+				{ family: "DM Sans", note: "clean, modern" }
+			]
+		},
+		{
+			title: "Serif / display",
+			fonts: [
+				{ family: "Playfair Display", note: "high-contrast, editorial" },
+				{ family: "Lora", note: "calm bookish serif" },
+				{ family: "Merriweather", note: "sturdy reading serif" }
+			]
+		},
+		{
+			title: "Mono",
+			fonts: [
+				{ family: "Space Mono", note: "quirky, made for display" },
+				{ family: "JetBrains Mono", note: "clean, techy" },
+				{ family: "IBM Plex Mono", note: "typewriter neutral" },
+				{ family: "Fira Mono", note: "humanist, soft" },
+				{ family: "Red Hat Mono", note: "rounded, friendly" },
+				{ family: "Victor Mono", note: "narrow, elegant" }
+			]
+		}
 	];
 
 	let activeAccent = $state(null);
@@ -118,22 +144,25 @@
 	</section>
 
 	<section>
-		<h3>Wordmark font</h3>
-		<div class="scheme-grid">
-			{#each fonts as font (font.family)}
-				<button
-					class="scheme-card"
-					class:applied={activeFont === font.family}
-					onclick={() => applyFont(font)}
-				>
-					<span class="mini-banner font-banner" style="font-family: '{font.family}'">Chesscards</span>
-					<span class="card-name">
-						{font.family}
-						<span class="card-note">{font.note}</span>
-					</span>
-				</button>
-			{/each}
-		</div>
+		<h3>Banner font</h3>
+		{#each fontGroups as group (group.title)}
+			<h4>{group.title}</h4>
+			<div class="scheme-grid">
+				{#each group.fonts as font (font.family)}
+					<button
+						class="scheme-card"
+						class:applied={activeFont === font.family}
+						onclick={() => applyFont(font)}
+					>
+						<span class="mini-banner font-banner" style="font-family: '{font.family}'">Chesscards <span class="font-menu-sample">My flashcards</span></span>
+						<span class="card-name">
+							{font.family}
+							<span class="card-note">{font.note}</span>
+						</span>
+					</button>
+				{/each}
+			</div>
+		{/each}
 		<button class="std-btn reset-btn" onclick={resetFont}>Reset font to app default</button>
 	</section>
 </div>
@@ -197,10 +226,19 @@
 		font-size: 1rem;
 	}
 	/* font samples wear whatever accent is applied, so the two choices can
-	   be judged together */
+	   be judged together; the small menu sample shows the same family at
+	   nav-link size */
 	.font-banner {
 		background-color: var(--accent);
 		font-size: 1.35rem;
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 10px;
+	}
+	.font-menu-sample {
+		font-size: 0.85rem;
+		color: rgba(255, 255, 255, 0.85);
 	}
 	.mini-row {
 		display: block;

@@ -140,10 +140,11 @@
 		background: white;
 		width: 100%;
 	}
-	/* our own accent focus ring on the border (like Firefox's blue) instead
-	   of Chrome's black UA outline on the contenteditable */
+	/* our own focus ring on the border (like Firefox's blue) instead of
+	   Chrome's black UA outline on the contenteditable — steel blue, held
+	   apart from the accent */
 	.tiptap:focus-within {
-		border-color: var(--accent);
+		border-color: #527ab3;
 	}
 	/* the side duplicates an existing card's: red outranks the focus ring,
 	   the side being typed in is exactly the one holding focus */

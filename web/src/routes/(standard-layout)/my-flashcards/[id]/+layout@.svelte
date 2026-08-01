@@ -50,7 +50,7 @@
 			? ["Add cards 5"] : []),
 		...(cardDrafts.addCards2 && sideHasContent(cardDrafts.addCards2.blocks)
 			? ["Add cards 2"] : []),
-		...(cardDrafts.browse?.editingCardId != null ? ["Browse / edit"] : [])
+		...(cardDrafts.browse?.editingCardId != null ? ["Cards"] : [])
 	];
 
 	// set once the user confirmed leaving, so the re-navigation passes through
@@ -93,8 +93,8 @@
 		? ["study", "browse", "settings"]
 		: ["study", "browse", "add-cards", "settings"];
 	const names = deck.isMarketplace
-		? ["Study", "Browse", "Settings"]
-		: ["Study", "Browse / edit", "Add cards", "Settings"];
+		? ["Study", "Cards", "Settings"]
+		: ["Study", "Cards", "Add cards", "Settings"];
 
 	// s/b/a jump between the deck's three working tabs. Bare letters, so they
 	// stand down wherever the keyboard is already spoken for — a text field, a

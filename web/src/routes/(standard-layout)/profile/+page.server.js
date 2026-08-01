@@ -50,7 +50,7 @@ export const actions = {
 		const data = await request.formData();
 		const mode = data.get("stage-progression-mode");
 		if (!["per-deck", "all", "none"].includes(mode)) {
-			return fail(400, { errors: ["Invalid stage progression setting"] });
+			return fail(400, { errors: ["Invalid chapter progression setting"] });
 		}
 		await decks.setStageProgressionMode(locals.userId, mode);
 		return { saved: "stage-progression" };

@@ -571,7 +571,7 @@
 				stageMenu = null;
 			}}
 		>
-			Rename stage
+			Rename chapter
 		</button>
 		{#if stagesSorted.length > 1}
 			<button
@@ -582,7 +582,7 @@
 					removeStage(id);
 				}}
 			>
-				Delete stage
+				Delete chapter
 			</button>
 		{/if}
 	</div>
@@ -710,7 +710,7 @@
 									<input
 										class="stage-rename-input"
 										autofocus
-										placeholder="Stage {group.stage.position}"
+										placeholder="Chapter {group.stage.position}"
 										bind:value={stageRename.value}
 										onblur={commitStageRename}
 										onmousedown={e => e.stopPropagation()}
@@ -743,7 +743,7 @@
 					{#if !readonly}
 						<tr class="add-stage-row">
 							<td colspan="6">
-								<button class="add-stage-btn" onmousedown={e => e.stopPropagation()} onclick={addStage}>+ Add stage</button>
+								<button class="add-stage-btn" onmousedown={e => e.stopPropagation()} onclick={addStage}>+ Add chapter</button>
 							</td>
 						</tr>
 					{/if}

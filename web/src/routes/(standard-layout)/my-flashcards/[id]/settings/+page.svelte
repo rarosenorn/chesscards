@@ -75,15 +75,15 @@
 	{/if}
 
 	<section>
-		<h3>Stage progression</h3>
+		<h3>Chapter progression</h3>
 		<p class="section-note">
-			New cards arrive stage by stage — the next stage unlocks once the one
-			before is learned. Off, every card is available from the start.
+			New cards arrive chapter by chapter — the next chapter unlocks once
+			the one before is learned. Off, every card is available from the start.
 		</p>
 		<form method="POST" action="?/progression" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
 			<label class="progression-toggle">
 				<input type="checkbox" name="value" value="true" checked={data.deck.stageProgression} />
-				Follow stage progression
+				Follow chapter progression
 			</label>
 		</form>
 	</section>

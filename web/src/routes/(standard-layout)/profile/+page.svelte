@@ -196,7 +196,7 @@
 		onchange={e => e.currentTarget.requestSubmit()}
 	>
 		<fieldset>
-			<legend>Stage progression</legend>
+			<legend>Chapter progression</legend>
 			<div class="pills">
 				{#each ["per-deck", "all", "none"] as mode}
 					<label class="pill" class:selected={stageProgressionMode === mode}>
@@ -206,9 +206,10 @@
 				{/each}
 			</div>
 			<p class="hint">
-				With stage progression a deck's new cards arrive stage by stage.
-				"All decks" and "No decks" set every deck at once; changing one
-				deck's own setting afterwards puts this back to per deck.
+				With chapter progression a deck's new cards arrive chapter by
+				chapter. "All decks" and "No decks" set every deck at once;
+				changing one deck's own setting afterwards puts this back to
+				per deck.
 			</p>
 		</fieldset>
 	</form>

@@ -11,7 +11,8 @@
 const GRADUATED_SHARE = 0.8;
 
 // the one way a stage is written out everywhere: numbered, named if it is
-const stageLabel = stage => `Stage ${stage.position}${stage.name ? ` — ${stage.name}` : ""}`;
+// (the user-facing word is "chapter"; "stage" stays the code's name)
+const stageLabel = stage => `Chapter ${stage.position}${stage.name ? ` — ${stage.name}` : ""}`;
 
 // a tactic card carries no FSRS state; its grades stamp last_review
 // (seen) and finished_at (done for good, its graduation)

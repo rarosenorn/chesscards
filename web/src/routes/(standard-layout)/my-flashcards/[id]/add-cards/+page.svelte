@@ -305,6 +305,16 @@
 
 
 <div class="type-row">
+	{#if stagesSorted.length > 1}
+		<label class="stage-picker">
+			Chapter
+			<select value={validStageId} onchange={e => chooseStage(e.currentTarget.value)}>
+				{#each stagesSorted as stage (stage.id)}
+					<option value={stage.id}>{stageLabel(stage)}</option>
+				{/each}
+			</select>
+		</label>
+	{/if}
 	<span id="card-type-label">Type</span>
 	<div class="type-segments" role="radiogroup" aria-labelledby="card-type-label">
 		{#each [
@@ -323,16 +333,6 @@
 			</button>
 		{/each}
 	</div>
-	{#if stagesSorted.length > 1}
-		<label class="stage-picker">
-			Stage
-			<select value={validStageId} onchange={e => chooseStage(e.currentTarget.value)}>
-				{#each stagesSorted as stage (stage.id)}
-					<option value={stage.id}>{stageLabel(stage)}</option>
-				{/each}
-			</select>
-		</label>
-	{/if}
 </div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
@@ -464,12 +464,12 @@
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
 	}
-	/* the stage the cards file into, off to the right of the type it pairs with */
+	/* the chapter the cards file into, leading the type it pairs with */
 	.stage-picker {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		margin-left: 12px;
+		margin-right: 12px;
 	}
 	.stage-picker select {
 		font-size: 0.85rem;

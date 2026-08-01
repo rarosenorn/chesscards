@@ -9,6 +9,19 @@
 	// pulled toward grey
 	const schemeGroups = [
 		{
+			title: "Ink — quiet deeps like the navy",
+			schemes: [
+				{ name: "Ink navy", accent: "#3f5878", hover: "#344a66", subtle: "#eef2f6", strong: "#d9e2ec" },
+				{ name: "Storm", accent: "#4f6d8f", hover: "#425c7a", subtle: "#eff3f7", strong: "#d9e2ed" },
+				{ name: "Slate", accent: "#52606d", hover: "#434f5a", subtle: "#eff2f4", strong: "#dbe2e7" },
+				{ name: "Ink teal", accent: "#3e6360", hover: "#32514e", subtle: "#ecf2f1", strong: "#d3e2e0" },
+				{ name: "Ink green", accent: "#4d6a56", hover: "#3f5847", subtle: "#eef3ef", strong: "#d7e4da" },
+				{ name: "Ink purple", accent: "#575074", hover: "#48425f", subtle: "#f0eff4", strong: "#dcdae6" },
+				{ name: "Ink wine", accent: "#6e4a56", hover: "#5b3d47", subtle: "#f4eff0", strong: "#e5d9dc" },
+				{ name: "Graphite", accent: "#50525b", hover: "#42444c", subtle: "#f0f0f2", strong: "#dcdde1" }
+			]
+		},
+		{
 			title: "Jewel — rich hues that carry white text",
 			schemes: [
 				{ name: "Deep emerald", accent: "#047857", hover: "#036649", subtle: "#e6f4f0", strong: "#c6e7dd" },
@@ -60,7 +73,6 @@
 			title: "Muted",
 			schemes: [
 				{ name: "Forest green", accent: "#4a7c59", hover: "#3e6a4b", subtle: "#edf4ee", strong: "#d5e6da" },
-				{ name: "Ink navy", accent: "#3f5878", hover: "#344a66", subtle: "#eef2f6", strong: "#d9e2ec" },
 				{ name: "Walnut", accent: "#8a6134", hover: "#75522c", subtle: "#f6f1ea", strong: "#eadfcd" },
 				{ name: "Dusty teal", accent: "#3d7676", hover: "#326262", subtle: "#ecf4f4", strong: "#d3e6e6" },
 				{ name: "Heather plum", accent: "#6d5f86", hover: "#5c5072", subtle: "#f1eff5", strong: "#e0dcea" }

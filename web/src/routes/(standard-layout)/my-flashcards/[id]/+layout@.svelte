@@ -96,10 +96,10 @@
 		? ["Study", "Cards", "Settings"]
 		: ["Study", "Cards", "Add cards", "Settings"];
 
-	// s/b/a jump between the deck's three working tabs. Bare letters, so they
+	// s/c/a jump between the deck's three working tabs. Bare letters, so they
 	// stand down wherever the keyboard is already spoken for — a text field, a
 	// card editor, or any modifier combo — the way study's own e/h/1-4 do.
-	const TAB_KEYS = { s: "study", b: "browse", a: "add-cards" };
+	const TAB_KEYS = { s: "study", c: "browse", a: "add-cards" };
 	const shortcutFor = path => Object.keys(TAB_KEYS).find(key => TAB_KEYS[key] === path);
 	const handleKeyDown = e => {
 		if (e.ctrlKey || e.metaKey || e.altKey) return;

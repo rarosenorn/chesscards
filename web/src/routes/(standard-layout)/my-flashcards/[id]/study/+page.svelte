@@ -4,7 +4,7 @@
 	import { fsrs, Rating } from "ts-fsrs"
 	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
-	import { countBoards, boardsBefore, sideHasContent } from "$lib/card-utils.js"
+	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { isSeen, unlockedStageIds, stageProgress } from "$lib/stages.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
@@ -111,6 +111,10 @@
 	let preview = $derived(isTactic ? null : scheduler.repeat(currentCard, new Date(previewAt)));
 
 	let frontBoardCount = $derived(currentCard ? countBoards(currentCard.front) : 0);
+	// where the arrows land: the card's first board that has moves to step
+	let focusBoardNumber = $derived(
+		currentCard ? firstBoardWithMoves(currentCard.front, currentCard.back) : null
+	);
 	// board numbers are only shown when the card has several boards to reference
 	let showBoardNumbers = $derived(
 		currentCard && frontBoardCount + countBoards(currentCard.back) > 1
@@ -295,7 +299,7 @@
 						authorView={marksBack}
 						minWidth="280px"
 						number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null}
-						autoFocus={boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex === 0}
+						autoFocus={boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex === focusBoardNumber}
 					/>
 					</div>
 				{/each}

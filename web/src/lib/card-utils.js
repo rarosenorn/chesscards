@@ -277,4 +277,21 @@ const countBoards = side => side.reduce(
 
 const boardsBefore = (side, blockIndex) => countBoards(side.slice(0, blockIndex));
 
-export { newBoard, normalizeBoard, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, invalidBoardNumbers, invalidFenMessage }
+// The card-wide number of its first board that has moves to step through —
+// where the arrow keys should land — or null when no board has any. Counts
+// front then back, the order the numbers run on the card.
+const firstBoardWithMoves = (front, back) => {
+	let number = 0;
+	for (const side of [front ?? [], back ?? []]) {
+		for (const block of side) {
+			if (block.type !== "chessboards") continue;
+			for (const board of block.content) {
+				if (typeof board !== "string" && (board.moves?.length ?? 0) > 0) return number;
+				number++;
+			}
+		}
+	}
+	return null;
+}
+
+export { newBoard, normalizeBoard, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage }

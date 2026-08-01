@@ -1,11 +1,13 @@
 <script>
 	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "../tiptap-utility.js"
-	import { countBoards, boardsBefore, sideHasContent } from "../card-utils.js"
+	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "../card-utils.js"
 	import Chessboard from "./Chessboard.svelte"
 
 	let { card } = $props();
 
+	// where the arrows land: the card's first board that has moves to step
+	let focusBoardNumber = $derived(firstBoardWithMoves(card.front, card.back));
 	let frontBoardCount = $derived(countBoards(card.front));
 	// board numbers are only shown when the card has several boards to reference
 	let showBoardNumbers = $derived(frontBoardCount + countBoards(card.back) > 1);
@@ -37,7 +39,7 @@
 						{authorView}
 						minWidth="280px"
 						number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null}
-						autoFocus={boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex === 0}
+						autoFocus={boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex === focusBoardNumber}
 					/>
 					</div>
 				{/each}

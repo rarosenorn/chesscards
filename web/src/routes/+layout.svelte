@@ -78,7 +78,7 @@
 		.left-nav {
 			margin-top: 4px;
 			display: flex;
-			gap: 32px;
+			gap: 22px;
 			align-items: center;
 			#logo-anchor-tag {
 				display: flex;
@@ -127,7 +127,7 @@
 		}
 		nav {
 			display: flex;
-			gap: 2px;
+			gap: 6px;
 			a {
 				padding: 12px 8px;
 				color: rgba(255, 255, 255, 0.85);

@@ -724,7 +724,6 @@
 									<button class="stage-toggle" onmousedown={e => e.stopPropagation()} onclick={() => draft.collapsed[group.stage.id] = !group.collapsed}>
 										<span class="collapse-arrow" class:collapsed={group.collapsed}></span>
 										<span class="stage-name">{stageLabel(group.stage)}</span>
-										<span class="stage-count">{group.cards.length}</span>
 										{#if deck.stageProgression && !unlockedStages.has(group.stage.id)}
 											<svg class="stage-lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
 												<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
@@ -1067,10 +1066,6 @@
 	}
 	.collapse-arrow.collapsed {
 		transform: none;
-	}
-	.stage-count {
-		font-weight: 400;
-		color: rgba(0, 0, 0, 0.45);
 	}
 	.stage-lock {
 		width: 13px;

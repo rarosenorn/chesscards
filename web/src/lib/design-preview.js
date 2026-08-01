@@ -8,7 +8,7 @@
 const SCHEME_KEY = "chesscards:scheme-preview";
 const FONT_KEY = "chesscards:font-preview";
 
-const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Fira+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Lato:wght@400;700&family=Lora:wght@400;600&family=Merriweather:wght@400;700&family=Montserrat:wght@400;600&family=Nunito:wght@400;700&family=Playfair+Display:wght@400;600&family=Poppins:wght@400;600&family=Raleway:wght@400;600&family=Red+Hat+Mono:wght@400;500&family=Rubik:wght@400;600&family=Space+Mono:wght@400;700&family=Victor+Mono:wght@400;500&display=swap";
+const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Fira+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Lato:wght@400;700&family=Lexend:wght@400;500;600&family=Lora:wght@400;500;600&family=Manrope:wght@400;500;600&family=Merriweather:wght@400;700&family=Montserrat:wght@400;500;600&family=Nunito:wght@400;500;600;700&family=Outfit:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600&family=Poppins:wght@400;500;600&family=Raleway:wght@400;500;600&family=Red+Hat+Mono:wght@400;500;600&family=Rubik:wght@400;500;600&family=Sora:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Victor+Mono:wght@400;500;600&display=swap";
 
 const readPreview = key => {
 	try {

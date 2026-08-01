@@ -14,6 +14,8 @@
 				{ name: "Current blue", accent: "#3381ca", hover: "#2b6dab", subtle: "#ebf3fa", strong: "#d4e5f5" },
 				{ name: "Royal blue", accent: "#2b6be6", hover: "#2258c4", subtle: "#ecf2fd", strong: "#d3e1fb" },
 				{ name: "Cobalt", accent: "#1d4ed8", hover: "#1841b4", subtle: "#eaeffc", strong: "#cfdbf9" },
+				{ name: "Ultramarine", accent: "#4338ca", hover: "#3730a3", subtle: "#efeefb", strong: "#dcd9f5" },
+				{ name: "Navy cobalt", accent: "#1e3a8a", hover: "#172d6e", subtle: "#eaeef8", strong: "#d0d9ee" },
 				{ name: "Indigo", accent: "#4f46e5", hover: "#423bc2", subtle: "#efeefd", strong: "#dcdafa" },
 				{ name: "Azure", accent: "#0284c7", hover: "#026da5", subtle: "#e7f4fb", strong: "#c8e6f5" },
 				{ name: "Emerald", accent: "#18a34b", hover: "#148a3f", subtle: "#e9f7ee", strong: "#cdeeda" },
@@ -37,6 +39,18 @@
 	];
 
 	const fontGroups = [
+		{
+			title: "Sturdy — real 500/600 cuts",
+			fonts: [
+				{ family: "Space Grotesk", note: "Space Mono's proportional sibling" },
+				{ family: "Manrope", note: "solid, modern" },
+				{ family: "Outfit", note: "geometric, even" },
+				{ family: "Sora", note: "wide, technical" },
+				{ family: "Lexend", note: "broad, heavy presence" },
+				{ family: "Plus Jakarta Sans", note: "rounded sturdy" },
+				{ family: "Barlow", note: "grotesque, workmanlike" }
+			]
+		},
 		{
 			title: "Sans",
 			fonts: [
@@ -242,6 +256,9 @@
 	}
 	.font-menu-sample {
 		font-size: 0.85rem;
+		/* the weight the real menu wears, so the sample tells the truth about
+		   families lacking a 500 cut */
+		font-weight: 500;
 		color: rgba(255, 255, 255, 0.85);
 	}
 	.mini-row {

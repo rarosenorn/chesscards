@@ -1,5 +1,6 @@
 <script>
 	import { setContext } from "svelte"
+	import { browser } from "$app/environment"
 	import favicon from '$lib/assets/favicon.svg';
 	import Logo from "$lib/assets/Logo.svelte"
 	import ModalHost from "$lib/components/ModalHost.svelte"
@@ -13,6 +14,23 @@
 	// every chessboard in the app reads the user's board preferences from here
 	// (a getter so consumers stay reactive to profile changes)
 	setContext("boardPrefs", () => data.boardPrefs ?? DEFAULT_BOARD_PREFS);
+
+	// a color scheme being tried on /color-schemes rides along on every page
+	// until reset there — the stored values override app.css's accent vars
+	if (browser) {
+		try {
+			const scheme = JSON.parse(localStorage.getItem("chesscards:scheme-preview"));
+			if (scheme?.accent) {
+				const root = document.documentElement.style;
+				root.setProperty("--accent", scheme.accent);
+				root.setProperty("--accent-hover", scheme.hover);
+				root.setProperty("--accent-subtle", scheme.subtle);
+				root.setProperty("--accent-subtle-strong", scheme.strong);
+			}
+		} catch {
+			// an unreadable entry just means no preview
+		}
+	}
 </script>
 
 <svelte:head>
@@ -26,11 +44,10 @@
 			<nav>
 				{#each [
 					["/my-flashcards", "My flashcards"],
-					["/statistics", "Statistics"],
 					["/marketplace", "Marketplace"],
 					["/why-flashcards", "Why flashcards?"],
 					["/faq", "FAQ"],
-					...(data.user?.isAdmin ? [["/admin", "Admin"]] : [])
+					["/wiki", "Wiki"]
 				] as [href, label]}
 					<a {href}>{label}</a>
 				{/each}

@@ -78,7 +78,7 @@
 		.left-nav {
 			margin-top: 4px;
 			display: flex;
-			gap: 15px;
+			gap: 32px;
 			align-items: center;
 			#logo-anchor-tag {
 				display: flex;
@@ -104,7 +104,7 @@
 				color: rgba(255, 255, 255, 0.85);
 				text-decoration: none;
 				font-family: var(--wordmark-font, inherit);
-				font-weight: 500;
+				font-weight: 600;
 			}
 			.nav-link:hover {
 				color: white;
@@ -127,13 +127,13 @@
 		}
 		nav {
 			display: flex;
-			gap: 10px;
+			gap: 2px;
 			a {
 				padding: 12px 8px;
 				color: rgba(255, 255, 255, 0.85);
 				text-decoration: none;
 				font-family: var(--wordmark-font, inherit);
-				font-weight: 500;
+				font-weight: 600;
 			}
 			a:hover {
 				color: white;

@@ -9,6 +9,14 @@
 	// pulled toward grey
 	const schemeGroups = [
 		{
+			title: "Ink navy, pulled bluer and lighter",
+			schemes: [
+				{ name: "Ink blue", accent: "#44608c", hover: "#38507a", subtle: "#eef2f7", strong: "#d8e1ee" },
+				{ name: "Denim ink", accent: "#4a6ba0", hover: "#3d5a89", subtle: "#eff3f9", strong: "#d9e2f1" },
+				{ name: "Steel blue", accent: "#527ab3", hover: "#45689b", subtle: "#f0f4fa", strong: "#dbe5f4" }
+			]
+		},
+		{
 			title: "Ink — quiet deeps like the navy",
 			schemes: [
 				{ name: "Ink navy", accent: "#3f5878", hover: "#344a66", subtle: "#eef2f6", strong: "#d9e2ec" },

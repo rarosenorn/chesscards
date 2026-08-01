@@ -295,6 +295,7 @@
 						authorView={marksBack}
 						minWidth="280px"
 						number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null}
+						autoFocus={boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex === 0}
 					/>
 					</div>
 				{/each}

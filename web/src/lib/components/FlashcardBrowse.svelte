@@ -32,7 +32,13 @@
 					<div class="board-container">
 						<!-- low floor: two squeezed boards must shrink, not overflow
 					     their cells and crush the gap between them -->
-					<Chessboard board={chessboard} {authorView} minWidth="280px" number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null} />
+					<Chessboard
+						board={chessboard}
+						{authorView}
+						minWidth="280px"
+						number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null}
+						autoFocus={boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex === 0}
+					/>
 					</div>
 				{/each}
 			</div>

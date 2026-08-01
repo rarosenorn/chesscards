@@ -26,7 +26,7 @@
 	// the card has more than one board (the block editor numbers with a CSS
 	// counter instead — see CardSideBlockEditor — because numbering there runs
 	// across blocks in document order).
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, children } = $props();
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, autoFocus = false, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -202,6 +202,19 @@
 		pointerFocus = true;
 		wrapperElement.focus({ preventScroll: true });
 	}
+
+	// The active card's first board takes focus as its card arrives (study's
+	// current card, the Cards preview), so ←/→ step the moves without a
+	// click first. Never off a field being typed in, and quietly: an arrival
+	// the user did not tab to draws no keyboard ring, like takeFocus above.
+	$effect(() => {
+		void normalized;
+		if (!autoFocus || !hasMoves || !wrapperElement) return;
+		const active = document.activeElement;
+		if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT" || active.isContentEditable)) return;
+		pointerFocus = true;
+		wrapperElement.focus({ preventScroll: true });
+	});
 
 	let wheelAcc = 0;
 	let lastWheel = 0;

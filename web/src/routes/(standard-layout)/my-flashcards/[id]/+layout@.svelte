@@ -22,7 +22,7 @@
 	// In-progress card state for the editor-trial and browse tabs. It lives
 	// here, in the layout that stays mounted across tab navigation, so
 	// switching tabs doesn't wipe a half-written card; leaving the deck
-	// discards it (after the warning below). The Add cards 1 tab is not in
+	// discards it (after the warning below). The Add cards tab is not in
 	// here: it keeps its draft in localStorage (add-cards-draft.js), which
 	// survives leaving the deck and a reload, so it needs no warning.
 	const cardDrafts = $state({ addCards: null, browse: null });
@@ -87,15 +87,14 @@
 	});
 	// marketplace deck instances are readonly, so no editing tabs; settings is
 	// there for the one thing that is theirs, resetting their study progress.
-	// "Add cards 2" (single Q/A list) and "Add cards 3" (one tiptap document
-	// per side, boards as PM nodes) are editor trials kept next to the classic
-	// front/back editor for side-by-side comparison.
+	// the editor trials (add-cards-2/-3/-5) keep their routes but lost their
+	// tabs: the block editor won, and only it is offered
 	const paths = deck.isMarketplace
 		? ["study", "browse", "settings"]
-		: ["study", "browse", "add-cards", "add-cards-2", "add-cards-3", "add-cards-5", "settings"];
+		: ["study", "browse", "add-cards", "settings"];
 	const names = deck.isMarketplace
 		? ["Study", "Browse", "Settings"]
-		: ["Study", "Browse / edit", "Add cards 1", "Add cards 2", "Add cards 3", "Add cards 5", "Settings"];
+		: ["Study", "Browse / edit", "Add cards", "Settings"];
 
 	// s/b/a jump between the deck's three working tabs. Bare letters, so they
 	// stand down wherever the keyboard is already spoken for — a text field, a

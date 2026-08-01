@@ -15,8 +15,9 @@
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
 	import { canonicalSideJson } from "$lib/card-utils.js"
+	import { unlockedStageIds, stageLabel } from "$lib/stages.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
-	import { updateCardContent, updateCardType, deleteCards } from "./browse.remote.js"
+	import { updateCardContent, updateCardType, deleteCards, createStage, renameStage, deleteStage, moveCards } from "./browse.remote.js"
 
 	let deck = getContext("deck");
 	// marketplace deck instances can only be viewed, not edited
@@ -41,6 +42,8 @@
 	// a draft written before sorting existed carries neither field
 	draft.sortColumn ??= "order";
 	draft.sortDescending ??= false;
+	// collapsed stage ids, kept across tab visits like the sort
+	draft.collapsed ??= {};
 
 	// returning to the tab reselects where it was left — the card being
 	// edited, or failing that the one being previewed. Captured non-reactively
@@ -98,15 +101,47 @@
 				: deck.cards
 	);
 
-	// the deck's own order, which the Order column shows and sorts by — the
-	// place a stored per-card order will land
-	let deckOrder = $derived(new Map(deck.cards.map((card, index) => [card.id, index])));
+	// --- stages ---
+	// The deck's stages carry the order: the Order column reads
+	// stage.position-in-stage ("2.17"), and with the table sorted by Order
+	// and unfiltered, the rows sit grouped under collapsible stage headers.
+	let stagesSorted = $derived([...deck.stages].sort((a, b) => a.position - b.position));
+	let stagePositions = $derived(new Map(deck.stages.map(stage => [stage.id, stage.position])));
+	let unlockedStages = $derived(unlockedStageIds(deck.stages, deck.cards));
+
+	let stageCards = $derived.by(() => {
+		const map = new Map(stagesSorted.map(stage => [stage.id, []]));
+		for (const card of [...deck.cards].sort((a, b) => a.position - b.position)) {
+			map.get(card.stage_id)?.push(card);
+		}
+		return map;
+	});
+	// "2.17" per card — from the sorted index, not the stored position, so a
+	// gap the server has not renumbered yet cannot show through
+	let orderLabels = $derived.by(() => {
+		const labels = new Map();
+		for (const stage of stagesSorted) {
+			stageCards.get(stage.id).forEach((card, index) => labels.set(card.id, `${stage.position}.${index + 1}`));
+		}
+		return labels;
+	});
+
+	// Stage ops renumber across the deck, so they answer with the fresh deck;
+	// land it in the shared context and re-find the selection among the new
+	// card objects.
+	const applyFresh = fresh => {
+		const keep = selectedCard?.id;
+		Object.assign(deck, fresh);
+		selectedCard = deck.cards.find(card => card.id === keep) ?? deck.cards[0];
+		multiSelected = new SvelteSet([...multiSelected].filter(id => deck.cards.some(card => card.id === id)));
+		anchorIndex = null;
+	}
 
 	// What each sortable column sorts on. A null sorts last whichever way the
 	// column runs: those rows show "—", and a blank belongs at the end rather
 	// than crowding whichever end is being read.
 	const sortValues = {
-		order: card => deckOrder.get(card.id),
+		order: card => stagePositions.get(card.stage_id) * 100000 + card.position,
 		front: card => getFrontIndicator(card.front)?.toLowerCase() ?? null,
 		type: card => (card.card_type === "tactic" ? 1 : 0),
 		// the due date itself, so ascending is soonest-due first — the order
@@ -125,10 +160,26 @@
 		return (x < y ? -1 : 1) * (descending ? -1 : 1);
 	}
 
+	// The stage headers only frame the table when it shows the deck's own
+	// order, whole: a search result or another column's sort is a flat list.
+	let groupedRows = $derived.by(() => {
+		if (draft.sortColumn !== "order" || searchFilter || dupFilter) return null;
+		const stages = draft.sortDescending ? [...stagesSorted].reverse() : stagesSorted;
+		return stages.map(stage => ({
+			stage,
+			cards: draft.sortDescending ? [...stageCards.get(stage.id)].reverse() : stageCards.get(stage.id),
+			collapsed: !!draft.collapsed[stage.id]
+		}));
+	});
+
 	// A column is always sorted — Order ascending is the deck's own order, the
 	// table's default. Sort is stable, so that order still decides ties.
+	// Grouped, this is the visible rows: a collapsed stage's cards drop out of
+	// arrow navigation and range selection with their rows.
 	let filteredCards = $derived(
-		[...matchedCards].sort(compareBy(draft.sortColumn, draft.sortDescending))
+		groupedRows
+			? groupedRows.flatMap(group => group.collapsed ? [] : group.cards)
+			: [...matchedCards].sort(compareBy(draft.sortColumn, draft.sortDescending))
 	);
 
 	// a header sorts ascending, and flips direction from there; the way back to
@@ -234,6 +285,119 @@
 		if (dragging) selectRange(anchorIndex, index);
 	}
 
+	// --- reordering ---
+	// The Order cell is the handle: a drag from it moves the selection (or its
+	// own row) and drops before/after the row under the cursor, or onto a
+	// stage header for the top of that stage; a plain click on it opens the
+	// order for typing ("3.3" — stage, then place in stage). Both need the
+	// grouped view; the drag also needs ascending, where "before" reads the
+	// way the numbers run.
+	let reorderDrag = $state(null);
+	let orderEdit = $state(null);
+
+	const handleOrderMouseDown = (e, card) => {
+		if (e.button !== 0 || readonly || !groupedRows) return;
+		e.stopPropagation();
+		e.preventDefault();
+		const cardIds = multiSelected.has(card.id)
+			? filteredCards.filter(c => multiSelected.has(c.id)).map(c => c.id)
+			: [card.id];
+		reorderDrag = { cardIds, card, started: false, startX: e.clientX, startY: e.clientY, over: null };
+	}
+
+	const handleWindowMouseMove = e => {
+		if (!reorderDrag || reorderDrag.started || draft.sortDescending) return;
+		if (Math.abs(e.clientX - reorderDrag.startX) + Math.abs(e.clientY - reorderDrag.startY) > 5) {
+			reorderDrag.started = true;
+		}
+	}
+
+	const handleRowDragOver = (e, card) => {
+		if (!reorderDrag?.started || reorderDrag.cardIds.includes(card.id)) return;
+		const rect = e.currentTarget.getBoundingClientRect();
+		const before = e.clientY < rect.top + rect.height / 2;
+		const list = stageCards.get(card.stage_id).filter(c => !reorderDrag.cardIds.includes(c.id));
+		reorderDrag.over = {
+			stageId: card.stage_id,
+			index: list.indexOf(card) + (before ? 0 : 1),
+			cardId: card.id,
+			before
+		};
+	}
+
+	const handleStageDragOver = stage => {
+		if (!reorderDrag?.started) return;
+		reorderDrag.over = { stageId: stage.id, index: 0, headerId: stage.id };
+	}
+
+	const finishReorderDrag = async () => {
+		const drag = reorderDrag;
+		reorderDrag = null;
+		if (!drag) return;
+		if (!drag.started) {
+			openOrderEdit(drag.card);
+			return;
+		}
+		if (!drag.over) return;
+		applyFresh(await moveCards({
+			deckId: deck.id, cardIds: drag.cardIds, stageId: drag.over.stageId, index: drag.over.index
+		}));
+	}
+
+	const openOrderEdit = card => {
+		orderEdit = { cardId: card.id, value: orderLabels.get(card.id) };
+	}
+
+	// "3.3" makes the card the third of stage 3, pushing the rest along;
+	// anything unparsable, an unknown stage, or an out-of-range place falls
+	// back to the order as it stands
+	const commitOrderEdit = async () => {
+		const edit = orderEdit;
+		orderEdit = null;
+		if (!edit || edit.value === orderLabels.get(edit.cardId)) return;
+		const match = edit.value.trim().match(/^(\d+)\.(\d+)$/);
+		if (!match) return;
+		const stage = stagesSorted.find(s => s.position === Number(match[1]));
+		if (!stage) return;
+		const place = Number(match[2]);
+		const others = stageCards.get(stage.id).filter(c => c.id !== edit.cardId);
+		if (place < 1 || place > others.length + 1) return;
+		applyFresh(await moveCards({
+			deckId: deck.id, cardIds: [edit.cardId], stageId: stage.id, index: place - 1
+		}));
+	}
+
+	// --- stage management ---
+	// the header's own context menu: rename inline, delete (its cards join the
+	// neighbouring stage), with new stages appended from the row under the table
+	let stageMenu = $state(null);
+	let stageRename = $state(null);
+
+	const handleStageContextMenu = (e, stage) => {
+		if (readonly) return;
+		e.preventDefault();
+		e.stopPropagation();
+		stageMenu = { x: e.clientX, y: e.clientY, stage };
+	}
+
+	const addStage = async () => applyFresh(await createStage({ deckId: deck.id, name: null }));
+
+	const commitStageRename = async () => {
+		const rename = stageRename;
+		stageRename = null;
+		if (!rename) return;
+		applyFresh(await renameStage({ deckId: deck.id, stageId: rename.stageId, name: rename.value.trim() }));
+	}
+
+	const removeStage = async stageId =>
+		applyFresh(await deleteStage({ deckId: deck.id, stageId }));
+
+	const moveSelectedToStage = async stageId => {
+		const cardIds = filteredCards.filter(c => multiSelected.has(c.id)).map(c => c.id);
+		if (cardIds.length === 0) return;
+		applyFresh(await moveCards({ deckId: deck.id, cardIds, stageId, index: null }));
+	}
+
 	// { x, y } where the context menu is open, or null
 	let contextMenu = $state(null);
 
@@ -319,11 +483,15 @@
 </script>
 
 <svelte:window
-	onmouseup={() => dragging = false}
-	onmousedown={() => contextMenu = null}
+	onmouseup={() => { dragging = false; finishReorderDrag(); }}
+	onmousemove={handleWindowMouseMove}
+	onmousedown={() => { contextMenu = null; stageMenu = null; }}
 	onkeydown={e => {
 		if (e.key === "Escape") {
 			contextMenu = null;
+			stageMenu = null;
+			reorderDrag = null;
+			orderEdit = null;
 		} else if (
 			e.key === "e" && !e.ctrlKey && !e.metaKey && !e.altKey &&
 			!readonly && selectedCard && !isEditingSelected &&
@@ -364,6 +532,19 @@
 				Edit card
 			</button>
 		{/if}
+		{#if stagesSorted.length > 1}
+			<div class="menu-heading">Move to</div>
+			{#each stagesSorted as stage (stage.id)}
+				<button
+					onclick={() => {
+						contextMenu = null;
+						moveSelectedToStage(stage.id);
+					}}
+				>
+					{stageLabel(stage)}
+				</button>
+			{/each}
+		{/if}
 		<button
 			class="danger"
 			onclick={() => {
@@ -373,6 +554,37 @@
 		>
 			{multiSelected.size > 1 ? `Delete ${multiSelected.size} cards` : "Delete card"}
 		</button>
+	</div>
+{/if}
+
+{#if stageMenu}
+	<div
+		class="context-menu"
+		role="menu"
+		tabindex="-1"
+		style="left: {stageMenu.x}px; top: {stageMenu.y}px"
+		onmousedown={e => e.stopPropagation()}
+	>
+		<button
+			onclick={() => {
+				stageRename = { stageId: stageMenu.stage.id, value: stageMenu.stage.name ?? "" };
+				stageMenu = null;
+			}}
+		>
+			Rename stage
+		</button>
+		{#if stagesSorted.length > 1}
+			<button
+				class="danger"
+				onclick={() => {
+					const id = stageMenu.stage.id;
+					stageMenu = null;
+					removeStage(id);
+				}}
+			>
+				Delete stage
+			</button>
+		{/if}
 	</div>
 {/if}
 
@@ -417,47 +629,130 @@
 					{/each}
 				</tr>
 			</thead>
-			<tbody>
-				{#each filteredCards as card, cardIndex (card.id)}
-					{@const indicator = getFrontIndicator(card.front)}
-					{@const boardCount = card.front.find(block => block.type === "chessboards")?.content.length ?? 0}
-					<tr
-						class:active={card.id === selectedCard.id}
-						class:multi-selected={multiSelected.has(card.id)}
-						onmousedown={e => handleRowMouseDown(e, card, cardIndex)}
-						onmouseenter={() => handleRowMouseEnter(cardIndex)}
-						oncontextmenu={e => handleRowContextMenu(e, card, cardIndex)}
+			{#snippet cardRow(card)}
+				{@const indicator = getFrontIndicator(card.front)}
+				{@const boardCount = card.front.find(block => block.type === "chessboards")?.content.length ?? 0}
+				<tr
+					class:active={card.id === selectedCard.id}
+					class:multi-selected={multiSelected.has(card.id)}
+					class:drop-before={reorderDrag?.over?.cardId === card.id && reorderDrag.over.before}
+					class:drop-after={reorderDrag?.over?.cardId === card.id && !reorderDrag.over.before}
+					onmousedown={e => handleRowMouseDown(e, card, filteredCards.indexOf(card))}
+					onmouseenter={() => handleRowMouseEnter(filteredCards.indexOf(card))}
+					onmousemove={e => handleRowDragOver(e, card)}
+					oncontextmenu={e => handleRowContextMenu(e, card, filteredCards.indexOf(card))}
+				>
+					<!-- the Order cell is the reorder handle: drag moves the row,
+					     a plain click opens the number for typing -->
+					<td
+						class="col-order"
+						class:order-handle={!readonly && groupedRows}
+						onmousedown={orderEdit?.cardId === card.id ? undefined : e => handleOrderMouseDown(e, card)}
 					>
-						<td class="col-order">{deckOrder.get(card.id) + 1}</td>
-						<td>
-							{#if indicator}
-								{indicator}
-							{:else}
-								<span class="board-only">{boardCount > 1 ? "{{chessboards}}" : "{{chessboard}}"}</span>
-							{/if}
-						</td>
-						<td class:type-cell={!readonly}>
-							{#if readonly}
-								{card.card_type === "tactic" ? "Tactic" : "Basic"}
-							{:else}
-								<!-- the press is kept off the row: picking a type is not
-								     selecting or sweeping through cards -->
-								<select
-									class="type-select"
-									value={card.card_type}
-									onmousedown={e => e.stopPropagation()}
-									onchange={e => changeCardType(card, e.currentTarget.value)}
-								>
-									<option value="basic">Basic</option>
-									<option value="tactic">Tactic</option>
-								</select>
-							{/if}
-						</td>
-						<td>{formatDue(card)}</td>
-						<td>{card.reps ?? "—"}</td>
-						<td>{card.card_type === "tactic" ? "—" : stateNames[card.state]}</td>
-					</tr>
-				{/each}
+						{#if orderEdit?.cardId === card.id}
+							<!-- svelte-ignore a11y_autofocus -- the input exists because the user just clicked here -->
+							<input
+								class="order-input"
+								autofocus
+								bind:value={orderEdit.value}
+								onblur={commitOrderEdit}
+								onkeydown={e => {
+									if (e.key === "Enter") commitOrderEdit();
+									if (e.key === "Escape") orderEdit = null;
+									e.stopPropagation();
+								}}
+							/>
+						{:else}
+							{orderLabels.get(card.id)}
+						{/if}
+					</td>
+					<td>
+						{#if indicator}
+							{indicator}
+						{:else}
+							<span class="board-only">{boardCount > 1 ? "{{chessboards}}" : "{{chessboard}}"}</span>
+						{/if}
+					</td>
+					<td class:type-cell={!readonly}>
+						{#if readonly}
+							{card.card_type === "tactic" ? "Tactic" : "Basic"}
+						{:else}
+							<!-- the press is kept off the row: picking a type is not
+							     selecting or sweeping through cards -->
+							<select
+								class="type-select"
+								value={card.card_type}
+								onmousedown={e => e.stopPropagation()}
+								onchange={e => changeCardType(card, e.currentTarget.value)}
+							>
+								<option value="basic">Basic</option>
+								<option value="tactic">Tactic</option>
+							</select>
+						{/if}
+					</td>
+					<td>{formatDue(card)}</td>
+					<td>{card.reps ?? "—"}</td>
+					<td>{card.card_type === "tactic" ? "—" : stateNames[card.state]}</td>
+				</tr>
+			{/snippet}
+			<tbody>
+				{#if groupedRows}
+					{#each groupedRows as group (group.stage.id)}
+						<tr
+							class="stage-row"
+							class:drop-into={reorderDrag?.over?.headerId === group.stage.id}
+							onmousemove={() => handleStageDragOver(group.stage)}
+							oncontextmenu={e => handleStageContextMenu(e, group.stage)}
+						>
+							<td colspan="6">
+								{#if stageRename?.stageId === group.stage.id}
+									<!-- svelte-ignore a11y_autofocus -- the input exists because the user just asked to rename -->
+									<input
+										class="stage-rename-input"
+										autofocus
+										placeholder="Stage {group.stage.position}"
+										bind:value={stageRename.value}
+										onblur={commitStageRename}
+										onmousedown={e => e.stopPropagation()}
+										onkeydown={e => {
+											if (e.key === "Enter") commitStageRename();
+											if (e.key === "Escape") { stageRename = null; e.stopPropagation(); }
+											e.stopPropagation();
+										}}
+									/>
+								{:else}
+									<button class="stage-toggle" onmousedown={e => e.stopPropagation()} onclick={() => draft.collapsed[group.stage.id] = !group.collapsed}>
+										<span class="collapse-arrow" class:collapsed={group.collapsed}></span>
+										<span class="stage-name">{stageLabel(group.stage)}</span>
+										<span class="stage-count">{group.cards.length}</span>
+										{#if deck.stageProgression && !unlockedStages.has(group.stage.id)}
+											<svg class="stage-lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
+												<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
+												<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+											</svg>
+										{/if}
+									</button>
+								{/if}
+							</td>
+						</tr>
+						{#if !group.collapsed}
+							{#each group.cards as card (card.id)}
+								{@render cardRow(card)}
+							{/each}
+						{/if}
+					{/each}
+					{#if !readonly}
+						<tr class="add-stage-row">
+							<td colspan="6">
+								<button class="add-stage-btn" onmousedown={e => e.stopPropagation()} onclick={addStage}>+ Add stage</button>
+							</td>
+						</tr>
+					{/if}
+				{:else}
+					{#each filteredCards as card (card.id)}
+						{@render cardRow(card)}
+					{/each}
+				{/if}
 			</tbody>
 		</table>
 		</div>
@@ -736,6 +1031,115 @@
 		margin-top: 16px;
 		margin-bottom: 0;
 		padding: 12px 30px;
+	}
+	/* --- stage rows --- */
+	/* a band between the card rows, greyer than the zebra so it reads as
+	   structure rather than another card (the selector out-weighs the zebra
+	   and hover rules, which would otherwise repaint it as a card row) */
+	tbody tr.stage-row td,
+	tbody tr.stage-row:hover td {
+		background-color: #e9e9e9;
+		border-right: none;
+		padding: 0;
+		cursor: default;
+	}
+	.stage-toggle {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 100%;
+		padding: 4px 8px;
+		border: none;
+		background: none;
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: rgba(0, 0, 0, 0.65);
+		cursor: pointer;
+	}
+	/* the sort arrow's cut, turned to point along the closed/open states */
+	.collapse-arrow {
+		flex: none;
+		width: 6px;
+		height: 9px;
+		background-color: rgba(0, 0, 0, 0.55);
+		clip-path: polygon(0 0, 100% 50%, 0 100%);
+		transform: rotate(90deg);
+	}
+	.collapse-arrow.collapsed {
+		transform: none;
+	}
+	.stage-count {
+		font-weight: 400;
+		color: rgba(0, 0, 0, 0.45);
+	}
+	.stage-lock {
+		width: 13px;
+		height: 13px;
+		color: rgba(0, 0, 0, 0.55);
+	}
+	.stage-rename-input {
+		width: 280px;
+		margin: 1px 8px;
+		padding: 2px 6px;
+		border: 1px solid var(--accent);
+		border-radius: 0;
+		font-size: 0.8rem;
+		font-weight: 600;
+	}
+	.stage-rename-input:focus {
+		outline: none;
+	}
+	.add-stage-btn {
+		width: 100%;
+		padding: 4px 8px;
+		border: none;
+		background: none;
+		text-align: left;
+		font-size: 0.8rem;
+		color: rgba(0, 0, 0, 0.45);
+		cursor: pointer;
+	}
+	.add-stage-btn:hover {
+		color: black;
+	}
+	tbody tr.add-stage-row td,
+	tbody tr.add-stage-row:hover td {
+		background-color: white;
+		border-right: none;
+		padding: 0;
+		cursor: default;
+	}
+	/* --- reordering --- */
+	.order-handle {
+		cursor: grab;
+	}
+	/* the drop target: an accent rule on the edge the cards would land at */
+	tr.drop-before td {
+		box-shadow: inset 0 2px 0 var(--accent);
+	}
+	tr.drop-after td {
+		box-shadow: inset 0 -2px 0 var(--accent);
+	}
+	tr.stage-row.drop-into td {
+		box-shadow: inset 0 -2px 0 var(--accent);
+	}
+	.order-input {
+		width: 100%;
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0 2px;
+		border: 1px solid var(--accent);
+		border-radius: 0;
+		font: inherit;
+	}
+	.order-input:focus {
+		outline: none;
+	}
+	.menu-heading {
+		padding: 4px 12px 2px 12px;
+		font-size: 0.75rem;
+		color: rgba(0, 0, 0, 0.45);
+		border-top: 1px solid #eee;
 	}
 	.context-menu {
 		position: fixed;

@@ -14,7 +14,7 @@
 	   size in disguise — a board is half the card — so anything that has to
 	   line up with a card's edge reads it from here rather than repeating
 	   the number (browse's toolbar does). */
-	--flashcard-width: 720px;
+	--flashcard-width: 848px;
 	/* The card's floor: what a line of text, a lone board with its move line,
 	   the divider and a line of text on the back come to — the shape most
 	   cards have, held so revealing the answer does not resize the card
@@ -218,16 +218,14 @@ body.piece-grabbing * {
 	align-items: center;
 }
 .flashcard .text-block {
-	/* the boards' own inset, so text and boards share one edge and the card
-	   reads as a single column. Wrapping therefore runs to the card's width —
-	   ~100 characters at 900px, past the 45–75 ideal, and the 1.5 line height
-	   is what carries it. The alternative was text stopping short of the
-	   boards' edge, which reads as broken rather than as a margin; a stricter
-	   measure would only be honest if the boards narrowed with it, and they
-	   are the reason the card is this wide. The editors are uncapped for the
-	   same reason, so a line now breaks where it will on the card. */
 	padding: 0 10px;
-	max-width: 100%;
+	/* Text carries its own measure now, apart from the boards: the card is
+	   wide for their sake, and prose runs to ~72 characters centered inside
+	   it — the chess-book arrangement, diagrams wide and text at reading
+	   width. Short text still centers (the block shrink-wraps), so only
+	   wrapped paragraphs feel the cap. The editors stay uncapped, so a line
+	   there breaks wider than it will on the card. */
+	max-width: min(100%, 72ch);
 }
 /* Text needs no alignment rule of its own: the block is only as wide as its
    text up to the measure, and the side centers it. Short text is therefore
@@ -281,18 +279,20 @@ body.piece-grabbing * {
 	align-self: stretch;
 	margin: 16px 0;
 }
-/* A lone board keeps close to the size it had on the wider 848px card: the
-   card narrowed for the text's measure, and only grids of two must shrink
-   to fit — a lone board never crowded anything. 430px is the largest that
-   keeps the typical revealed card (text, board, moves, divider, back line)
-   inside the height floor, so revealing still resizes nothing. */
-.flashcard .single-board-block > .board-container,
-.flashcard[data-boards="solo"] .single-board-block > .board-container {
-	width: 430px;
-	/* a board wider than that (Chessboard minWidth) must grow the centered
-	   cell, not spill out one-sided */
+/* a lone board keeps the same size as a 2-column grid cell, centered */
+.flashcard .single-board-block > .board-container {
+	/* exactly one 2-column cell of the grid below: half the side, less half
+	   the grid's 20px inset and half the gap between the columns */
+	width: calc(50% - 10px - var(--board-col-gap) / 2);
+	/* a board wider than the half-width cell (Chessboard minWidth) must
+	   grow the centered cell, not spill out one-sided */
 	min-width: min-content;
-	max-width: 100%;
+}
+/* Nothing on this card sits in a two-board row, so no board has a column to
+   line up with and the half-width cell is only a habit — the boards take a
+   fifth more of the card. */
+.flashcard[data-boards="solo"] .single-board-block > .board-container {
+	width: calc((50% - 10px - var(--board-col-gap) / 2) * 1.2);
 }
 .flashcard .board-grid-block {
 	display: grid;

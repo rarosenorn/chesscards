@@ -460,14 +460,4 @@
 		grid-column: 1 / -1;
 		width: 100%;
 	}
-	/* The editor's room is taken BEFORE the editor assembles: a mounting
-	   ChessboardEditor builds up over a few frames, and without a reserved
-	   height the boards below get pushed down in steps as it grows. On the
-	   capped canvas the setup-stage editor is a constant 626px; narrower
-	   windows shrink the editor with them and forgo the reservation. */
-	@media (min-width: 1040px) {
-		.board-cell.cell-editing {
-			min-height: 626px;
-		}
-	}
 </style>

@@ -1030,9 +1030,6 @@
 		margin-top: 16px;
 		margin-bottom: 0;
 		padding: 12px 30px;
-		/* the add-cards canvas width, so boards preview at the same size the
-		   card renders lone boards (a half-block cell there ≈ the solo size) */
-		max-width: 1000px;
 	}
 	/* --- stage rows --- */
 	/* a band between the card rows, greyer than the zebra so it reads as

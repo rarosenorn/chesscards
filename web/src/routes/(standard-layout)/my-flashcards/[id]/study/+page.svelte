@@ -464,9 +464,6 @@
 	.flashcard-edit {
 		margin-top: 34px;
 		padding: 12px 30px;
-		/* the add-cards canvas width, so boards preview at the same size the
-		   card renders lone boards (a half-block cell there ≈ the solo size) */
-		max-width: 1000px;
 	}
 	.flashcard-btn-row {
 		display: flex;

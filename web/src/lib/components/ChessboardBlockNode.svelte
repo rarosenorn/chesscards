@@ -376,29 +376,36 @@
 </div>
 
 <style>
-	/* THE INVARIANT HERE: a lone board is exactly a 2-column cell — that is
-	   what makes every transition (create a board beside one, delete back
-	   down to one, open or close an editor) geometry-free, because a board
-	   resize can never be instant (its redraw is frame-driven). The card's
-	   own solo/pair size split (451/376, app.css) is deliberately NOT
-	   mirrored: the card never transitions, the editor always does. Full
-	   width: a row's first board starts exactly where the text does. */
+	/* The card's exact board sizes (app.css "card board layout"): paired
+	   boards are the card's 376px cells 12px apart, a lone board the card's
+	   451px solo — the editor shows what the card will render, to the
+	   pixel. The grid is capped at exactly two cells plus the gap and
+	   centered, so the sizes hold on any canvas; open editors span that
+	   same width, one open or several stacked alike. The known cost of
+	   mirroring the solo/pair split: the surviving board resizes when a
+	   block crosses between one board and two. */
 	.board-grid-block {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		grid-auto-flow: dense;
+		width: 100%;
+		max-width: calc(376px * 2 + 12px);
+		margin-inline: auto;
 		/* rows sit closer than columns: the numbers above each board already
 		   add visual air between rows; the column gap is the card's own */
 		gap: 12px 12px;
 	}
-	/* a lone board keeps a 2-column cell's size, centered (like v1) */
+	/* a lone board takes the card's solo size, centered */
 	.board-grid-block.single {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		width: 100%;
+		max-width: calc(376px * 2 + 12px);
+		margin-inline: auto;
 	}
 	.board-grid-block.single > .board-cell:not(.cell-editing) {
-		width: calc(50% - 6px);
+		width: min(451px, 100%);
 		min-width: min-content;
 	}
 	.board-cell {

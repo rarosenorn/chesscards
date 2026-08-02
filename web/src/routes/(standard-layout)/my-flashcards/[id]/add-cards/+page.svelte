@@ -448,15 +448,15 @@
 		margin-bottom: 80px;
 		/* 30px to the editors: the distance boards/text had from the card
 		   edge in the block editor (card 20px + block 10px) */
-		padding: 12px 30px;
+		padding: 12px 32px;
 		gap: 4px;
-		max-width: 880px;
+		max-width: var(--flashcard-width);
 		position: relative;
 	}
 	/* card-type bar above the card, sharing its column width */
 	.type-row {
 		width: 100%;
-		max-width: 880px;
+		max-width: var(--flashcard-width);
 		margin: 17px auto 0 auto;
 		display: flex;
 		align-items: center;
@@ -540,8 +540,8 @@
 		position: sticky;
 		top: 0;
 		z-index: 20;
-		margin: -12px -30px 4px -30px;
-		padding: 8px 30px 0 30px;
+		margin: -12px -32px 4px -32px;
+		padding: 8px 32px 0 32px;
 		background: white;
 		border-radius: 8px 8px 0 0;
 	}

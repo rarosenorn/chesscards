@@ -294,4 +294,4 @@ const firstBoardWithMoves = (front, back) => {
 	return null;
 }
 
-export { newBoard, normalizeBoard, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage }
+export { newBoard, normalizeBoard, boardForJson, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage }

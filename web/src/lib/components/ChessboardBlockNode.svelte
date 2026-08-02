@@ -369,27 +369,25 @@
 </div>
 
 <style>
-	/* Boards preview at ONE size — the card's 376px cell (see app.css "card
-	   board layout") — lone or paired alike: a single size means adding or
-	   deleting a neighbour never resizes the boards already there, and a
-	   resize is the one thing a board cannot do instantly (its redraw is
-	   frame-driven). A solo card renders its lone board a fifth wider than
-	   this; the preview trades that fidelity for a steady workspace. The
-	   min() keeps narrow windows working. */
+	/* The grid's tracks never change: fluid halves at all times, so nothing
+	   that opens, closes, arrives or leaves can move a track. Closed boards
+	   are sized as CELLS — one size, the card's 376px cell (see app.css
+	   "card board layout"), lone or paired alike — because a board resize is
+	   the one thing that can never be instant (its redraw is frame-driven).
+	   An open editor spans the row at the block's full width. A solo card
+	   renders its lone board a fifth wider than this preview; that fidelity
+	   is traded for a workspace where nothing ever jumps. */
 	.board-grid-block {
 		display: grid;
-		grid-template-columns: repeat(2, min(376px, calc(50% - 6px)));
-		justify-content: center;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		grid-auto-flow: dense;
 		/* rows sit closer than columns: the numbers above each board already
 		   add visual air between rows */
 		gap: 12px 12px;
 	}
-	/* an open editor voids the fixed tracks: it gets the block's full width,
-	   the same room whether one editor is open or several stack */
-	.board-grid-block:has(.cell-editing) {
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		justify-content: stretch;
+	.board-grid-block > .board-cell:not(.cell-editing) {
+		width: min(376px, 100%);
+		justify-self: center;
 	}
 	.board-grid-block.single {
 		display: flex;

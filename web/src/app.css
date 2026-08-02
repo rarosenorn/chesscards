@@ -19,8 +19,10 @@
 	   the divider and a line of text on the back come to — the shape most
 	   cards have, held so revealing the answer does not resize the card
 	   under the cursor. Browse shows no controls and keeps the same floor,
-	   so a card is the same size in both views. */
-	--flashcard-min-height: 578px;
+	   so a card is the same size in both views. A lone board renders at its
+	   old wide-card size (see the single-board rule), so the floor stays
+	   what that content came to. */
+	--flashcard-min-height: 642px;
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the
    window scrollbar: that shifts the viewport width and makes the responsive
@@ -205,7 +207,7 @@ body.piece-grabbing * {
    numbers that set how large a board renders. */
 .flashcard {
 	max-width: var(--flashcard-width);
-	--board-col-gap: 20px;
+	--board-col-gap: 12px;
 }
 /* one side of a card: the blocks stack here rather than directly in the
    card, so the side can carry its own reading axis (see side-alignment.js) */
@@ -279,14 +281,15 @@ body.piece-grabbing * {
 	align-self: stretch;
 	margin: 16px 0;
 }
-/* a lone board keeps the same size as a 2-column grid cell, centered */
+/* A lone board holds the size it had on the wider 848px card: the card
+   narrowed for the text's measure, and only grids of two must shrink to
+   fit — a lone board never crowded anything. */
 .flashcard .single-board-block > .board-container {
-	/* exactly one 2-column cell of the grid below: half the side, less half
-	   the grid's 20px inset and half the gap between the columns */
-	width: calc(50% - 10px - var(--board-col-gap) / 2);
-	/* a board wider than the half-width cell (Chessboard minWidth) must
-	   grow the centered cell, not spill out one-sided */
+	width: 372px;
+	/* a board wider than that (Chessboard minWidth) must grow the centered
+	   cell, not spill out one-sided */
 	min-width: min-content;
+	max-width: 100%;
 }
 /* Nothing on this card sits in a two-board row, so no board has a column to
    line up with and the half-width cell is only a habit — the boards take a

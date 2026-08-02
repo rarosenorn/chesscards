@@ -220,12 +220,12 @@ body.piece-grabbing * {
 .flashcard .text-block {
 	padding: 0 10px;
 	/* Text carries its own measure now, apart from the boards: the card is
-	   wide for their sake, and prose runs to ~66 characters centered inside
+	   wide for their sake, and prose runs to ~70 characters centered inside
 	   it — the chess-book arrangement, diagrams wide and text at reading
 	   width. Short text still centers (the block shrink-wraps), so only
 	   wrapped paragraphs feel the cap. The editors stay uncapped, so a line
 	   there breaks wider than it will on the card. */
-	max-width: min(100%, 66ch);
+	max-width: min(100%, 70ch);
 }
 /* Text needs no alignment rule of its own: the block is only as wide as its
    text up to the measure, and the side centers it. Short text is therefore

@@ -443,26 +443,24 @@
 </div>
 
 <style>
+	/* The editor keeps its own 880 rather than the card's 720: the open board
+	   editor is laid out for this width, and a card that grows and shrinks
+	   around it is worse than an editor wrapping text a little wider than
+	   the card will. */
 	.container {
 		margin-top: 6px;
 		margin-bottom: 80px;
 		/* 30px to the editors: the distance boards/text had from the card
 		   edge in the block editor (card 20px + block 10px) */
-		padding: 12px 32px;
-	}
-	/* An open board editor gets the old wide canvas back for as long as it is
-	   open: the card's 720 is a text-measure decision, and the board editor
-	   was laid out for more */
-	.container:has(:global(.board-block-editing)) {
-		max-width: 880px;
+		padding: 12px 30px;
 		gap: 4px;
-		max-width: var(--flashcard-width);
+		max-width: 880px;
 		position: relative;
 	}
 	/* card-type bar above the card, sharing its column width */
 	.type-row {
 		width: 100%;
-		max-width: var(--flashcard-width);
+		max-width: 880px;
 		margin: 17px auto 0 auto;
 		display: flex;
 		align-items: center;
@@ -546,8 +544,8 @@
 		position: sticky;
 		top: 0;
 		z-index: 20;
-		margin: -12px -32px 4px -32px;
-		padding: 8px 32px 0 32px;
+		margin: -12px -30px 4px -30px;
+		padding: 8px 30px 0 30px;
 		background: white;
 		border-radius: 8px 8px 0 0;
 	}

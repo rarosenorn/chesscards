@@ -350,6 +350,20 @@
 		background: white;
 		border-radius: 8px 8px 0 0;
 	}
+	/* the rule under the bar stops with the text column instead of crossing
+	   the board column (the bar's own border spans everything) */
+	.menu-bar-holder :global(.fixed-menu) {
+		border-bottom: none;
+		position: relative;
+	}
+	.menu-bar-holder :global(.fixed-menu)::after {
+		content: "";
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		width: min(48ch, 100%);
+		border-bottom: 1px solid #ddd;
+	}
 	.side-indicator {
 		margin-left: 8px;
 		margin-bottom: 2px;
@@ -367,18 +381,20 @@
 	.side-row {
 		display: grid;
 		grid-template-columns: minmax(260px, 48ch) minmax(420px, 1fr);
-		gap: 20px;
+		gap: 14px;
 		align-items: start;
 		width: 100%;
 	}
 	.text-col {
 		min-width: 0;
 	}
+	/* boards hug the text column rather than centering in their cell, so the
+	   two columns read as one card */
 	.board-col {
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		align-items: center;
+		align-items: flex-start;
 		gap: 12px;
 	}
 	.board-container {

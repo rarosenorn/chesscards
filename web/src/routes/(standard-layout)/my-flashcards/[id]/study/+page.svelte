@@ -435,7 +435,7 @@
 		/* the top is the card's rim, wider than the divider's 18px between
 		   the sides; the row below closes the card at the 10px it has always
 		   kept from the bottom edge */
-		padding: 24px 40px 10px 40px;
+		padding: 24px 32px 10px 32px;
 	}
 	/* The controls close the card, one centred row on one 20px rhythm. The
 	   auto margin drops the row to the card's floor — on a card shorter than

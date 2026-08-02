@@ -361,7 +361,7 @@
 		position: absolute;
 		left: 0;
 		bottom: 0;
-		width: min(48ch, 100%);
+		width: min(50ch, 100%);
 		border-bottom: 1px solid #ddd;
 	}
 	.side-indicator {
@@ -380,7 +380,7 @@
 	   column owns whatever the measure leaves. */
 	.side-row {
 		display: grid;
-		grid-template-columns: minmax(260px, 48ch) minmax(420px, 1fr);
+		grid-template-columns: minmax(260px, 50ch) minmax(420px, 1fr);
 		gap: 14px;
 		align-items: start;
 		width: 100%;

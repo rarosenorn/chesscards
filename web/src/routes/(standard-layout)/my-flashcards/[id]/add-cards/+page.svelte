@@ -449,6 +449,12 @@
 		/* 30px to the editors: the distance boards/text had from the card
 		   edge in the block editor (card 20px + block 10px) */
 		padding: 12px 32px;
+	}
+	/* An open board editor gets the old wide canvas back for as long as it is
+	   open: the card's 720 is a text-measure decision, and the board editor
+	   was laid out for more */
+	.container:has(:global(.board-block-editing)) {
+		max-width: 880px;
 		gap: 4px;
 		max-width: var(--flashcard-width);
 		position: relative;

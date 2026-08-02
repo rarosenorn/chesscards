@@ -281,21 +281,18 @@ body.piece-grabbing * {
 	align-self: stretch;
 	margin: 16px 0;
 }
-/* A lone board holds the size it had on the wider 848px card: the card
-   narrowed for the text's measure, and only grids of two must shrink to
-   fit — a lone board never crowded anything. */
-.flashcard .single-board-block > .board-container {
-	width: 372px;
+/* A lone board keeps close to the size it had on the wider 848px card: the
+   card narrowed for the text's measure, and only grids of two must shrink
+   to fit — a lone board never crowded anything. 430px is the largest that
+   keeps the typical revealed card (text, board, moves, divider, back line)
+   inside the height floor, so revealing still resizes nothing. */
+.flashcard .single-board-block > .board-container,
+.flashcard[data-boards="solo"] .single-board-block > .board-container {
+	width: 430px;
 	/* a board wider than that (Chessboard minWidth) must grow the centered
 	   cell, not spill out one-sided */
 	min-width: min-content;
 	max-width: 100%;
-}
-/* Nothing on this card sits in a two-board row, so no board has a column to
-   line up with and the half-width cell is only a habit — the boards take a
-   fifth more of the card. */
-.flashcard[data-boards="solo"] .single-board-block > .board-container {
-	width: calc((50% - 10px - var(--board-col-gap) / 2) * 1.2);
 }
 .flashcard .board-grid-block {
 	display: grid;

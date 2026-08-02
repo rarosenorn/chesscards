@@ -366,7 +366,7 @@
 	   column owns whatever the measure leaves. */
 	.side-row {
 		display: grid;
-		grid-template-columns: minmax(280px, 62ch) minmax(340px, 1fr);
+		grid-template-columns: minmax(260px, 48ch) minmax(420px, 1fr);
 		gap: 20px;
 		align-items: start;
 		width: 100%;
@@ -384,7 +384,7 @@
 	.board-container {
 		position: relative;
 		width: 100%;
-		max-width: 480px;
+		max-width: 580px;
 	}
 	/* An open board editor needs the whole card: the side stacks (text above,
 	   boards below) for as long as it is open, and the editing container

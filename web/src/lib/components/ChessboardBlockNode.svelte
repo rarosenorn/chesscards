@@ -389,20 +389,20 @@
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		grid-auto-flow: dense;
 		width: 100%;
+		/* capped to exactly two card cells and left-aligned, NOT centered:
+		   a row's first board starts exactly where the text does */
 		max-width: calc(376px * 2 + 12px);
-		margin-inline: auto;
 		/* rows sit closer than columns: the numbers above each board already
 		   add visual air between rows; the column gap is the card's own */
 		gap: 12px 12px;
 	}
-	/* a lone board takes the card's solo size, centered */
+	/* a lone board takes the card's solo size, centered in the full block
+	   like it always was */
 	.board-grid-block.single {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		width: 100%;
-		max-width: calc(376px * 2 + 12px);
-		margin-inline: auto;
 	}
 	.board-grid-block.single > .board-cell:not(.cell-editing) {
 		width: min(451px, 100%);

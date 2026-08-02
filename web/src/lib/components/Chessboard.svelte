@@ -259,7 +259,13 @@
 	style="min-width: {minWidth}"
 	class="board-wrapper"
 	class:pointer-focus={pointerFocus}
-	onblur={() => pointerFocus = false}
+	onblur={() => {
+		// a window switch blurs the focused element too, and the return
+		// refocuses it as a keyboard arrival — that round trip must not
+		// surrender the flag, or coming back to the browser draws the ring.
+		// A blur while the document still has focus is a real departure.
+		if (document.hasFocus()) pointerFocus = false;
+	}}
 	bind:this={wrapperElement}
 	tabindex={hasMoves ? 0 : undefined}
 	role="group"

@@ -369,23 +369,27 @@
 </div>
 
 <style>
-	/* full width: a row's first board starts exactly where the text does */
+	/* Boards preview at the size the card will render them (see app.css
+	   "card board layout": 376px cells, 451px for a lone board), centered —
+	   the editor's wider 880 canvas serves the open board editor, not
+	   wider boards. The min() keeps narrow windows working. */
 	.board-grid-block {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-columns: repeat(2, min(376px, calc(50% - 6px)));
+		justify-content: center;
 		grid-auto-flow: dense;
 		/* rows sit closer than columns: the numbers above each board already
 		   add visual air between rows */
-		gap: 12px 20px;
+		gap: 12px 12px;
 	}
-	/* a lone board keeps a 2-column cell's size, centered (like v1) */
+	/* a lone board takes the card's solo size, centered */
 	.board-grid-block.single {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 	}
 	.board-grid-block.single > .board-cell:not(.cell-editing) {
-		width: calc(50% - 10px);
+		width: min(451px, 100%);
 		min-width: min-content;
 	}
 	.board-cell {

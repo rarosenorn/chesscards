@@ -5,7 +5,7 @@
 	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
-	import { isSeen, unlockedStageIds, stageProgress } from "$lib/stages.js"
+	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
@@ -206,8 +206,8 @@
 		const before = sorted[index - 1];
 		const progress = stageProgress(deck.cards.filter(card => card.stage_id === before.id));
 		return {
-			locked: `Stage ${locked.position}${locked.name ? ` — ${locked.name}` : ""}`,
-			before: `Stage ${before.position}${before.name ? ` — ${before.name}` : ""}`,
+			locked: stageLabel(locked),
+			before: stageLabel(before),
 			progress
 		};
 	});

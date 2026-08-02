@@ -116,10 +116,17 @@
 		editingIds[id] = value;
 		onEditingChange(Object.values(editingIds).some(Boolean));
 	};
+	// The mount-time seed only covers boards present at block mount; a board
+	// INSERTED into a living block reports through a deferred microtask, one
+	// layout too late — the editor squeezed into a closed cell for a beat.
+	// The shared set is written before the node even exists, so falling back
+	// to it makes the very first layout the editing one. An explicit false
+	// (a closed editor) stays false through the ??.
+	const cellEditing = id => editingIds[id] ?? ui.editingIds.has(id);
 
 	// an open editor renders ABOVE the row its board belongs to (both open:
 	// left editor first); collapsed boards keep their order after it
-	const cellOrder = i => Math.floor(i / COLS) * (COLS + 1) + (editingIds[items[i]?.id] ? i % COLS : COLS);
+	const cellOrder = i => Math.floor(i / COLS) * (COLS + 1) + (cellEditing(items[i]?.id) ? i % COLS : COLS);
 
 	// --- the virtual board caret (see block-caret-state.svelte.js) ---
 
@@ -134,11 +141,11 @@
 	// editor parks the caret there, ready for typing, without drawing a bar
 	// beside a panel that is itself the focus; the editor's left may carry a
 	// bar like any board.
-	const rowBreakAt = i => i % COLS === 0 || !!editingIds[items[i - 1]?.id] || !!editingIds[items[i]?.id];
+	const rowBreakAt = i => i % COLS === 0 || cellEditing(items[i - 1]?.id) || cellEditing(items[i]?.id);
 	const caretBefore = i => active && sideFocused && !range
 		&& boardCaret.index === i
 		&& (i === 0 || (rowBreakAt(i) && boardCaret.affinity === "down"));
-	const caretAfter = i => active && sideFocused && !range && !editingIds[items[i]?.id]
+	const caretAfter = i => active && sideFocused && !range && !cellEditing(items[i]?.id)
 		&& boardCaret.index === i + 1
 		&& !(i + 1 < items.length && rowBreakAt(i + 1) && boardCaret.affinity === "down");
 	const inRange = i => !!range && i >= range.from && i < range.to;
@@ -394,8 +401,10 @@
 		flex-direction: column;
 		align-items: center;
 	}
+	/* a lone board on its own row previews at the card's solo size — wider
+	   than a pair's cells, as the card renders it */
 	.board-grid-block.single > .board-cell:not(.cell-editing) {
-		width: min(376px, 100%);
+		width: min(451px, 100%);
 		min-width: min-content;
 	}
 	.board-cell {

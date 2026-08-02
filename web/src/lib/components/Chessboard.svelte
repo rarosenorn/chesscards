@@ -356,7 +356,12 @@
 	   shrinks, the board never re-renders smaller, and the drag shadow's
 	   correct size mismatches the real one, making drops snap dirty). With
 	   inline-size containment the cell sizes the board, never the reverse. */
-	.board-wrapper.pointer-focus:focus-visible {
+	/* No keyboard ring on boards at all: focus arrives on its own (the active
+	   card's board takes it for the arrow keys), so the ring would light up
+	   on plain card switches and window returns — announcing a focus nobody
+	   asked for. The pointer-focus flag still marks pointer arrivals for any
+	   styling that may want the distinction. */
+	.board-wrapper:focus-visible {
 		outline: none;
 	}
 	.board-wrapper {

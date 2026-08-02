@@ -369,10 +369,13 @@
 </div>
 
 <style>
-	/* Boards preview at the size the card will render them (see app.css
-	   "card board layout": 376px cells, 451px for a lone board), centered —
-	   the editor's wider 880 canvas serves the open board editor, not
-	   wider boards. The min() keeps narrow windows working. */
+	/* Boards preview at ONE size — the card's 376px cell (see app.css "card
+	   board layout") — lone or paired alike: a single size means adding or
+	   deleting a neighbour never resizes the boards already there, and a
+	   resize is the one thing a board cannot do instantly (its redraw is
+	   frame-driven). A solo card renders its lone board a fifth wider than
+	   this; the preview trades that fidelity for a steady workspace. The
+	   min() keeps narrow windows working. */
 	.board-grid-block {
 		display: grid;
 		grid-template-columns: repeat(2, min(376px, calc(50% - 6px)));
@@ -382,14 +385,19 @@
 		   add visual air between rows */
 		gap: 12px 12px;
 	}
-	/* a lone board takes the card's solo size, centered */
+	/* an open editor voids the fixed tracks: it gets the block's full width,
+	   the same room whether one editor is open or several stack */
+	.board-grid-block:has(.cell-editing) {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		justify-content: stretch;
+	}
 	.board-grid-block.single {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 	}
 	.board-grid-block.single > .board-cell:not(.cell-editing) {
-		width: min(451px, 100%);
+		width: min(376px, 100%);
 		min-width: min-content;
 	}
 	.board-cell {

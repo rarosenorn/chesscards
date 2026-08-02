@@ -1030,6 +1030,9 @@
 		margin-top: 16px;
 		margin-bottom: 0;
 		padding: 12px 30px;
+		/* the add-cards canvas: content lands at 764, so boards render the
+		   card's exact sizes (376 cells, 451 lone) with text sharing both edges */
+		max-width: 848px;
 	}
 	/* --- stage rows --- */
 	/* a band between the card rows, greyer than the zebra so it reads as

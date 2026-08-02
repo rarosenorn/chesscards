@@ -454,13 +454,13 @@
 		   edge in the block editor (card 20px + block 10px) */
 		padding: 12px 30px;
 		gap: 4px;
-		max-width: 880px;
+		max-width: 848px;
 		position: relative;
 	}
 	/* card-type bar above the card, sharing its column width */
 	.type-row {
 		width: 100%;
-		max-width: 880px;
+		max-width: 848px;
 		margin: 17px auto 0 auto;
 		display: flex;
 		align-items: center;

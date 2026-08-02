@@ -155,13 +155,6 @@
 	.tiptap :global(.ProseMirror) {
 		outline: none;
 	}
-	/* text wraps at the board pair's right edge (two card cells + gap), so
-	   text and boards share both edges */
-	.tiptap :global(.ProseMirror > p),
-	.tiptap :global(.ProseMirror > ul),
-	.tiptap :global(.ProseMirror > ol) {
-		max-width: calc(376px * 2 + 12px);
-	}
 
 	:global(.ProseMirror) {
 		padding: 4px 10px;

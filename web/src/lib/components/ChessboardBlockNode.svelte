@@ -384,14 +384,15 @@
 	   same width, one open or several stacked alike. The known cost of
 	   mirroring the solo/pair split: the surviving board resizes when a
 	   block crosses between one board and two. */
+	/* Full width, like the text: both edges shared. The card's exact board
+	   sizes come from the CANVAS, not from caps here — the editor pages size
+	   their content to 764px (two 376 card cells + the card's 12px gap), so
+	   fluid halves ARE 376 and a lone board's 451 fits as on the card. */
 	.board-grid-block {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		grid-auto-flow: dense;
 		width: 100%;
-		/* capped to exactly two card cells and left-aligned, NOT centered:
-		   a row's first board starts exactly where the text does */
-		max-width: calc(376px * 2 + 12px);
 		/* rows sit closer than columns: the numbers above each board already
 		   add visual air between rows; the column gap is the card's own */
 		gap: 12px 12px;

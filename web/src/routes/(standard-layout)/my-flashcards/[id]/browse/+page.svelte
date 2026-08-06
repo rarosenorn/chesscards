@@ -9,6 +9,7 @@
 	// small (phone) only deck and card table stacked, selected card in popover
 
 	import { getContext, untrack } from "svelte"
+	import { flip } from "svelte/animate"
 	import { SvelteSet } from "svelte/reactivity"
 	import { page } from "$app/state"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
@@ -172,6 +173,24 @@
 		}));
 	});
 
+	// While a reorder drag is in flight the table renders from a preview of
+	// the grouped rows: the dragged cards are lifted out and a placeholder row
+	// holds the slot they would drop into, so the new order is visible before
+	// it is committed. filteredCards keeps reading the real groupedRows —
+	// selection and arrow navigation must not see the placeholder.
+	let displayGroups = $derived.by(() => {
+		const drag = reorderDrag;
+		if (!groupedRows || !drag?.started || !drag.over) return groupedRows;
+		const placeholder = { id: "__placeholder__", placeholder: true };
+		return groupedRows.map(group => {
+			let cards = group.cards.filter(c => !drag.cardIds.includes(c.id));
+			if (group.stage.id === drag.over.stageId) {
+				cards = [...cards.slice(0, drag.over.index), placeholder, ...cards.slice(drag.over.index)];
+			}
+			return { ...group, cards };
+		});
+	});
+
 	// A column is always sorted — Order ascending is the deck's own order, the
 	// table's default. Sort is stable, so that order still decides ties.
 	// Grouped, this is the visible rows: a collapsed stage's cards drop out of
@@ -286,12 +305,12 @@
 	}
 
 	// --- reordering ---
-	// The Order cell is the handle: a drag from it moves the selection (or its
-	// own row) and drops before/after the row under the cursor, or onto a
-	// stage header for the top of that stage; a plain click on it opens the
-	// order for typing ("3.3" — stage, then place in stage). Both need the
-	// grouped view; the drag also needs ascending, where "before" reads the
-	// way the numbers run.
+	// The Order cell is the handle: a drag from it lifts the selection (or its
+	// own row) out of the table — a ghost chip rides the cursor, a placeholder
+	// row holds the slot the cards would drop into, and the other rows slide
+	// around it live. A plain click on it opens the order for typing ("3.3" —
+	// stage, then place in stage). Both need the grouped view; the drag also
+	// needs ascending, where the slots read the way the numbers run.
 	let reorderDrag = $state(null);
 	let orderEdit = $state(null);
 
@@ -302,32 +321,54 @@
 		const cardIds = multiSelected.has(card.id)
 			? filteredCards.filter(c => multiSelected.has(c.id)).map(c => c.id)
 			: [card.id];
-		reorderDrag = { cardIds, card, started: false, startX: e.clientX, startY: e.clientY, over: null };
+		reorderDrag = {
+			cardIds, card, started: false,
+			startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY,
+			// the placeholder keeps the lifted row's exact height
+			rowHeight: e.currentTarget.closest("tr").getBoundingClientRect().height,
+			over: null, initial: null
+		};
 	}
 
 	const handleWindowMouseMove = e => {
-		if (!reorderDrag || reorderDrag.started || draft.sortDescending) return;
+		if (!reorderDrag) return;
+		reorderDrag.x = e.clientX;
+		reorderDrag.y = e.clientY;
+		if (reorderDrag.started || draft.sortDescending) return;
 		if (Math.abs(e.clientX - reorderDrag.startX) + Math.abs(e.clientY - reorderDrag.startY) > 5) {
+			// the placeholder opens at the dragged card's own slot, so the
+			// table holds still until the cursor actually moves somewhere
+			const stageList = stageCards.get(reorderDrag.card.stage_id);
+			const index = stageList
+				.slice(0, stageList.findIndex(c => c.id === reorderDrag.card.id))
+				.filter(c => !reorderDrag.cardIds.includes(c.id)).length;
+			reorderDrag.initial = { stageId: reorderDrag.card.stage_id, index };
+			reorderDrag.over = { ...reorderDrag.initial };
 			reorderDrag.started = true;
 		}
 	}
 
+	const setDragOver = (stageId, index) => {
+		const over = reorderDrag.over;
+		if (over && over.stageId === stageId && over.index === index) return;
+		reorderDrag.over = { stageId, index };
+	}
+
 	const handleRowDragOver = (e, card) => {
 		if (!reorderDrag?.started || reorderDrag.cardIds.includes(card.id)) return;
+		// the midpoint must come from the row's layout slot: mid-flip the rect
+		// is translated, and reading it would re-slot against a moving target
 		const rect = e.currentTarget.getBoundingClientRect();
-		const before = e.clientY < rect.top + rect.height / 2;
+		const transform = new DOMMatrixReadOnly(getComputedStyle(e.currentTarget).transform);
+		const top = rect.top - transform.m42;
+		const before = e.clientY < top + rect.height / 2;
 		const list = stageCards.get(card.stage_id).filter(c => !reorderDrag.cardIds.includes(c.id));
-		reorderDrag.over = {
-			stageId: card.stage_id,
-			index: list.indexOf(card) + (before ? 0 : 1),
-			cardId: card.id,
-			before
-		};
+		setDragOver(card.stage_id, list.findIndex(c => c.id === card.id) + (before ? 0 : 1));
 	}
 
 	const handleStageDragOver = stage => {
 		if (!reorderDrag?.started) return;
-		reorderDrag.over = { stageId: stage.id, index: 0, headerId: stage.id };
+		setDragOver(stage.id, 0);
 	}
 
 	const finishReorderDrag = async () => {
@@ -338,7 +379,9 @@
 			openOrderEdit(drag.card);
 			return;
 		}
+		// dropped back where it was lifted from: nothing to commit
 		if (!drag.over) return;
+		if (drag.over.stageId === drag.initial.stageId && drag.over.index === drag.initial.index) return;
 		applyFresh(await moveCards({
 			deckId: deck.id, cardIds: drag.cardIds, stageId: drag.over.stageId, index: drag.over.index
 		}));
@@ -588,7 +631,17 @@
 	</div>
 {/if}
 
-<div class="browse-container">
+{#if reorderDrag?.started}
+	<!-- rides the cursor; pointer-events off so the rows underneath keep
+	     seeing the mousemoves that place the drop slot -->
+	<div class="drag-ghost" style="left: {reorderDrag.x + 14}px; top: {reorderDrag.y + 10}px">
+		{reorderDrag.cardIds.length > 1
+			? `${reorderDrag.cardIds.length} cards`
+			: (getFrontIndicator(reorderDrag.card.front) ?? "{{chessboard}}")}
+	</div>
+{/if}
+
+<div class="browse-container" class:reordering={!!reorderDrag?.started}>
 	<div class="left-pane">
 		<div class="search-row">
 			<input
@@ -629,19 +682,9 @@
 					{/each}
 				</tr>
 			</thead>
-			{#snippet cardRow(card)}
+			{#snippet cardCells(card)}
 				{@const indicator = getFrontIndicator(card.front)}
 				{@const boardCount = card.front.find(block => block.type === "chessboards")?.content.length ?? 0}
-				<tr
-					class:active={card.id === selectedCard.id}
-					class:multi-selected={multiSelected.has(card.id)}
-					class:drop-before={reorderDrag?.over?.cardId === card.id && reorderDrag.over.before}
-					class:drop-after={reorderDrag?.over?.cardId === card.id && !reorderDrag.over.before}
-					onmousedown={e => handleRowMouseDown(e, card, filteredCards.indexOf(card))}
-					onmouseenter={() => handleRowMouseEnter(filteredCards.indexOf(card))}
-					onmousemove={e => handleRowDragOver(e, card)}
-					oncontextmenu={e => handleRowContextMenu(e, card, filteredCards.indexOf(card))}
-				>
 					<!-- the Order cell is the reorder handle: drag moves the row,
 					     a plain click opens the number for typing -->
 					<td
@@ -693,14 +736,13 @@
 					<td>{formatDue(card)}</td>
 					<td>{card.reps ?? "—"}</td>
 					<td>{card.card_type === "tactic" ? "—" : stateNames[card.state]}</td>
-				</tr>
 			{/snippet}
 			<tbody>
-				{#if groupedRows}
-					{#each groupedRows as group (group.stage.id)}
+				{#if displayGroups}
+					{#each displayGroups as group (group.stage.id)}
 						<tr
 							class="stage-row"
-							class:drop-into={reorderDrag?.over?.headerId === group.stage.id}
+							class:drop-into={reorderDrag?.started && reorderDrag.over?.stageId === group.stage.id && group.collapsed}
 							onmousemove={() => handleStageDragOver(group.stage)}
 							oncontextmenu={e => handleStageContextMenu(e, group.stage)}
 						>
@@ -735,8 +777,25 @@
 							</td>
 						</tr>
 						{#if !group.collapsed}
-							{#each group.cards as card (card.id)}
-								{@render cardRow(card)}
+							{#each group.cards as item (item.id)}
+								<!-- one tr for card and placeholder alike: the animate
+								     directive must sit directly under the keyed each -->
+								<tr
+									animate:flip={{ duration: reorderDrag?.started ? 150 : 0 }}
+									class:placeholder-row={item.placeholder}
+									class:active={!item.placeholder && item.id === selectedCard.id}
+									class:multi-selected={!item.placeholder && multiSelected.has(item.id)}
+									onmousedown={item.placeholder ? undefined : e => handleRowMouseDown(e, item, filteredCards.indexOf(item))}
+									onmouseenter={item.placeholder ? undefined : () => handleRowMouseEnter(filteredCards.indexOf(item))}
+									onmousemove={item.placeholder ? undefined : e => handleRowDragOver(e, item)}
+									oncontextmenu={item.placeholder ? undefined : e => handleRowContextMenu(e, item, filteredCards.indexOf(item))}
+								>
+									{#if item.placeholder}
+										<td class="placeholder-cell" colspan="6" style="height: {reorderDrag?.rowHeight}px"></td>
+									{:else}
+										{@render cardCells(item)}
+									{/if}
+								</tr>
 							{/each}
 						{/if}
 					{/each}
@@ -749,7 +808,15 @@
 					{/if}
 				{:else}
 					{#each filteredCards as card (card.id)}
-						{@render cardRow(card)}
+						<tr
+							class:active={card.id === selectedCard.id}
+							class:multi-selected={multiSelected.has(card.id)}
+							onmousedown={e => handleRowMouseDown(e, card, filteredCards.indexOf(card))}
+							onmouseenter={() => handleRowMouseEnter(filteredCards.indexOf(card))}
+							oncontextmenu={e => handleRowContextMenu(e, card, filteredCards.indexOf(card))}
+						>
+							{@render cardCells(card)}
+						</tr>
 					{/each}
 				{/if}
 			</tbody>
@@ -1111,15 +1178,41 @@
 	.order-handle {
 		cursor: grab;
 	}
-	/* the drop target: an accent rule on the edge the cards would land at */
-	tr.drop-before td {
-		box-shadow: inset 0 2px 0 var(--accent);
+	/* everything grabs while a drag is in flight — the rows' own pointer
+	   cursors would otherwise flicker through under the ghost */
+	.browse-container.reordering,
+	.browse-container.reordering * {
+		cursor: grabbing;
 	}
-	tr.drop-after td {
-		box-shadow: inset 0 -2px 0 var(--accent);
+	/* the slot the cards would drop into: an empty band holding the lifted
+	   row's height (the selector out-weighs the zebra and hover repaints) */
+	tbody tr.placeholder-row td,
+	tbody tr.placeholder-row:hover td {
+		background-color: #eef4fd;
+		border-right: none;
+		padding: 0;
 	}
+	/* a collapsed chapter can't show the placeholder between its rows, so the
+	   header keeps the accent rule as its drop cue */
 	tr.stage-row.drop-into td {
 		box-shadow: inset 0 -2px 0 var(--accent);
+	}
+	/* the dragged cards, riding the cursor as a chip */
+	.drag-ghost {
+		position: fixed;
+		z-index: 20;
+		pointer-events: none;
+		max-width: 260px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		padding: 3px 10px;
+		background-color: white;
+		border: 1px solid #ccc;
+		box-shadow: rgba(0, 0, 0, 0.2) 0 2px 8px;
+		font-size: 0.875rem;
+		color: #333;
+		opacity: 0.85;
 	}
 	.order-input {
 		width: 100%;

@@ -277,7 +277,7 @@ body.piece-grabbing * {
 	   percentage below resolves against nothing — the board would then be
 	   sized by its min-width floor alone */
 	align-self: stretch;
-	margin: 16px 0;
+	margin: 12px 0;
 }
 /* a lone board keeps the same size as a 2-column grid cell, centered */
 .flashcard .single-board-block > .board-container {
@@ -305,8 +305,8 @@ body.piece-grabbing * {
 	   add visual air between rows */
 	gap: 12px var(--board-col-gap);
 	position: relative;
-	margin-top: 16px;
-	margin-bottom: 16px;
+	margin-top: 12px;
+	margin-bottom: 12px;
 }
 .flashcard .board-container {
 	position: relative;

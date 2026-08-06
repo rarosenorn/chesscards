@@ -892,11 +892,11 @@
 	.board:focus {
 		outline: none;
 	}
-	/* the picked-up piece's square: yellow fill, not the default faint black */
+	/* the picked-up piece's square: steelblue fill, not the default faint black */
 	/* fully opaque: a translucent fill blends differently with light and
 	   dark squares, making the highlight look inconsistent */
 	.board :global(.cm-chessboard .markers .marker.marker-square) {
-		fill: #ffff33;
+		fill: steelblue;
 		opacity: 1;
 	}
 	/* the library puts a pointer on every input-enabled square; instead:
@@ -1201,8 +1201,7 @@
 		font-size: 1.7rem;
 		color: #333;
 	}
-	/* selection reads through the background alone, same yellow as the
-	   board's picked-up-piece highlight */
+	/* selection reads through the background alone */
 	.palette-piece.selected {
 		background-color: #ffff33;
 	}

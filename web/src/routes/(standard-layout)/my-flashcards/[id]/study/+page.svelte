@@ -362,7 +362,6 @@
 							</button>
 						</div>
 						<div class="eval-btn">
-							<p>Never</p>
 							<button
 								onclick={() => evaluateTactic(true)}
 								class="std-btn"

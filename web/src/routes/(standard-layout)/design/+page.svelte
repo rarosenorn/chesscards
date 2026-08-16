@@ -3,7 +3,7 @@
 	// live to the whole app (see design-preview.js — the root layout re-applies
 	// a stored choice on every page) until reset here.
 	import { onMount } from "svelte"
-	import { SCHEME_KEY, FONT_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar } from "$lib/design-preview.js"
+	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant } from "$lib/design-preview.js"
 
 	// "straight" — the hue at close to full strength; "muted" — the same idea
 	// pulled toward grey
@@ -144,11 +144,13 @@
 
 	let activeAccent = $state(null);
 	let activeFont = $state(null);
+	let whiteBanner = $state(false);
 	let tab = $state("color");
 
 	onMount(() => {
 		activeAccent = readPreview(SCHEME_KEY)?.accent ?? null;
 		activeFont = readPreview(FONT_KEY)?.family ?? null;
+		whiteBanner = readPreview(BANNER_KEY)?.variant === "white";
 		// the samples below render in the tryout fonts, so they must load here
 		// even before any is applied
 		ensureFontStylesheet();
@@ -164,6 +166,19 @@
 		clearSchemeVars();
 		localStorage.removeItem(SCHEME_KEY);
 		activeAccent = null;
+	}
+
+	// on/off rather than pick-one: the banner variant rides on top of
+	// whichever accent scheme is applied
+	const toggleWhiteBanner = () => {
+		whiteBanner = !whiteBanner;
+		if (whiteBanner) {
+			applyBannerVariant("white");
+			localStorage.setItem(BANNER_KEY, JSON.stringify({ variant: "white" }));
+		} else {
+			clearBannerVariant();
+			localStorage.removeItem(BANNER_KEY);
+		}
 	}
 
 	const applyFont = font => {
@@ -193,6 +208,20 @@
 
 	{#if tab === "color"}
 	<section>
+		<h4>Banner — rides on top of any scheme below</h4>
+		<div class="scheme-grid">
+			<button
+				class="scheme-card"
+				class:applied={whiteBanner}
+				onclick={toggleWhiteBanner}
+			>
+				<span class="mini-banner white-banner">Chesscards <span class="white-banner-links">My flashcards</span></span>
+				<span class="card-name">
+					White banner
+					<span class="card-note">click to toggle — accent stays for buttons</span>
+				</span>
+			</button>
+		</div>
 		{#each schemeGroups as group (group.title)}
 			<h4>{group.title}</h4>
 			<div class="scheme-grid">
@@ -320,7 +349,7 @@
 		padding: 8px 10px;
 		border-radius: 3px;
 		color: white;
-		font-family: var(--wordmark-font, roboto-mono);
+		font-family: var(--wordmark-font, inherit);
 		font-size: 1rem;
 	}
 	/* font samples wear whatever accent is applied, so the two choices can
@@ -341,6 +370,23 @@
 		   families lacking a 500 cut */
 		font-weight: 500;
 		color: color-mix(in srgb, var(--accent-text) 85%, transparent);
+	}
+	/* the white-banner card's miniature: paper bar, hairline, accent wordmark */
+	.white-banner {
+		background-color: white;
+		border: 1px solid #ddd;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+		color: var(--accent);
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 10px;
+	}
+	.white-banner-links {
+		font-size: 0.85rem;
+		font-weight: 600;
+		font-family: var(--wordmark-font, inherit);
+		color: rgba(0, 0, 0, 0.65);
 	}
 	.mini-row {
 		display: block;

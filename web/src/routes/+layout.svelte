@@ -1,7 +1,7 @@
 <script>
 	import { setContext } from "svelte"
 	import { browser } from "$app/environment"
-	import { SCHEME_KEY, FONT_KEY, readPreview, applySchemeVars, applyFontVar } from "$lib/design-preview.js"
+	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, readPreview, applySchemeVars, applyFontVar, applyBannerVariant } from "$lib/design-preview.js"
 	import favicon from '$lib/assets/favicon.svg';
 	import Logo from "$lib/assets/Logo.svelte"
 	import ModalHost from "$lib/components/ModalHost.svelte"
@@ -23,6 +23,8 @@
 		if (scheme?.accent) applySchemeVars(scheme);
 		const font = readPreview(FONT_KEY);
 		if (font?.family) applyFontVar(font.family);
+		const banner = readPreview(BANNER_KEY);
+		if (banner?.variant) applyBannerVariant(banner.variant);
 	}
 </script>
 
@@ -140,6 +142,33 @@
 				text-decoration: underline;
 			}
 		}
+	}
+	/* the white-banner tryout (html[data-banner="white"], set by design-preview):
+	   the bar goes paper, so definition moves elsewhere — a hairline underneath,
+	   the wordmark carrying the accent, dark-grey links, and Register back to a
+	   normal accent fill instead of the inverted one */
+	:global(html[data-banner="white"]) #topbar {
+		background-color: white;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+	}
+	:global(html[data-banner="white"]) #topbar #logo-anchor-tag {
+		color: var(--accent);
+	}
+	:global(html[data-banner="white"]) #topbar nav a,
+	:global(html[data-banner="white"]) #topbar .nav-link {
+		color: rgba(0, 0, 0, 0.65);
+	}
+	:global(html[data-banner="white"]) #topbar nav a:hover,
+	:global(html[data-banner="white"]) #topbar .nav-link:hover {
+		color: rgba(0, 0, 0, 0.9);
+	}
+	:global(html[data-banner="white"]) #topbar .primary-btn {
+		background-color: var(--accent);
+		border-color: var(--accent);
+		color: var(--accent-text);
+	}
+	:global(html[data-banner="white"]) #topbar .primary-btn:hover {
+		background-color: var(--accent-hover);
 	}
 	main {
 		background-color: #efefef;

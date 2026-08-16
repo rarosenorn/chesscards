@@ -58,7 +58,7 @@
 		{
 			title: "Straight",
 			schemes: [
-				{ name: "Current blue", accent: "#3381ca", hover: "#2b6dab", subtle: "#ebf3fa", strong: "#d4e5f5" },
+				{ name: "Steelblue (current)", accent: "#4682b4", hover: "#3b6e99", subtle: "#f0f5f9", strong: "#dae6f0" },
 				{ name: "Royal blue", accent: "#2b6be6", hover: "#2258c4", subtle: "#ecf2fd", strong: "#d3e1fb" },
 				{ name: "Cobalt", accent: "#1d4ed8", hover: "#1841b4", subtle: "#eaeffc", strong: "#cfdbf9" },
 				{ name: "Ultramarine", accent: "#4338ca", hover: "#3730a3", subtle: "#efeefb", strong: "#dcd9f5" },
@@ -341,8 +341,8 @@
 	/* the applied card's mark stays the app's own blue: an outline in the
 	   scheme being tried would vanish on the light ones */
 	.scheme-card.applied {
-		border-color: #3381ca;
-		outline: 1px solid #3381ca;
+		border-color: #4682b4;
+		outline: 1px solid #4682b4;
 	}
 	.mini-banner {
 		display: block;

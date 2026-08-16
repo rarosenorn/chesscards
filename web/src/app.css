@@ -1,12 +1,12 @@
 :root {
 	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-	/* the site's single accent (denim blue): interactive and active
+	/* the site's single accent (steelblue): interactive and active
 	   elements only — primary buttons, active tabs/pills, focus rings, and
 	   selection tints. Neutrals stay the base; red stays for destructive. */
-	--accent: #4169aa;
-	--accent-hover: #365a92;
-	--accent-subtle: #eef3f9;
-	--accent-subtle-strong: #d7e2f2;
+	--accent: #4682b4;
+	--accent-hover: #3b6e99;
+	--accent-subtle: #f0f5f9;
+	--accent-subtle-strong: #dae6f0;
 	/* what text on an accent surface wears: white on the deep accents, near
 	   black should a light accent ever take over */
 	--accent-text: #ffffff;

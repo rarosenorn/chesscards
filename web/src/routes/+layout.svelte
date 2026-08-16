@@ -90,9 +90,7 @@
 
 				span {
 					margin-left: 5px;
-					/* the wordmark keeps its own face; the tryout font (the
-					   --wordmark-font override) dresses only the menu links */
-					font-family: roboto-mono;
+					font-family: var(--wordmark-font, inherit);
 					font-size: 1.7rem;
 				}
 			}
@@ -106,7 +104,7 @@
 				color: color-mix(in srgb, var(--accent-text) 85%, transparent);
 				text-decoration: none;
 				font-family: var(--wordmark-font, inherit);
-				font-weight: 500;
+				font-weight: 600;
 			}
 			.nav-link:hover {
 				color: var(--accent-text);
@@ -135,7 +133,7 @@
 				color: color-mix(in srgb, var(--accent-text) 85%, transparent);
 				text-decoration: none;
 				font-family: var(--wordmark-font, inherit);
-				font-weight: 500;
+				font-weight: 600;
 			}
 			a:hover {
 				color: var(--accent-text);

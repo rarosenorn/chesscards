@@ -35,7 +35,7 @@
 <div class="layout">
 	<div id="topbar">
 		<div class="left-nav">
-			<a id="logo-anchor-tag" href="/"><Logo /><span class="wordmark">Chess<span class="wordmark-tail">cards</span></span></a>
+			<a id="logo-anchor-tag" href="/"><Logo /><span class="wordmark">Chesscards</span></a>
 			<nav>
 				{#each [
 					["/my-flashcards", "My flashcards"],
@@ -90,19 +90,16 @@
 				position: relative;
 				bottom: 2px;
 
-				/* the wordmark keeps its own face (self-hosted, see app.css) —
-				   the /design font tryout dresses only the menu links. Two-tone
-				   700/400 echoing the two-card mark; display size wants the
-				   tighter tracking */
+				/* the wordmark wears the app face at a single weight matched to
+				   the mark's ink, sized so its cap height sits near half the
+				   cards' height — unity comes from weight/size/alignment, not a
+				   display font. The /design font tryout dresses only the menu
+				   links. */
 				.wordmark {
-					margin-left: 11px;
-					font-family: "Space Grotesk", Inter, sans-serif;
-					font-weight: 700;
-					letter-spacing: -0.02em;
-					font-size: 1.7rem;
-				}
-				.wordmark-tail {
-					font-weight: 400;
+					margin-left: 10px;
+					font-weight: 600;
+					letter-spacing: -0.015em;
+					font-size: 1.6rem;
 				}
 			}
 		}

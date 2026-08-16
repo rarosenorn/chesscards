@@ -155,15 +155,6 @@ thead > th {
    a commercial license must be purchased before this ships to real users;
    Canterbury.ttf (also in static/fonts, 1001fonts FFC license) is the
    commercially-safe fallback to swap back to */
-/* the wordmark's own face (variable, latin subset, self-hosted per the
-   design-preview rule: a chosen font gets self-hosted when made permanent).
-   OFL licensed. */
-@font-face {
-	font-family: "Space Grotesk";
-	src: url("/fonts/SpaceGrotesk-latin-var.woff2") format("woff2");
-	font-weight: 300 700;
-	font-display: swap;
-}
 @font-face {
 	font-family: "Gothic Valentine";
 	src: url("/fonts/GothicValentine-PERSONAL-USE-ONLY.ttf") format("truetype");

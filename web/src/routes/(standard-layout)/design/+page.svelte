@@ -218,7 +218,7 @@
 				class:applied={whiteBanner}
 				onclick={toggleWhiteBanner}
 			>
-				<span class="mini-banner white-banner"><span class="mini-wordmark">Chess<span class="mini-wordmark-tail">cards</span></span> <span class="white-banner-links">My flashcards</span></span>
+				<span class="mini-banner white-banner"><span class="mini-wordmark">Chesscards</span> <span class="white-banner-links">My flashcards</span></span>
 				<span class="card-name">
 					White banner
 					<span class="card-note">click to toggle — accent stays for buttons</span>
@@ -236,7 +236,7 @@
 					>
 						<!-- the banner, a selected table row, a subtle fill and the two
 						     solids: the places the accent actually shows up, in miniature -->
-						<span class="mini-banner" style="background-color: {scheme.accent}; color: {scheme.text ?? 'white'}"><span class="mini-wordmark">Chess<span class="mini-wordmark-tail">cards</span></span></span>
+						<span class="mini-banner" style="background-color: {scheme.accent}; color: {scheme.text ?? 'white'}"><span class="mini-wordmark">Chesscards</span></span>
 						<span class="mini-row" style="background-color: {scheme.strong}">selected row</span>
 						<span class="mini-row" style="background-color: {scheme.subtle}">subtle fill</span>
 						<span class="swatches">
@@ -266,7 +266,7 @@
 						class:applied={activeFont === font.family}
 						onclick={() => applyFont(font)}
 					>
-						<span class="mini-banner font-banner"><span class="mini-wordmark">Chess<span class="mini-wordmark-tail">cards</span></span> <span class="font-menu-sample" style="font-family: '{font.family}'">My flashcards</span></span>
+						<span class="mini-banner font-banner"><span class="mini-wordmark">Chesscards</span> <span class="font-menu-sample" style="font-family: '{font.family}'">My flashcards</span></span>
 						<span class="card-name">
 							{font.family}
 							<span class="card-note">{font.note}</span>
@@ -354,14 +354,10 @@
 		color: white;
 		font-size: 1rem;
 	}
-	/* the wordmark rendered as the real banner wears it (fixed face, two-tone) */
+	/* the wordmark rendered as the real banner wears it (app face, 600) */
 	.mini-wordmark {
-		font-family: "Space Grotesk", Inter, sans-serif;
-		font-weight: 700;
-		letter-spacing: -0.02em;
-	}
-	.mini-wordmark-tail {
-		font-weight: 400;
+		font-weight: 600;
+		letter-spacing: -0.015em;
 	}
 	/* font samples wear whatever accent is applied, so the two choices can
 	   be judged together; the tryout family dresses the menu sample — the

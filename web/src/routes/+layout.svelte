@@ -16,8 +16,8 @@
 	// (a getter so consumers stay reactive to profile changes)
 	setContext("boardPrefs", () => data.boardPrefs ?? DEFAULT_BOARD_PREFS);
 
-	// design tryouts (/design): a scheme or wordmark font being tried rides
-	// along on every page until reset there
+	// design tryouts (/design): a scheme, menu font or banner variant being
+	// tried rides along on every page until reset there
 	if (browser) {
 		const scheme = readPreview(SCHEME_KEY);
 		if (scheme?.accent) applySchemeVars(scheme);
@@ -35,7 +35,7 @@
 <div class="layout">
 	<div id="topbar">
 		<div class="left-nav">
-			<a id="logo-anchor-tag" href="/"><Logo /><span>Chesscards</span></a>
+			<a id="logo-anchor-tag" href="/"><Logo /><span class="wordmark">Chess<span class="wordmark-tail">cards</span></span></a>
 			<nav>
 				{#each [
 					["/my-flashcards", "My flashcards"],
@@ -90,10 +90,19 @@
 				position: relative;
 				bottom: 2px;
 
-				span {
-					margin-left: 5px;
-					font-family: var(--wordmark-font, inherit);
+				/* the wordmark keeps its own face (self-hosted, see app.css) —
+				   the /design font tryout dresses only the menu links. Two-tone
+				   700/400 echoing the two-card mark; display size wants the
+				   tighter tracking */
+				.wordmark {
+					margin-left: 11px;
+					font-family: "Space Grotesk", Inter, sans-serif;
+					font-weight: 700;
+					letter-spacing: -0.02em;
 					font-size: 1.7rem;
+				}
+				.wordmark-tail {
+					font-weight: 400;
 				}
 			}
 		}
@@ -105,7 +114,7 @@
 				padding: 8px;
 				color: color-mix(in srgb, var(--accent-text) 85%, transparent);
 				text-decoration: none;
-				font-family: var(--wordmark-font, inherit);
+				font-family: var(--menu-font, inherit);
 				font-weight: 600;
 			}
 			.nav-link:hover {
@@ -134,7 +143,7 @@
 				padding: 12px 8px;
 				color: color-mix(in srgb, var(--accent-text) 85%, transparent);
 				text-decoration: none;
-				font-family: var(--wordmark-font, inherit);
+				font-family: var(--menu-font, inherit);
 				font-weight: 600;
 			}
 			a:hover {
@@ -145,14 +154,14 @@
 	}
 	/* the white-banner tryout (html[data-banner="white"], set by design-preview):
 	   the bar goes paper, so definition moves elsewhere — a hairline underneath,
-	   the wordmark carrying the accent, dark-grey links, and Register back to a
-	   normal accent fill instead of the inverted one */
+	   a near-black wordmark, dark-grey links, and Register back to a normal
+	   accent fill instead of the inverted one */
 	:global(html[data-banner="white"]) #topbar {
 		background-color: white;
 		border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	}
 	:global(html[data-banner="white"]) #topbar #logo-anchor-tag {
-		color: var(--accent);
+		color: rgba(0, 0, 0, 0.85);
 	}
 	:global(html[data-banner="white"]) #topbar nav a,
 	:global(html[data-banner="white"]) #topbar .nav-link {

@@ -1,5 +1,5 @@
-// The /design page's tryout state: an accent scheme and a wordmark font
-// override, kept in localStorage and re-applied on every load by the root
+// The /design page's tryout state: an accent scheme, a menu-font override
+// and a banner variant, kept in localStorage and re-applied on every load by the root
 // layout, so a candidate rides along across the whole app until reset on
 // /design. Nothing here touches app.css — making a choice permanent stays a
 // code change. Tryout fonts come off Google Fonts; a chosen one gets
@@ -48,11 +48,11 @@ const ensureFontStylesheet = () => {
 
 const applyFontVar = family => {
 	ensureFontStylesheet();
-	document.documentElement.style.setProperty("--wordmark-font", `"${family}"`);
+	document.documentElement.style.setProperty("--menu-font", `"${family}"`);
 }
 
 const clearFontVar = () =>
-	document.documentElement.style.removeProperty("--wordmark-font");
+	document.documentElement.style.removeProperty("--menu-font");
 
 // the banner variant is a mode, not a palette — the layout's CSS keys off
 // the attribute (html[data-banner="white"]) while the accent vars stay put

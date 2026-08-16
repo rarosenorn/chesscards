@@ -2,8 +2,8 @@
 <svg width="47" viewBox="66 52 94 105" xmlns="http://www.w3.org/2000/svg">
   <!-- 2 fanned cards with Cburnett (Wikimedia) chess pieces:
        bishop (left, behind) and knight (right, on top). Each card has a large
-       central piece inside a thin inner border, with index icons in the
-       top-left and bottom-right corners, like a real playing card. -->
+       central piece inside a thin inner border. No corner index icons: at
+       banner size (47px wide) they render as unreadable specks. -->
 
   <defs>
     <!-- Black bishop (Cburnett Chess_bdt45) -->
@@ -36,8 +36,6 @@
       <rect x="88" y="58" width="64" height="92" rx="8" fill="#ffffff" stroke="#111111" stroke-width="3"/>
       <rect x="99" y="72" width="42" height="66" rx="5" fill="none" stroke="#111111" stroke-width="1.5"/>
       <use href="#cb-bishop" transform="translate(95 79) scale(1.12)"/>
-      <use href="#cb-bishop" transform="translate(90 62) scale(0.24)"/>
-      <use href="#cb-bishop" transform="translate(139 136) scale(0.24) rotate(180 22.5 23)"/>
     </g>
 
     <!-- Right card + knight (drawn last, on top) -->
@@ -45,8 +43,6 @@
       <rect x="88" y="58" width="64" height="92" rx="8" fill="#ffffff" stroke="#111111" stroke-width="3"/>
       <rect x="99" y="72" width="42" height="66" rx="5" fill="none" stroke="#111111" stroke-width="1.5"/>
       <use href="#cb-knight" transform="translate(95 79) scale(1.12)"/>
-      <use href="#cb-knight" transform="translate(90 62) scale(0.24)"/>
-      <use href="#cb-knight" transform="translate(139 136) scale(0.24) rotate(180 22.5 23)"/>
     </g>
   </g>
 </svg>

@@ -203,7 +203,7 @@
 
 	<div class="tabs">
 		<button class:current={tab === "color"} onclick={() => tab = "color"}>Accent color</button>
-		<button class:current={tab === "font"} onclick={() => tab = "font"}>Banner font</button>
+		<button class:current={tab === "font"} onclick={() => tab = "font"}>Menu font</button>
 	</div>
 
 	{#if tab === "color"}
@@ -215,7 +215,7 @@
 				class:applied={whiteBanner}
 				onclick={toggleWhiteBanner}
 			>
-				<span class="mini-banner white-banner">Chesscards <span class="white-banner-links">My flashcards</span></span>
+				<span class="mini-banner white-banner"><span class="mini-wordmark">Chess<span class="mini-wordmark-tail">cards</span></span> <span class="white-banner-links">My flashcards</span></span>
 				<span class="card-name">
 					White banner
 					<span class="card-note">click to toggle — accent stays for buttons</span>
@@ -233,7 +233,7 @@
 					>
 						<!-- the banner, a selected table row, a subtle fill and the two
 						     solids: the places the accent actually shows up, in miniature -->
-						<span class="mini-banner" style="background-color: {scheme.accent}; color: {scheme.text ?? 'white'}">Chesscards</span>
+						<span class="mini-banner" style="background-color: {scheme.accent}; color: {scheme.text ?? 'white'}"><span class="mini-wordmark">Chess<span class="mini-wordmark-tail">cards</span></span></span>
 						<span class="mini-row" style="background-color: {scheme.strong}">selected row</span>
 						<span class="mini-row" style="background-color: {scheme.subtle}">subtle fill</span>
 						<span class="swatches">
@@ -263,7 +263,7 @@
 						class:applied={activeFont === font.family}
 						onclick={() => applyFont(font)}
 					>
-						<span class="mini-banner font-banner" style="font-family: '{font.family}'">Chesscards <span class="font-menu-sample">My flashcards</span></span>
+						<span class="mini-banner font-banner"><span class="mini-wordmark">Chess<span class="mini-wordmark-tail">cards</span></span> <span class="font-menu-sample" style="font-family: '{font.family}'">My flashcards</span></span>
 						<span class="card-name">
 							{font.family}
 							<span class="card-note">{font.note}</span>
@@ -349,12 +349,20 @@
 		padding: 8px 10px;
 		border-radius: 3px;
 		color: white;
-		font-family: var(--wordmark-font, inherit);
 		font-size: 1rem;
 	}
+	/* the wordmark rendered as the real banner wears it (fixed face, two-tone) */
+	.mini-wordmark {
+		font-family: "Space Grotesk", Inter, sans-serif;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+	}
+	.mini-wordmark-tail {
+		font-weight: 400;
+	}
 	/* font samples wear whatever accent is applied, so the two choices can
-	   be judged together; the small menu sample shows the same family at
-	   nav-link size */
+	   be judged together; the tryout family dresses the menu sample — the
+	   wordmark keeps its own face, like the real banner */
 	.font-banner {
 		background-color: var(--accent);
 		color: var(--accent-text);
@@ -367,8 +375,8 @@
 	.font-menu-sample {
 		font-size: 0.85rem;
 		/* the weight the real menu wears, so the sample tells the truth about
-		   families lacking a 500 cut */
-		font-weight: 500;
+		   families lacking a 600 cut */
+		font-weight: 600;
 		color: color-mix(in srgb, var(--accent-text) 85%, transparent);
 	}
 	/* the white-banner card's miniature: paper bar, hairline, accent wordmark */
@@ -376,7 +384,7 @@
 		background-color: white;
 		border: 1px solid #ddd;
 		border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-		color: var(--accent);
+		color: rgba(0, 0, 0, 0.85);
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
@@ -385,7 +393,7 @@
 	.white-banner-links {
 		font-size: 0.85rem;
 		font-weight: 600;
-		font-family: var(--wordmark-font, inherit);
+		font-family: var(--menu-font, inherit);
 		color: rgba(0, 0, 0, 0.65);
 	}
 	.mini-row {

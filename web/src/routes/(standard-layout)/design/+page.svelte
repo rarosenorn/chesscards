@@ -156,7 +156,9 @@
 		ensureFontStylesheet();
 	});
 
+	// clicking the applied card again deselects it, back to the app default
 	const applyScheme = scheme => {
+		if (activeAccent === scheme.accent) return resetScheme();
 		applySchemeVars(scheme);
 		localStorage.setItem(SCHEME_KEY, JSON.stringify(scheme));
 		activeAccent = scheme.accent;
@@ -182,6 +184,7 @@
 	}
 
 	const applyFont = font => {
+		if (activeFont === font.family) return resetFont();
 		applyFontVar(font.family);
 		localStorage.setItem(FONT_KEY, JSON.stringify(font));
 		activeFont = font.family;

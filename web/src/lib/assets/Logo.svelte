@@ -1,23 +1,10 @@
 <!-- TODO make horsey like image playing cards with 2 mirrored horses on top -->
 <svg width="47" viewBox="66 52 94 105" xmlns="http://www.w3.org/2000/svg">
-  <!-- 2 fanned cards with Cburnett (Wikimedia) chess pieces:
-       bishop (left, behind) and knight (right, on top). Each card has a large
-       central piece inside a thin inner border. No corner index icons: at
-       banner size (47px wide) they render as unreadable specks. -->
+  <!-- 2 fanned cards: a blank one behind, a knight (Cburnett, Wikimedia)
+       filling the front one. No inner border or corner indices — at banner
+       size (47px wide) the plainer card reads cleaner. -->
 
   <defs>
-    <!-- Black bishop (Cburnett Chess_bdt45) -->
-    <g id="cb-bishop">
-      <g style="fill:none; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-miterlimit:4;" transform="translate(0,0.6)">
-        <g style="fill:#000000; stroke:#000000; stroke-linecap:butt;">
-          <path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.65,38.99 6.68,38.97 6,38 C 7.35,36.54 9,36 9,36 z"/>
-          <path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/>
-          <path d="M 25 8 A 2.5 2.5 0 1 1 20,8 A 2.5 2.5 0 1 1 25 8 z"/>
-        </g>
-        <path d="M 17.5,26 L 27.5,26 M 15,30 L 30,30 M 22.5,15.5 L 22.5,20.5 M 20,18 L 25,18" style="fill:none; stroke:#ffffff; stroke-linejoin:miter;"/>
-      </g>
-    </g>
-
     <!-- Black knight (Cburnett Chess_ndt45) -->
     <g id="cb-knight">
       <g style="fill:none; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-miterlimit:4;" transform="translate(0,0.3)">
@@ -31,18 +18,17 @@
   </defs>
 
   <g stroke-linejoin="round">
-    <!-- Left card + bishop (drawn first, behind) -->
-    <g transform="rotate(-7 120 150)">
+    <!-- Blank card behind: rotated clockwise about the shared center and
+         nudged left, so it peeks past the front card's top-left and
+         bottom-left edges only -->
+    <g transform="translate(-5 -1) rotate(7 120 104)">
       <rect x="88" y="58" width="64" height="92" rx="8" fill="#ffffff" stroke="#111111" stroke-width="3"/>
-      <rect x="99" y="72" width="42" height="66" rx="5" fill="none" stroke="#111111" stroke-width="1.5"/>
-      <use href="#cb-bishop" transform="translate(95 79) scale(1.12)"/>
     </g>
 
-    <!-- Right card + knight (drawn last, on top) -->
-    <g transform="rotate(2 120 150)">
+    <!-- Front card, upright, the knight centered on it -->
+    <g>
       <rect x="88" y="58" width="64" height="92" rx="8" fill="#ffffff" stroke="#111111" stroke-width="3"/>
-      <rect x="99" y="72" width="42" height="66" rx="5" fill="none" stroke="#111111" stroke-width="1.5"/>
-      <use href="#cb-knight" transform="translate(95 79) scale(1.12)"/>
+      <use href="#cb-knight" transform="translate(94 77.5) scale(1.15)"/>
     </g>
   </g>
 </svg>

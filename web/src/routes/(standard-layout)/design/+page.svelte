@@ -354,10 +354,10 @@
 		color: white;
 		font-size: 1rem;
 	}
-	/* the wordmark rendered as the real banner wears it (app face, 600) */
+	/* the wordmark rendered as the real banner wears it (app face, bold) */
 	.mini-wordmark {
-		font-weight: 600;
-		letter-spacing: -0.015em;
+		font-weight: 700;
+		letter-spacing: -0.02em;
 	}
 	/* font samples wear whatever accent is applied, so the two choices can
 	   be judged together; the tryout family dresses the menu sample — the

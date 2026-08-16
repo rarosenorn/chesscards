@@ -90,15 +90,14 @@
 				position: relative;
 				bottom: 2px;
 
-				/* the wordmark wears the app face at a single weight matched to
-				   the mark's ink, sized so its cap height sits near half the
-				   cards' height — unity comes from weight/size/alignment, not a
-				   display font. The /design font tryout dresses only the menu
+				/* the wordmark wears the app face, bold and tight-set to match
+				   the mark's ink — unity comes from weight/size/alignment, not
+				   a display font. The /design font tryout dresses only the menu
 				   links. */
 				.wordmark {
 					margin-left: 10px;
-					font-weight: 600;
-					letter-spacing: -0.015em;
+					font-weight: 700;
+					letter-spacing: -0.02em;
 					font-size: 1.6rem;
 				}
 			}

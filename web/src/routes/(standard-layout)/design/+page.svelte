@@ -144,6 +144,7 @@
 
 	let activeAccent = $state(null);
 	let activeFont = $state(null);
+	let tab = $state("color");
 
 	onMount(() => {
 		activeAccent = readPreview(SCHEME_KEY)?.accent ?? null;
@@ -185,8 +186,13 @@
 		here; making a choice permanent is a code change.
 	</p>
 
+	<div class="tabs">
+		<button class:current={tab === "color"} onclick={() => tab = "color"}>Accent color</button>
+		<button class:current={tab === "font"} onclick={() => tab = "font"}>Banner font</button>
+	</div>
+
+	{#if tab === "color"}
 	<section>
-		<h3>Accent color</h3>
 		{#each schemeGroups as group (group.title)}
 			<h4>{group.title}</h4>
 			<div class="scheme-grid">
@@ -217,9 +223,8 @@
 		{/each}
 		<button class="std-btn reset-btn" onclick={resetScheme}>Reset color to app default</button>
 	</section>
-
+	{:else}
 	<section>
-		<h3>Banner font</h3>
 		{#each fontGroups as group (group.title)}
 			<h4>{group.title}</h4>
 			<div class="scheme-grid">
@@ -240,6 +245,7 @@
 		{/each}
 		<button class="std-btn reset-btn" onclick={resetFont}>Reset font to app default</button>
 	</section>
+	{/if}
 </div>
 
 <style>
@@ -253,14 +259,30 @@
 		font-size: 0.95rem;
 		color: rgba(0, 0, 0, 0.6);
 	}
-	section + section {
-		margin-top: 28px;
-		padding-top: 18px;
-		border-top: 1px solid rgba(0, 0, 0, 0.1);
+	/* the deck pages' tab look, minus the routes: these switch local state */
+	.tabs {
+		display: flex;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 	}
-	h3 {
-		margin: 0 0 10px 0;
-		font-size: 1.05rem;
+	.tabs > button {
+		background-color: white;
+		border: 1px solid #e3e1e1;
+		border-bottom: none;
+		border-radius: 4px 4px 0 0;
+		margin-right: 5px;
+		padding: 6px 16px 3px 16px;
+		cursor: pointer;
+		font-size: 0.95rem;
+	}
+	.tabs > button:hover {
+		background-color: rgba(0, 0, 0, 0.05);
+	}
+	.tabs > button.current {
+		color: var(--accent-text);
+		background-color: var(--accent);
+	}
+	section {
+		margin-top: 4px;
 	}
 	h4 {
 		margin: 12px 0 8px 0;

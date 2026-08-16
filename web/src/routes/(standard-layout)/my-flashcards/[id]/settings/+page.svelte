@@ -6,8 +6,8 @@
 
 	let { data, form } = $props();
 
-	let deleteForm;
-	let resetForm;
+	let deleteForm = $state();
+	let resetForm = $state();
 
 	const confirmReset = async () => {
 		const confirmed = await typedConfirmModal({

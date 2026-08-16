@@ -13,6 +13,7 @@
 	// letting an in-progress edit survive host navigation.
 	let { card, session = null, onSave, onCancel } = $props();
 
+	// svelte-ignore state_referenced_locally -- session is an init-time bag, never swapped
 	const bag = session ?? {
 		boardUi: { editingIds: new Set(), editorStates: {}, applyEditors: {}, invalidBoards: {} },
 		frontDoc: null,

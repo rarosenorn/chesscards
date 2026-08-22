@@ -7,7 +7,6 @@
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
-	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
@@ -20,6 +19,17 @@
 	// owners can edit the current card in place (like browse), via the Edit
 	// button on the answer row or the e key
 	let editingCard = $state(false);
+
+	// The block editor drags tiptap's ProseMirror view, the chessboard editor
+	// and svelte-dnd-action behind it — ~1.2 MB that studying never touches.
+	// Loading it on the first edit keeps it off the path to the first card.
+	let CardBlockEdit = $state(null);
+	let editorModule = null;
+	const startEditing = async () => {
+		editorModule ??= import("$lib/components/CardBlockEdit.svelte");
+		CardBlockEdit = (await editorModule).default;
+		editingCard = true;
+	}
 	const saveEdit = async (front, back) => {
 		await updateCardContent({ cardId: currentCard.id, front, back });
 		currentCard.front = JSON.parse(front);
@@ -222,7 +232,7 @@
 			!e.target.isContentEditable
 		) {
 			e.preventDefault();
-			editingCard = true;
+			startEditing();
 			return;
 		}
 		if (
@@ -309,7 +319,7 @@
 </div>
 {/snippet}
 
-{#if currentCard && editingCard}
+{#if currentCard && editingCard && CardBlockEdit}
 	<div class="flashcard-edit card-surface">
 		<CardBlockEdit card={currentCard} onSave={saveEdit} onCancel={() => editingCard = false} />
 	</div>
@@ -390,7 +400,7 @@
 				{#if !readonly}
 					<button
 						class="std-btn"
-						onclick={() => editingCard = true}
+						onclick={startEditing}
 						title="Shortcut key: e"
 					>
 						Edit

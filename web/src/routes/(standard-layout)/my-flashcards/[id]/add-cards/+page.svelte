@@ -5,7 +5,7 @@
 	// the blocks, and boards are managed with buttons and svelte-dnd
 	// dragging (within and between blocks). Submit converts each doc to the
 	// stored block-array format, so study/browse need no changes.
-	import { getContext, onMount } from "svelte"
+	import { getContext, onMount, tick } from "svelte"
 	import { enhance } from "$app/forms"
 	import { beforeNavigate } from "$app/navigation"
 	import { browser } from "$app/environment"
@@ -61,7 +61,15 @@
 		saveStageId(deckId, value);
 	}
 
-	const startAddStage = () => { stageAdd = { value: "" } };
+	// focused by hand, not by autofocus: the front editor holds focus while
+	// the card is being written, and autofocus on the freshly rendered field
+	// does not take it away
+	let stageAddInput = $state(null);
+	const startAddStage = async () => {
+		stageAdd = { value: "" };
+		await tick();
+		stageAddInput?.focus();
+	}
 
 	const commitAddStage = async () => {
 		const add = stageAdd;
@@ -353,20 +361,17 @@
 				{/each}
 			</select>
 		</label>
-		<button
-			type="button"
-			class="add-stage-btn"
-			class:open={stageAdd}
-			aria-label="New chapter"
-			aria-expanded={!!stageAdd}
-			onmousedown={e => e.preventDefault()}
-			onclick={() => stageAdd ? commitAddStage() : startAddStage()}
-		>+</button>
-		{#if stageAdd}
-			<!-- svelte-ignore a11y_autofocus -- the field exists because the user just asked for a chapter -->
+		{#if !stageAdd}
+			<button
+				type="button"
+				class="add-stage-btn"
+				aria-label="New chapter"
+				onclick={startAddStage}
+			>+</button>
+		{:else}
 			<input
 				class="add-stage-input"
-				autofocus
+				bind:this={stageAddInput}
 				placeholder="Chapter name"
 				bind:value={stageAdd.value}
 				onblur={commitAddStage}
@@ -493,6 +498,9 @@
 	   around it is worse than an editor wrapping text a little wider than
 	   the card will. */
 	.container {
+		/* one number for the canvas's inset, so the sticky bar below can
+		   bleed back out to the edge by exactly as much */
+		--canvas-pad: 20px;
 		margin-top: 6px;
 		margin-bottom: 80px;
 		/* 20px to the editors: with the editor's own 2px border and 10px
@@ -500,7 +508,7 @@
 		   so a board sits the same distance from this canvas's edge as from
 		   the card's. The card's width less that 64px of chrome lands the
 		   content at the card's 896, and boards render at the card's sizes. */
-		padding: 12px 20px;
+		padding: 12px var(--canvas-pad);
 		gap: 4px;
 		max-width: var(--flashcard-width);
 		position: relative;
@@ -549,11 +557,6 @@
 	.add-stage-btn:hover {
 		background-color: #f6f6f6;
 		color: rgba(0, 0, 0, 0.85);
-	}
-	/* while the field is open the + is the commit, and says so */
-	.add-stage-btn.open {
-		border-color: var(--accent);
-		color: var(--accent);
 	}
 	.add-stage-input {
 		font-size: 0.85rem;
@@ -635,8 +638,8 @@
 		position: sticky;
 		top: 0;
 		z-index: 20;
-		margin: -12px -30px 4px -30px;
-		padding: 8px 30px 0 30px;
+		margin: -12px calc(-1 * var(--canvas-pad)) 4px calc(-1 * var(--canvas-pad));
+		padding: 8px var(--canvas-pad) 0 var(--canvas-pad);
 		background: white;
 		border-radius: 8px 8px 0 0;
 	}

@@ -10,7 +10,7 @@
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
-	import { updateCardContent, deleteCards } from "../browse/browse.remote.js"
+	import { updateCardContent, updateCardType, deleteCards } from "../browse/browse.remote.js"
 
 	let deck = getContext("deck");
 	// marketplace deck instances can only be viewed, not edited
@@ -30,10 +30,16 @@
 		CardBlockEdit = (await editorModule).default;
 		editingCard = true;
 	}
-	const saveEdit = async (front, back) => {
-		await updateCardContent({ cardId: currentCard.id, front, back });
-		currentCard.front = JSON.parse(front);
-		currentCard.back = JSON.parse(back);
+	const saveEdit = async (front, back, cardType) => {
+		const card = currentCard;
+		await updateCardContent({ cardId: card.id, front, back });
+		card.front = JSON.parse(front);
+		card.back = JSON.parse(back);
+		// the type is saved with the rest, so cancelling leaves it alone. It
+		// decides how the card is graded, so the queue re-derives from it.
+		if (cardType !== card.card_type) {
+			Object.assign(card, await updateCardType({ cardId: card.id, cardType }));
+		}
 		editingCard = false;
 	}
 
@@ -321,7 +327,7 @@
 
 {#if currentCard && editingCard && CardBlockEdit}
 	<div class="flashcard-edit card-surface">
-		<CardBlockEdit card={currentCard} onSave={saveEdit} onCancel={() => editingCard = false} />
+		<CardBlockEdit card={currentCard} showCardType onSave={saveEdit} onCancel={() => editingCard = false} />
 	</div>
 {:else if currentCard}
 	<div

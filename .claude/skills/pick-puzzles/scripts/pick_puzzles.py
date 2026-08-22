@@ -23,10 +23,10 @@ DB = ROOT / "scratch" / "puzzles.duckdb"
 
 # (name, rating range, count) — two spare per bracket, to be picked over by hand
 BRACKETS = [
-    ("Simple", "Rating >= 1100 AND Rating < 1300", 3 + 2),
-    ("Intermediate", "Rating >= 1400 AND Rating < 1600", 3 + 2),
-    ("Hard", "Rating >= 1600 AND Rating < 1800", 2 + 2),
-    ("Very hard", "Rating >= 1800 AND Rating < 2000", 2 + 2),
+    ("Simple", "Rating >= 1600 AND Rating < 1750", 3 + 2),
+    ("Intermediate", "Rating >= 1750 AND Rating < 1900", 3 + 2),
+    ("Hard", "Rating >= 1950 AND Rating < 2100", 2 + 2),
+    ("Very hard", "Rating >= 2100 AND Rating < 2300", 2 + 2),
 ]
 CANDIDATES = 60        # rows pulled per bracket to have replacements for rejects
 MATE_NODES = 400_000   # search budget per puzzle; a mate in 4 needs ~250k

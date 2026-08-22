@@ -44,12 +44,12 @@ hand.
 
 | Bracket      | Rating    | Wanted | Picked |
 |--------------|-----------|--------|--------|
-| Simple       | 1100–1300 | 3      | 5      |
-| Intermediate | 1400–1600 | 3      | 5      |
-| Hard         | 1600–1800 | 2      | 4      |
-| Very hard    | 1800–2000 | 2      | 4      |
+| Simple       | 1600–1750 | 3      | 5      |
+| Intermediate | 1750–1900 | 3      | 5      |
+| Hard         | 1950–2100 | 2      | 4      |
+| Very hard    | 2100–2300 | 2      | 4      |
 
-(1300–1400 is deliberately skipped, to keep the first two brackets clearly apart.)
+(1900–1950 is deliberately skipped, to keep intermediate and hard clearly apart.)
 
 **Most popular first.** Within a bracket, candidates are taken in `Popularity DESC,
 NbPlays DESC` order and accepted until the bracket is full, so a rejected puzzle is

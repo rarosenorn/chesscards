@@ -1,16 +1,12 @@
 # Currently working on
-## add cards page
-- when clicking on an open editor, the input becomes unfocused, it should still be focused.
-- in study and browse, flashcard text and boards should have same margin, e.g. left side of text and left side of left board (when 2 boards in row) should be flush
-- but the caret should only be ihdden on editor right side, not on next boards left side, in regards to what we just fixed.
-
-## do so if you own a deck and are in study mode, you can press e and you can edit the card like in browse. put edit button on right side of answers (mirror hide button) but only if user owns deck ofcourse
-
-## indicator whos turn it is on a board, like in 1001 endgame puzzles with a color filled square
+- center Show duplicates text on input and increase font size slightly
 
 ## subdecks
+- Order could be subdeck.number? like if a card is the 3rd card in the 2nd subdeck its order is 2.3?
 - Subdecks are parts of a deck grouped together for some level of internalization before moving to next subdeck
+- level of internalizatoin before moving on? maybe having seen all cards in subdeck atleast 3 times?, then its not dependents on getting them right, or maybe getting synthesis cards correct 2 times?
 - Subdecks because sometimes its good to have some mastery of part of a deck, before moving to the next part. For example, in endgames its better to have seen cards from basic endgames like king and rook vs king multiple times and have some mastery of that part, before moving to include cards from the next subdeck, which could include more advanced endgames. Then you would progress when you hit target on some variable in the previous subdeck. Ofcourse it should have settings to bypass in whatever way.
+- Default should be subdeck progression, but should be option to do full throttle anki style
 
 Subdecks is good because if you have a large deck on 1 opening for example, its better to gain some mastery of the most popular lines and not too deep (like quickstart in chessable), rather than getting cards for the basics and then more obscure before you even have a level of internalization of the basics. Same for endgames, want to master basics before knight and bishop mate.
 
@@ -33,39 +29,25 @@ Study all cards in the chosen deck by getting cards from the deck contiuously. H
 ## study all button
 - Button for study all, which studies all your decks in some way for interleaving all, still adhering to subdeck progression.
 
+# when in edit mode, arrows cant both go back and forth in moves and control caret. what to do?
+# footer for proffesional look
+# contact page with email for bugs / ideas / business inquiries
 # allow PGN for board editor for both positions and moves import
-# editor: make the drag and drop work properly again, AI didnt revert properly so I think we lost some function, esp. between back and front
 # editor: do selectors for annotations like pieces with nice icons showing arrows and circle, selectable and between Start position Clean board and pieces above
-# editor: another delete block icon thats not ugly
-# Chesscards wiki with info on FSRS, card types etc.
-# Tutorial page on how to use editor
-# Reorder cards in deck builder, so you can decide which order the cards are, different from insertion order
+# Chesscards wiki with info on how app works, FSRS, card types etc.
 # Do so if i card becomes due during a day, it becomes due at 2am local time, s.t. cards are rdy in the morning instead of dumping in through the day.(look how anki does)
 # Overview over your decks on marketplace / how many got/purchased it stats
 # Versioning of marketplace decks? If you improve it, request to update?
 # Statistics
 # if its your deck, do such that if you press e in study mode the editor comes up and youcan change stuff
-# evaluation of deck: dont do stars theyre reductive. do recommend / do not recommend like steam.
-## heatmap in myflashcards like anki heatmap and github heatmap
-## more detailed statistics?
+# evaluation of deck: dont do stars theyre reductive. do recommend / do not recommend like steam and do comments with upvote / downvote buttons.
+# heatmap in myflashcards like anki heatmap and github heatmap
 
 # Chessboard editor
-# Card types
-Different card types than just front and back, like anki has different types like cloze deletion, image mask etc.
-## tactics card type
-Card type that is done first time you get it correct, again if not correct. For example for checkmate patterns, there are N tactics cards for "find checkmate and name pattern", doesnt make sense to have these kind of cards as fsrs, since its better to have more different, than seeing same "puzzle" multiple times"
-## cloze deletion
-
 # "fork" free deck?
 # link created account with socials, delink created account from socials
 
-## board editor: delimit front/back moves in the move list
-Show ALL moves in the editor's move list at all times (no hiding behind the
-eye), with some UI delimiting where the back begins — e.g. a divider line /
-"back" label between the front segment and the back segment. The eye then
-only governs the board preview, and the boundary is always visible while
-editing.
-
+# REST OF DOC AI CREATED
 # SPEC: add-cards editor — caret / deletion / merge behavior
 As implemented in `web/src/lib/tiptap-chessboard-block/` (2026-07-28). This is
 the reference for how the editor is SUPPOSED to behave — adjust this first,

@@ -14,6 +14,7 @@ For each of the common checkmate patterns create
       A: "Either a rook or a queen"
    - Cards about when checkmate often happens
    - 6 (?) cards of differing difficulty which has a board on front, the user then has to find the checkmate and name it
+   - Do different "variations/flavors" of the checkmate, e.g.corner anastasias mate
 Do synthesizing, e.g. 
    Q: "Which named checkmates can the queen do without friendly support (except being defended)"
    A: "Dovetails mate, swallows tail mate, epaulette mate etc."
@@ -22,6 +23,7 @@ Do synthesizing, e.g.
    Q: "Whats the difference between Blind Swine Mate
    Q: "Which named checkmates can be done with only 1 piece?"
    A: "Smothered Mate ..."
+   Q: "Which mates with e.g. Rook and bishop can you do" this is good because if you have rook and bishop close to king its easier if you know: ok this and this mate i can do, how can i get there?"
 
 [ ] pawns and pawn structures
 

@@ -454,8 +454,10 @@
 		applyFresh(await moveCards({ deckId: deck.id, cardIds, stageId, index: null }));
 	}
 
-	// { x, y } where the context menu is open, or null
+	// { x, y } where the context menu is open, or null; the chapter list
+	// inside it opens folded, and folds again with the menu
 	let contextMenu = $state(null);
+	let moveMenuOpen = $state(false);
 
 	const handleRowContextMenu = (e, card, index) => {
 		if (readonly) return;
@@ -466,6 +468,7 @@
 			multiSelected = new SvelteSet([card.id]);
 			anchorIndex = index;
 		}
+		moveMenuOpen = false;
 		contextMenu = { x: e.clientX, y: e.clientY };
 	}
 
@@ -589,17 +592,30 @@
 			</button>
 		{/if}
 		{#if stagesSorted.length > 1}
-			<div class="menu-heading">Move to</div>
-			{#each stagesSorted as stage (stage.id)}
-				<button
-					onclick={() => {
-						contextMenu = null;
-						moveSelectedToStage(stage.id);
-					}}
-				>
-					{stageName(stage)}
-				</button>
-			{/each}
+			<!-- the chapters stay folded away until asked for: a deck with many
+			     of them used to bury Delete under the whole list -->
+			<button
+				class="submenu-toggle"
+				class:open={moveMenuOpen}
+				aria-expanded={moveMenuOpen}
+				onclick={() => moveMenuOpen = !moveMenuOpen}
+			>
+				{multiSelected.size > 1 ? `Move ${multiSelected.size} cards` : "Move card"}
+				<span class="submenu-arrow" class:open={moveMenuOpen}></span>
+			</button>
+			{#if moveMenuOpen}
+				{#each stagesSorted as stage (stage.id)}
+					<button
+						class="submenu-item"
+						onclick={() => {
+							contextMenu = null;
+							moveSelectedToStage(stage.id);
+						}}
+					>
+						{stageName(stage)}
+					</button>
+				{/each}
+			{/if}
 		{/if}
 		<button
 			class="danger"
@@ -708,7 +724,9 @@
 				{@const indicator = getFrontIndicator(card.front)}
 				{@const boardCount = card.front.find(block => block.type === "chessboards")?.content.length ?? 0}
 					<!-- the Order cell is the reorder handle: drag moves the row,
-					     a plain click opens the number for typing -->
+					     a plain click opens the number for typing. The grip
+					     beside the number says so — the cell looked like a
+					     plain number, and nothing invited the drag. -->
 					<td
 						class="col-order"
 						class:order-handle={!readonly && groupedRows}
@@ -729,6 +747,13 @@
 							/>
 						{:else}
 							{orderLabels.get(card.id)}
+							{#if !readonly && groupedRows}
+								<svg class="grip" viewBox="0 0 6 10" aria-hidden="true">
+									<circle cx="1" cy="1" r="1"/><circle cx="5" cy="1" r="1"/>
+									<circle cx="1" cy="5" r="1"/><circle cx="5" cy="5" r="1"/>
+									<circle cx="1" cy="9" r="1"/><circle cx="5" cy="9" r="1"/>
+								</svg>
+							{/if}
 						{/if}
 					</td>
 					<td>
@@ -1029,7 +1054,24 @@
 		border-right: none;
 	}
 	.col-order {
-		width: 62px;
+		width: 76px;
+	}
+	/* the number keeps the cell's left edge, the grip sits out at the right
+	   where the drag begins */
+	td.col-order {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 6px;
+	}
+	.grip {
+		flex: none;
+		width: 6px;
+		height: 10px;
+		fill: #cfcfcf;
+	}
+	tbody tr:hover .grip {
+		fill: #9a9a9a;
 	}
 	.col-type {
 		width: 86px;
@@ -1221,6 +1263,9 @@
 	.order-handle {
 		cursor: grab;
 	}
+	.order-handle:hover .grip {
+		fill: #6f6f6f;
+	}
 	/* everything grabs while a drag is in flight — the rows' own pointer
 	   cursors would otherwise flicker through under the ghost */
 	.browse-container.reordering,
@@ -1269,11 +1314,29 @@
 	.order-input:focus {
 		outline: none;
 	}
-	.menu-heading {
-		padding: 4px 12px 2px 12px;
-		font-size: 0.75rem;
-		color: rgba(0, 0, 0, 0.45);
-		border-top: 1px solid #eee;
+	/* the disclosure that holds the chapter list, and the list itself */
+	.context-menu button.submenu-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+	}
+	.submenu-arrow {
+		flex: none;
+		width: 0;
+		height: 0;
+		border-top: 4px solid transparent;
+		border-bottom: 4px solid transparent;
+		border-left: 5px solid rgba(0, 0, 0, 0.4);
+		transition: transform 110ms ease;
+	}
+	/* points down once the list below it is showing */
+	.submenu-arrow.open {
+		transform: rotate(90deg);
+	}
+	.context-menu button.submenu-item {
+		padding-left: 26px;
+		color: #404040;
 	}
 	.context-menu {
 		position: fixed;

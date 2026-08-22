@@ -22,7 +22,7 @@
 	   happen to share it. Shared with the add-cards editor, which mirrors
 	   these sizes; it also sets a lone board's width, which is one cell of
 	   the pair it would sit in. */
-	--board-col-gap: 24px;
+	--board-col-gap: 20px;
 	/* A card whose boards all stand alone has no column to line up with, so
 	   its boards take this much more than a grid cell. */
 	--board-solo-scale: 1.36;

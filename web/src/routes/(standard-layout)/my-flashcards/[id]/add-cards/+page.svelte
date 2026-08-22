@@ -373,7 +373,17 @@
 				aria-label={stageAdd ? "Cancel new chapter" : "New chapter"}
 				aria-expanded={!!stageAdd}
 				onclick={() => stageAdd ? cancelAddStage() : startAddStage()}
-			>{stageAdd ? "\u00d7" : "+"}</button>
+			>
+				<!-- drawn, not typed: a + and a x set as text sit off-centre
+				     in the button by the font's own metrics -->
+				<svg viewBox="0 0 16 16" aria-hidden="true">
+					{#if stageAdd}
+						<path d="M4 4 L12 12 M12 4 L4 12" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+					{:else}
+						<path d="M8 3 V13 M3 8 H13" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+					{/if}
+				</svg>
+			</button>
 			{#if stageAdd}
 				<input
 					class="stage-add-input"
@@ -572,10 +582,13 @@
 		padding: 0;
 		border: none;
 		background: none;
-		font-size: 1.1rem;
-		line-height: 1;
 		color: rgba(0, 0, 0, 0.6);
 		cursor: pointer;
+	}
+	.stage-add-toggle svg {
+		display: block;
+		width: 13px;
+		height: 13px;
 	}
 	.stage-add-toggle:hover {
 		background-color: #f6f6f6;
@@ -597,19 +610,21 @@
 	.stage-add-input:focus {
 		outline: none;
 	}
+	/* the app's neutral button, not the accent: adding a chapter is an
+	   ordinary action on this row, not the row's primary one */
 	.stage-add-commit {
 		align-self: stretch;
 		padding: 0 10px;
 		border: none;
 		border-left: 1px solid rgba(0, 0, 0, 0.15);
-		background-color: var(--accent);
-		color: var(--accent-text);
+		background-color: #f5f5f5;
+		color: #404040;
 		font-size: 0.8rem;
 		font-weight: 500;
 		cursor: pointer;
 	}
 	.stage-add-commit:hover:enabled {
-		background-color: var(--accent-hover);
+		background-color: #ececec;
 	}
 	.stage-add-commit:disabled {
 		background-color: #f0f0f0;

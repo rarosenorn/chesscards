@@ -875,6 +875,10 @@
 		stroke: none;
 	}
 	.editor {
+		/* what "picked, and waiting to be placed" looks like — worn by the
+		   palette's chosen piece and by the square a piece is lifted from,
+		   which are the same act */
+		--tool-selected: #ffff33;
 		position: relative;
 		width: 100%;
 	}
@@ -892,11 +896,13 @@
 	.board:focus {
 		outline: none;
 	}
-	/* the picked-up piece's square: steelblue fill, not the default faint black */
+	/* The picked-up piece's square wears the palette's selected yellow, not
+	   the default faint black: picking a piece up off the board and picking
+	   one out of the palette are the same act, so they read the same. */
 	/* fully opaque: a translucent fill blends differently with light and
 	   dark squares, making the highlight look inconsistent */
 	.board :global(.cm-chessboard .markers .marker.marker-square) {
-		fill: steelblue;
+		fill: var(--tool-selected);
 		opacity: 1;
 	}
 	/* the library puts a pointer on every input-enabled square; instead:
@@ -1203,7 +1209,7 @@
 	}
 	/* selection reads through the background alone */
 	.palette-piece.selected {
-		background-color: #ffff33;
+		background-color: var(--tool-selected);
 	}
 	.palette-piece svg {
 		width: 100%;

@@ -2,3 +2,5 @@ scratch/
 # a stray empty one gets left at the root when npm runs from here;
 # the real install is web/node_modules, ignored by web/.gitignore
 node_modules/
+# skill output: the pick-puzzles .ods files are regenerated, not sources
+puzzle-picks/

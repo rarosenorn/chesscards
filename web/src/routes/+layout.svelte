@@ -41,7 +41,6 @@
 					["/my-flashcards", "My flashcards"],
 					["/marketplace", "Marketplace"],
 					["/why-flashcards", "Why flashcards?"],
-					["/faq", "FAQ"],
 					["/wiki", "Wiki"]
 				] as [href, label]}
 					<a {href}>{label}</a>

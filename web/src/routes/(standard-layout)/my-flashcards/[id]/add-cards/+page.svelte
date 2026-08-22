@@ -495,17 +495,20 @@
 	.container {
 		margin-top: 6px;
 		margin-bottom: 80px;
-		/* 30px to the editors: the distance boards/text had from the card
-		   edge in the block editor (card 20px + block 10px) */
-		padding: 12px 30px;
+		/* 20px to the editors: with the editor's own 2px border and 10px
+		   text padding that puts content 32px in — the card's rim exactly,
+		   so a board sits the same distance from this canvas's edge as from
+		   the card's. The card's width less that 64px of chrome lands the
+		   content at the card's 896, and boards render at the card's sizes. */
+		padding: 12px 20px;
 		gap: 4px;
-		max-width: 848px;
+		max-width: var(--flashcard-width);
 		position: relative;
 	}
 	/* card-type bar above the card, sharing its column width */
 	.type-row {
 		width: 100%;
-		max-width: 848px;
+		max-width: var(--flashcard-width);
 		margin: 17px auto 0 auto;
 		display: flex;
 		align-items: center;
@@ -530,8 +533,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		/* stretched, so it is exactly as tall as the select beside it
+		   whatever that works out to */
+		align-self: stretch;
 		width: 26px;
-		height: 26px;
 		padding: 0;
 		border: 1px solid rgba(0, 0, 0, 0.25);
 		border-radius: 4px;

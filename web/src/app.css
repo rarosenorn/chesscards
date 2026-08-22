@@ -13,8 +13,19 @@
 	/* how wide a flashcard renders, wherever one is shown. It is a board
 	   size in disguise — a board is half the card — so anything that has to
 	   line up with a card's edge reads it from here rather than repeating
-	   the number (browse's toolbar does). */
-	--flashcard-width: 848px;
+	   the number (browse's toolbar does). 960 less the card's 32px rims
+	   leaves 896 of content: two 432 cells with the gap below between
+	   them. */
+	--flashcard-width: 960px;
+	/* The one distance the board layout is built on: between the two boards
+	   of a row, and from either board to the card's edge (the card's own
+	   32px rim, with the grid taking no inset of its own). Equal on all
+	   three, so a row of boards sits evenly in the card. Shared with the
+	   add-cards editor, which mirrors these sizes. */
+	--board-col-gap: 32px;
+	/* A card whose boards all stand alone has no column to line up with, so
+	   its boards take this much more than a grid cell. */
+	--board-solo-scale: 1.3;
 	/* The card's floor: what a line of text, a lone board with its move line,
 	   the divider and a line of text on the back come to — the shape most
 	   cards have, held so revealing the answer does not resize the card
@@ -22,7 +33,7 @@
 	   so a card is the same size in both views. A lone board renders at its
 	   old wide-card size (see the single-board rule), so the floor stays
 	   what that content came to. */
-	--flashcard-min-height: 642px;
+	--flashcard-min-height: 753px;
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the
    window scrollbar: that shifts the viewport width and makes the responsive
@@ -207,7 +218,6 @@ body.piece-grabbing * {
    numbers that set how large a board renders. */
 .flashcard {
 	max-width: var(--flashcard-width);
-	--board-col-gap: 12px;
 }
 /* one side of a card: the blocks stack here rather than directly in the
    card, so the side can carry its own reading axis (see side-alignment.js) */
@@ -218,14 +228,16 @@ body.piece-grabbing * {
 	align-items: center;
 }
 .flashcard .text-block {
-	padding: 0 10px;
-	/* Text carries its own measure now, apart from the boards: the card is
-	   wide for their sake, and prose runs to ~70 characters centered inside
-	   it — the chess-book arrangement, diagrams wide and text at reading
-	   width. Short text still centers (the block shrink-wraps), so only
-	   wrapped paragraphs feel the cap. The editors stay uncapped, so a line
-	   there breaks wider than it will on the card. */
-	max-width: min(100%, 70ch);
+	/* Text carries its own measure, apart from the boards: the card is wide
+	   for their sake, and prose is inset from the boards' edge rather than
+	   run to it — the chess-book arrangement, diagrams wide and text a
+	   little narrower. The inset is small on purpose: a line longer than
+	   the ideal measure reads better here than a column of text stranded in
+	   the middle of a wide card. Short text still centers (the block
+	   shrink-wraps), so only wrapped paragraphs feel the cap. The editors
+	   stay uncapped, so a line there breaks wider than it will on the
+	   card. */
+	max-width: calc(100% - 96px);
 }
 /* Text needs no alignment rule of its own: the block is only as wide as its
    text up to the measure, and the side centers it. Short text is therefore
@@ -282,24 +294,24 @@ body.piece-grabbing * {
 /* a lone board keeps the same size as a 2-column grid cell, centered */
 .flashcard .single-board-block > .board-container {
 	/* exactly one 2-column cell of the grid below: half the side, less half
-	   the grid's 20px inset and half the gap between the columns */
-	width: calc(50% - 10px - var(--board-col-gap) / 2);
+	   the gap between the columns */
+	width: calc(50% - var(--board-col-gap) / 2);
 	/* a board wider than the half-width cell (Chessboard minWidth) must
 	   grow the centered cell, not spill out one-sided */
 	min-width: min-content;
 }
 /* Nothing on this card sits in a two-board row, so no board has a column to
-   line up with and the half-width cell is only a habit — the boards take a
-   fifth more of the card. */
+   line up with and the half-width cell is only a habit — the boards take
+   the solo share of the card instead. */
 .flashcard[data-boards="solo"] .single-board-block > .board-container {
-	width: calc((50% - 10px - var(--board-col-gap) / 2) * 1.2);
+	width: calc((50% - var(--board-col-gap) / 2) * var(--board-solo-scale));
 }
 .flashcard .board-grid-block {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-	/* matches .text-block's inset, so a row's left board sits flush with
-	   the text; a small inset keeps the boards as large as the card allows */
-	width: calc(100% - 20px);
+	/* no inset of its own: the card's 32px rim already holds the boards off
+	   its edge by exactly the gap they keep from each other */
+	width: 100%;
 	margin-inline: auto;
 	/* rows sit closer than columns: the numbers above each board already
 	   add visual air between rows */

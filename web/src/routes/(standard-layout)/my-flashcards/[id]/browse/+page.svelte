@@ -1138,10 +1138,11 @@
 	.card-edit {
 		margin-top: 16px;
 		margin-bottom: 0;
-		padding: 12px 30px;
-		/* the add-cards canvas: content lands at 764, so boards render the
-		   card's exact sizes (376 cells, 451 lone) with text sharing both edges */
-		max-width: 848px;
+		padding: 12px 20px;
+		/* the add-cards canvas: content lands at 896, so boards render the
+		   card's exact sizes (432 cells, 562 lone) with text sharing both
+		   edges — and the editor is exactly as wide as the card it replaces */
+		max-width: var(--flashcard-width);
 	}
 	/* --- stage rows --- */
 	/* a band between the card rows, greyer than the zebra so it reads as

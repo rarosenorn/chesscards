@@ -377,8 +377,8 @@
 
 <style>
 	/* The card's exact board sizes (app.css "card board layout"): paired
-	   boards are the card's 376px cells 12px apart, a lone board the card's
-	   451px solo — the editor shows what the card will render, to the
+	   boards are the card's 432px cells --board-col-gap apart, a lone board
+	   the card's 562px solo — the editor shows what the card will render, to the
 	   pixel. The grid is capped at exactly two cells plus the gap and
 	   centered, so the sizes hold on any canvas; open editors span that
 	   same width, one open or several stacked alike. The known cost of
@@ -386,8 +386,8 @@
 	   block crosses between one board and two. */
 	/* Full width, like the text: both edges shared. The card's exact board
 	   sizes come from the CANVAS, not from caps here — the editor pages size
-	   their content to 764px (two 376 card cells + the card's 12px gap), so
-	   fluid halves ARE 376 and a lone board's 451 fits as on the card. */
+	   their content to 896px (two 432 card cells + the card's 32px gap), so
+	   fluid halves ARE 432 and a lone board's 562 fits as on the card. */
 	.board-grid-block {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -395,7 +395,7 @@
 		width: 100%;
 		/* rows sit closer than columns: the numbers above each board already
 		   add visual air between rows; the column gap is the card's own */
-		gap: 12px 12px;
+		gap: 12px var(--board-col-gap);
 	}
 	/* a lone board takes the card's solo size, centered in the full block
 	   like it always was */
@@ -406,7 +406,9 @@
 		width: 100%;
 	}
 	.board-grid-block.single > .board-cell:not(.cell-editing) {
-		width: min(451px, 100%);
+		/* the card's solo rule, read off this block's own width: one cell of
+		   the pair beside it, scaled up the same way */
+		width: min(calc((100% - var(--board-col-gap)) / 2 * var(--board-solo-scale)), 100%);
 		min-width: min-content;
 	}
 	.board-cell {

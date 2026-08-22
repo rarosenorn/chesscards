@@ -124,6 +124,27 @@
 
 <svelte:window onkeydown={handleKeyDown} />
 
+{#if showCardType}
+	<!-- above the menu bar, the order the add-cards page uses: the type is a
+	     property of the whole card, so it leads the card rather than sitting
+	     among the buttons that close it -->
+	<div class="type-row">
+		<span id="edit-card-type-label">Type</span>
+		<div class="type-segments" role="radiogroup" aria-labelledby="edit-card-type-label">
+			{#each [["basic", "Basic"], ["tactic", "Tactic"]] as [value, label]}
+				<button
+					class="std-btn"
+					role="radio"
+					aria-checked={cardType === value}
+					class:selected={cardType === value}
+					onclick={() => cardType = value}
+				>
+					{label}
+				</button>
+			{/each}
+		</div>
+	</div>
+{/if}
 <div class="menu-holder">
 	<DocEditorMenuBar {menu} onAddChessboard={addChessboard} />
 </div>
@@ -159,45 +180,27 @@
 	/>
 </div>
 <div class="edit-actions">
-	{#if showCardType}
-		<span id="edit-card-type-label">Type</span>
-		<div class="type-segments" role="radiogroup" aria-labelledby="edit-card-type-label">
-			{#each [["basic", "Basic"], ["tactic", "Tactic"]] as [value, label]}
-				<button
-					class="std-btn"
-					role="radio"
-					aria-checked={cardType === value}
-					class:selected={cardType === value}
-					onclick={() => cardType = value}
-				>
-					{label}
-				</button>
-			{/each}
-		</div>
-		<span class="actions-spacer"></span>
-	{/if}
 	<button class="std-btn" onclick={onCancel}>Cancel</button>
 	<button class="std-btn" title="ctrl+enter" onclick={save}>Save</button>
 </div>
 
 <style>
-	/* flush with the editors' right edge, like add-cards' Add card; with the
-	   type shown the row spans instead, type at the left and the buttons
-	   still at the right */
+	/* flush with the editors' right edge, like add-cards' Add card */
 	.edit-actions {
 		align-self: end;
 		display: flex;
-		align-items: center;
 		gap: 8px;
 		margin-top: 12px;
+	}
+	/* the add-cards type row, above the card's own menu bar */
+	.type-row {
+		align-self: stretch;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 8px;
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
-	}
-	.edit-actions:has(.type-segments) {
-		align-self: stretch;
-	}
-	.actions-spacer {
-		flex: 1;
 	}
 	/* the add-cards pills: unselected recedes grey, the selected is plain
 	   white against it */

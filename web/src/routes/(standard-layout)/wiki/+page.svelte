@@ -6,8 +6,12 @@
 	// whole marketplace.
 	import { page } from "$app/state"
 	import Faq from "./Faq.svelte"
+	import Editor from "./Editor.svelte"
+	import Srs from "./Srs.svelte"
 
 	const sections = [
+		{ slug: "editor", title: "Editor", component: Editor },
+		{ slug: "srs", title: "SRS algorithm", component: Srs },
 		{ slug: "faq", title: "FAQ", component: Faq }
 	];
 
@@ -83,5 +87,33 @@
 	.wiki-body h2 {
 		margin: 0 0 14px 0;
 		font-size: 1.2rem;
+	}
+	/* the sections are their own components, so their prose is styled from
+	   here: one reading measure and rhythm whatever the section */
+	.wiki-body :global(p),
+	.wiki-body :global(ul),
+	.wiki-body :global(dl) {
+		max-width: 70ch;
+	}
+	.wiki-body :global(h3) {
+		margin: 26px 0 8px 0;
+		font-size: 1rem;
+	}
+	.wiki-body :global(p) {
+		margin: 0 0 10px 0;
+		line-height: 1.55;
+		color: #333;
+	}
+	.wiki-body :global(ul) {
+		margin: 0 0 10px 0;
+		padding-left: 22px;
+		line-height: 1.55;
+		color: #333;
+	}
+	.wiki-body :global(li) {
+		margin-bottom: 3px;
+	}
+	.wiki-body :global(a) {
+		color: var(--accent);
 	}
 </style>

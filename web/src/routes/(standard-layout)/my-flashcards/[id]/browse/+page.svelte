@@ -725,7 +725,7 @@
 				{@const boardCount = card.front.find(block => block.type === "chessboards")?.content.length ?? 0}
 					<!-- the Order cell is the reorder handle: drag moves the row,
 					     a plain click opens the number for typing. The grip
-					     beside the number says so — the cell looked like a
+					     leading the row says so — the cell looked like a
 					     plain number, and nothing invited the drag. -->
 					<td
 						class="col-order"
@@ -746,7 +746,6 @@
 								}}
 							/>
 						{:else}
-							{orderLabels.get(card.id)}
 							{#if !readonly && groupedRows}
 								<svg class="grip" viewBox="0 0 6 10" aria-hidden="true">
 									<circle cx="1" cy="1" r="1"/><circle cx="5" cy="1" r="1"/>
@@ -754,6 +753,7 @@
 									<circle cx="1" cy="9" r="1"/><circle cx="5" cy="9" r="1"/>
 								</svg>
 							{/if}
+							{orderLabels.get(card.id)}
 						{/if}
 					</td>
 					<td>
@@ -1056,13 +1056,12 @@
 	.col-order {
 		width: 76px;
 	}
-	/* the number keeps the cell's left edge, the grip sits out at the right
-	   where the drag begins */
+	/* the grip leads the row, in the table's own left margin clear of every
+	   column: it acts on the whole row, and the drag never crosses content */
 	td.col-order {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 6px;
+		gap: 8px;
 	}
 	.grip {
 		flex: none;

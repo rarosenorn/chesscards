@@ -1,0 +1,426 @@
+{
+  "deck": "Caro-Kann",
+  "chapters": [
+    {
+      "name": "Overview",
+      "cards": [
+        {
+          "id": "ov-first-moves",
+          "front": {
+            "text": "What are the first moves of the **Caro-Kann Defence**?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "c6"
+                ],
+                "orientation": "b",
+                "solutionFrom": 0
+              }
+            ]
+          },
+          "back": {
+            "text": "1 e4 c6."
+          }
+        },
+        {
+          "id": "ov-blacks-plan",
+          "front": {
+            "text": "White has played 1 e4 and you answered 1...c6. What is your plan, and what does it do?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+                "moves": [
+                  "d4",
+                  "d5"
+                ],
+                "orientation": "b",
+                "solutionFrom": 0,
+                "solutionArrows": {
+                  "2": [
+                    [
+                      "success",
+                      "d5",
+                      "e4"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "2...d5, attacking White's e-pawn — just as in the French Defence. (Here after 2 d4.)"
+          }
+        },
+        {
+          "id": "ov-why-c-pawn",
+          "front": {
+            "text": "Black supports ...d5 with the c-pawn rather than the e-pawn. Why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3",
+                "orientation": "b",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "c8",
+                      "h3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "He wants to keep the c8-h3 diagonal open for his bishop. No matter how closely related 1...e6 and 1...c6 may be, this tiny difference immediately causes a **fundamental divergence** from the French: the queen's bishop can develop outside the pawn-chain."
+          }
+        },
+        {
+          "id": "ov-vs-french",
+          "front": {
+            "text": "Both positions have Black striking at e4 with ...d5. What do the French (left) and the Caro-Kann (right) share, and what separates them?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3",
+                "orientation": "b",
+                "solutionMarkers": {
+                  "0": [
+                    [
+                      "danger",
+                      "c8"
+                    ]
+                  ]
+                },
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "danger",
+                      "c8",
+                      "d7"
+                    ]
+                  ]
+                }
+              },
+              {
+                "fen": "rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3",
+                "orientation": "b",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "c8",
+                      "h3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "C: Shared — both prepare ...d5 to attack the e-pawn, giving the same pawn-centre. Different — ...e6 shuts the French bishop in behind its own chain, while ...c6 leaves the c8-h3 diagonal open. Solving \"the problem of the French bishop\" is the whole point of the Caro-Kann."
+          }
+        },
+        {
+          "id": "ov-drawish-reputation",
+          "front": {
+            "text": "The Caro-Kann was long saddled with a derogatory epithet. Which one, and is it deserved?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+                "orientation": "b"
+              }
+            ]
+          },
+          "back": {
+            "text": "\"Drawish opening\" — derogatory and **completely undeserved**. Though no less ancient than the French, 1...c6 was accepted as a serious opening only when Capablanca and Nimzowitsch took it up in the 1920s and 1930s, and the prejudice held until the final breakthrough in the 1980s. Today it is one of the most important and popular replies to 1 e4."
+          }
+        },
+        {
+          "id": "ov-popularity-vs-e4",
+          "front": {
+            "text": "How popular is the Caro-Kann as a reply to 1 e4?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
+                "orientation": "b",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "c7",
+                      "c6"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "C: About **8%** — the fifth most common reply, after 1...e5 (38%), 1...c5 (19%), 1...e6 (11%) and 1...d5 (11%). (Lichess, 1400-1800, all time controls, Aug 2026)"
+          }
+        },
+        {
+          "id": "ov-three-white-moves",
+          "front": {
+            "text": "This is the main starting position of the Caro-Kann. Which three moves does White choose between here?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3",
+                "orientation": "b",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "e4",
+                      "e5"
+                    ],
+                    [
+                      "warning",
+                      "e4",
+                      "d5"
+                    ],
+                    [
+                      "info",
+                      "b1",
+                      "c3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "C: 3 e5 (the Advance), 3 exd5 (the Exchange, and the Panov behind it), and 3 Nc3 (or 3 Nd2, the main lines)."
+          }
+        },
+        {
+          "id": "ov-three-move-shares",
+          "front": {
+            "text": "After 1 e4 c6 2 d4 d5, how often will you meet each of White's three main moves?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3",
+                "orientation": "b"
+              }
+            ]
+          },
+          "back": {
+            "text": "C: 3 e5 (Advance) **41%**, 3 exd5 (Exchange) **31%**, 3 Nc3 **19%** — together over 90% of games. (Lichess, 1400-1800, all time controls, Aug 2026)"
+          }
+        },
+        {
+          "id": "ov-advance-intro",
+          "front": {
+            "text": "Which variation is this, what do you reply, and how often will you meet it?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp2pppp/2p5/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 3",
+                "moves": [
+                  "Bf5"
+                ],
+                "orientation": "b",
+                "solutionFrom": 0
+              }
+            ]
+          },
+          "back": {
+            "text": "C: The **Advance Variation**, and the most common line at 41%. Black replies 3...Bf5 — the bishop gets outside the pawn-chain before ...e6 shuts it in. (Lichess, 1400-1800, all time controls, Aug 2026)"
+          }
+        },
+        {
+          "id": "ov-exchange-intro",
+          "front": {
+            "text": "White has exchanged on d5. Which variation is this, and what are his two fundamentally different plans?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp2pppp/8/3p4/3P4/8/PPP2PPP/RNBQKBNR w KQkq - 0 4",
+                "orientation": "b",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "warning",
+                      "c2",
+                      "c4"
+                    ],
+                    [
+                      "info",
+                      "f1",
+                      "d3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "C: The **Exchange Variation** (31% of all Caro-Kanns). White now has two fundamentally different plans: 4 c4, the Panov Attack, continuing the fight for the centre; or 4 Bd3, treating it as a Queen's Gambit Declined Exchange with colours reversed. (Lichess, 1400-1800, all time controls, Aug 2026)"
+          }
+        },
+        {
+          "id": "ov-panov-intro",
+          "front": {
+            "text": "Which variation is this, and what is White really doing?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp2pppp/8/3p4/2PP4/8/PP3PPP/RNBQKBNR b KQkq - 0 4",
+                "orientation": "b",
+                "solutionMarkers": {
+                  "0": [
+                    [
+                      "danger",
+                      "d5"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "The **Panov Attack**. White is in fact playing a sort of Queen's Gambit (1 d4 d5 2 c4): rather than acquiesce to Black's occupation of d5, he fiercely attacks this central outpost — a veritable 1 d4 strategy. It is where the differences between 1 e4 and 1 d4 fall away and the two great opening moves meet."
+          }
+        },
+        {
+          "id": "ov-exchange-bd3",
+          "front": {
+            "text": "Which variation is this, and what makes 4 Bd3 a good move?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp2pppp/8/3p4/3P4/3B4/PPP2PPP/RNBQK1NR b KQkq - 1 4",
+                "orientation": "b",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "danger",
+                      "d3",
+                      "h7"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "The **Caro-Kann Exchange Variation** proper — a Queen's Gambit Declined Exchange with colours reversed. The bishop on d3 makes it much more difficult for the opponent to develop his queen's bishop than in the 'real' Queen's Gambit.\n\nC: 4 Bd3 is 17% here; at club level 4 Nf3 (30%) is actually the commonest, usually transposing. (Lichess, 1400-1800, all time controls, Aug 2026)"
+          }
+        },
+        {
+          "id": "ov-classical-intro",
+          "front": {
+            "text": "White has played 3 Nc3. What is Black's usual reply, and where does it lead?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp2pppp/2p5/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR b KQkq - 1 3",
+                "moves": [
+                  "dxe4",
+                  "Nxe4"
+                ],
+                "orientation": "b",
+                "solutionFrom": 0
+              }
+            ]
+          },
+          "back": {
+            "text": "3...dxe4 is by far the most usual reply, when 4 Nxe4 reaches the main lines — the **Classical Variation** after 4...Bf5, or 4...Nd7. 3 Nc3 is 19% and 3 Nd2 a further 3%. (Lichess, 1400-1800, all time controls, Aug 2026)"
+          }
+        },
+        {
+          "id": "ov-nc3-vs-nd2",
+          "front": {
+            "text": "3 Nc3 and 3 Nd2 are near-identical. Where does the difference actually lie?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3",
+                "orientation": "b",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "info",
+                      "b1",
+                      "c3"
+                    ],
+                    [
+                      "info",
+                      "b1",
+                      "d2"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "In contrast to the French, there is hardly any difference between these two knight moves: after 3...dxe4 4 Nxe4 the two roads reconnect. The difference lies in 3...g6 — against 3 Nd2 it loses some of its bite, because c3 will protect d4 firmly and obstruct the bishop about to appear on g7."
+          }
+        },
+        {
+          "id": "ov-white-avoids-d4",
+          "front": {
+            "text": "What if White does not play 2 d4? Which three set-ups should you expect?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+                "orientation": "b",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "info",
+                      "d2",
+                      "d3"
+                    ],
+                    [
+                      "info",
+                      "b1",
+                      "c3"
+                    ],
+                    [
+                      "warning",
+                      "c2",
+                      "c4"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "2 d3 (introducing the King's Indian Attack), 2 Nc3 d5 3 Nf3 or 2 Nf3 d5 3 Nc3 (the Two Knights Variation), and 2 c4 — a subtle refinement on the Panov. These are the only alternatives accepted as fully satisfactory."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Advance Variation",
+      "cards": []
+    },
+    {
+      "name": "Exchange Variation",
+      "cards": []
+    },
+    {
+      "name": "Panov Attack",
+      "cards": []
+    },
+    {
+      "name": "Classical Variation",
+      "cards": []
+    },
+    {
+      "name": "4...Nd7",
+      "cards": []
+    },
+    {
+      "name": "4...Nd7 5 Bc4",
+      "cards": []
+    },
+    {
+      "name": "4...Nd7 5 Ng5",
+      "cards": []
+    },
+    {
+      "name": "Sidelines",
+      "cards": []
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "deck": "Caro-Kann",
+  "cards": {
+    "ov-first-moves": "659a77d8-cf70-4e05-8a65-47b923229c14",
+    "ov-blacks-plan": "17ae4e21-94d1-4fff-b465-b63c606a9135",
+    "ov-why-c-pawn": "690e12ae-3ac1-449b-b668-bc82408481d9",
+    "ov-vs-french": "4bc2187c-0c1d-44be-bfae-1c6f0fe77f37",
+    "ov-drawish-reputation": "9d262b24-345a-45b6-875b-9ffffccf6f6a",
+    "ov-popularity-vs-e4": "fd3a4c7c-801e-470f-809c-38c561f01944",
+    "ov-three-white-moves": "f5e51456-8b15-48ab-83fc-05d910d6da66",
+    "ov-three-move-shares": "d28f7317-81e6-42bf-8c04-b9bcd2f88e2c",
+    "ov-advance-intro": "63c8870e-1742-4a2f-9c4b-65ea3ebf5250",
+    "ov-exchange-intro": "5854e6c4-5f35-4557-8588-32e84dbdcc71",
+    "ov-panov-intro": "e9c9be6e-1b99-44fe-860b-d905d0ff5470",
+    "ov-exchange-bd3": "24b6504c-556b-40b5-af62-13933784acd0",
+    "ov-classical-intro": "ceba40fb-fc7e-4880-80ec-2ee5953f0c29",
+    "ov-nc3-vs-nd2": "53df9e03-1bfd-419f-b669-2a61f65b4098",
+    "ov-white-avoids-d4": "9b00317c-ba42-4a3d-bd5b-e85f8f4f8d8c"
+  }
+}

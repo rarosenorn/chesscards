@@ -439,7 +439,7 @@
 	   board layout"), shared with browse */
 	.flashcard {
 		align-items: center;
-		margin-top: 34px;
+		margin-top: 24px;
 		min-height: calc(var(--flashcard-min-height) + 69px);
 		/* the top is the card's rim, wider than the divider's 18px between
 		   the sides; the row below closes the card at the 10px it has always
@@ -471,7 +471,7 @@
 	/* the in-place card editor: same surface as the card it replaces, the
 	   add-cards page's inner inset */
 	.flashcard-edit {
-		margin-top: 34px;
+		margin-top: 24px;
 		padding: 12px 20px;
 		/* the add-cards canvas: content lands at 896, so boards render the
 		   card's exact sizes (432 cells, 562 lone) with text sharing both

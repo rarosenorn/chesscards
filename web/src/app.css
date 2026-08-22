@@ -13,16 +13,16 @@
 	/* how wide a flashcard renders, wherever one is shown. It is a board
 	   size in disguise — a board is half the card — so anything that has to
 	   line up with a card's edge reads it from here rather than repeating
-	   the number (browse's toolbar does). 960 less the card's 32px rims
-	   leaves 896 of content: two 432 cells with the gap below between
+	   the number (browse's toolbar does). 952 less the card's 32px rims
+	   leaves 888 of content: two 432 cells with the gap below between
 	   them. */
-	--flashcard-width: 960px;
-	/* The one distance the board layout is built on: between the two boards
-	   of a row, and from either board to the card's edge (the card's own
-	   32px rim, with the grid taking no inset of its own). Equal on all
-	   three, so a row of boards sits evenly in the card. Shared with the
-	   add-cards editor, which mirrors these sizes. */
-	--board-col-gap: 32px;
+	--flashcard-width: 952px;
+	/* Between the two boards of a row. A little tighter than the card's own
+	   32px rim, so a pair reads as one row rather than two boards that
+	   happen to share it. Shared with the add-cards editor, which mirrors
+	   these sizes; it also sets a lone board's width, which is one cell of
+	   the pair it would sit in. */
+	--board-col-gap: 24px;
 	/* A card whose boards all stand alone has no column to line up with, so
 	   its boards take this much more than a grid cell. */
 	--board-solo-scale: 1.36;

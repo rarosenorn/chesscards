@@ -1067,10 +1067,10 @@
 		flex: none;
 		width: 6px;
 		height: 10px;
-		fill: #cfcfcf;
+		fill: #9b9b9b;
 	}
 	tbody tr:hover .grip {
-		fill: #9a9a9a;
+		fill: #6b6b6b;
 	}
 	.col-type {
 		width: 86px;
@@ -1263,7 +1263,7 @@
 		cursor: grab;
 	}
 	.order-handle:hover .grip {
-		fill: #6f6f6f;
+		fill: #333;
 	}
 	/* everything grabs while a drag is in flight — the rows' own pointer
 	   cursors would otherwise flicker through under the ghost */

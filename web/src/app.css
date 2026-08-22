@@ -1,12 +1,13 @@
 :root {
 	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-	/* the site's single accent (steelblue): interactive and active
-	   elements only — primary buttons, active tabs/pills, focus rings, and
-	   selection tints. Neutrals stay the base; red stays for destructive. */
-	--accent: #4682b4;
-	--accent-hover: #3b6e99;
-	--accent-subtle: #f0f5f9;
-	--accent-subtle-strong: #dae6f0;
+	/* the site's single accent ("Denim sat +2" from the design page):
+	   interactive and active elements only — primary buttons, active
+	   tabs/pills, focus rings, and selection tints. Neutrals stay the base;
+	   red stays for destructive. */
+	--accent: #3867b2;
+	--accent-hover: #2f5798;
+	--accent-subtle: #edf2fa;
+	--accent-subtle-strong: #d4e1f4;
 	/* what text on an accent surface wears: white on the deep accents, near
 	   black should a light accent ever take over */
 	--accent-text: #ffffff;

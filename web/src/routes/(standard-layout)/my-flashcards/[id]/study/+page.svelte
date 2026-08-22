@@ -25,20 +25,27 @@
 	// Loading it on the first edit keeps it off the path to the first card.
 	let CardBlockEdit = $state(null);
 	let editorModule = null;
+
+	// The card's type is chosen on the row above the editor, as on the
+	// add-cards page. It is held here rather than written on click: the
+	// editor has a Cancel, and a type already saved would survive it.
+	let editCardType = $state(null);
+
 	const startEditing = async () => {
 		editorModule ??= import("$lib/components/CardBlockEdit.svelte");
 		CardBlockEdit = (await editorModule).default;
+		editCardType = currentCard.card_type;
 		editingCard = true;
 	}
-	const saveEdit = async (front, back, cardType) => {
+	const saveEdit = async (front, back) => {
 		const card = currentCard;
 		await updateCardContent({ cardId: card.id, front, back });
 		card.front = JSON.parse(front);
 		card.back = JSON.parse(back);
 		// the type is saved with the rest, so cancelling leaves it alone. It
 		// decides how the card is graded, so the queue re-derives from it.
-		if (cardType !== card.card_type) {
-			Object.assign(card, await updateCardType({ cardId: card.id, cardType }));
+		if (editCardType !== card.card_type) {
+			Object.assign(card, await updateCardType({ cardId: card.id, cardType: editCardType }));
 		}
 		editingCard = false;
 	}
@@ -326,8 +333,25 @@
 {/snippet}
 
 {#if currentCard && editingCard && CardBlockEdit}
+	<!-- the add-cards type row, above the card and on the page's own ground -->
+	<div class="edit-type-row">
+		<span id="edit-card-type-label">Type</span>
+		<div class="type-segments" role="radiogroup" aria-labelledby="edit-card-type-label">
+			{#each [["basic", "Basic"], ["tactic", "Tactic"]] as [value, label]}
+				<button
+					class="std-btn"
+					role="radio"
+					aria-checked={editCardType === value}
+					class:selected={editCardType === value}
+					onclick={() => editCardType = value}
+				>
+					{label}
+				</button>
+			{/each}
+		</div>
+	</div>
 	<div class="flashcard-edit card-surface">
-		<CardBlockEdit card={currentCard} showCardType onSave={saveEdit} onCancel={() => editingCard = false} />
+		<CardBlockEdit card={currentCard} onSave={saveEdit} onCancel={() => editingCard = false} />
 	</div>
 {:else if currentCard}
 	<div
@@ -476,8 +500,35 @@
 	}
 	/* the in-place card editor: same surface as the card it replaces, the
 	   add-cards page's inner inset */
+	/* sits on the grey above the card, the card's own width, as on the
+	   add-cards page */
+	.edit-type-row {
+		width: 100%;
+		max-width: var(--flashcard-width);
+		margin: 24px auto 0 auto;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		font-size: 0.85rem;
+		color: rgba(0, 0, 0, 0.6);
+	}
+	.type-segments {
+		display: flex;
+		gap: 4px;
+	}
+	.type-segments .std-btn {
+		padding: 4px 10px;
+		border-radius: 999px;
+		color: rgba(0, 0, 0, 0.55);
+	}
+	.type-segments .std-btn.selected {
+		background-color: white;
+		border-color: darkgrey;
+		color: #222;
+		font-weight: 500;
+	}
 	.flashcard-edit {
-		margin-top: 24px;
+		margin-top: 6px;
 		padding: 12px 20px;
 		/* the add-cards canvas: content lands at 896, so boards render the
 		   card's exact sizes (432 cells, 562 lone) with text sharing both

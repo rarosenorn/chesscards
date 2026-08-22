@@ -11,15 +11,7 @@
 	// add-cards page's Add card button); Ctrl+Enter saves too. session
 	// (optional) is a bag { boardUi, frontDoc, backDoc } owned by the host,
 	// letting an in-progress edit survive host navigation.
-	// showCardType: study edits a card with nothing else on screen, so the
-	// type belongs in the editor. Browse keeps its own per-row control in the
-	// table beside it and leaves this off.
-	let { card, session = null, showCardType = false, onSave, onCancel } = $props();
-
-	// Local until Save, like the documents: the editor has a Cancel, and a
-	// type that had already been written would survive it.
-	// svelte-ignore state_referenced_locally -- initial value; edits live here
-	let cardType = $state(card.card_type);
+	let { card, session = null, onSave, onCancel } = $props();
 
 	// svelte-ignore state_referenced_locally -- session is an init-time bag, never swapped
 	const bag = session ?? {
@@ -99,7 +91,7 @@
 			noContentAttempted = true;
 			return;
 		}
-		await onSave(docSideJsonBlocks(front), docSideJsonBlocks(back), cardType);
+		await onSave(docSideJsonBlocks(front), docSideJsonBlocks(back));
 	}
 
 	// with a host-owned session the unsaved documents survive navigation
@@ -124,27 +116,6 @@
 
 <svelte:window onkeydown={handleKeyDown} />
 
-{#if showCardType}
-	<!-- above the menu bar, the order the add-cards page uses: the type is a
-	     property of the whole card, so it leads the card rather than sitting
-	     among the buttons that close it -->
-	<div class="type-row">
-		<span id="edit-card-type-label">Type</span>
-		<div class="type-segments" role="radiogroup" aria-labelledby="edit-card-type-label">
-			{#each [["basic", "Basic"], ["tactic", "Tactic"]] as [value, label]}
-				<button
-					class="std-btn"
-					role="radio"
-					aria-checked={cardType === value}
-					class:selected={cardType === value}
-					onclick={() => cardType = value}
-				>
-					{label}
-				</button>
-			{/each}
-		</div>
-	</div>
-{/if}
 <div class="menu-holder">
 	<DocEditorMenuBar {menu} onAddChessboard={addChessboard} />
 </div>
@@ -191,33 +162,6 @@
 		display: flex;
 		gap: 8px;
 		margin-top: 12px;
-	}
-	/* the add-cards type row, above the card's own menu bar */
-	.type-row {
-		align-self: stretch;
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		margin-bottom: 8px;
-		font-size: 0.85rem;
-		color: rgba(0, 0, 0, 0.6);
-	}
-	/* the add-cards pills: unselected recedes grey, the selected is plain
-	   white against it */
-	.type-segments {
-		display: flex;
-		gap: 4px;
-	}
-	.type-segments .std-btn {
-		padding: 4px 10px;
-		border-radius: 999px;
-		color: rgba(0, 0, 0, 0.55);
-	}
-	.type-segments .std-btn.selected {
-		background-color: white;
-		border-color: darkgrey;
-		color: #222;
-		font-weight: 500;
 	}
 	.menu-holder {
 		align-self: stretch;

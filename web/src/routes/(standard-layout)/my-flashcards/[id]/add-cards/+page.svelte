@@ -517,7 +517,7 @@
 	.type-row {
 		width: 100%;
 		max-width: var(--flashcard-width);
-		margin: 7px auto 0 auto;
+		margin: 17px auto 0 auto;
 		display: flex;
 		align-items: center;
 		gap: 12px;

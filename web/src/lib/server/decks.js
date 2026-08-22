@@ -1,11 +1,12 @@
 import { pool } from "./pool.js"
 
 // a deck is born with its Stage 1: every card belongs to a stage, so there is
-// always one to put the first card in
+// always one to put the first card in. Stages are named, so the first one
+// carries the name the user would have typed anyway.
 const create = async (userId, name) => {
 	const { rows } = await pool.query(`
 		with d as (insert into decks(user_id, name) values($1, $2) returning id, user_id, name),
-		s as (insert into stages(deck_id, position) select id, 1 from d)
+		s as (insert into stages(deck_id, name, position) select id, 'Chapter 1', 1 from d)
 		select id, user_id "userId", name from d`, [userId, name]);
 
 	return rows[0]

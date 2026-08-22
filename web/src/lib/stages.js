@@ -10,12 +10,19 @@
 
 const GRADUATED_SHARE = 0.8;
 
-// the one way a stage is written out everywhere: numbered, named if it is
-// (the user-facing word is "chapter"; "stage" stays the code's name)
-const stageLabel = stage => `Chapter ${stage.position}${stage.name ? ` — ${stage.name}` : ""}`;
+// Every stage has a name, so there are three ways to write one out (the
+// user-facing word is "chapter"; "stage" stays the code's name).
+//
+// Spelled out, for the running text of study's unlock note.
+const stageLabel = stage => `Chapter ${stage.position} — ${stage.name}`;
 
-// the abbreviated form the Cards table's chapter bars wear
-const stageLabelShort = stage => `Ch.${stage.position}${stage.name ? ` - ${stage.name}` : ""}`;
+// Abbreviated, for the Add cards picker, where the number tells the options
+// apart at a glance.
+const stageLabelShort = stage => `Ch. ${stage.position} — ${stage.name}`;
+
+// Bare, for the Cards table's chapter bars: the bars sit in deck order, so
+// the number would only repeat what the rows already say.
+const stageName = stage => stage.name;
 
 // a tactic card carries no FSRS state; its grades stamp last_review
 // (seen) and finished_at (done for good, its graduation)
@@ -50,4 +57,4 @@ const stageProgress = cards => ({
 	total: cards.length
 });
 
-export { GRADUATED_SHARE, stageLabel, stageLabelShort, isSeen, isGraduated, stagePasses, unlockedStageIds, stageProgress }
+export { GRADUATED_SHARE, stageLabel, stageLabelShort, stageName, isSeen, isGraduated, stagePasses, unlockedStageIds, stageProgress }

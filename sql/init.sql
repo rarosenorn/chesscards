@@ -84,13 +84,14 @@ create table decks (
 );
 
 -- Every card belongs to a stage and every deck has at least one; a deck that
--- wants no progression is simply a deck of one stage. The name is optional
--- ("Stage 2" vs "Stage 2 — Rook endgames"). Positions (stage in deck, card in
--- stage) are kept dense 1..n by the server ops that move things.
+-- wants no progression is simply a deck of one stage. Every stage is named:
+-- the Cards table shows the name alone, and the order is read off the rows.
+-- Positions (stage in deck, card in stage) are kept dense 1..n by the server
+-- ops that move things.
 create table stages (
 	id uuid primary key default gen_random_uuid(),
 	deck_id uuid references decks(id) on delete cascade not null,
-	name text,
+	name text not null,
 	position smallint not null
 );
 
@@ -136,7 +137,7 @@ create table marketplace_decks (
 create table marketplace_stages (
 	id uuid primary key default gen_random_uuid(),
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
-	name text,
+	name text not null,
 	position smallint not null
 );
 

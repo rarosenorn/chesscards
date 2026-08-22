@@ -16,7 +16,7 @@
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
 	import { canonicalSideJson } from "$lib/card-utils.js"
-	import { unlockedStageIds, stageLabel, stageLabelShort } from "$lib/stages.js"
+	import { unlockedStageIds, stageName } from "$lib/stages.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardContent, updateCardType, deleteCards, createStage, renameStage, deleteStage, moveCards } from "./browse.remote.js"
 
@@ -139,7 +139,7 @@
 	}
 
 	// What each sortable column sorts on. A null sorts last whichever way the
-	// column runs: those rows show "—", and a blank belongs at the end rather
+	// column runs: those rows show a dash, and a blank belongs at the end rather
 	// than crowding whichever end is being read.
 	const sortValues = {
 		order: card => stagePositions.get(card.stage_id) * 100000 + card.position,
@@ -423,12 +423,25 @@
 		stageMenu = { x: e.clientX, y: e.clientY, stage };
 	}
 
-	const addStage = async () => applyFresh(await createStage({ deckId: deck.id, name: null }));
+	// A chapter is named at birth: the button opens a field rather than
+	// creating one, so there is never an unnamed chapter to go back and fix.
+	// Blank is a cancel in both directions — creating and renaming — since
+	// there is no name to fall back to.
+	let stageAdd = $state(null);
+
+	const startAddStage = () => { stageAdd = { value: "" } };
+
+	const commitAddStage = async () => {
+		const add = stageAdd;
+		stageAdd = null;
+		if (!add?.value.trim()) return;
+		applyFresh(await createStage({ deckId: deck.id, name: add.value.trim() }));
+	}
 
 	const commitStageRename = async () => {
 		const rename = stageRename;
 		stageRename = null;
-		if (!rename) return;
+		if (!rename?.value.trim()) return;
 		applyFresh(await renameStage({ deckId: deck.id, stageId: rename.stageId, name: rename.value.trim() }));
 	}
 
@@ -488,7 +501,7 @@
 	const stateNames = ["New", "Learning", "Review", "Relearning"];
 
 	const formatDue = card => {
-		if (card.finished_at) return "—";
+		if (card.finished_at) return null;
 		if (card.card_type === "tactic")
 			return Date.parse(card.due) > Date.now()
 				? new Date(card.due).toLocaleDateString()
@@ -584,7 +597,7 @@
 						moveSelectedToStage(stage.id);
 					}}
 				>
-					{stageLabel(stage)}
+					{stageName(stage)}
 				</button>
 			{/each}
 		{/if}
@@ -610,7 +623,7 @@
 	>
 		<button
 			onclick={() => {
-				stageRename = { stageId: stageMenu.stage.id, value: stageMenu.stage.name ?? "" };
+				stageRename = { stageId: stageMenu.stage.id, value: stageMenu.stage.name };
 				stageMenu = null;
 			}}
 		>
@@ -682,6 +695,15 @@
 					{/each}
 				</tr>
 			</thead>
+			<!-- a column with nothing to say for this card: a plain hyphen,
+			     centred so a run of them reads as one quiet column -->
+			{#snippet cellOrDash(value)}
+				{#if value == null}
+					<span class="empty-cell">-</span>
+				{:else}
+					{value}
+				{/if}
+			{/snippet}
 			{#snippet cardCells(card)}
 				{@const indicator = getFrontIndicator(card.front)}
 				{@const boardCount = card.front.find(block => block.type === "chessboards")?.content.length ?? 0}
@@ -733,9 +755,9 @@
 							</select>
 						{/if}
 					</td>
-					<td>{formatDue(card)}</td>
-					<td>{card.reps ?? "—"}</td>
-					<td>{card.card_type === "tactic" ? "—" : stateNames[card.state]}</td>
+					<td>{@render cellOrDash(formatDue(card))}</td>
+					<td>{@render cellOrDash(card.reps)}</td>
+					<td>{@render cellOrDash(card.card_type === "tactic" ? null : stateNames[card.state])}</td>
 			{/snippet}
 			<tbody>
 				{#if displayGroups}
@@ -752,7 +774,7 @@
 									<input
 										class="stage-rename-input"
 										autofocus
-										placeholder="Chapter {group.stage.position}"
+										placeholder={group.stage.name}
 										bind:value={stageRename.value}
 										onblur={commitStageRename}
 										onmousedown={e => e.stopPropagation()}
@@ -765,7 +787,7 @@
 								{:else}
 									<button class="stage-toggle" onmousedown={e => e.stopPropagation()} onclick={() => draft.collapsed[group.stage.id] = !group.collapsed}>
 										<span class="collapse-arrow" class:collapsed={group.collapsed}></span>
-										<span class="stage-name">{stageLabelShort(group.stage)}</span>
+										<span class="stage-name">{stageName(group.stage)}</span>
 										{#if deck.stageProgression && !unlockedStages.has(group.stage.id)}
 											<svg class="stage-lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
 												<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
@@ -802,7 +824,24 @@
 					{#if !readonly}
 						<tr class="add-stage-row">
 							<td colspan="6">
-								<button class="add-stage-btn" onmousedown={e => e.stopPropagation()} onclick={addStage}>+ Add chapter</button>
+								{#if stageAdd}
+									<!-- svelte-ignore a11y_autofocus -- the input exists because the user just asked to add -->
+									<input
+										class="stage-rename-input"
+										autofocus
+										placeholder="Chapter name"
+										bind:value={stageAdd.value}
+										onblur={commitAddStage}
+										onmousedown={e => e.stopPropagation()}
+										onkeydown={e => {
+											if (e.key === "Enter") commitAddStage();
+											if (e.key === "Escape") { stageAdd = null; e.stopPropagation(); }
+											e.stopPropagation();
+										}}
+									/>
+								{:else}
+									<button class="add-stage-btn" onmousedown={e => e.stopPropagation()} onclick={startAddStage}>+ Add chapter</button>
+								{/if}
 							</td>
 						</tr>
 					{/if}
@@ -1003,6 +1042,11 @@
 	}
 	.col-state {
 		width: 95px;
+	}
+	.empty-cell {
+		display: block;
+		text-align: center;
+		color: #999;
 	}
 	td {
 		white-space: nowrap;

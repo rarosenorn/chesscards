@@ -39,10 +39,14 @@ const freshDeck = async (locals, deckId) => {
 	return deck;
 }
 
+// A chapter always has a name: the callers only offer to create or rename
+// one through a field, and a blank one is a cancelled edit, not an erasure.
 export const createStage =
 	command("unchecked", async ({ deckId, name }) => {
 		const { locals } = getRequestEvent();
-		if (!await decks.createStage(locals.userId, deckId, name ?? null)) {
+		const trimmed = name?.trim();
+		if (!trimmed) error(400, "A chapter needs a name");
+		if (!await decks.createStage(locals.userId, deckId, trimmed)) {
 			error(403, "Unauthorized");
 		}
 		return freshDeck(locals, deckId);
@@ -51,7 +55,9 @@ export const createStage =
 export const renameStage =
 	command("unchecked", async ({ deckId, stageId, name }) => {
 		const { locals } = getRequestEvent();
-		if (!await decks.renameStage(locals.userId, stageId, name || null)) {
+		const trimmed = name?.trim();
+		if (!trimmed) error(400, "A chapter needs a name");
+		if (!await decks.renameStage(locals.userId, stageId, trimmed)) {
 			error(403, "Unauthorized");
 		}
 		return freshDeck(locals, deckId);

@@ -12,11 +12,12 @@
 	import { page } from "$app/state"
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
 	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft, loadFrozenSides, saveFrozenSides, loadStageId, saveStageId } from "$lib/add-cards-draft.js"
-	import { stageLabel } from "$lib/stages.js"
+	import { stageLabelShort } from "$lib/stages.js"
 	import Snowflake from "$lib/icons/Snowflake.svelte"
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
+	import { createStage } from "../browse/browse.remote.js"
 	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
 
 	// the shared deck context (layout); new cards are pushed into it so
@@ -47,9 +48,28 @@
 			? stageId
 			: stagesSorted[stagesSorted.length - 1]?.id
 	);
+	// A chapter can be started from here, so a run of cards that belongs in a
+	// new one does not send you to the Cards tab and back. The last option
+	// turns the picker into a field for as long as it takes to name it;
+	// blank cancels, as it does in browse, since a chapter has no name to
+	// fall back to.
+	const NEW_STAGE = "new-chapter";
+	let stageAdd = $state(null);
+
 	const chooseStage = value => {
+		if (value === NEW_STAGE) { stageAdd = { value: "" }; return; }
 		stageId = value;
 		saveStageId(deckId, value);
+	}
+
+	const commitAddStage = async () => {
+		const add = stageAdd;
+		stageAdd = null;
+		if (!add?.value.trim()) return;
+		const before = new Set(deck.stages.map(stage => stage.id));
+		Object.assign(deck, await createStage({ deckId, name: add.value.trim() }));
+		const made = deck.stages.find(stage => !before.has(stage.id));
+		if (made) chooseStage(made.id);
 	}
 
 	// a frozen side keeps its content through the submit, for a run of cards
@@ -305,16 +325,6 @@
 
 
 <div class="type-row">
-	{#if stagesSorted.length > 1}
-		<label class="stage-picker">
-			Chapter
-			<select value={validStageId} onchange={e => chooseStage(e.currentTarget.value)}>
-				{#each stagesSorted as stage (stage.id)}
-					<option value={stage.id}>{stageLabel(stage)}</option>
-				{/each}
-			</select>
-		</label>
-	{/if}
 	<span id="card-type-label">Type</span>
 	<div class="type-segments" role="radiogroup" aria-labelledby="card-type-label">
 		{#each [
@@ -333,6 +343,30 @@
 			</button>
 		{/each}
 	</div>
+	<label class="stage-picker">
+		Ch.
+		{#if stageAdd}
+			<!-- svelte-ignore a11y_autofocus -- the field exists because the user just asked for a chapter -->
+			<input
+				autofocus
+				placeholder="Chapter name"
+				bind:value={stageAdd.value}
+				onblur={commitAddStage}
+				onkeydown={e => {
+					if (e.key === "Enter") commitAddStage();
+					if (e.key === "Escape") stageAdd = null;
+					e.stopPropagation();
+				}}
+			/>
+		{:else}
+			<select value={validStageId} onchange={e => chooseStage(e.currentTarget.value)}>
+				{#each stagesSorted as stage (stage.id)}
+					<option value={stage.id}>{stageLabelShort(stage)}</option>
+				{/each}
+				<option value={NEW_STAGE}>+ New chapter…</option>
+			</select>
+		{/if}
+	</label>
 </div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
@@ -468,12 +502,20 @@
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
 	}
-	/* the chapter the cards file into, leading the type it pairs with */
+	/* the chapter the cards file into, trailing the type it pairs with */
 	.stage-picker {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		margin-right: 12px;
+		margin-left: 12px;
+	}
+	.stage-picker input {
+		font-size: 0.85rem;
+		padding: 3px 6px;
+		border: 1px solid rgba(0, 0, 0, 0.25);
+		border-radius: 4px;
+		background-color: white;
+		width: 150px;
 	}
 	.stage-picker select {
 		font-size: 0.85rem;

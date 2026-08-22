@@ -117,6 +117,11 @@
 	th:first-child {
 		font-size: 1.15rem;
 	}
+	/* the create field belongs to the deck list it adds to, so it sits
+	   closer to it than the two tables sit to each other */
+	table:last-of-type {
+		margin-bottom: 14px;
+	}
 	form {
 		margin-top: 6px;
 	}

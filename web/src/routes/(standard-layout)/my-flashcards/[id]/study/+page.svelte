@@ -455,7 +455,7 @@
 	.card-actions {
 		align-self: stretch;
 		margin-top: auto;
-		padding-top: 24px;
+		padding-top: 14px;
 		display: flex;
 		justify-content: center;
 		align-items: flex-end;

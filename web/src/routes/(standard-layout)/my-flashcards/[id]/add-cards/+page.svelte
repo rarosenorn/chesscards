@@ -12,7 +12,7 @@
 	import { page } from "$app/state"
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
 	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft, loadFrozenSides, saveFrozenSides, loadStageId, saveStageId } from "$lib/add-cards-draft.js"
-	import { stageLabelShort } from "$lib/stages.js"
+	import { stageName } from "$lib/stages.js"
 	import Snowflake from "$lib/icons/Snowflake.svelte"
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
@@ -49,18 +49,18 @@
 			: stagesSorted[stagesSorted.length - 1]?.id
 	);
 	// A chapter can be started from here, so a run of cards that belongs in a
-	// new one does not send you to the Cards tab and back. The last option
-	// turns the picker into a field for as long as it takes to name it;
-	// blank cancels, as it does in browse, since a chapter has no name to
-	// fall back to.
-	const NEW_STAGE = "new-chapter";
+	// new one does not send you to the Cards tab and back. The + beside the
+	// picker turns it into a field for as long as it takes to name it; blank
+	// cancels, as it does in browse, since a chapter has no name to fall
+	// back to.
 	let stageAdd = $state(null);
 
 	const chooseStage = value => {
-		if (value === NEW_STAGE) { stageAdd = { value: "" }; return; }
 		stageId = value;
 		saveStageId(deckId, value);
 	}
+
+	const startAddStage = () => { stageAdd = { value: "" } };
 
 	const commitAddStage = async () => {
 		const add = stageAdd;
@@ -343,30 +343,34 @@
 			</button>
 		{/each}
 	</div>
-	<label class="stage-picker">
-		Ch.
-		{#if stageAdd}
-			<!-- svelte-ignore a11y_autofocus -- the field exists because the user just asked for a chapter -->
-			<input
-				autofocus
-				placeholder="Chapter name"
-				bind:value={stageAdd.value}
-				onblur={commitAddStage}
-				onkeydown={e => {
-					if (e.key === "Enter") commitAddStage();
-					if (e.key === "Escape") stageAdd = null;
-					e.stopPropagation();
-				}}
-			/>
-		{:else}
-			<select value={validStageId} onchange={e => chooseStage(e.currentTarget.value)}>
-				{#each stagesSorted as stage (stage.id)}
-					<option value={stage.id}>{stageLabelShort(stage)}</option>
-				{/each}
-				<option value={NEW_STAGE}>+ New chapter…</option>
-			</select>
+	<div class="stage-picker">
+		<label>
+			Ch.
+			{#if stageAdd}
+				<!-- svelte-ignore a11y_autofocus -- the field exists because the user just asked for a chapter -->
+				<input
+					autofocus
+					placeholder="Chapter name"
+					bind:value={stageAdd.value}
+					onblur={commitAddStage}
+					onkeydown={e => {
+						if (e.key === "Enter") commitAddStage();
+						if (e.key === "Escape") stageAdd = null;
+						e.stopPropagation();
+					}}
+				/>
+			{:else}
+				<select value={validStageId} onchange={e => chooseStage(e.currentTarget.value)}>
+					{#each stagesSorted as stage (stage.id)}
+						<option value={stage.id}>{stageName(stage)}</option>
+					{/each}
+				</select>
+			{/if}
+		</label>
+		{#if !stageAdd}
+			<button type="button" class="add-stage-btn" aria-label="New chapter" onclick={startAddStage}>+</button>
 		{/if}
-	</label>
+	</div>
 </div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
@@ -506,8 +510,34 @@
 	.stage-picker {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 4px;
 		margin-left: 12px;
+	}
+	.stage-picker label {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	/* the + sits against the picker as its trailing edge, not as a button of
+	   its own weight */
+	.add-stage-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		padding: 0;
+		border: none;
+		border-radius: 4px;
+		background: none;
+		font-size: 1rem;
+		line-height: 1;
+		color: rgba(0, 0, 0, 0.55);
+		cursor: pointer;
+	}
+	.add-stage-btn:hover {
+		background-color: rgba(0, 0, 0, 0.07);
+		color: rgba(0, 0, 0, 0.8);
 	}
 	.stage-picker input {
 		font-size: 0.85rem;

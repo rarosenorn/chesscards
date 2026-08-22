@@ -696,7 +696,7 @@
 				</tr>
 			</thead>
 			<!-- a column with nothing to say for this card: a plain hyphen,
-			     centred so a run of them reads as one quiet column -->
+			     right-aligned so a run of them reads as one quiet column -->
 			{#snippet cellOrDash(value)}
 				{#if value == null}
 					<span class="empty-cell">-</span>
@@ -1045,7 +1045,7 @@
 	}
 	.empty-cell {
 		display: block;
-		text-align: center;
+		text-align: right;
 		color: #999;
 	}
 	td {

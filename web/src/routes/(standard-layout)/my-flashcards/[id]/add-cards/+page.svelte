@@ -52,8 +52,11 @@
 	// new one does not send you to the Cards tab and back. The + opens a
 	// field beside the picker rather than in place of it: the chapter the
 	// cards are filing into stays readable while the next one is named.
-	// Blank cancels, as it does in browse, since a chapter has no name to
-	// fall back to.
+	//
+	// Creating is committed by Add (or Enter), never by losing focus: a
+	// click elsewhere used to make the chapter, or throw away what had been
+	// typed, depending on how far the name had got. Blur now does nothing,
+	// and only the x discards.
 	let stageAdd = $state(null);
 
 	const chooseStage = value => {
@@ -71,12 +74,14 @@
 		stageAddInput?.focus();
 	}
 
+	const cancelAddStage = () => { stageAdd = null };
+
 	const commitAddStage = async () => {
-		const add = stageAdd;
+		const name = stageAdd?.value.trim();
+		if (!name) return;
 		stageAdd = null;
-		if (!add?.value.trim()) return;
 		const before = new Set(deck.stages.map(stage => stage.id));
-		Object.assign(deck, await createStage({ deckId, name: add.value.trim() }));
+		Object.assign(deck, await createStage({ deckId, name }));
 		const made = deck.stages.find(stage => !before.has(stage.id));
 		if (made) chooseStage(made.id);
 	}
@@ -361,27 +366,34 @@
 				{/each}
 			</select>
 		</label>
-		{#if !stageAdd}
+		<div class="stage-add" class:open={stageAdd}>
 			<button
 				type="button"
-				class="add-stage-btn"
-				aria-label="New chapter"
-				onclick={startAddStage}
-			>+</button>
-		{:else}
-			<input
-				class="add-stage-input"
-				bind:this={stageAddInput}
-				placeholder="Chapter name"
-				bind:value={stageAdd.value}
-				onblur={commitAddStage}
-				onkeydown={e => {
-					if (e.key === "Enter") commitAddStage();
-					if (e.key === "Escape") stageAdd = null;
-					e.stopPropagation();
-				}}
-			/>
-		{/if}
+				class="stage-add-toggle"
+				aria-label={stageAdd ? "Cancel new chapter" : "New chapter"}
+				aria-expanded={!!stageAdd}
+				onclick={() => stageAdd ? cancelAddStage() : startAddStage()}
+			>{stageAdd ? "\u00d7" : "+"}</button>
+			{#if stageAdd}
+				<input
+					class="stage-add-input"
+					bind:this={stageAddInput}
+					placeholder="Chapter name"
+					bind:value={stageAdd.value}
+					onkeydown={e => {
+						if (e.key === "Enter") commitAddStage();
+						if (e.key === "Escape") cancelAddStage();
+						e.stopPropagation();
+					}}
+				/>
+				<button
+					type="button"
+					class="stage-add-commit"
+					disabled={!stageAdd.value.trim()}
+					onclick={commitAddStage}
+				>Add</button>
+			{/if}
+		</div>
 	</div>
 </div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -536,38 +548,73 @@
 		align-items: center;
 		gap: 8px;
 	}
-	/* the + wears the picker's own box, so the two read as one control */
-	.add-stage-btn {
+	/* One box that grows: closed it is the +, open it holds the field and
+	   its Add. It wears the select's border so the two read as one control,
+	   and stretches to the select's height whatever that works out to. */
+	.stage-add {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		/* stretched, so it is exactly as tall as the select beside it
-		   whatever that works out to */
 		align-self: stretch;
-		width: 26px;
-		padding: 0;
 		border: 1px solid rgba(0, 0, 0, 0.25);
 		border-radius: 4px;
 		background-color: white;
+		overflow: hidden;
+	}
+	.stage-add.open {
+		border-color: var(--accent);
+	}
+	.stage-add-toggle {
+		align-self: stretch;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		padding: 0;
+		border: none;
+		background: none;
 		font-size: 1.1rem;
 		line-height: 1;
 		color: rgba(0, 0, 0, 0.6);
 		cursor: pointer;
 	}
-	.add-stage-btn:hover {
+	.stage-add-toggle:hover {
 		background-color: #f6f6f6;
 		color: rgba(0, 0, 0, 0.85);
 	}
-	.add-stage-input {
-		font-size: 0.85rem;
-		padding: 3px 6px;
-		border: 1px solid var(--accent);
-		border-radius: 4px;
-		background-color: white;
+	/* the inner edges are hairlines, not the box's own border: the parts
+	   are divisions of one control rather than three controls in a row */
+	.stage-add-input {
+		/* no vertical padding, stretched instead: the field must not make
+		   the box taller than the select it sits against */
+		align-self: stretch;
 		width: 150px;
+		padding: 0 6px;
+		border: none;
+		border-left: 1px solid rgba(0, 0, 0, 0.15);
+		background: none;
+		font-size: 0.85rem;
 	}
-	.add-stage-input:focus {
+	.stage-add-input:focus {
 		outline: none;
+	}
+	.stage-add-commit {
+		align-self: stretch;
+		padding: 0 10px;
+		border: none;
+		border-left: 1px solid rgba(0, 0, 0, 0.15);
+		background-color: var(--accent);
+		color: var(--accent-text);
+		font-size: 0.8rem;
+		font-weight: 500;
+		cursor: pointer;
+	}
+	.stage-add-commit:hover:enabled {
+		background-color: var(--accent-hover);
+	}
+	.stage-add-commit:disabled {
+		background-color: #f0f0f0;
+		color: rgba(0, 0, 0, 0.35);
+		cursor: default;
 	}
 	.stage-picker select {
 		font-size: 0.85rem;

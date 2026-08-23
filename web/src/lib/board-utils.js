@@ -186,4 +186,16 @@ const showAnnotations = (chessboard, annotation) => {
 	}
 }
 
-export { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations }
+// A mated or stalemated position has no side to move in any useful sense: the
+// game is over there. Invalid FENs (a position still being typed in the
+// editor) are not "over" — they simply cannot be judged.
+const isPositionFinished = fen => {
+	try {
+		const game = new Chess(fen);
+		return game.isCheckmate() || game.isStalemate();
+	} catch {
+		return false;
+	}
+}
+
+export { isPositionFinished, FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations }

@@ -7,7 +7,7 @@
 	import { Arrows } from "cm-chessboard/src/extensions/arrows/Arrows.js"
 	import { Markers } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { normalizeBoard } from "$lib/card-utils.js"
-	import { replayMoves, showAnnotations } from "$lib/board-utils.js"
+	import { replayMoves, showAnnotations, isPositionFinished } from "$lib/board-utils.js"
 	import { boardCaret } from "$lib/block-caret-state.svelte.js"
 	import { playMoveSound } from "$lib/sounds.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
@@ -63,6 +63,9 @@
 	// diagram, and a marker flipping as you step would pull the eye. The
 	// moves are on show while stepping anyway.
 	let blackToMove = $derived(positions[0]?.split(" ")[1] === "b");
+	// nobody is to move in a finished position: the strip keeps its height so
+	// the board does not shift, it just has nothing to say
+	let finished = $derived(isPositionFinished(positions[0]));
 
 	// One-line move list, grouped so the line only wraps between pairs: each
 	// pair is a number ("…" appended when black starts it, e.g. black moving
@@ -275,15 +278,18 @@
 	<!-- The strip above every board: its number (when the card has more than
 	     one) and the side to move, which takes the number's place on a lone
 	     board. Always rendered, at a fixed height, so a board does not shift
-	     when the number comes and goes. -->
+	     when the number comes and goes — or when the position is mate or
+	     stalemate, where there is no side to move at all. -->
 	<div class="board-header">
 		{#if number != null}<span class="board-number">{number}</span>{/if}
-		<span
-			class="side-to-move"
-			class:black={blackToMove}
-			role="img"
-			aria-label={blackToMove ? "Black to move" : "White to move"}
-		></span>
+		{#if !finished}
+			<span
+				class="side-to-move"
+				class:black={blackToMove}
+				role="img"
+				aria-label={blackToMove ? "Black to move" : "White to move"}
+			></span>
+		{/if}
 	</div>
 	<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- keyboard stepping lives on the focusable wrapper -->
 	<div

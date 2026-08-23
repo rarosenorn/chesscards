@@ -23,8 +23,9 @@
 <p>
 	<em>Claude:</em> the colours carry no meaning enforced by the app — an
 	arrow is stored with its colour and drawn back exactly as you left it.
-	They are yours to use consistently. The convention most chess sites and
-	books share, and the one the underlying names suggest, is:
+	They are yours to use consistently. The board library names them
+	<em>success</em>, <em>info</em>, <em>danger</em> and <em>warning</em>,
+	which suggests a reading:
 </p>
 
 <ul>

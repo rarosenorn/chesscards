@@ -331,7 +331,7 @@
 	}
 
 	const handleWindowMouseMove = e => {
-		if (!reorderDrag) return;
+		if (!reorderDrag || reorderDrag.committing) return;
 		reorderDrag.x = e.clientX;
 		reorderDrag.y = e.clientY;
 		if (reorderDrag.started || draft.sortDescending) return;
@@ -355,7 +355,8 @@
 	}
 
 	const handleRowDragOver = (e, card) => {
-		if (!reorderDrag?.started || reorderDrag.cardIds.includes(card.id)) return;
+		if (!reorderDrag?.started || reorderDrag.committing) return;
+		if (reorderDrag.cardIds.includes(card.id)) return;
 		// the midpoint must come from the row's layout slot: mid-flip the rect
 		// is translated, and reading it would re-slot against a moving target
 		const rect = e.currentTarget.getBoundingClientRect();
@@ -367,24 +368,41 @@
 	}
 
 	const handleStageDragOver = stage => {
-		if (!reorderDrag?.started) return;
+		if (!reorderDrag?.started || reorderDrag.committing) return;
 		setDragOver(stage.id, 0);
 	}
 
 	const finishReorderDrag = async () => {
 		const drag = reorderDrag;
-		reorderDrag = null;
 		if (!drag) return;
 		if (!drag.started) {
+			reorderDrag = null;
 			openOrderEdit(drag.card);
 			return;
 		}
 		// dropped back where it was lifted from: nothing to commit
-		if (!drag.over) return;
-		if (drag.over.stageId === drag.initial.stageId && drag.over.index === drag.initial.index) return;
-		applyFresh(await moveCards({
-			deckId: deck.id, cardIds: drag.cardIds, stageId: drag.over.stageId, index: drag.over.index
-		}));
+		const unmoved = !drag.over
+			|| (drag.over.stageId === drag.initial.stageId && drag.over.index === drag.initial.index);
+		if (unmoved) {
+			reorderDrag = null;
+			return;
+		}
+		// The lifted state is held until the server answers. Clearing it here
+		// dropped the placeholder and put the row back where it started for
+		// the length of the round trip, so the card was seen to snap home and
+		// then jump to where it had been dropped. Committing freezes the
+		// slot: the placeholder stays where the card was let go, and the real
+		// row takes its place when the fresh deck lands.
+		drag.committing = true;
+		try {
+			applyFresh(await moveCards({
+				deckId: deck.id, cardIds: drag.cardIds, stageId: drag.over.stageId, index: drag.over.index
+			}));
+		} finally {
+			// a failed move must not leave the table frozen around a
+			// placeholder for a card that never went anywhere
+			reorderDrag = null;
+		}
 	}
 
 	const openOrderEdit = card => {
@@ -660,7 +678,7 @@
 	</div>
 {/if}
 
-{#if reorderDrag?.started}
+{#if reorderDrag?.started && !reorderDrag.committing}
 	<!-- rides the cursor; pointer-events off so the rows underneath keep
 	     seeing the mousemoves that place the drop slot -->
 	<div class="drag-ghost" style="left: {reorderDrag.x + 14}px; top: {reorderDrag.y + 10}px">
@@ -670,7 +688,7 @@
 	</div>
 {/if}
 
-<div class="browse-container" class:reordering={!!reorderDrag?.started}>
+<div class="browse-container" class:reordering={!!reorderDrag?.started && !reorderDrag.committing}>
 	<div class="left-pane">
 		<div class="search-row">
 			<input
@@ -828,7 +846,7 @@
 								<!-- one tr for card and placeholder alike: the animate
 								     directive must sit directly under the keyed each -->
 								<tr
-									animate:flip={{ duration: reorderDrag?.started ? 150 : 0 }}
+									animate:flip={{ duration: reorderDrag?.started && !reorderDrag.committing ? 150 : 0 }}
 									class:placeholder-row={item.placeholder}
 									class:active={!item.placeholder && item.id === selectedCard.id}
 									class:multi-selected={!item.placeholder && multiSelected.has(item.id)}
@@ -1210,12 +1228,15 @@
 		cursor: pointer;
 	}
 	/* the sort arrow's cut, turned to point along the closed/open states */
+	/* The triangle is clipped out of a SQUARE box: a 6x9 box turned 90deg is
+	   9 wide, which overflowed the cell and lost its point. A square keeps
+	   the same footprint whichever way it points. */
 	.collapse-arrow {
 		flex: none;
-		width: 6px;
+		width: 9px;
 		height: 9px;
 		background-color: rgba(0, 0, 0, 0.55);
-		clip-path: polygon(0 0, 100% 50%, 0 100%);
+		clip-path: polygon(17% 0, 83% 50%, 17% 100%);
 		transform: rotate(90deg);
 	}
 	.collapse-arrow.collapsed {

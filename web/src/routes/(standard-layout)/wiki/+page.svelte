@@ -8,10 +8,12 @@
 	import Faq from "./Faq.svelte"
 	import Editor from "./Editor.svelte"
 	import Srs from "./Srs.svelte"
+	import AnnotationColors from "./AnnotationColors.svelte"
 
 	const sections = [
 		{ slug: "editor", title: "Editor", component: Editor },
 		{ slug: "srs", title: "SRS algorithm", component: Srs },
+		{ slug: "annotation-colors", title: "Annotation colors", component: AnnotationColors },
 		{ slug: "faq", title: "FAQ", component: Faq }
 	];
 

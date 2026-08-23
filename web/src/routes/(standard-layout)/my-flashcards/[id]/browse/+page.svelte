@@ -1195,13 +1195,6 @@
 	tbody tr:nth-child(even) td {
 		background-color: #f4f4f4;
 	}
-	/* The stripe belongs to the row's PLACE, not the row, so a row sliding
-	   into an even slot takes the grey the instant it re-slots while it is
-	   still animating from the old one — a flicker under the moving row. No
-	   stripes while the order is being rearranged; they come back on drop. */
-	.reordering tbody tr:nth-child(even) td {
-		background-color: transparent;
-	}
 	tbody tr:hover td {
 		background-color: #ececec;
 	}
@@ -1322,21 +1315,21 @@
 		cursor: default;
 	}
 	/* --- reordering --- */
-	/* While a drag is in flight the pointer is in a gesture, not pointing, so
-	   the row under it keeps the background it already had. Each case is
-	   restated because the hover rule sits at the same specificity as the
-	   zebra and selection rules it would otherwise beat — the order here is
-	   theirs, so a selected row still wins over an even one. */
-	.reordering tbody tr:hover td {
+	/* What a card row is painted while a drag is in flight. These out-weigh
+	   the zebra, the hover and the selection rules all at once, so the whole
+	   set has to be restated here — but only for CARD rows: the chapter
+	   bands and the add-chapter row keep their own colours, which is what
+	   the :not()s are for (they also lift these above the plain hover rule,
+	   so hovering paints nothing while the pointer is in a gesture).
+	   No stripes: the stripe belongs to a row's PLACE, so a row re-slotting
+	   took its new grey while it was still sliding out of the old one. */
+	.reordering tbody tr:not(.stage-row):not(.add-stage-row) td {
 		background-color: transparent;
 	}
-	.reordering tbody tr:nth-child(even):hover td {
-		background-color: #f4f4f4;
-	}
-	.reordering tbody tr.multi-selected:hover td {
+	.reordering tbody tr.multi-selected:not(.stage-row):not(.add-stage-row) td {
 		background-color: #e9f1fc;
 	}
-	.reordering tbody tr.active:hover td {
+	.reordering tbody tr.active:not(.stage-row):not(.add-stage-row) td {
 		background-color: var(--accent-subtle-strong);
 	}
 	.reordering tbody tr:hover .grip {

@@ -317,6 +317,10 @@
 	const handleOrderMouseDown = (e, card) => {
 		if (e.button !== 0 || readonly || !groupedRows) return;
 		e.stopPropagation();
+		// this handler both stops the event reaching the window and prevents
+		// the default, so an order input open on another row would neither be
+		// told to close nor lose focus on its own: close it here
+		commitOrderEdit();
 		e.preventDefault();
 		// The drag leaves the selection alone. Elsewhere (Finder, Linear) the
 		// dragged row would take the selection with it, but here the
@@ -341,6 +345,15 @@
 		if (!reorderDrag) return;
 		reorderDrag.x = e.clientX;
 		reorderDrag.y = e.clientY;
+		// Off the table entirely: the slot goes back to the one the cards
+		// were lifted from, so letting go out there puts them back rather
+		// than leaving them at whichever row the cursor last crossed. The
+		// rows' own handler has already run for this event, so a cursor
+		// still inside the table has set its slot and is left alone.
+		if (reorderDrag.started && !e.target?.closest?.("table")) {
+			setDragOver(reorderDrag.initial.stageId, reorderDrag.initial.index);
+			return;
+		}
 		if (reorderDrag.started || draft.sortDescending) return;
 		if (Math.abs(e.clientX - reorderDrag.startX) + Math.abs(e.clientY - reorderDrag.startY) > 5) {
 			// the placeholder opens at the dragged card's own slot, so the
@@ -582,7 +595,7 @@
 <svelte:window
 	onmouseup={() => { dragging = false; finishReorderDrag(); }}
 	onmousemove={handleWindowMouseMove}
-	onmousedown={() => { contextMenu = null; stageMenu = null; }}
+	onmousedown={() => { contextMenu = null; stageMenu = null; commitOrderEdit(); }}
 	onkeydown={e => {
 		if (e.key === "Escape") {
 			contextMenu = null;
@@ -776,6 +789,7 @@
 								class="order-input"
 								autofocus
 								bind:value={orderEdit.value}
+								onmousedown={e => e.stopPropagation()}
 								onblur={commitOrderEdit}
 								onkeydown={e => {
 									if (e.key === "Enter") commitOrderEdit();
@@ -1180,6 +1194,13 @@
 	}
 	tbody tr:nth-child(even) td {
 		background-color: #f4f4f4;
+	}
+	/* The stripe belongs to the row's PLACE, not the row, so a row sliding
+	   into an even slot takes the grey the instant it re-slots while it is
+	   still animating from the old one — a flicker under the moving row. No
+	   stripes while the order is being rearranged; they come back on drop. */
+	.reordering tbody tr:nth-child(even) td {
+		background-color: transparent;
 	}
 	tbody tr:hover td {
 		background-color: #ececec;

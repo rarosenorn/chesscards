@@ -326,8 +326,17 @@
 		// dragged row would take the selection with it, but here the
 		// selection also decides which card the pane beside the table shows:
 		// reordering a row would swap what you are reading.
-		const cardIds = multiSelected.has(card.id)
-			? filteredCards.filter(c => multiSelected.has(c.id)).map(c => c.id)
+		//
+		// A selection carries as one only while its rows are a run: dropping
+		// a scattered set would close the gaps between them, which is a
+		// different edit from the one a drag looks like it is making. Ctrl
+		// past a gap and the drag falls back to the row under the cursor.
+		const selected = filteredCards.filter(c => multiSelected.has(c.id));
+		const contiguous = selected.length > 0 && selected.every((c, i) =>
+			i === 0 || filteredCards.indexOf(c) === filteredCards.indexOf(selected[i - 1]) + 1
+		);
+		const cardIds = multiSelected.has(card.id) && contiguous
+			? selected.map(c => c.id)
 			: [card.id];
 		reorderDrag = {
 			cardIds, card, started: false,
@@ -648,21 +657,23 @@
 	// the table is not an ancestor, so a listener on it would never see the
 	// keys. The board itself only claims Left/Right, for its moves.
 	const navigateCards = e => {
-		if (e.key === "ArrowUp") {
-			e.preventDefault();
-			selectedCard =
-				filteredCards[Math.max(filteredCards.indexOf(selectedCard) - 1, 0)]
-		} else if (e.key === "ArrowDown") {
-			e.preventDefault();
-			selectedCard =
-				filteredCards[Math.min(
-					filteredCards.indexOf(selectedCard) + 1, filteredCards.length - 1
-				)]
-		} else {
+		const from = filteredCards.indexOf(selectedCard);
+		let to;
+		if (e.key === "ArrowUp") to = Math.max(from - 1, 0);
+		else if (e.key === "ArrowDown") to = Math.min(from + 1, filteredCards.length - 1);
+		else return;
+		e.preventDefault();
+		selectedCard = filteredCards[to];
+		// Shift sweeps from the anchor the way it does with the mouse: the
+		// row the selection was started at stays put and the arrows drag the
+		// far end over it. Without shift the anchor moves along too.
+		if (e.shiftKey) {
+			if (anchorIndex === null) anchorIndex = from;
+			selectRange(anchorIndex, to);
 			return;
 		}
 		multiSelected = new SvelteSet([selectedCard.id]);
-		anchorIndex = filteredCards.indexOf(selectedCard);
+		anchorIndex = to;
 	}
 </script>
 

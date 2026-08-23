@@ -365,6 +365,7 @@
 			reorderDrag.initial = { stageId: reorderDrag.card.stage_id, index };
 			reorderDrag.over = { ...reorderDrag.initial };
 			reorderDrag.started = true;
+			autoScrollFrame ??= requestAnimationFrame(autoScrollStep);
 		}
 	}
 
@@ -374,17 +375,60 @@
 		reorderDrag.over = { stageId, index };
 	}
 
-	const handleRowDragOver = (e, card) => {
-		if (!reorderDrag?.started || reorderDrag.cardIds.includes(card.id)) return;
+	const slotForRow = (rowEl, card, clientY) => {
 		// the midpoint must come from the row's layout slot: mid-flip the rect
 		// is translated, and reading it would re-slot against a moving target
-		const rect = e.currentTarget.getBoundingClientRect();
-		const transform = new DOMMatrixReadOnly(getComputedStyle(e.currentTarget).transform);
+		const rect = rowEl.getBoundingClientRect();
+		const transform = new DOMMatrixReadOnly(getComputedStyle(rowEl).transform);
 		const top = rect.top - transform.m42;
-		const before = e.clientY < top + rect.height / 2;
+		const before = clientY < top + rect.height / 2;
 		const list = stageCards.get(card.stage_id).filter(c => !reorderDrag.cardIds.includes(c.id));
 		setDragOver(card.stage_id, list.findIndex(c => c.id === card.id) + (before ? 0 : 1));
 	}
+
+	const handleRowDragOver = (e, card) => {
+		if (!reorderDrag?.started || reorderDrag.cardIds.includes(card.id)) return;
+		slotForRow(e.currentTarget, card, e.clientY);
+	}
+
+	// While the list is scrolling under a still cursor no mousemove arrives,
+	// so the slot is worked out from whatever row now sits under the pointer.
+	const reslotUnderCursor = () => {
+		const row = document.elementFromPoint(reorderDrag.x, reorderDrag.y)?.closest?.("tr[data-card-row]");
+		if (!row) return;
+		const card = deck.cards.find(c => c.id === row.dataset.cardRow);
+		if (card && !reorderDrag.cardIds.includes(card.id)) slotForRow(row, card, reorderDrag.y);
+	}
+
+	// Held near the top or bottom edge, the list scrolls itself: without this
+	// a card cannot be dragged past the rows the window happens to show, and
+	// a long chapter can only be reordered by typing the numbers. Speed rises
+	// with how far into the edge band the cursor is.
+	const EDGE_BAND = 48;
+	const EDGE_SPEED = 16;
+	let tableContainer = $state(null);
+	let autoScrollFrame = null;
+
+	const autoScrollStep = () => {
+		autoScrollFrame = null;
+		if (!reorderDrag?.started || !tableContainer) return;
+		const box = tableContainer.getBoundingClientRect();
+		const y = reorderDrag.y;
+		const into = y < box.top + EDGE_BAND
+			? -(box.top + EDGE_BAND - y)
+			: y > box.bottom - EDGE_BAND
+				? y - (box.bottom - EDGE_BAND)
+				: 0;
+		if (into) {
+			const before = tableContainer.scrollTop;
+			tableContainer.scrollTop += Math.sign(into)
+				* Math.ceil(EDGE_SPEED * Math.min(1, Math.abs(into) / EDGE_BAND));
+			if (tableContainer.scrollTop !== before) reslotUnderCursor();
+		}
+		autoScrollFrame = requestAnimationFrame(autoScrollStep);
+	}
+
+
 
 	const handleStageDragOver = stage => {
 		if (!reorderDrag?.started) return;
@@ -412,11 +456,23 @@
 		// once the lifted state was held across the wait — as a pause before
 		// anything moved. The request goes out behind it and its answer,
 		// which renumbers the whole deck, lands on top.
+		// where every card stood before the optimistic move, so a refused
+		// request can put them all back: the table snapping to the old order
+		// is the only honest answer to a move the server did not make
+		const before = deck.cards.map(card => ({ card, stage_id: card.stage_id, position: card.position }));
 		applyLocalMove(drag);
 		reorderDrag = null;
-		applyFresh(await moveCards({
-			deckId: deck.id, cardIds: drag.cardIds, stageId: drag.over.stageId, index: drag.over.index
-		}));
+		try {
+			applyFresh(await moveCards({
+				deckId: deck.id, cardIds: drag.cardIds, stageId: drag.over.stageId, index: drag.over.index
+			}));
+		} catch (err) {
+			for (const was of before) {
+				was.card.stage_id = was.stage_id;
+				was.card.position = was.position;
+			}
+			throw err;
+		}
 	}
 
 	// the preview's order, written into the cards themselves: each stage
@@ -736,7 +792,7 @@
 				</button>
 			{/if}
 		</div>
-		<div class="table-container">
+		<div class="table-container" bind:this={tableContainer}>
 		<!-- svelte-ignore a11y_autofocus -- table is the page's primary interaction target; focus enables arrow-key nav immediately -->
 		<table
 			role="grid"
@@ -1198,8 +1254,11 @@
 	tbody tr:hover td {
 		background-color: #ececec;
 	}
+	/* one blue for the whole selection: the first row picked used to keep a
+	   stronger fill than the ones added after it, which read as a difference
+	   in kind rather than in order */
 	tbody tr.multi-selected td {
-		background-color: #e9f1fc;
+		background-color: var(--accent-subtle-strong);
 	}
 	tbody tr.active td {
 		background-color: var(--accent-subtle-strong);
@@ -1327,7 +1386,7 @@
 		background-color: transparent;
 	}
 	.reordering tbody tr.multi-selected:not(.stage-row):not(.add-stage-row) td {
-		background-color: #e9f1fc;
+		background-color: var(--accent-subtle-strong);
 	}
 	.reordering tbody tr.active:not(.stage-row):not(.add-stage-row) td {
 		background-color: var(--accent-subtle-strong);

@@ -8,7 +8,7 @@
 	// TODO responsive ideas: medium deck table stacked on card table
 	// small (phone) only deck and card table stacked, selected card in popover
 
-	import { getContext, untrack } from "svelte"
+	import { getContext, untrack, tick } from "svelte"
 	import { flip } from "svelte/animate"
 	import { SvelteSet } from "svelte/reactivity"
 	import { page } from "$app/state"
@@ -561,6 +561,24 @@
 		applyFresh(await moveCards({ deckId: deck.id, cardIds, stageId, index: null }));
 	}
 
+	let cardPane = $state(null);
+
+	// Picking a card hands the keyboard to its first board with moves, so
+	// the arrows step the line without a click on the board first. The board
+	// asks for focus itself as it arrives, but a click on a row focuses the
+	// table too, and which lands last is a race; this settles it after the
+	// click by focusing whatever the preview offered as its focus target.
+	$effect(() => {
+		const id = selectedCard?.id;
+		if (!id) return;
+		tick().then(() => {
+			if (selectedCard?.id !== id) return;
+			const active = document.activeElement;
+			if (active && (active.tagName === "INPUT" || active.isContentEditable)) return;
+			cardPane?.querySelector('[tabindex="0"]')?.focus({ preventScroll: true });
+		});
+	});
+
 	// { x, y } where the context menu is open, or null; the chapter list
 	// inside it opens folded, and folds again with the menu
 	let contextMenu = $state(null);
@@ -996,7 +1014,7 @@
 		</table>
 		</div>
 	</div>
-	<div class="selected-card-container">
+	<div class="selected-card-container" bind:this={cardPane}>
 		{#if selectedCard}
 			{#if isEditingSelected}
 				<div class="card-edit card-surface">

@@ -318,17 +318,13 @@
 		if (e.button !== 0 || readonly || !groupedRows) return;
 		e.stopPropagation();
 		e.preventDefault();
-		// Dragging a row that is not in the selection takes the selection with
-		// it, the way every list that reorders by handle does. One rule — the
-		// dragged rows end up selected — so the highlight never sits on some
-		// other row while this one moves, which is what made it look like the
-		// selection wandered on drop.
-		if (!multiSelected.has(card.id)) {
-			selectedCard = card;
-			multiSelected = new SvelteSet([card.id]);
-			anchorIndex = filteredCards.indexOf(card);
-		}
-		const cardIds = filteredCards.filter(c => multiSelected.has(c.id)).map(c => c.id);
+		// The drag leaves the selection alone. Elsewhere (Finder, Linear) the
+		// dragged row would take the selection with it, but here the
+		// selection also decides which card the pane beside the table shows:
+		// reordering a row would swap what you are reading.
+		const cardIds = multiSelected.has(card.id)
+			? filteredCards.filter(c => multiSelected.has(c.id)).map(c => c.id)
+			: [card.id];
 		reorderDrag = {
 			cardIds, card, started: false,
 			startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY,

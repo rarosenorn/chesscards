@@ -3,7 +3,7 @@
 <h3>Chapter progression</h3>
 
 <p>
-	A deck can hold its later chapters shut until the earlier ones are
+	<em>Claude:</em> a deck can hold its later chapters shut until the earlier ones are
 	learned, so a long deck introduces itself in order instead of all at once.
 	Turn it on under the deck's <strong>Settings</strong>.
 </p>

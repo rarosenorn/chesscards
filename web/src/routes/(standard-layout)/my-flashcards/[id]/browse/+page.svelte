@@ -174,18 +174,23 @@
 	});
 
 	// While a reorder drag is in flight the table renders from a preview of
-	// the grouped rows: the dragged cards are lifted out and a placeholder row
-	// holds the slot they would drop into, so the new order is visible before
-	// it is committed. filteredCards keeps reading the real groupedRows —
-	// selection and arrow navigation must not see the placeholder.
+	// the grouped rows: the dragged cards are lifted out and put back at the
+	// slot they would drop into, so the order it would commit to is on screen
+	// before it is. filteredCards keeps reading the real groupedRows —
+	// selection and arrow navigation must not see the preview's order.
 	let displayGroups = $derived.by(() => {
 		const drag = reorderDrag;
 		if (!groupedRows || !drag?.started || !drag.over) return groupedRows;
-		const placeholder = { id: "__placeholder__", placeholder: true };
+		// The dragged rows are lifted out and put back at the slot they would
+		// land in, rendered as themselves: the table shows the order it would
+		// commit to rather than an empty band to read the result off.
+		const lifted = groupedRows
+			.flatMap(group => group.cards)
+			.filter(c => drag.cardIds.includes(c.id));
 		return groupedRows.map(group => {
 			let cards = group.cards.filter(c => !drag.cardIds.includes(c.id));
 			if (group.stage.id === drag.over.stageId) {
-				cards = [...cards.slice(0, drag.over.index), placeholder, ...cards.slice(drag.over.index)];
+				cards = [...cards.slice(0, drag.over.index), ...lifted, ...cards.slice(drag.over.index)];
 			}
 			return { ...group, cards };
 		});
@@ -306,9 +311,8 @@
 
 	// --- reordering ---
 	// The Order cell is the handle: a drag from it lifts the selection (or its
-	// own row) out of the table — a ghost chip rides the cursor, a placeholder
-	// row holds the slot the cards would drop into, and the other rows slide
-	// around it live. A plain click on it opens the order for typing ("3.3" —
+	// own row) and carries them through the table: the rows themselves ride
+	// to the slot they would land in and the others slide around them live. A plain click on it opens the order for typing ("3.3" —
 	// stage, then place in stage). Both need the grouped view; the drag also
 	// needs ascending, where the slots read the way the numbers run.
 	let reorderDrag = $state(null);
@@ -328,8 +332,6 @@
 		reorderDrag = {
 			cardIds, card, started: false,
 			startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY,
-			// the placeholder keeps the lifted row's exact height
-			rowHeight: e.currentTarget.closest("tr").getBoundingClientRect().height,
 			over: null, initial: null
 		};
 	}
@@ -340,8 +342,8 @@
 		reorderDrag.y = e.clientY;
 		if (reorderDrag.started || draft.sortDescending) return;
 		if (Math.abs(e.clientX - reorderDrag.startX) + Math.abs(e.clientY - reorderDrag.startY) > 5) {
-			// the placeholder opens at the dragged card's own slot, so the
-			// table holds still until the cursor actually moves somewhere
+			// the lift opens at the dragged card's own slot, so the table
+			// holds still until the cursor actually moves somewhere
 			const stageList = stageCards.get(reorderDrag.card.stage_id);
 			const index = stageList
 				.slice(0, stageList.findIndex(c => c.id === reorderDrag.card.id))
@@ -392,19 +394,18 @@
 			return;
 		}
 		// The lifted state is held until the server answers. Clearing it here
-		// dropped the placeholder and put the row back where it started for
-		// the length of the round trip, so the card was seen to snap home and
-		// then jump to where it had been dropped. Committing freezes the
-		// slot: the placeholder stays where the card was let go, and the real
-		// row takes its place when the fresh deck lands.
+		// put the rows back where they started for the length of the round
+		// trip, so a card was seen to snap home and then jump to where it had
+		// been dropped. Committing freezes the order the drag was showing
+		// until the fresh deck lands on top of it.
 		drag.committing = true;
 		try {
 			applyFresh(await moveCards({
 				deckId: deck.id, cardIds: drag.cardIds, stageId: drag.over.stageId, index: drag.over.index
 			}));
 		} finally {
-			// a failed move must not leave the table frozen around a
-			// placeholder for a card that never went anywhere
+			// a failed move must not leave the table frozen on an order it
+			// never committed
 			reorderDrag = null;
 		}
 	}
@@ -682,16 +683,6 @@
 	</div>
 {/if}
 
-{#if reorderDrag?.started && !reorderDrag.committing}
-	<!-- rides the cursor; pointer-events off so the rows underneath keep
-	     seeing the mousemoves that place the drop slot -->
-	<div class="drag-ghost" style="left: {reorderDrag.x + 14}px; top: {reorderDrag.y + 10}px">
-		{reorderDrag.cardIds.length > 1
-			? `${reorderDrag.cardIds.length} cards`
-			: (getFrontIndicator(reorderDrag.card.front) ?? "{{chessboard}}")}
-	</div>
-{/if}
-
 <div class="browse-container" class:reordering={!!reorderDrag?.started && !reorderDrag.committing}>
 	<div class="left-pane">
 		<div class="search-row">
@@ -847,23 +838,19 @@
 						</tr>
 						{#if !group.collapsed}
 							{#each group.cards as item (item.id)}
-								<!-- one tr for card and placeholder alike: the animate
-								     directive must sit directly under the keyed each -->
+								<!-- the animate directive must sit directly under
+								     the keyed each -->
 								<tr
 									animate:flip={{ duration: reorderDrag?.started && !reorderDrag.committing ? 150 : 0 }}
-									class:placeholder-row={item.placeholder}
-									class:active={!item.placeholder && item.id === selectedCard.id}
-									class:multi-selected={!item.placeholder && multiSelected.has(item.id)}
-									onmousedown={item.placeholder ? undefined : e => handleRowMouseDown(e, item, filteredCards.indexOf(item))}
-									onmouseenter={item.placeholder ? undefined : () => handleRowMouseEnter(filteredCards.indexOf(item))}
-									onmousemove={item.placeholder ? undefined : e => handleRowDragOver(e, item)}
-									oncontextmenu={item.placeholder ? undefined : e => handleRowContextMenu(e, item, filteredCards.indexOf(item))}
+									class:lifted={reorderDrag?.started && reorderDrag.cardIds.includes(item.id)}
+									class:active={item.id === selectedCard.id}
+									class:multi-selected={multiSelected.has(item.id)}
+									onmousedown={e => handleRowMouseDown(e, item, filteredCards.indexOf(item))}
+									onmouseenter={() => handleRowMouseEnter(filteredCards.indexOf(item))}
+									onmousemove={e => handleRowDragOver(e, item)}
+									oncontextmenu={e => handleRowContextMenu(e, item, filteredCards.indexOf(item))}
 								>
-									{#if item.placeholder}
-										<td class="placeholder-cell" colspan="6" style="height: {reorderDrag?.rowHeight}px"></td>
-									{:else}
-										{@render cardCells(item)}
-									{/if}
+									{@render cardCells(item)}
 								</tr>
 							{/each}
 						{/if}
@@ -1296,35 +1283,19 @@
 	.browse-container.reordering * {
 		cursor: grabbing;
 	}
-	/* the slot the cards would drop into: an empty band holding the lifted
-	   row's height (the selector out-weighs the zebra and hover repaints) */
-	tbody tr.placeholder-row td,
-	tbody tr.placeholder-row:hover td {
-		background-color: #eef4fd;
-		border-right: none;
-		padding: 0;
+	/* The dragged rows are the drag's own picture: they sit at the slot they
+	   would land in, raised off the table so they read as held rather than
+	   settled. (The selector out-weighs the zebra and selection repaints.) */
+	tbody tr.lifted td,
+	tbody tr.lifted:hover td {
+		background-color: #fbfcfe;
+		border-top: 1px solid var(--accent);
+		border-bottom: 1px solid var(--accent);
 	}
-	/* a collapsed chapter can't show the placeholder between its rows, so the
+	/* a collapsed chapter can't show the rows landing inside it, so the
 	   header keeps the accent rule as its drop cue */
 	tr.stage-row.drop-into td {
 		box-shadow: inset 0 -2px 0 var(--accent);
-	}
-	/* the dragged cards, riding the cursor as a chip */
-	.drag-ghost {
-		position: fixed;
-		z-index: 20;
-		pointer-events: none;
-		max-width: 260px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		padding: 3px 10px;
-		background-color: white;
-		border: 1px solid #ccc;
-		box-shadow: rgba(0, 0, 0, 0.2) 0 2px 8px;
-		font-size: 0.875rem;
-		color: #333;
-		opacity: 0.85;
 	}
 	.order-input {
 		width: 100%;

@@ -328,14 +328,17 @@
 		reorderDrag = {
 			cardIds, card, started: false,
 			startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY,
-			// the placeholder keeps the lifted row's exact height
-			rowHeight: e.currentTarget.closest("tr").getBoundingClientRect().height,
+			// the placeholder holds the whole load: every row being carried,
+			// so the gap is the size of what would drop into it
+			rowHeight: cardIds
+				.map(id => document.querySelector(`[data-card-row="${id}"]`)?.getBoundingClientRect().height ?? 0)
+				.reduce((a, b) => a + b, 0),
 			over: null, initial: null
 		};
 	}
 
 	const handleWindowMouseMove = e => {
-		if (!reorderDrag || reorderDrag.committing) return;
+		if (!reorderDrag) return;
 		reorderDrag.x = e.clientX;
 		reorderDrag.y = e.clientY;
 		if (reorderDrag.started || draft.sortDescending) return;
@@ -359,8 +362,7 @@
 	}
 
 	const handleRowDragOver = (e, card) => {
-		if (!reorderDrag?.started || reorderDrag.committing) return;
-		if (reorderDrag.cardIds.includes(card.id)) return;
+		if (!reorderDrag?.started || reorderDrag.cardIds.includes(card.id)) return;
 		// the midpoint must come from the row's layout slot: mid-flip the rect
 		// is translated, and reading it would re-slot against a moving target
 		const rect = e.currentTarget.getBoundingClientRect();
@@ -372,7 +374,7 @@
 	}
 
 	const handleStageDragOver = stage => {
-		if (!reorderDrag?.started || reorderDrag.committing) return;
+		if (!reorderDrag?.started) return;
 		setDragOver(stage.id, 0);
 	}
 
@@ -391,21 +393,35 @@
 			reorderDrag = null;
 			return;
 		}
-		// The lifted state is held until the server answers. Clearing it here
-		// dropped the placeholder and put the row back where it started for
-		// the length of the round trip, so the card was seen to snap home and
-		// then jump to where it had been dropped. Committing freezes the
-		// slot: the placeholder stays where the card was let go, and the real
-		// row takes its place when the fresh deck lands.
-		drag.committing = true;
-		try {
-			applyFresh(await moveCards({
-				deckId: deck.id, cardIds: drag.cardIds, stageId: drag.over.stageId, index: drag.over.index
-			}));
-		} finally {
-			// a failed move must not leave the table frozen around a
-			// placeholder for a card that never went anywhere
-			reorderDrag = null;
+		// The drop lands at once: the same order the preview was showing is
+		// written into the deck here, and the drag ends. Waiting on the
+		// server first read as the row snapping home and then jumping, or —
+		// once the lifted state was held across the wait — as a pause before
+		// anything moved. The request goes out behind it and its answer,
+		// which renumbers the whole deck, lands on top.
+		applyLocalMove(drag);
+		reorderDrag = null;
+		applyFresh(await moveCards({
+			deckId: deck.id, cardIds: drag.cardIds, stageId: drag.over.stageId, index: drag.over.index
+		}));
+	}
+
+	// the preview's order, written into the cards themselves: each stage
+	// renumbered 1..n the way the server will, so the table settles into the
+	// dropped order without waiting to be told
+	const applyLocalMove = drag => {
+		const carried = deck.cards.filter(card => drag.cardIds.includes(card.id));
+		for (const stage of deck.stages) {
+			let cards = deck.cards
+				.filter(card => card.stage_id === stage.id && !drag.cardIds.includes(card.id))
+				.sort((a, b) => a.position - b.position);
+			if (stage.id === drag.over.stageId) {
+				cards = [...cards.slice(0, drag.over.index), ...carried, ...cards.slice(drag.over.index)];
+			}
+			cards.forEach((card, i) => {
+				card.stage_id = stage.id;
+				card.position = i + 1;
+			});
 		}
 	}
 
@@ -682,7 +698,7 @@
 	</div>
 {/if}
 
-{#if reorderDrag?.started && !reorderDrag.committing}
+{#if reorderDrag?.started}
 	<!-- rides the cursor; pointer-events off so the rows underneath keep
 	     seeing the mousemoves that place the drop slot -->
 	<div class="drag-ghost" style="left: {reorderDrag.x + 14}px; top: {reorderDrag.y + 10}px">
@@ -692,7 +708,7 @@
 	</div>
 {/if}
 
-<div class="browse-container" class:reordering={!!reorderDrag?.started && !reorderDrag.committing}>
+<div class="browse-container" class:reordering={!!reorderDrag?.started}>
 	<div class="left-pane">
 		<div class="search-row">
 			<input
@@ -850,7 +866,8 @@
 								<!-- one tr for card and placeholder alike: the animate
 								     directive must sit directly under the keyed each -->
 								<tr
-									animate:flip={{ duration: reorderDrag?.started && !reorderDrag.committing ? 150 : 0 }}
+									data-card-row={item.placeholder ? undefined : item.id}
+									animate:flip={{ duration: reorderDrag?.started ? 150 : 0 }}
 									class:placeholder-row={item.placeholder}
 									class:active={!item.placeholder && item.id === selectedCard.id}
 									class:multi-selected={!item.placeholder && multiSelected.has(item.id)}
@@ -1316,12 +1333,15 @@
 	.browse-container.reordering * {
 		cursor: grabbing;
 	}
-	/* the slot the cards would drop into: an empty band holding the lifted
-	   row's height (the selector out-weighs the zebra and hover repaints) */
+	/* the slot the cards would drop into: a gap the size of the load being
+	   carried, in the table's own ground so it reads as a hole rather than
+	   another row (the selector out-weighs the zebra, selection and hover
+	   repaints, which would otherwise tint it) */
 	tbody tr.placeholder-row td,
 	tbody tr.placeholder-row:hover td {
-		background-color: #eef4fd;
+		background-color: transparent;
 		border-right: none;
+		border-bottom: none;
 		padding: 0;
 	}
 	/* a collapsed chapter can't show the placeholder between its rows, so the

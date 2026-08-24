@@ -14,10 +14,11 @@
 	/* how wide a flashcard renders, wherever one is shown. It is a board
 	   size in disguise — a board is half the card — so anything that has to
 	   line up with a card's edge reads it from here rather than repeating
-	   the number (browse's toolbar does). 952 less the card's 32px rims
-	   leaves 888 of content: two 432 cells with the gap below between
-	   them. */
-	--flashcard-width: 952px;
+	   the number (browse's toolbar does). 912 less the card's 32px rims
+	   leaves 848 of content: two 414 cells with the gap below between
+	   them. The rim and the gap are fixed, so trimming this number is a way
+	   of trimming the boards. */
+	--flashcard-width: 912px;
 	/* Between the two boards of a row. A little tighter than the card's own
 	   32px rim, so a pair reads as one row rather than two boards that
 	   happen to share it. Shared with the add-cards editor, which mirrors
@@ -35,7 +36,7 @@
 	   where the answer will leave it strands the board above a field of
 	   empty card, which reads worse than the card growing when the answer
 	   comes in. */
-	--flashcard-min-height: 670px;
+	--flashcard-min-height: 643px;
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the
    window scrollbar: that shifts the viewport width and makes the responsive
@@ -229,22 +230,18 @@ body.piece-grabbing * {
 	flex-direction: column;
 	align-items: center;
 }
+/* Text reads from the boards' left edge: the card's rim is the whole margin
+   on that side, so a line starts where the left board starts rather than
+   floating somewhere inside it. The eye returns to that edge on every line,
+   which is why it is the one worth lining up; the right is ragged anyway, so
+   the measure stops short of the rim there instead — enough that a long line
+   never runs up against where the boards end. The measure this leaves is
+   longer than the ideal one, deliberately: text stranded in a narrow column
+   down the middle of a card this wide reads worse. */
 .flashcard .text-block {
-	/* Text carries its own measure, apart from the boards: the card is wide
-	   for their sake, and prose is inset from the boards' edge rather than
-	   run to it — the chess-book arrangement, diagrams wide and text a
-	   little narrower. The inset is small on purpose: a line longer than
-	   the ideal measure reads better here than a column of text stranded in
-	   the middle of a wide card. Short text still centers (the block
-	   shrink-wraps), so only wrapped paragraphs feel the cap. The editors
-	   stay uncapped, so a line there breaks wider than it will on the
-	   card. */
-	max-width: calc(100% - 96px);
+	align-self: flex-start;
+	max-width: calc(100% - 40px);
 }
-/* Text needs no alignment rule of its own: the block is only as wide as its
-   text up to the measure, and the side centers it. Short text is therefore
-   centered, and wrapped text fills the measure and reads left-aligned from a
-   fixed edge — one declaration, no threshold. */
 /* boards are decided by the card's data: a lone board sits centered only
    while every board block on the side is a lone board */
 .flashcard .card-side[data-board-align="left"] .single-board-block {

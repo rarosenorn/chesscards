@@ -529,7 +529,7 @@
 		   text padding that puts content 32px in — the card's rim exactly,
 		   so a board sits the same distance from this canvas's edge as from
 		   the card's. The card's width less that 64px of chrome lands the
-		   content at the card's 896, and boards render at the card's sizes. */
+		   content at the card's 848, and boards render at the card's sizes. */
 		padding: 12px var(--canvas-pad);
 		gap: 4px;
 		max-width: var(--flashcard-width);

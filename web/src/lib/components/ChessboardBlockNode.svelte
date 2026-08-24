@@ -377,8 +377,8 @@
 
 <style>
 	/* The card's exact board sizes (app.css "card board layout"): paired
-	   boards are the card's 432px cells --board-col-gap apart, a lone board
-	   the card's 562px solo — the editor shows what the card will render, to the
+	   boards are the card's 414px cells --board-col-gap apart, a lone board
+	   the card's 563px solo — the editor shows what the card will render, to the
 	   pixel. The grid is capped at exactly two cells plus the gap and
 	   centered, so the sizes hold on any canvas; open editors span that
 	   same width, one open or several stacked alike. The known cost of
@@ -386,8 +386,9 @@
 	   block crosses between one board and two. */
 	/* Full width, like the text: both edges shared. The card's exact board
 	   sizes come from the CANVAS, not from caps here — the editor pages size
-	   their content to 896px (two 432 card cells + the card's 32px gap), so
-	   fluid halves ARE 432 and a lone board's 562 fits as on the card. */
+	   their content to 848px (two 414 card cells + the 20px --board-col-gap
+	   between them), so fluid halves ARE 414 and a lone board's 563 fits as
+	   on the card. */
 	.board-grid-block {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

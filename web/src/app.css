@@ -234,13 +234,13 @@ body.piece-grabbing * {
 	/* Text carries its own measure, apart from the boards: the card is wide
 	   for their sake, and prose is inset from the boards' edge rather than
 	   run to it — the chess-book arrangement, diagrams wide and text a
-	   little narrower. The inset is small on purpose: a line longer than
-	   the ideal measure reads better here than a column of text stranded in
-	   the middle of a wide card. Short text still centers (the block
-	   shrink-wraps), so only wrapped paragraphs feel the cap. The editors
-	   stay uncapped, so a line there breaks wider than it will on the
-	   card. */
-	max-width: calc(100% - 96px);
+	   little narrower. The inset is the card's own rim taken a second time,
+	   and small on purpose: a line longer than the ideal measure reads
+	   better here than a column of text stranded in the middle of a wide
+	   card. Short text still centers (the block shrink-wraps), so only
+	   wrapped paragraphs feel the cap. The editors stay uncapped, so a line
+	   there breaks wider than it will on the card. */
+	max-width: calc(100% - 64px);
 }
 /* Text needs no alignment rule of its own: the block is only as wide as its
    text up to the measure, and the side centers it. Short text is therefore

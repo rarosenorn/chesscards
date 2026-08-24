@@ -1,11 +1,23 @@
 <!-- content to come -->
 
+<h3>Chapters</h3>
+
+<p>
+	<em>Claude:</em> a deck starts out as one flat list. Turn <strong>Use
+	chapters</strong> on under the deck's <strong>Settings</strong> to group its
+	cards, and the chapter picker, the chapter headers in Cards and the
+	<code>2.17</code> card numbering appear. Switching it back off hides all of
+	that again without touching the chapters themselves, so turning it on later
+	finds them as they were.
+</p>
+
 <h3>Chapter progression</h3>
 
 <p>
-	<em>Claude:</em> a deck can hold its later chapters shut until the earlier ones are
-	learned, so a long deck introduces itself in order instead of all at once.
-	Turn it on under the deck's <strong>Settings</strong>.
+	With chapters on, a deck can additionally hold its later chapters shut until
+	the earlier ones are learned, so a long deck introduces itself in order
+	instead of all at once. Its own switch sits under the same
+	<strong>Settings</strong>, below the one above.
 </p>
 
 <p>

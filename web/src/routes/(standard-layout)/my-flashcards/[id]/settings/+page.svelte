@@ -74,6 +74,27 @@
 	</section>
 	{/if}
 
+	<!-- a marketplace deck's chapters are its author's: the studier gets the
+	     progression switch below, not the choice of whether chapters exist -->
+	{#if !data.deck.isMarketplace}
+	<section>
+		<h3>Chapters</h3>
+		<p class="section-note">
+			Group the deck's cards into chapters. Off, the deck is one flat list.
+			Chapters you have made are kept while this is off, so turning it back
+			on brings them back as they were.
+		</p>
+		<form method="POST" action="?/chapters" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
+			<label class="progression-toggle">
+				<input type="checkbox" name="value" value="true" checked={data.deck.chapters} />
+				Use chapters
+			</label>
+		</form>
+	</section>
+	{/if}
+
+	<!-- nothing to gate without chapters, so the switch only appears with them -->
+	{#if data.deck.chapters}
 	<section>
 		<h3>Chapter progression</h3>
 		<p class="section-note">
@@ -87,6 +108,7 @@
 			</label>
 		</form>
 	</section>
+	{/if}
 
 	<!-- the danger zone is the one section a marketplace instance also gets:
 	     resetting is its only destructive act, deleting stays the owner's -->

@@ -357,6 +357,9 @@
 			</button>
 		{/each}
 	</div>
+	<!-- no chapters, nothing to file into: the cards go to the deck's one
+	     stage, which validStageId already falls back to -->
+	{#if deck.chapters}
 	<div class="stage-picker">
 		<label>
 			Ch.
@@ -405,6 +408,7 @@
 			{/if}
 		</div>
 	</div>
+	{/if}
 </div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div

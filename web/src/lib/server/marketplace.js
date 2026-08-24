@@ -132,8 +132,9 @@ const approveUploadRequest = async requestId => {
 		if (!request) throw new Error("Request not found or not pending");
 
 		const { rows: [mpDeck] } = await client.query(
-			"insert into marketplace_decks(user_id, name, description, price, theme, image, image_type) values($1, $2, $3, $4, $5, $6, $7) returning id",
-			[request.user_id, request.name, request.description, request.price, request.theme, request.image, request.image_type]
+			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, chapters)
+			 select $1, $2, $3, $4, $5, $6, $7, d.chapters from decks d where d.id = $8 returning id`,
+			[request.user_id, request.name, request.description, request.price, request.theme, request.image, request.image_type, request.deck_id]
 		);
 		// the stage structure travels with the cards, matched up by position
 		await client.query(
@@ -254,7 +255,7 @@ const getInstancesWithoutCards = async userId => {
 // render them unchanged
 const getInstanceById = async (userId, instanceId) => {
 	const { rows } = await pool.query(`
-		select i.id, md.name, i.stage_progression "stageProgression",
+		select i.id, md.name, md.chapters, i.stage_progression "stageProgression",
 			coalesce((select json_agg(json_build_object('id', ms.id, 'name', ms.name, 'position', ms.position) order by ms.position)
 				from marketplace_stages ms where ms.marketplace_deck_id = md.id), '[]'::json) stages,
 			coalesce(json_agg(json_build_object(
@@ -274,7 +275,7 @@ const getInstanceById = async (userId, instanceId) => {
 		left join marketplace_cards mc on mc.id = ci.marketplace_card_id
 		left join marketplace_stages ms on ms.id = mc.stage_id
 		where i.user_id = $1 and i.id = $2
-		group by i.id, md.name`,
+		group by i.id, md.name, md.chapters`,
 		[userId, instanceId]
 	);
 

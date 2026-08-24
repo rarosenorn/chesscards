@@ -91,10 +91,13 @@
 
 	// Progression gates only the introduction of unseen cards: anything
 	// already met keeps its reviews coming even if its stage has fallen
-	// back behind the bar (cards moved, stages regrouped).
+	// back behind the bar (cards moved, stages regrouped). A deck with
+	// chapters switched off shows none of them, so it gates nothing either —
+	// its stages may still be there, but nothing tells the studier so.
+	let progression = $derived(deck.chapters && deck.stageProgression);
 	let unlockedStages = $derived(unlockedStageIds(deck.stages, deck.cards));
 	const gated = card =>
-		deck.stageProgression && !isSeen(card) && !unlockedStages.has(card.stage_id);
+		progression && !isSeen(card) && !unlockedStages.has(card.stage_id);
 
 	let currentCard = $derived.by(() => {
 		const due = deck.cards.filter(card =>
@@ -221,7 +224,7 @@
 	// when the queue runs dry against a locked stage, say what unlocks it:
 	// the first locked stage and how far the one before it has to go
 	let lockedNote = $derived.by(() => {
-		if (!deck.stageProgression) return null;
+		if (!progression) return null;
 		const sorted = [...deck.stages].sort((a, b) => a.position - b.position);
 		const index = sorted.findIndex(stage => !unlockedStages.has(stage.id));
 		if (index < 1) return null;

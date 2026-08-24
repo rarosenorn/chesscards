@@ -15,7 +15,7 @@ const create = async (userId, name) => {
 const getById = async (userId, id) => {
 	const { rows } =
 		await pool.query(`
-			select d.id, d.name, d.stage_progression "stageProgression",
+			select d.id, d.name, d.chapters, d.stage_progression "stageProgression",
 				coalesce((select json_agg(json_build_object('id', s.id, 'name', s.name, 'position', s.position) order by s.position)
 					from stages s where s.deck_id = d.id), '[]'::json) stages,
 				coalesce((select json_agg(to_jsonb(c) order by s.position, c.position)
@@ -300,6 +300,18 @@ const moveCards = async (userId, deckId, cardIds, targetStageId, targetIndex) =>
 	}
 }
 
+// Chapters on or off for one deck. Nothing moves: the deck's stages stay as
+// they are, so switching back on finds the grouping where it was left. A deck
+// switched on that has only ever had its birth stage simply shows that one
+// until the user makes another.
+const updateChapters = async (userId, deckId, value) => {
+	const { rowCount } = await pool.query(
+		"update decks set chapters = $3 where id = $2 and user_id = $1",
+		[userId, deckId, value]);
+
+	return rowCount === 1;
+}
+
 // touching a single deck's toggle also puts the profile's three-way back to
 // "per deck" — the bulk modes only mean anything until the next exception
 const updateStageProgression = async (userId, deckId, value) => {
@@ -337,4 +349,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateStageProgression, getStageProgressionMode, setStageProgressionMode }
+export { create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }

@@ -118,11 +118,15 @@
 		return map;
 	});
 	// "2.17" per card — from the sorted index, not the stored position, so a
-	// gap the server has not renumbered yet cannot show through
+	// gap the server has not renumbered yet cannot show through. Without
+	// chapters there is no first half to write: the deck is one run of
+	// numbers, counted across the stages it still has in the order they sit.
 	let orderLabels = $derived.by(() => {
 		const labels = new Map();
+		let flat = 0;
 		for (const stage of stagesSorted) {
-			stageCards.get(stage.id).forEach((card, index) => labels.set(card.id, `${stage.position}.${index + 1}`));
+			stageCards.get(stage.id).forEach((card, index) =>
+				labels.set(card.id, deck.chapters ? `${stage.position}.${index + 1}` : `${++flat}`));
 		}
 		return labels;
 	});
@@ -169,7 +173,9 @@
 		return stages.map(stage => ({
 			stage,
 			cards: draft.sortDescending ? [...stageCards.get(stage.id)].reverse() : stageCards.get(stage.id),
-			collapsed: !!draft.collapsed[stage.id]
+			// a chapter collapsed before chapters were switched off would take
+			// its cards out of a table that no longer has a header to open it
+			collapsed: deck.chapters && !!draft.collapsed[stage.id]
 		}));
 	});
 
@@ -509,21 +515,50 @@
 
 	// "3.3" makes the card the third of stage 3, pushing the rest along;
 	// anything unparsable, an unknown stage, or an out-of-range place falls
-	// back to the order as it stands
+	// back to the order as it stands. Without chapters the label is a plain
+	// "17", so that is what the field takes: the deck's stages are still what
+	// the move is expressed in, so the flat place is walked back to the stage
+	// it lands in and the index within it.
 	const commitOrderEdit = async () => {
 		const edit = orderEdit;
 		orderEdit = null;
 		if (!edit || edit.value === orderLabels.get(edit.cardId)) return;
-		const match = edit.value.trim().match(/^(\d+)\.(\d+)$/);
-		if (!match) return;
-		const stage = stagesSorted.find(s => s.position === Number(match[1]));
-		if (!stage) return;
-		const place = Number(match[2]);
-		const others = stageCards.get(stage.id).filter(c => c.id !== edit.cardId);
-		if (place < 1 || place > others.length + 1) return;
+		const target = deck.chapters
+			? chapterPlace(edit.value, edit.cardId)
+			: flatPlace(edit.value, edit.cardId);
+		if (!target) return;
 		applyFresh(await moveCards({
-			deckId: deck.id, cardIds: [edit.cardId], stageId: stage.id, index: place - 1
+			deckId: deck.id, cardIds: [edit.cardId], stageId: target.stageId, index: target.index
 		}));
+	}
+
+	const chapterPlace = (value, cardId) => {
+		const match = value.trim().match(/^(\d+)\.(\d+)$/);
+		if (!match) return null;
+		const stage = stagesSorted.find(s => s.position === Number(match[1]));
+		if (!stage) return null;
+		const place = Number(match[2]);
+		const others = stageCards.get(stage.id).filter(c => c.id !== cardId);
+		if (place < 1 || place > others.length + 1) return null;
+		return { stageId: stage.id, index: place - 1 };
+	}
+
+	// The same move, said flatly: place p means "sit where the deck's p-th
+	// card sits", so the card the flat count lands on names both the stage to
+	// move into and the index within it. Past the end, the last stage's end.
+	const flatPlace = (value, cardId) => {
+		if (!/^\d+$/.test(value.trim())) return null;
+		const place = Number(value.trim());
+		const others = stagesSorted.flatMap(stage =>
+			stageCards.get(stage.id).filter(c => c.id !== cardId));
+		if (place < 1 || place > others.length + 1) return null;
+		if (place === others.length + 1) {
+			const last = stagesSorted[stagesSorted.length - 1];
+			return { stageId: last.id, index: stageCards.get(last.id).filter(c => c.id !== cardId).length };
+		}
+		const target = others[place - 1];
+		const within = stageCards.get(target.stage_id).filter(c => c.id !== cardId);
+		return { stageId: target.stage_id, index: within.findIndex(c => c.id === target.id) };
 	}
 
 	// --- stage management ---
@@ -727,9 +762,10 @@
 				Edit card
 			</button>
 		{/if}
-		{#if stagesSorted.length > 1}
+		{#if deck.chapters && stagesSorted.length > 1}
 			<!-- the chapters stay folded away until asked for: a deck with many
-			     of them used to bury Delete under the whole list -->
+			     of them used to bury Delete under the whole list. A deck with
+			     chapters off has nowhere to move a card to that it can name -->
 			<button
 				class="submenu-toggle"
 				class:open={moveMenuOpen}
@@ -924,6 +960,10 @@
 			<tbody>
 				{#if displayGroups}
 					{#each displayGroups as group (group.stage.id)}
+						<!-- without chapters the groups are still what the rows are
+						     built from (and what a reorder drops into), but nothing
+						     frames them: the deck reads as one list -->
+						{#if deck.chapters}
 						<tr
 							class="stage-row"
 							class:drop-into={reorderDrag?.started && reorderDrag.over?.stageId === group.stage.id && group.collapsed}
@@ -960,6 +1000,7 @@
 								{/if}
 							</td>
 						</tr>
+						{/if}
 						{#if !group.collapsed}
 							{#each group.cards as item (item.id)}
 								<!-- one tr for card and placeholder alike: the animate
@@ -984,7 +1025,7 @@
 							{/each}
 						{/if}
 					{/each}
-					{#if !readonly}
+					{#if !readonly && deck.chapters}
 						<tr class="add-stage-row">
 							<td colspan="6">
 								{#if stageAdd}

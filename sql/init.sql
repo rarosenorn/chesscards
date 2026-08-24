@@ -77,8 +77,15 @@ create table decks (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid references "user" ("id") on delete cascade not null,
 	name text not null,
+	-- Whether the deck is organised into chapters at all. Off (the default) it
+	-- is one flat list: the chapter picker, the headers and the "2.17" order
+	-- numbering all go, and the deck's single stage is an implementation
+	-- detail nothing shows. The stages survive being switched off, so turning
+	-- chapters back on restores the grouping instead of rebuilding it.
+	chapters boolean not null default false,
 	-- introduce new cards stage by stage (all seen + most graduated unlocks
-	-- the next); off = every stage is open, Anki style
+	-- the next); off = every stage is open, Anki style. Only bites while
+	-- chapters is on — a deck with no chapters has nothing to gate.
 	stage_progression boolean not null default true,
 	unique(user_id, name)
 );
@@ -130,7 +137,10 @@ create table marketplace_decks (
 	price numeric(5,2) check(price >= 0) not null,
 	theme deck_theme not null,
 	image bytea not null,
-	image_type text not null
+	image_type text not null,
+	-- the author's chapter choice, copied from the source deck at approval: a
+	-- deck published without chapters reads as one list for everyone who takes it
+	chapters boolean not null default false
 );
 
 -- the deck's stage structure, copied from the source deck at upload approval

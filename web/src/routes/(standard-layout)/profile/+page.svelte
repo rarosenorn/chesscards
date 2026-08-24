@@ -209,7 +209,8 @@
 				With chapter progression a deck's new cards arrive chapter by
 				chapter. "All decks" and "No decks" set every deck at once;
 				changing one deck's own setting afterwards puts this back to
-				per deck.
+				per deck. Only decks that use chapters are affected — a flat
+				deck has nothing to unlock.
 			</p>
 		</fieldset>
 	</form>

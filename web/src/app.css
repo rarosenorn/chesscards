@@ -19,6 +19,13 @@
 	   them. The rim and the gap are fixed, so trimming this number is a way
 	   of trimming the boards. */
 	--flashcard-width: 912px;
+	/* Card prose, a notch above the 16px the rest of the page inherits. The
+	   card is wide for the boards' sake, so its measure runs long whatever
+	   the text inset is; the larger face is what buys the line back down to
+	   a readable character count. The add-cards editor reads it too, so a
+	   paragraph looks the same size where it is written as where it is
+	   answered. */
+	--card-text-size: 17px;
 	/* Between the two boards of a row. A little tighter than the card's own
 	   32px rim, so a pair reads as one row rather than two boards that
 	   happen to share it. Shared with the add-cards editor, which mirrors
@@ -241,6 +248,7 @@ body.piece-grabbing * {
 	   wrapped paragraphs feel the cap. The editors stay uncapped, so a line
 	   there breaks wider than it will on the card. */
 	max-width: calc(100% - 64px);
+	font-size: var(--card-text-size);
 }
 /* Text needs no alignment rule of its own: the block is only as wide as its
    text up to the measure, and the side centers it. Short text is therefore

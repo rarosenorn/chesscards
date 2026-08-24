@@ -139,6 +139,9 @@
 		border: 2px solid rgba(0, 0, 0, 0.2);
 		background: white;
 		width: 100%;
+		/* the card's own prose size (app.css), so a paragraph is written at
+		   the size it will be answered at */
+		font-size: var(--card-text-size);
 	}
 	/* our own focus ring on the border (like Firefox's blue) instead of
 	   Chrome's black UA outline on the contenteditable — steel blue, held

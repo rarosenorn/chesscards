@@ -230,18 +230,22 @@ body.piece-grabbing * {
 	flex-direction: column;
 	align-items: center;
 }
-/* Text keeps the boards' margin, evenly: the card's 32px rim is all that
-   holds a line off the edge, exactly as it is all that holds the boards off
-   it, so prose runs to where they run instead of sitting inset from them. The
-   measure that leaves is longer than the ideal one, deliberately — text
-   stranded in a narrow column down the middle of a card this wide reads
-   worse. The cap needs no alignment rule beside it: the block is only as wide
-   as its text up to the measure, and the side centers it, so a short prompt
-   reads centered and a wrapped paragraph fills the width and reads
-   left-aligned from a fixed edge, with no threshold between the two. */
 .flashcard .text-block {
-	max-width: 100%;
+	/* Text carries its own measure, apart from the boards: the card is wide
+	   for their sake, and prose is inset from the boards' edge rather than
+	   run to it — the chess-book arrangement, diagrams wide and text a
+	   little narrower. The inset is small on purpose: a line longer than
+	   the ideal measure reads better here than a column of text stranded in
+	   the middle of a wide card. Short text still centers (the block
+	   shrink-wraps), so only wrapped paragraphs feel the cap. The editors
+	   stay uncapped, so a line there breaks wider than it will on the
+	   card. */
+	max-width: calc(100% - 96px);
 }
+/* Text needs no alignment rule of its own: the block is only as wide as its
+   text up to the measure, and the side centers it. Short text is therefore
+   centered, and wrapped text fills the measure and reads left-aligned from a
+   fixed edge — one declaration, no threshold. */
 /* boards are decided by the card's data: a lone board sits centered only
    while every board block on the side is a lone board */
 .flashcard .card-side[data-board-align="left"] .single-board-block {

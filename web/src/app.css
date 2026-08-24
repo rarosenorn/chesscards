@@ -230,17 +230,17 @@ body.piece-grabbing * {
 	flex-direction: column;
 	align-items: center;
 }
-/* Text reads from the boards' left edge: the card's rim is the whole margin
-   on that side, so a line starts where the left board starts rather than
-   floating somewhere inside it. The eye returns to that edge on every line,
-   which is why it is the one worth lining up; the right is ragged anyway, so
-   the measure stops short of the rim there instead — enough that a long line
-   never runs up against where the boards end. The measure this leaves is
-   longer than the ideal one, deliberately: text stranded in a narrow column
-   down the middle of a card this wide reads worse. */
+/* Text keeps the boards' margin, evenly: the card's 32px rim is all that
+   holds a line off the edge, exactly as it is all that holds the boards off
+   it, so prose runs to where they run instead of sitting inset from them. The
+   measure that leaves is longer than the ideal one, deliberately — text
+   stranded in a narrow column down the middle of a card this wide reads
+   worse. The cap needs no alignment rule beside it: the block is only as wide
+   as its text up to the measure, and the side centers it, so a short prompt
+   reads centered and a wrapped paragraph fills the width and reads
+   left-aligned from a fixed edge, with no threshold between the two. */
 .flashcard .text-block {
-	align-self: flex-start;
-	max-width: calc(100% - 40px);
+	max-width: 100%;
 }
 /* boards are decided by the card's data: a lone board sits centered only
    while every board block on the side is a lone board */

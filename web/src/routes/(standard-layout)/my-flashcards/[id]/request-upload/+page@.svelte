@@ -748,12 +748,16 @@
 		overflow-y: auto;
 		padding: 0 24px;
 	}
+	/* the dashed frame is the card plus its own 12px of air, read off the
+	   card's width rather than repeated: at a fixed number the frame either
+	   squeezed the card narrower than it renders anywhere else or drifted
+	   away from it whenever that width changed */
 	.candidate {
 		border: 2px dashed var(--accent);
 		border-radius: 8px;
 		padding: 0 12px;
 		margin: 32px auto 24px auto;
-		max-width: 940px;
+		max-width: calc(var(--flashcard-width) + 24px);
 	}
 	.candidate :global(.flashcard) {
 		margin-top: 12px;

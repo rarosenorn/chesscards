@@ -6,7 +6,6 @@
 - Subdecks are parts of a deck grouped together for some level of internalization before moving to next subdeck
 - level of internalizatoin before moving on? maybe having seen all cards in subdeck atleast 3 times?, then its not dependents on getting them right, or maybe getting synthesis cards correct 2 times?
 - Subdecks because sometimes its good to have some mastery of part of a deck, before moving to the next part. For example, in endgames its better to have seen cards from basic endgames like king and rook vs king multiple times and have some mastery of that part, before moving to include cards from the next subdeck, which could include more advanced endgames. Then you would progress when you hit target on some variable in the previous subdeck. Ofcourse it should have settings to bypass in whatever way.
-- Default should be subdeck progression, but should be option to do full throttle anki style
 
 Subdecks is good because if you have a large deck on 1 opening for example, its better to gain some mastery of the most popular lines and not too deep (like quickstart in chessable), rather than getting cards for the basics and then more obscure before you even have a level of internalization of the basics. Same for endgames, want to master basics before knight and bishop mate.
 
@@ -34,6 +33,7 @@ Study all cards in the chosen deck by getting cards from the deck contiuously. H
 # contact page with email for bugs / ideas / business inquiries
 # allow PGN for board editor for both positions and moves import
 # editor: do selectors for annotations like pieces with nice icons showing arrows and circle, selectable and between Start position Clean board and pieces above
+# maybe: editor toggle for side to move (click the indicator to flip it) — only way now is editing the w/b in the FEN field
 # Chesscards wiki with info on how app works, FSRS, card types etc.
 # Do so if i card becomes due during a day, it becomes due at 2am local time, s.t. cards are rdy in the morning instead of dumping in through the day.(look how anki does)
 # Overview over your decks on marketplace / how many got/purchased it stats

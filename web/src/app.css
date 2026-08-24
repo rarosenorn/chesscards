@@ -35,15 +35,17 @@
 	/* A card whose boards all stand alone has no column to line up with, so
 	   its boards take this much more than a grid cell. */
 	--board-solo-scale: 1.36;
-	/* The card's floor: what a line of text and a lone board with its move
-	   line come to — the question side of the shape most cards have. Held so
+	/* The card's floor, set by eye rather than derived: comfortably above what
+	   a line of text and a lone board with its move line come to (643), so a
+	   sparse card keeps some air under it instead of hugging its contents. It
+	   does not track the board size — narrowing the card leaves it here. Held so
 	   a card with less on it than that does not shrink to a stub, and so
 	   browse (which shows no controls) sizes a card as study does. It is
 	   deliberately NOT the revealed height: padding the question out to
 	   where the answer will leave it strands the board above a field of
 	   empty card, which reads worse than the card growing when the answer
 	   comes in. */
-	--flashcard-min-height: 643px;
+	--flashcard-min-height: 695px;
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the
    window scrollbar: that shifts the viewport width and makes the responsive

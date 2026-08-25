@@ -156,8 +156,8 @@
 		},
 		{
 			name: "1.5 leading, 16px, small inset",
-			note: "16px, 1.5 leading, 20px a side — enough inset to read as deliberate",
-			vars: { size: 16, leading: "1.5", inset: 40 }
+			note: "16px, 1.5 leading, 12px a side — just off the boards' edge",
+			vars: { size: 16, leading: "1.5", inset: 24 }
 		},
 		{
 			name: "Open leading",

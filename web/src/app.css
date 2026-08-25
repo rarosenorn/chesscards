@@ -258,9 +258,9 @@ body.piece-grabbing * {
 	font-size: var(--card-text-size);
 	line-height: var(--card-text-leading);
 }
-/* /design's card tab can pin prose to the boards' left edge instead of
-   centering it; nothing sets this attribute in the app itself */
-:root[data-card-text="left"] .flashcard .text-block {
+/* /design's card tab shows a flush-left variant beside the centred one; the
+   app itself never sets this class */
+.card-text-left .flashcard .text-block {
 	align-self: flex-start;
 }
 /* Text needs no alignment rule of its own: the block is only as wide as its

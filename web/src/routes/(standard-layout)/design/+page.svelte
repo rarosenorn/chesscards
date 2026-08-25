@@ -3,7 +3,8 @@
 	// live to the whole app (see design-preview.js — the root layout re-applies
 	// a stored choice on every page) until reset here.
 	import { onMount } from "svelte"
-	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, CARD_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant, applyCardVars, clearCardVars } from "$lib/design-preview.js"
+	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant } from "$lib/design-preview.js"
+	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 
 	// "straight" — the hue at close to full strength; "muted" — the same idea
 	// pulled toward grey
@@ -142,84 +143,79 @@
 		}
 	];
 
-	// The card tab's knobs. Each row is one lever with the app's own value
-	// first, so "what it does now" is always the leftmost choice. The measure
-	// under them is arithmetic, not a guess: card width less its 32px rims,
-	// less the inset.
-	const cardLevers = [
+	// The card tab: one sample card rendered once per variant, so the ways at
+	// the long-measure problem can be read side by side rather than described.
+	// Each variant is only the vars it changes; anything it leaves out is
+	// app.css's own value, which is what the first one shows.
+	const CARD_DEFAULTS = { width: 912, size: 17, inset: 64 };
+
+	const cardVariants = [
 		{
-			key: "width", label: "Card width",
-			note: "the rim and the board gap are fixed, so this is really board size",
-			options: [
-				{ value: null, name: "912px", note: "now — 414px boards" },
-				{ value: "872px", name: "872px", note: "394px boards" },
-				{ value: "840px", name: "840px", note: "378px boards" },
-				{ value: "952px", name: "952px", note: "434px boards" }
-			]
+			name: "As it is now",
+			note: "17px, 32px inset each side, default leading"
 		},
 		{
-			key: "size", label: "Text size",
-			note: "a bigger face cuts the characters per line without moving anything else",
-			options: [
-				{ value: null, name: "17px", note: "now" },
-				{ value: "16px", name: "16px", note: "what it was" },
-				{ value: "18px", name: "18px", note: "" }
-			]
+			name: "Open leading",
+			note: "back to 16px, flush with the boards, 1.6 leading — the untried lever",
+			vars: { size: 16, leading: "1.6", inset: 0 }
 		},
 		{
-			key: "leading", label: "Leading",
-			note: "the untried lever: open leading is how a long measure is made readable",
-			options: [
-				{ value: null, name: "normal", note: "now — about 1.2" },
-				{ value: "1.45", name: "1.45", note: "" },
-				{ value: "1.6", name: "1.6", note: "the usual fix" },
-				{ value: "1.75", name: "1.75", note: "" }
-			]
+			name: "Open leading, inset kept",
+			note: "the same, but prose stays inside the boards' edge",
+			vars: { size: 16, leading: "1.6" }
 		},
 		{
-			key: "inset", label: "Text inset",
-			note: "how far prose sits inside the boards' edge, both sides together",
-			options: [
-				{ value: null, name: "64px", note: "now — 32 a side" },
-				{ value: "0px", name: "0", note: "flush with the boards" },
-				{ value: "40px", name: "40px", note: "" },
-				{ value: "96px", name: "96px", note: "what it was" }
-			]
+			name: "Narrower card",
+			note: "840px card — 378px boards — with open leading",
+			vars: { width: 840, size: 16, leading: "1.6", inset: 0 }
 		},
 		{
-			key: "align", label: "Alignment",
-			note: "centred shrink-wraps, so short text centres; left pins every line to one edge",
-			options: [
-				{ value: null, name: "Centred", note: "now" },
-				{ value: "left", name: "Flush left", note: "" }
-			]
+			name: "Flush left",
+			note: "every line starts at the left board's edge; short text no longer centres",
+			vars: { size: 16, leading: "1.6", inset: 0, align: "left" }
+		},
+		{
+			name: "Bigger face",
+			note: "18px does the work instead of the leading",
+			vars: { size: 18, leading: "1.4", inset: 0 }
 		}
 	];
 
-	// what app.css holds, for the measure sum when a lever is left alone
-	const cardDefaults = { width: 912, size: 17, inset: 64 };
-	const px = value => parseInt(value, 10);
+	// the arithmetic under each variant: the card less its 32px rims, less the
+	// inset; characters from Inter's average advance of about 0.47em
+	const variantStyle = vars => [
+		vars?.width && `--flashcard-width: ${vars.width}px`,
+		vars?.size && `--card-text-size: ${vars.size}px`,
+		vars?.inset != null && `--card-text-inset: ${vars.inset}px`,
+		vars?.leading && `--card-text-leading: ${vars.leading}`
+	].filter(Boolean).join("; ");
 
-	let card = $state({});
-	let cardMeasure = $derived(
-		px(card.width ?? cardDefaults.width) - 64 - px(card.inset ?? cardDefaults.inset)
-	);
-	// rough but honest: Inter's average advance runs about 0.47em over prose
-	let cardChars = $derived(
-		Math.round(cardMeasure / (px(card.size ?? cardDefaults.size) * 0.47))
-	);
+	const variantMeasure = vars =>
+		(vars?.width ?? CARD_DEFAULTS.width) - 64 - (vars?.inset ?? CARD_DEFAULTS.inset);
 
-	const setLever = (key, value) => {
-		card = value == null ? { ...card, [key]: undefined } : { ...card, [key]: value };
-		applyCardVars(card);
-		localStorage.setItem(CARD_KEY, JSON.stringify(card));
-	}
+	const variantChars = vars =>
+		Math.round(variantMeasure(vars) / ((vars?.size ?? CARD_DEFAULTS.size) * 0.47));
 
-	const resetCard = () => {
-		card = {};
-		clearCardVars();
-		localStorage.removeItem(CARD_KEY);
-	}
+	// a card with the shape the problem shows up on: a paragraph long enough to
+	// wrap, over a pair of boards that hold the card at its full width
+	const sampleText = paragraph => ({
+		type: "text",
+		content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: paragraph }] }] }
+	});
+
+	const sampleCard = {
+		front: [
+			sampleText("In Anastasia's mate, a king is on the edge of the board. It has a friendly pawn or rook blocking its flight square orthogonally towards the center. An opponent knight is 3 squares from the king in the same direction, controlling the kings 2 diagonal flight squares."),
+			{
+				type: "chessboards",
+				content: [
+					{ fen: "r4rk1/ppp2ppp/2bp4/3Nn3/4P3/3B3R/PPP2qPP/R2Q3K w - - 2 18", moves: [], annotations: {}, orientation: "w" },
+					{ fen: "5r2/5Nqp/p5k1/1p6/2p5/P1P5/1P3PPP/5RK1 w - - 0 1", moves: [], annotations: {}, orientation: "w" }
+				]
+			}
+		],
+		back: []
+	};
 
 	let activeAccent = $state(null);
 	let activeFont = $state(null);
@@ -230,7 +226,6 @@
 		activeAccent = readPreview(SCHEME_KEY)?.accent ?? null;
 		activeFont = readPreview(FONT_KEY)?.family ?? null;
 		whiteBanner = readPreview(BANNER_KEY)?.variant === "white";
-		card = readPreview(CARD_KEY) ?? {};
 		// the samples below render in the tryout fonts, so they must load here
 		// even before any is applied
 		ensureFontStylesheet();
@@ -362,38 +357,27 @@
 	<section>
 		<p class="lever-intro">
 			The card is wide because the boards are, so its prose runs a long
-			line whatever else is done. Each lever below is one way at that;
-			they stack, and they apply to every card in the app — flip to Study
-			or Cards to read a real one.
+			line whatever else is done. Each card below is the same text and the
+			same two boards, with one way at that problem applied. Nothing here
+			changes the app — picking one is a code change.
 		</p>
-		<div class="measure">
-			<strong>{cardMeasure}px</strong> of measure — about
-			<strong>{cardChars}</strong> characters a line
-			<span class="measure-note">(45–75 is the comfortable range)</span>
-		</div>
-		<p class="sample" style="width: {cardMeasure}px">
-			In Anastasia's mate, a king is on the edge of the board. It has a
-			friendly pawn or rook blocking its flight square orthogonally towards
-			the center. An opponent knight is 3 squares from the king in the same
-			direction, controlling the kings 2 diagonal flight squares.
-		</p>
-		{#each cardLevers as lever (lever.key)}
-			<h4>{lever.label}</h4>
-			<p class="lever-note">{lever.note}</p>
-			<div class="lever-row">
-				{#each lever.options as option (option.name)}
-					<button
-						class="std-btn lever-btn"
-						class:selected={(card[lever.key] ?? null) === option.value}
-						onclick={() => setLever(lever.key, option.value)}
-					>
-						{option.name}
-						{#if option.note}<span class="card-note">{option.note}</span>{/if}
-					</button>
-				{/each}
+		{#each cardVariants as variant (variant.name)}
+			<h4>{variant.name}</h4>
+			<p class="lever-note">
+				{variant.note}
+				<span class="measure-note">
+					· {variantMeasure(variant.vars)}px measure, about
+					{variantChars(variant.vars)} characters a line
+				</span>
+			</p>
+			<div
+				class="variant"
+				class:card-text-left={variant.vars?.align === "left"}
+				style={variantStyle(variant.vars)}
+			>
+				<FlashcardBrowse card={sampleCard} />
 			</div>
 		{/each}
-		<button class="std-btn reset-btn" onclick={resetCard}>Reset card text to app default</button>
 	</section>
 	{/if}
 </div>
@@ -404,46 +388,20 @@
 		font-size: 0.95rem;
 		color: rgba(0, 0, 0, 0.6);
 	}
-	/* the arithmetic the levers add up to, kept beside them so a choice can be
-	   read before the app is flipped to */
-	.measure {
-		padding: 10px 14px;
-		border-radius: 6px;
-		background-color: var(--accent-subtle);
-		font-size: 0.95rem;
-	}
 	.measure-note {
 		color: rgba(0, 0, 0, 0.5);
-	}
-	/* the same prose a card carries, at the measure the levers leave it, so a
-	   line break here is the line break there */
-	.sample {
-		margin: 14px 0 4px 0;
-		font-size: var(--card-text-size);
-		line-height: var(--card-text-leading);
 	}
 	.lever-note {
 		margin: 0 0 8px 0;
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.55);
 	}
-	.lever-row {
+	/* the cards sit on the page's grey the way they do in browse; the widest
+	   variant decides the column, so the narrower ones read as narrower */
+	.variant {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		margin-bottom: 6px;
-	}
-	.lever-btn {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 2px;
-		min-width: 110px;
-	}
-	.lever-btn.selected {
-		border-color: var(--accent);
-		background-color: var(--accent-subtle);
-		font-weight: 500;
+		justify-content: center;
+		margin-bottom: 28px;
 	}
 	.design-container {
 		display: flex;

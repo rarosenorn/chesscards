@@ -25,7 +25,7 @@
 	   distinct target to land on. The add-cards editor reads the size too, so
 	   a paragraph looks the same where it is written as where it is
 	   answered. */
-	--card-text-size: 16.5px;
+	--card-text-size: 16px;
 	/* The measure card prose is held to, and its leading. The card is wide
 	   because two boards are, not because a line of text wants to be: so the
 	   text takes a column of its own and the boards break out wider than it,

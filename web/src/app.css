@@ -14,8 +14,8 @@
 	/* how wide a flashcard renders, wherever one is shown. It is a board
 	   size in disguise — a board is half the card — so anything that has to
 	   line up with a card's edge reads it from here rather than repeating
-	   the number (browse's toolbar does). 892 less the card's 32px rims
-	   leaves 828 of content: two 404 cells with the gap below between
+	   the number (browse's toolbar does). 892 less the card's 37px rims
+	   leaves 818 of content: two 399 cells with the gap below between
 	   them. The rim and the gap are fixed, so trimming this number is a way
 	   of trimming the boards. */
 	--flashcard-width: 892px;
@@ -36,7 +36,7 @@
 	--card-text-measure: 80ch;
 	--card-text-leading: 1.5;
 	/* Between the two boards of a row. A little tighter than the card's own
-	   32px rim, so a pair reads as one row rather than two boards that
+	   37px rim, so a pair reads as one row rather than two boards that
 	   happen to share it. Shared with the add-cards editor, which mirrors
 	   these sizes; it also sets a lone board's width, which is one cell of
 	   the pair it would sit in. */
@@ -45,7 +45,7 @@
 	   its boards take this much more than a grid cell. Raised when the card
 	   narrowed, to hold the lone board at the 563px it has always rendered:
 	   only the paired boards were meant to give up the width. */
-	--board-solo-scale: 1.394;
+	--board-solo-scale: 1.411;
 	/* The card's floor, set by eye rather than derived: comfortably above what
 	   a line of text and a lone board with its move line come to (643), so a
 	   sparse card keeps some air under it instead of hugging its contents. It
@@ -337,7 +337,7 @@ body.piece-grabbing * {
 .flashcard .board-grid-block {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-	/* no inset of its own: the card's 32px rim already holds the boards off
+	/* no inset of its own: the card's 37px rim already holds the boards off
 	   its edge by exactly the gap they keep from each other */
 	width: 100%;
 	margin-inline: auto;

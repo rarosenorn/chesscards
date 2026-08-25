@@ -186,7 +186,7 @@
 		}
 	];
 
-	// the arithmetic under each variant: the card less its 32px rims, less the
+	// the arithmetic under each variant: the card less its 37px rims, less the
 	// inset; characters from Inter's average advance of about 0.47em
 	const variantStyle = vars => [
 		vars?.width && `--flashcard-width: ${vars.width}px`,
@@ -199,7 +199,7 @@
 	// card's own width takes over
 	const variantChars = vars => {
 		const size = vars?.size ?? CARD_DEFAULTS.size;
-		let cardWidth = (vars?.width ?? CARD_DEFAULTS.width) - 64;
+		let cardWidth = (vars?.width ?? CARD_DEFAULTS.width) - 74;
 		if (vars?.columns) return Math.round((cardWidth - 20) / 2 / (size * 0.47));
 		return Math.round(Math.min(vars?.measure ?? CARD_DEFAULTS.measure, cardWidth / (size * 0.47)));
 	}

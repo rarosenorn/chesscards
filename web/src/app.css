@@ -35,6 +35,10 @@
 	   render other values. */
 	--card-text-measure: 68ch;
 	--card-text-leading: 1.5;
+	/* how far the column sits inside the boards' left edge. Nominally they
+	   share that edge — that is what stops a narrow column floating in a wide
+	   card — but a hair of daylight reads better than a hard butt against it. */
+	--card-text-inset: 12px;
 	/* Between the two boards of a row. A little tighter than the card's own
 	   32px rim, so a pair reads as one row rather than two boards that
 	   happen to share it. Shared with the add-cards editor, which mirrors
@@ -267,6 +271,8 @@ body.piece-grabbing * {
    and centers, there is no edge to share and the column centers with them. */
 .flashcard .card-side[data-board-align="left"] .text-block {
 	align-self: flex-start;
+	/* margin, not padding: border-box padding would eat into the measure */
+	margin-inline-start: var(--card-text-inset);
 }
 /* Text needs no alignment rule of its own: the block is only as wide as its
    text up to the measure, and the side centers it. Short text is therefore

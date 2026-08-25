@@ -147,42 +147,37 @@
 	// the long-measure problem can be read side by side rather than described.
 	// Each variant is only the vars it changes; anything it leaves out is
 	// app.css's own value, which is what the first one shows.
-	const CARD_DEFAULTS = { width: 912, size: 16, inset: 24 };
+	const CARD_DEFAULTS = { width: 912, size: 16, measure: 68 };
 
 	const cardVariants = [
 		{
 			name: "As it is now",
-			note: "16px, 1.5 leading, 12px a side"
+			note: "16px, 1.5 leading, a 68ch column sharing the boards' left edge"
+		},
+		{
+			name: "Narrower column",
+			note: "60ch — the middle of the comfortable range",
+			vars: { measure: 60 }
+		},
+		{
+			name: "Wider column",
+			note: "75ch — the top of the comfortable range",
+			vars: { measure: 75 }
+		},
+		{
+			name: "Column centred",
+			note: "the same column, centred in the card instead of sharing an edge",
+			vars: { align: "center" }
+		},
+		{
+			name: "Full width, open leading",
+			note: "no column at all — the whole card's width at 1.6 leading",
+			vars: { measure: 999, leading: "1.6" }
 		},
 		{
 			name: "What it was before",
 			note: "17px, 32px a side, default leading — the long line with tight leading",
-			vars: { size: 17, leading: "normal", inset: 64 }
-		},
-		{
-			name: "Open leading",
-			note: "back to 16px, flush with the boards, 1.6 leading — the untried lever",
-			vars: { size: 16, leading: "1.6", inset: 0 }
-		},
-		{
-			name: "Open leading, inset kept",
-			note: "the same, but prose stays inside the boards' edge",
-			vars: { size: 16, leading: "1.6" }
-		},
-		{
-			name: "Narrower card",
-			note: "840px card — 378px boards — with open leading",
-			vars: { width: 840, size: 16, leading: "1.6", inset: 0 }
-		},
-		{
-			name: "Flush left",
-			note: "every line starts at the left board's edge; short text no longer centres",
-			vars: { size: 16, leading: "1.6", inset: 0, align: "left" }
-		},
-		{
-			name: "Bigger face",
-			note: "18px does the work instead of the leading",
-			vars: { size: 18, leading: "1.4", inset: 0 }
+			vars: { size: 17, measure: 999, leading: "normal" }
 		}
 	];
 
@@ -191,15 +186,17 @@
 	const variantStyle = vars => [
 		vars?.width && `--flashcard-width: ${vars.width}px`,
 		vars?.size && `--card-text-size: ${vars.size}px`,
-		vars?.inset != null && `--card-text-inset: ${vars.inset}px`,
+		vars?.measure && `--card-text-measure: ${vars.measure}ch`,
 		vars?.leading && `--card-text-leading: ${vars.leading}`
 	].filter(Boolean).join("; ");
 
-	const variantMeasure = vars =>
-		(vars?.width ?? CARD_DEFAULTS.width) - 64 - (vars?.inset ?? CARD_DEFAULTS.inset);
-
-	const variantChars = vars =>
-		Math.round(variantMeasure(vars) / ((vars?.size ?? CARD_DEFAULTS.size) * 0.47));
+	// a ch column is its own character count, until it outruns the card and the
+	// card's own width takes over
+	const variantChars = vars => {
+		const size = vars?.size ?? CARD_DEFAULTS.size;
+		const cardChars = ((vars?.width ?? CARD_DEFAULTS.width) - 64) / (size * 0.47);
+		return Math.round(Math.min(vars?.measure ?? CARD_DEFAULTS.measure, cardChars));
+	}
 
 	// a card with the shape the problem shows up on: a paragraph long enough to
 	// wrap, over a pair of boards that hold the card at its full width
@@ -371,13 +368,12 @@
 			<p class="lever-note">
 				{variant.note}
 				<span class="measure-note">
-					· {variantMeasure(variant.vars)}px measure, about
-					{variantChars(variant.vars)} characters a line
+					· about {variantChars(variant.vars)} characters a line
 				</span>
 			</p>
 			<div
 				class="variant"
-				class:card-text-left={variant.vars?.align === "left"}
+				class:card-text-centre={variant.vars?.align === "center"}
 				style={variantStyle(variant.vars)}
 			>
 				<FlashcardBrowse card={sampleCard} />
@@ -407,6 +403,10 @@
 		display: flex;
 		justify-content: center;
 		margin-bottom: 28px;
+	}
+	/* the one variant that undoes the shared edge, to read it against */
+	.variant.card-text-centre :global(.flashcard .card-side .text-block) {
+		align-self: center;
 	}
 	.design-container {
 		display: flex;

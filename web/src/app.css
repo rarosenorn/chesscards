@@ -26,12 +26,14 @@
 	   a paragraph looks the same where it is written as where it is
 	   answered. */
 	--card-text-size: 16px;
-	/* how far a line of card prose sits inside the boards' edge, total across
-	   both sides, and how open its leading is. The inset is small — just off
-	   the boards, enough to read as deliberate — because the measure is not
-	   what is buying readability here; the leading is. Both live here rather
-	   than in the rule below so /design's card tab can render other values. */
-	--card-text-inset: 24px;
+	/* The measure card prose is held to, and its leading. The card is wide
+	   because two boards are, not because a line of text wants to be: so the
+	   text takes a column of its own and the boards break out wider than it,
+	   the arrangement a textbook or a chess book uses. ch, not px, so the
+	   column tracks the face rather than drifting when the size changes.
+	   Both live here rather than in the rule below so /design's card tab can
+	   render other values. */
+	--card-text-measure: 68ch;
 	--card-text-leading: 1.5;
 	/* Between the two boards of a row. A little tighter than the card's own
 	   32px rim, so a pair reads as one row rather than two boards that
@@ -248,21 +250,22 @@ body.piece-grabbing * {
 }
 .flashcard .text-block {
 	/* Text carries its own measure, apart from the boards: the card is wide
-	   for their sake, and prose sits just off the boards' edge rather than
-	   running to it — the chess-book arrangement, diagrams wide and text a
-	   little narrower. The inset stays small on purpose: a line longer than
-	   the ideal measure reads better here than a column of text stranded in
-	   the middle of a wide card, and the leading is what carries that long
-	   line. Short text still centers (the block shrink-wraps), so only
-	   wrapped paragraphs feel the cap. The editors stay uncapped, so a line
-	   there breaks wider than it will on the card. */
-	max-width: calc(100% - var(--card-text-inset));
+	   for their sake, and prose is held to a readable column while the boards
+	   break out wider than it. Short text still centers within the column
+	   (the block shrink-wraps), so only wrapped paragraphs feel the cap; the
+	   min keeps the column from outrunning a card narrowed by a small
+	   viewport. The editors stay uncapped, so a line there breaks wider than
+	   it will on the card. */
+	max-width: min(var(--card-text-measure), 100%);
 	font-size: var(--card-text-size);
 	line-height: var(--card-text-leading);
 }
-/* /design's card tab shows a flush-left variant beside the centred one; the
-   app itself never sets this class */
-.card-text-left .flashcard .text-block {
+/* A column narrower than the card would float in the middle of it with
+   nothing to belong to. Where the boards take the side's left edge, the text
+   takes it too, so the two share one — the book arrangement, prose and the
+   figure beside it starting on the same line. Where every board stands alone
+   and centers, there is no edge to share and the column centers with them. */
+.flashcard .card-side[data-board-align="left"] .text-block {
 	align-self: flex-start;
 }
 /* Text needs no alignment rule of its own: the block is only as wide as its

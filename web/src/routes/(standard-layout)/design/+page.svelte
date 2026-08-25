@@ -155,6 +155,11 @@
 			note: "17px, 32px inset each side, default leading"
 		},
 		{
+			name: "1.5 leading, 16px, small inset",
+			note: "16px, 1.5 leading, 20px a side — enough inset to read as deliberate",
+			vars: { size: 16, leading: "1.5", inset: 40 }
+		},
+		{
 			name: "Open leading",
 			note: "back to 16px, flush with the boards, 1.6 leading — the untried lever",
 			vars: { size: 16, leading: "1.6", inset: 0 }

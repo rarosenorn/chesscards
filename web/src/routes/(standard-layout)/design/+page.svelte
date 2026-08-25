@@ -176,7 +176,7 @@
 		},
 		{
 			name: "Two columns over a board pair",
-			note: "text spans the card and splits, so it fills the width the boards set — balanced, so a short paragraph makes two short columns rather than filling the left one first",
+			note: "justified and hyphenated over the boards' own 20px gutter, the way a paper sets them — balanced, so a short paragraph makes two short columns rather than filling the left one first",
 			vars: { columns: true }
 		},
 		{
@@ -200,7 +200,7 @@
 	const variantChars = vars => {
 		const size = vars?.size ?? CARD_DEFAULTS.size;
 		let cardWidth = (vars?.width ?? CARD_DEFAULTS.width) - 64;
-		if (vars?.columns) return Math.round((cardWidth - 32) / 2 / (size * 0.47));
+		if (vars?.columns) return Math.round((cardWidth - 20) / 2 / (size * 0.47));
 		return Math.round(Math.min(vars?.measure ?? CARD_DEFAULTS.measure, cardWidth / (size * 0.47)));
 	}
 
@@ -421,7 +421,15 @@
 		max-width: 100%;
 		margin-inline-start: 0;
 		columns: 2;
-		column-gap: 32px;
+		/* the boards' own gap, so the two columns sit as close as the two
+		   diagrams under them; a paper's gutter is about this share of the
+		   measure too */
+		column-gap: var(--board-col-gap);
+		/* what makes a column read as a column rather than as a narrow
+		   paragraph: both edges straight, with hyphenation to stop a
+		   justified 54-character line opening rivers */
+		text-align: justify;
+		hyphens: auto;
 	}
 	.design-container {
 		display: flex;

@@ -38,7 +38,7 @@
 	/* how far the column sits inside the boards' left edge. Nominally they
 	   share that edge — that is what stops a narrow column floating in a wide
 	   card — but a hair of daylight reads better than a hard butt against it. */
-	--card-text-inset: 4px;
+	--card-text-inset: 2px;
 	/* Between the two boards of a row. A little tighter than the card's own
 	   32px rim, so a pair reads as one row rather than two boards that
 	   happen to share it. Shared with the add-cards editor, which mirrors

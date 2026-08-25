@@ -175,6 +175,11 @@
 			vars: { measure: 999, leading: "1.6" }
 		},
 		{
+			name: "Two columns over a board pair",
+			note: "text spans the card and splits, so it fills the width the boards set — balanced, so a short paragraph makes two short columns rather than filling the left one first",
+			vars: { columns: true }
+		},
+		{
 			name: "What it was before",
 			note: "17px, 32px a side, default leading — the long line with tight leading",
 			vars: { size: 17, measure: 999, leading: "normal" }
@@ -194,8 +199,9 @@
 	// card's own width takes over
 	const variantChars = vars => {
 		const size = vars?.size ?? CARD_DEFAULTS.size;
-		const cardChars = ((vars?.width ?? CARD_DEFAULTS.width) - 64) / (size * 0.47);
-		return Math.round(Math.min(vars?.measure ?? CARD_DEFAULTS.measure, cardChars));
+		let cardWidth = (vars?.width ?? CARD_DEFAULTS.width) - 64;
+		if (vars?.columns) return Math.round((cardWidth - 32) / 2 / (size * 0.47));
+		return Math.round(Math.min(vars?.measure ?? CARD_DEFAULTS.measure, cardWidth / (size * 0.47)));
 	}
 
 	// a card with the shape the problem shows up on: a paragraph long enough to
@@ -373,6 +379,7 @@
 			</p>
 			<div
 				class="variant"
+				class:card-text-columns={variant.vars?.columns}
 				class:card-text-centre={variant.vars?.align === "center"}
 				style={variantStyle(variant.vars)}
 			>
@@ -407,6 +414,14 @@
 	/* the one variant that undoes the shared edge, to read it against */
 	.variant.card-text-centre :global(.flashcard .card-side .text-block) {
 		align-self: center;
+	}
+	/* only where the boards make a row to fill: a side of lone boards has no
+	   width to match, so its text keeps the column */
+	.variant.card-text-columns :global(.flashcard .card-side[data-board-align="left"] .text-block) {
+		max-width: 100%;
+		margin-inline-start: 0;
+		columns: 2;
+		column-gap: 32px;
 	}
 	.design-container {
 		display: flex;

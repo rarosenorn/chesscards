@@ -19,18 +19,20 @@
 	   them. The rim and the gap are fixed, so trimming this number is a way
 	   of trimming the boards. */
 	--flashcard-width: 912px;
-	/* Card prose, a notch above the 16px the rest of the page inherits. The
-	   card is wide for the boards' sake, so its measure runs long whatever
-	   the text inset is; the larger face is what buys the line back down to
-	   a readable character count. The add-cards editor reads it too, so a
-	   paragraph looks the same size where it is written as where it is
+	/* Card prose: the page's own 16px. The card is wide for the boards' sake,
+	   so its measure runs long whatever the inset is — the leading below is
+	   what makes that line readable, by giving the eye's return sweep a
+	   distinct target to land on. The add-cards editor reads the size too, so
+	   a paragraph looks the same where it is written as where it is
 	   answered. */
-	--card-text-size: 17px;
+	--card-text-size: 16px;
 	/* how far a line of card prose sits inside the boards' edge, total across
-	   both sides, and how open its leading is. Both are here rather than in the
-	   rule below so /design's card tab can try other values live. */
-	--card-text-inset: 64px;
-	--card-text-leading: normal;
+	   both sides, and how open its leading is. The inset is small — just off
+	   the boards, enough to read as deliberate — because the measure is not
+	   what is buying readability here; the leading is. Both live here rather
+	   than in the rule below so /design's card tab can render other values. */
+	--card-text-inset: 24px;
+	--card-text-leading: 1.5;
 	/* Between the two boards of a row. A little tighter than the card's own
 	   32px rim, so a pair reads as one row rather than two boards that
 	   happen to share it. Shared with the add-cards editor, which mirrors
@@ -246,12 +248,12 @@ body.piece-grabbing * {
 }
 .flashcard .text-block {
 	/* Text carries its own measure, apart from the boards: the card is wide
-	   for their sake, and prose is inset from the boards' edge rather than
-	   run to it — the chess-book arrangement, diagrams wide and text a
-	   little narrower. The inset is the card's own rim taken a second time,
-	   and small on purpose: a line longer than the ideal measure reads
-	   better here than a column of text stranded in the middle of a wide
-	   card. Short text still centers (the block shrink-wraps), so only
+	   for their sake, and prose sits just off the boards' edge rather than
+	   running to it — the chess-book arrangement, diagrams wide and text a
+	   little narrower. The inset stays small on purpose: a line longer than
+	   the ideal measure reads better here than a column of text stranded in
+	   the middle of a wide card, and the leading is what carries that long
+	   line. Short text still centers (the block shrink-wraps), so only
 	   wrapped paragraphs feel the cap. The editors stay uncapped, so a line
 	   there breaks wider than it will on the card. */
 	max-width: calc(100% - var(--card-text-inset));

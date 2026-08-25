@@ -147,17 +147,17 @@
 	// the long-measure problem can be read side by side rather than described.
 	// Each variant is only the vars it changes; anything it leaves out is
 	// app.css's own value, which is what the first one shows.
-	const CARD_DEFAULTS = { width: 912, size: 17, inset: 64 };
+	const CARD_DEFAULTS = { width: 912, size: 16, inset: 24 };
 
 	const cardVariants = [
 		{
 			name: "As it is now",
-			note: "17px, 32px inset each side, default leading"
+			note: "16px, 1.5 leading, 12px a side"
 		},
 		{
-			name: "1.5 leading, 16px, small inset",
-			note: "16px, 1.5 leading, 12px a side — just off the boards' edge",
-			vars: { size: 16, leading: "1.5", inset: 24 }
+			name: "What it was before",
+			note: "17px, 32px a side, default leading — the long line with tight leading",
+			vars: { size: 17, leading: "normal", inset: 64 }
 		},
 		{
 			name: "Open leading",

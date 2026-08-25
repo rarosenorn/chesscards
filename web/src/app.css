@@ -34,7 +34,7 @@
 	   Both live here rather than in the rule below so /design's card tab can
 	   render other values. */
 	--card-text-measure: 68ch;
-	--card-text-leading: 1.4;
+	--card-text-leading: 1.5;
 	/* how far the column sits inside the boards' left edge. Nominally they
 	   share that edge — that is what stops a narrow column floating in a wide
 	   card — but a hair of daylight reads better than a hard butt against it. */

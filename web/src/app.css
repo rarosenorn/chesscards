@@ -33,7 +33,7 @@
 	   column tracks the face rather than drifting when the size changes.
 	   Both live here rather than in the rule below so /design's card tab can
 	   render other values. */
-	--card-text-measure: 82ch;
+	--card-text-measure: 76ch;
 	--card-text-leading: 1.5;
 	/* Between the two boards of a row. A little tighter than the card's own
 	   32px rim, so a pair reads as one row rather than two boards that

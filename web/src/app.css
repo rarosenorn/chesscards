@@ -26,6 +26,11 @@
 	   paragraph looks the same size where it is written as where it is
 	   answered. */
 	--card-text-size: 17px;
+	/* how far a line of card prose sits inside the boards' edge, total across
+	   both sides, and how open its leading is. Both are here rather than in the
+	   rule below so /design's card tab can try other values live. */
+	--card-text-inset: 64px;
+	--card-text-leading: normal;
 	/* Between the two boards of a row. A little tighter than the card's own
 	   32px rim, so a pair reads as one row rather than two boards that
 	   happen to share it. Shared with the add-cards editor, which mirrors
@@ -249,8 +254,14 @@ body.piece-grabbing * {
 	   card. Short text still centers (the block shrink-wraps), so only
 	   wrapped paragraphs feel the cap. The editors stay uncapped, so a line
 	   there breaks wider than it will on the card. */
-	max-width: calc(100% - 64px);
+	max-width: calc(100% - var(--card-text-inset));
 	font-size: var(--card-text-size);
+	line-height: var(--card-text-leading);
+}
+/* /design's card tab can pin prose to the boards' left edge instead of
+   centering it; nothing sets this attribute in the app itself */
+:root[data-card-text="left"] .flashcard .text-block {
+	align-self: flex-start;
 }
 /* Text needs no alignment rule of its own: the block is only as wide as its
    text up to the measure, and the side centers it. Short text is therefore

@@ -1,7 +1,7 @@
 <script>
 	import { setContext } from "svelte"
 	import { browser } from "$app/environment"
-	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, readPreview, applySchemeVars, applyFontVar, applyBannerVariant } from "$lib/design-preview.js"
+	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, CARD_KEY, readPreview, applySchemeVars, applyFontVar, applyBannerVariant, applyCardVars } from "$lib/design-preview.js"
 	import favicon from '$lib/assets/favicon.svg';
 	import Logo from "$lib/assets/Logo.svelte"
 	import ModalHost from "$lib/components/ModalHost.svelte"
@@ -25,6 +25,8 @@
 		if (font?.family) applyFontVar(font.family);
 		const banner = readPreview(BANNER_KEY);
 		if (banner?.variant) applyBannerVariant(banner.variant);
+		const card = readPreview(CARD_KEY);
+		if (card) applyCardVars(card);
 	}
 </script>
 

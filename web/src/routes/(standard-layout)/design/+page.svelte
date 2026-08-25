@@ -3,7 +3,7 @@
 	// live to the whole app (see design-preview.js — the root layout re-applies
 	// a stored choice on every page) until reset here.
 	import { onMount } from "svelte"
-	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant } from "$lib/design-preview.js"
+	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, CARD_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant, applyCardVars, clearCardVars } from "$lib/design-preview.js"
 
 	// "straight" — the hue at close to full strength; "muted" — the same idea
 	// pulled toward grey
@@ -142,6 +142,85 @@
 		}
 	];
 
+	// The card tab's knobs. Each row is one lever with the app's own value
+	// first, so "what it does now" is always the leftmost choice. The measure
+	// under them is arithmetic, not a guess: card width less its 32px rims,
+	// less the inset.
+	const cardLevers = [
+		{
+			key: "width", label: "Card width",
+			note: "the rim and the board gap are fixed, so this is really board size",
+			options: [
+				{ value: null, name: "912px", note: "now — 414px boards" },
+				{ value: "872px", name: "872px", note: "394px boards" },
+				{ value: "840px", name: "840px", note: "378px boards" },
+				{ value: "952px", name: "952px", note: "434px boards" }
+			]
+		},
+		{
+			key: "size", label: "Text size",
+			note: "a bigger face cuts the characters per line without moving anything else",
+			options: [
+				{ value: null, name: "17px", note: "now" },
+				{ value: "16px", name: "16px", note: "what it was" },
+				{ value: "18px", name: "18px", note: "" }
+			]
+		},
+		{
+			key: "leading", label: "Leading",
+			note: "the untried lever: open leading is how a long measure is made readable",
+			options: [
+				{ value: null, name: "normal", note: "now — about 1.2" },
+				{ value: "1.45", name: "1.45", note: "" },
+				{ value: "1.6", name: "1.6", note: "the usual fix" },
+				{ value: "1.75", name: "1.75", note: "" }
+			]
+		},
+		{
+			key: "inset", label: "Text inset",
+			note: "how far prose sits inside the boards' edge, both sides together",
+			options: [
+				{ value: null, name: "64px", note: "now — 32 a side" },
+				{ value: "0px", name: "0", note: "flush with the boards" },
+				{ value: "40px", name: "40px", note: "" },
+				{ value: "96px", name: "96px", note: "what it was" }
+			]
+		},
+		{
+			key: "align", label: "Alignment",
+			note: "centred shrink-wraps, so short text centres; left pins every line to one edge",
+			options: [
+				{ value: null, name: "Centred", note: "now" },
+				{ value: "left", name: "Flush left", note: "" }
+			]
+		}
+	];
+
+	// what app.css holds, for the measure sum when a lever is left alone
+	const cardDefaults = { width: 912, size: 17, inset: 64 };
+	const px = value => parseInt(value, 10);
+
+	let card = $state({});
+	let cardMeasure = $derived(
+		px(card.width ?? cardDefaults.width) - 64 - px(card.inset ?? cardDefaults.inset)
+	);
+	// rough but honest: Inter's average advance runs about 0.47em over prose
+	let cardChars = $derived(
+		Math.round(cardMeasure / (px(card.size ?? cardDefaults.size) * 0.47))
+	);
+
+	const setLever = (key, value) => {
+		card = value == null ? { ...card, [key]: undefined } : { ...card, [key]: value };
+		applyCardVars(card);
+		localStorage.setItem(CARD_KEY, JSON.stringify(card));
+	}
+
+	const resetCard = () => {
+		card = {};
+		clearCardVars();
+		localStorage.removeItem(CARD_KEY);
+	}
+
 	let activeAccent = $state(null);
 	let activeFont = $state(null);
 	let whiteBanner = $state(false);
@@ -151,6 +230,7 @@
 		activeAccent = readPreview(SCHEME_KEY)?.accent ?? null;
 		activeFont = readPreview(FONT_KEY)?.family ?? null;
 		whiteBanner = readPreview(BANNER_KEY)?.variant === "white";
+		card = readPreview(CARD_KEY) ?? {};
 		// the samples below render in the tryout fonts, so they must load here
 		// even before any is applied
 		ensureFontStylesheet();
@@ -207,6 +287,7 @@
 	<div class="tabs">
 		<button class:current={tab === "color"} onclick={() => tab = "color"}>Accent color</button>
 		<button class:current={tab === "font"} onclick={() => tab = "font"}>Menu font</button>
+		<button class:current={tab === "card"} onclick={() => tab = "card"}>Card text</button>
 	</div>
 
 	{#if tab === "color"}
@@ -255,7 +336,7 @@
 		{/each}
 		<button class="std-btn reset-btn" onclick={resetScheme}>Reset color to app default</button>
 	</section>
-	{:else}
+	{:else if tab === "font"}
 	<section>
 		{#each fontGroups as group (group.title)}
 			<h4>{group.title}</h4>
@@ -277,10 +358,93 @@
 		{/each}
 		<button class="std-btn reset-btn" onclick={resetFont}>Reset font to app default</button>
 	</section>
+	{:else}
+	<section>
+		<p class="lever-intro">
+			The card is wide because the boards are, so its prose runs a long
+			line whatever else is done. Each lever below is one way at that;
+			they stack, and they apply to every card in the app — flip to Study
+			or Cards to read a real one.
+		</p>
+		<div class="measure">
+			<strong>{cardMeasure}px</strong> of measure — about
+			<strong>{cardChars}</strong> characters a line
+			<span class="measure-note">(45–75 is the comfortable range)</span>
+		</div>
+		<p class="sample" style="width: {cardMeasure}px">
+			In Anastasia's mate, a king is on the edge of the board. It has a
+			friendly pawn or rook blocking its flight square orthogonally towards
+			the center. An opponent knight is 3 squares from the king in the same
+			direction, controlling the kings 2 diagonal flight squares.
+		</p>
+		{#each cardLevers as lever (lever.key)}
+			<h4>{lever.label}</h4>
+			<p class="lever-note">{lever.note}</p>
+			<div class="lever-row">
+				{#each lever.options as option (option.name)}
+					<button
+						class="std-btn lever-btn"
+						class:selected={(card[lever.key] ?? null) === option.value}
+						onclick={() => setLever(lever.key, option.value)}
+					>
+						{option.name}
+						{#if option.note}<span class="card-note">{option.note}</span>{/if}
+					</button>
+				{/each}
+			</div>
+		{/each}
+		<button class="std-btn reset-btn" onclick={resetCard}>Reset card text to app default</button>
+	</section>
 	{/if}
 </div>
 
 <style>
+	.lever-intro {
+		margin: 0 0 14px 0;
+		font-size: 0.95rem;
+		color: rgba(0, 0, 0, 0.6);
+	}
+	/* the arithmetic the levers add up to, kept beside them so a choice can be
+	   read before the app is flipped to */
+	.measure {
+		padding: 10px 14px;
+		border-radius: 6px;
+		background-color: var(--accent-subtle);
+		font-size: 0.95rem;
+	}
+	.measure-note {
+		color: rgba(0, 0, 0, 0.5);
+	}
+	/* the same prose a card carries, at the measure the levers leave it, so a
+	   line break here is the line break there */
+	.sample {
+		margin: 14px 0 4px 0;
+		font-size: var(--card-text-size);
+		line-height: var(--card-text-leading);
+	}
+	.lever-note {
+		margin: 0 0 8px 0;
+		font-size: 0.85rem;
+		color: rgba(0, 0, 0, 0.55);
+	}
+	.lever-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-bottom: 6px;
+	}
+	.lever-btn {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 2px;
+		min-width: 110px;
+	}
+	.lever-btn.selected {
+		border-color: var(--accent);
+		background-color: var(--accent-subtle);
+		font-weight: 500;
+	}
 	.design-container {
 		display: flex;
 		flex-direction: column;

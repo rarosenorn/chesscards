@@ -8,6 +8,7 @@
 const SCHEME_KEY = "chesscards:scheme-preview";
 const FONT_KEY = "chesscards:font-preview";
 const BANNER_KEY = "chesscards:banner-preview";
+const CARD_KEY = "chesscards:card-preview";
 
 const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Fira+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Lato:wght@400;700&family=Lexend:wght@400;500;600&family=Lora:wght@400;500;600&family=Manrope:wght@400;500;600&family=Merriweather:wght@400;700&family=Montserrat:wght@400;500;600&family=Nunito:wght@400;500;600;700&family=Outfit:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600&family=Poppins:wght@400;500;600&family=Raleway:wght@400;500;600&family=Red+Hat+Mono:wght@400;500;600&family=Rubik:wght@400;500;600&family=Sora:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Victor+Mono:wght@400;500;600&display=swap";
 
@@ -36,6 +37,33 @@ const clearSchemeVars = () => {
 	}
 }
 
+// The card tab's knobs: the four numbers that decide how card prose reads
+// (card width, text size, its inset from the boards' edge, its leading) plus
+// whether the block centers or pins left. Only the keys present in the tryout
+// are written, so a tryout that only moves leading leaves the rest to app.css.
+const CARD_VARS = {
+	width: "--flashcard-width",
+	size: "--card-text-size",
+	inset: "--card-text-inset",
+	leading: "--card-text-leading"
+};
+
+const applyCardVars = card => {
+	const root = document.documentElement.style;
+	for (const [key, name] of Object.entries(CARD_VARS)) {
+		if (card?.[key] == null) root.removeProperty(name);
+		else root.setProperty(name, card[key]);
+	}
+	if (card?.align === "left") document.documentElement.dataset.cardText = "left";
+	else delete document.documentElement.dataset.cardText;
+}
+
+const clearCardVars = () => {
+	const root = document.documentElement.style;
+	for (const name of Object.values(CARD_VARS)) root.removeProperty(name);
+	delete document.documentElement.dataset.cardText;
+}
+
 // one stylesheet serves every tryout font; added at most once per page
 const ensureFontStylesheet = () => {
 	if (document.getElementById("design-preview-fonts")) return;
@@ -62,4 +90,4 @@ const applyBannerVariant = variant =>
 const clearBannerVariant = () =>
 	delete document.documentElement.dataset.banner;
 
-export { SCHEME_KEY, FONT_KEY, BANNER_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant }
+export { SCHEME_KEY, FONT_KEY, BANNER_KEY, CARD_KEY, readPreview, applyCardVars, clearCardVars, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant }

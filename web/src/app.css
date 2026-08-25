@@ -14,11 +14,11 @@
 	/* how wide a flashcard renders, wherever one is shown. It is a board
 	   size in disguise — a board is half the card — so anything that has to
 	   line up with a card's edge reads it from here rather than repeating
-	   the number (browse's toolbar does). 912 less the card's 32px rims
-	   leaves 848 of content: two 414 cells with the gap below between
+	   the number (browse's toolbar does). 880 less the card's 32px rims
+	   leaves 816 of content: two 398 cells with the gap below between
 	   them. The rim and the gap are fixed, so trimming this number is a way
 	   of trimming the boards. */
-	--flashcard-width: 912px;
+	--flashcard-width: 880px;
 	/* Card prose: the page's own 16px. The card is wide for the boards' sake,
 	   so its measure runs long whatever the inset is — the leading below is
 	   what makes that line readable, by giving the eye's return sweep a
@@ -42,8 +42,10 @@
 	   the pair it would sit in. */
 	--board-col-gap: 20px;
 	/* A card whose boards all stand alone has no column to line up with, so
-	   its boards take this much more than a grid cell. */
-	--board-solo-scale: 1.36;
+	   its boards take this much more than a grid cell. Raised when the card
+	   narrowed, to hold the lone board at the 563px it has always rendered:
+	   only the paired boards were meant to give up the width. */
+	--board-solo-scale: 1.415;
 	/* The card's floor, set by eye rather than derived: comfortably above what
 	   a line of text and a lone board with its move line come to (643), so a
 	   sparse card keeps some air under it instead of hugging its contents. It

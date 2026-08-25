@@ -176,6 +176,14 @@
 	.tiptap :global(p:last-child) {
 		margin-bottom: 7px;
 	}
+	/* Prose breaks where it will on the card: the card's own column and
+	   leading (app.css), so a line written here is the line answered there.
+	   The input keeps its full width — it is a control, and a box shrunk to
+	   the measure would read as broken — and board blocks are untouched. */
+	.tiptap :global(:is(p, ul, ol)) {
+		max-width: var(--card-text-measure);
+		line-height: var(--card-text-leading);
+	}
 
 	/* --- chessboard blocks: one giant letter per block --- */
 	.tiptap :global(.board-block) {

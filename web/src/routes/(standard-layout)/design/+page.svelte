@@ -147,12 +147,12 @@
 	// the long-measure problem can be read side by side rather than described.
 	// Each variant is only the vars it changes; anything it leaves out is
 	// app.css's own value, which is what the first one shows.
-	const CARD_DEFAULTS = { width: 912, size: 16, measure: 82 };
+	const CARD_DEFAULTS = { width: 912, size: 16.2, measure: 82 };
 
 	const cardVariants = [
 		{
 			name: "As it is now",
-			note: "16px, 1.5 leading, an 82ch column, centred"
+			note: "16.2px, 1.5 leading, an 82ch column, centred"
 		},
 		{
 			name: "Narrower column",

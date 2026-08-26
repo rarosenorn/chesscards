@@ -339,13 +339,17 @@
 	// row holds the slot the cards would drop into, and the other rows slide
 	// around it live. A plain click on it opens the order for typing ("3.3" —
 	// stage, then place in stage). A drop is a move in the deck's own order,
-	// which the table is free to be showing any way it likes: sorted the other
-	// way, filtered down to a search, or ordered by another column entirely.
+	// so the table has to be showing that order, running the way it runs: any
+	// other sort, or Order reversed, and the rows either side of the cursor
+	// say nothing about where the cards would land. A filter is no obstacle
+	// though — the slots are read from the deck rather than from what it is
+	// showing, so a search can be reordered within.
 	let reorderDrag = $state(null);
 	let orderEdit = $state(null);
+	let canReorder = $derived(!readonly && draft.sortColumn === "order" && !draft.sortDescending);
 
 	const handleOrderMouseDown = (e, card) => {
-		if (e.button !== 0 || readonly) return;
+		if (e.button !== 0 || !canReorder) return;
 		e.stopPropagation();
 		// this handler both stops the event reaching the window and prevents
 		// the default, so an order input open on another row would neither be
@@ -444,14 +448,10 @@
 		const top = rect.top - transform.m42;
 		const before = clientY < top + rect.height / 2;
 		const list = stageCards.get(card.stage_id).filter(c => !reorderDrag.cardIds.includes(c.id));
+		// the slot is read off the deck's own order, which is the order the
+		// table is showing: above a row is that row's place, below it the next
 		const pos = list.findIndex(c => c.id === card.id);
-		// The slot is read off the deck's own order: above a row is that row's
-		// place, below it the next one. Sorted by Order descending the table
-		// runs against the deck, so the two sides swap; under any other sort
-		// the neighbouring rows say nothing about the deck's order at all, and
-		// "next to this card" is the whole of what the drop can mean.
-		const reversed = draft.sortColumn === "order" && draft.sortDescending;
-		setDragOver(card.stage_id, pos + (before === reversed ? 1 : 0), { cardId: card.id, before });
+		setDragOver(card.stage_id, pos + (before ? 0 : 1), { cardId: card.id, before });
 	}
 
 	const handleRowDragOver = (e, card) => {
@@ -503,12 +503,9 @@
 
 
 
-	// a chapter header is the top of what it heads, which read the other way
-	// round is the chapter's last place in the deck
 	const handleStageDragOver = stage => {
 		if (!reorderDrag?.started) return;
-		const list = stageCards.get(stage.id).filter(c => !reorderDrag.cardIds.includes(c.id));
-		setDragOver(stage.id, draft.sortDescending ? list.length : 0, { stageId: stage.id });
+		setDragOver(stage.id, 0, { stageId: stage.id });
 	}
 
 	const finishReorderDrag = async () => {
@@ -962,7 +959,7 @@
 					     plain number, and nothing invited the drag. -->
 					<td
 						class="col-order"
-						class:order-handle={!readonly}
+						class:order-handle={canReorder}
 						onmousedown={orderEdit?.cardId === card.id ? undefined : e => handleOrderMouseDown(e, card)}
 					>
 						{#if orderEdit?.cardId === card.id}
@@ -980,7 +977,7 @@
 								}}
 							/>
 						{:else}
-							{#if !readonly}
+							{#if canReorder}
 								<svg class="grip" viewBox="0 0 6 10" aria-hidden="true">
 									<circle cx="1" cy="1" r="1"/><circle cx="5" cy="1" r="1"/>
 									<circle cx="1" cy="5" r="1"/><circle cx="5" cy="5" r="1"/>

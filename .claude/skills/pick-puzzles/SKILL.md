@@ -1,5 +1,6 @@
 ---
 name: pick-puzzles
+argument-hint: <mate theme, e.g. anastasiaMate | hookMate | bodenMate>
 description: Pick 10 Lichess puzzles for a named checkmate pattern (Anastasia's mate, Boden's mate, smothered mate, …) spread over four rating brackets, and write them to an .ods in puzzle-picks/. Use when asked to find, pick, or refresh puzzles for a mate theme or a mate-pattern deck.
 ---
 

@@ -180,44 +180,21 @@
 	});
 
 	// While a reorder drag is in flight the table renders from a preview of
-	// the rows: the dragged cards are lifted out and a placeholder row holds
-	// the slot they would drop into, so the new order is visible before it is
-	// committed. The slot itself is a place in the deck (a stage and an index
-	// within it), but the placeholder has to appear where the cursor is, in
-	// whatever order the table happens to be showing — so the drag carries a
-	// visual anchor beside the slot (the row it is sitting against, and which
-	// side of it), and that is what the preview reads. filteredCards keeps
-	// reading the real rows — selection and arrow navigation must not see the
-	// placeholder.
-	const PLACEHOLDER = { id: "__placeholder__", placeholder: true };
-	const placeSlot = (rows, stageId) => {
-		const anchor = reorderDrag.over.anchor;
-		const at = anchor?.cardId ? rows.findIndex(c => c.id === anchor.cardId) : -1;
-		if (at !== -1) {
-			const i = at + (anchor.before ? 0 : 1);
-			return [...rows.slice(0, i), PLACEHOLDER, ...rows.slice(i)];
-		}
-		// the anchor row belongs to another chapter's run, so this one shows
-		// nothing; failing a row altogether (a chapter header under the
-		// cursor, or a run the drag emptied) the slot is the run's own head
-		if (anchor?.cardId) return rows;
-		return stageId === null || anchor?.stageId === stageId ? [PLACEHOLDER, ...rows] : rows;
-	}
+	// the grouped rows: the dragged cards are lifted out and a placeholder row
+	// holds the slot they would drop into, so the new order is visible before
+	// it is committed. filteredCards keeps reading the real groupedRows —
+	// selection and arrow navigation must not see the placeholder.
 	let displayGroups = $derived.by(() => {
 		const drag = reorderDrag;
 		if (!groupedRows || !drag?.started || !drag.over) return groupedRows;
-		return groupedRows.map(group => ({
-			...group,
-			cards: placeSlot(group.cards.filter(c => !drag.cardIds.includes(c.id)), group.stage.id)
-		}));
-	});
-	// the flat table — a filtered list, or another column's sort — previews the
-	// same way, with the whole list as the one run to place the slot in
-	let displayRows = $derived.by(() => {
-		const drag = reorderDrag;
-		if (groupedRows) return null;
-		if (!drag?.started || !drag.over) return filteredCards;
-		return placeSlot(filteredCards.filter(c => !drag.cardIds.includes(c.id)), null);
+		const placeholder = { id: "__placeholder__", placeholder: true };
+		return groupedRows.map(group => {
+			let cards = group.cards.filter(c => !drag.cardIds.includes(c.id));
+			if (group.stage.id === drag.over.stageId) {
+				cards = [...cards.slice(0, drag.over.index), placeholder, ...cards.slice(drag.over.index)];
+			}
+			return { ...group, cards };
+		});
 	});
 
 	// A column is always sorted — Order ascending is the deck's own order, the
@@ -339,14 +316,14 @@
 	// row holds the slot the cards would drop into, and the other rows slide
 	// around it live. A plain click on it opens the order for typing ("3.3" —
 	// stage, then place in stage). A drop is a move in the deck's own order,
-	// so the table has to be showing that order, running the way it runs: any
-	// other sort, or Order reversed, and the rows either side of the cursor
-	// say nothing about where the cards would land. A filter is no obstacle
-	// though — the slots are read from the deck rather than from what it is
-	// showing, so a search can be reordered within.
+	// so the table has to be showing that order, whole and the way it runs:
+	// the grouped view (Order, unfiltered), ascending, where the slots read
+	// the way the numbers do. The grip goes by the same rule — a table that
+	// cannot be dragged shows no handle to drag by — and the Order header
+	// says so for anyone who came looking for one.
 	let reorderDrag = $state(null);
 	let orderEdit = $state(null);
-	let canReorder = $derived(!readonly && draft.sortColumn === "order" && !draft.sortDescending);
+	let canReorder = $derived(!readonly && !!groupedRows && !draft.sortDescending);
 
 	const handleOrderMouseDown = (e, card) => {
 		if (e.button !== 0 || !canReorder) return;
@@ -384,19 +361,6 @@
 		};
 	}
 
-	// Where the placeholder opens: against the row that follows the dragged
-	// ones in the table as it is being shown, or — dragging the last of them —
-	// the row before, so the gap opens exactly where they were lifted from.
-	const startAnchor = () => {
-		const ids = reorderDrag.cardIds;
-		const carried = filteredCards.map(c => ids.includes(c.id));
-		const after = filteredCards.slice(carried.lastIndexOf(true) + 1).find(c => !ids.includes(c.id));
-		if (after) return { cardId: after.id, before: true };
-		const before = filteredCards.slice(0, carried.indexOf(true)).findLast(c => !ids.includes(c.id));
-		if (before) return { cardId: before.id, before: false };
-		return { stageId: reorderDrag.card.stage_id };
-	}
-
 	const handleWindowMouseMove = e => {
 		if (!reorderDrag) return;
 		reorderDrag.x = e.clientX;
@@ -410,9 +374,8 @@
 			// there (past the last row, in the padding beside them) is still
 			// a drop, taken against the nearest row rather than a departure.
 			if (!tableContainer?.contains(e.target)) {
-				const { stageId, index, anchor } = reorderDrag.initial;
-				setDragOver(stageId, index, anchor);
-			} else if (!e.target?.closest?.('tr[data-card-row], tr.stage-row')) {
+				setDragOver(reorderDrag.initial.stageId, reorderDrag.initial.index);
+			} else if (!e.target?.closest?.("tr[data-card-row], tr.stage-row")) {
 				reslotUnderCursor();
 			}
 			return;
@@ -424,20 +387,17 @@
 			const index = stageList
 				.slice(0, stageList.findIndex(c => c.id === reorderDrag.card.id))
 				.filter(c => !reorderDrag.cardIds.includes(c.id)).length;
-			reorderDrag.initial = { stageId: reorderDrag.card.stage_id, index, anchor: startAnchor() };
+			reorderDrag.initial = { stageId: reorderDrag.card.stage_id, index };
 			reorderDrag.over = { ...reorderDrag.initial };
 			reorderDrag.started = true;
 			autoScrollFrame ??= requestAnimationFrame(autoScrollStep);
 		}
 	}
 
-	const sameAnchor = (a, b) =>
-		a?.cardId === b?.cardId && a?.before === b?.before && a?.stageId === b?.stageId;
-
-	const setDragOver = (stageId, index, anchor) => {
+	const setDragOver = (stageId, index) => {
 		const over = reorderDrag.over;
-		if (over && over.stageId === stageId && over.index === index && sameAnchor(over.anchor, anchor)) return;
-		reorderDrag.over = { stageId, index, anchor };
+		if (over && over.stageId === stageId && over.index === index) return;
+		reorderDrag.over = { stageId, index };
 	}
 
 	const slotForRow = (rowEl, card, clientY) => {
@@ -448,10 +408,7 @@
 		const top = rect.top - transform.m42;
 		const before = clientY < top + rect.height / 2;
 		const list = stageCards.get(card.stage_id).filter(c => !reorderDrag.cardIds.includes(c.id));
-		// the slot is read off the deck's own order, which is the order the
-		// table is showing: above a row is that row's place, below it the next
-		const pos = list.findIndex(c => c.id === card.id);
-		setDragOver(card.stage_id, pos + (before ? 0 : 1), { cardId: card.id, before });
+		setDragOver(card.stage_id, list.findIndex(c => c.id === card.id) + (before ? 0 : 1));
 	}
 
 	const handleRowDragOver = (e, card) => {
@@ -462,8 +419,8 @@
 	// The slot when no row's own handler has spoken for the cursor: the list is
 	// scrolling under a still pointer, or the pointer is inside the list but on
 	// no row — under the last one, beside them in the padding. The nearest row
-	// by height takes it, so dragging past the end of the list drops at the end
-	// rather than reading as having left.
+	// by height takes it, so a drag carried past the end of the list drops at
+	// the end rather than reading as having left.
 	const reslotUnderCursor = () => {
 		const rows = [...(tableContainer?.querySelectorAll("tr[data-card-row]") ?? [])];
 		if (!rows.length) return;
@@ -505,7 +462,7 @@
 
 	const handleStageDragOver = stage => {
 		if (!reorderDrag?.started) return;
-		setDragOver(stage.id, 0, { stageId: stage.id });
+		setDragOver(stage.id, 0);
 	}
 
 	const finishReorderDrag = async () => {
@@ -932,7 +889,18 @@
 								: draft.sortDescending ? "descending" : "ascending"}
 						>
 							<button class="sort-btn" onclick={() => toggleSort(column)}>
-								{label}
+								<span class="sort-label">
+									{label}
+									{#if column === "order" && !readonly}
+										<!-- the drag has conditions and no other sign of them:
+										     the handle it wants is simply absent until they hold -->
+										<span
+											class="col-info"
+											aria-hidden="true"
+											title="Drag to reorder cards. Possible when cards are sorted ascending by order and not filtered"
+										>i</span>
+									{/if}
+								</span>
 								{#if draft.sortColumn === column}
 									<span class="sort-arrow" class:descending={draft.sortDescending}></span>
 								{/if}
@@ -1108,25 +1076,15 @@
 						</tr>
 					{/if}
 				{:else}
-					{#each displayRows as item (item.id)}
-						<!-- one tr for card and placeholder alike: the animate
-						     directive must sit directly under the keyed each -->
+					{#each filteredCards as card (card.id)}
 						<tr
-							data-card-row={item.placeholder ? undefined : item.id}
-							animate:flip={{ duration: reorderDrag?.started ? 150 : 0 }}
-							class:placeholder-row={item.placeholder}
-							class:active={!item.placeholder && item.id === selectedCard.id}
-							class:multi-selected={!item.placeholder && multiSelected.has(item.id)}
-							onmousedown={item.placeholder ? undefined : e => handleRowMouseDown(e, item, filteredCards.indexOf(item))}
-							onmouseenter={item.placeholder ? undefined : () => handleRowMouseEnter(filteredCards.indexOf(item))}
-							onmousemove={item.placeholder ? undefined : e => handleRowDragOver(e, item)}
-							oncontextmenu={item.placeholder ? undefined : e => handleRowContextMenu(e, item, filteredCards.indexOf(item))}
+							class:active={card.id === selectedCard.id}
+							class:multi-selected={multiSelected.has(card.id)}
+							onmousedown={e => handleRowMouseDown(e, card, filteredCards.indexOf(card))}
+							onmouseenter={() => handleRowMouseEnter(filteredCards.indexOf(card))}
+							oncontextmenu={e => handleRowContextMenu(e, card, filteredCards.indexOf(card))}
 						>
-							{#if item.placeholder}
-								<td class="placeholder-cell" colspan="6" style="height: {reorderDrag?.rowHeight}px"></td>
-							{:else}
-								{@render cardCells(item)}
-							{/if}
+							{@render cardCells(card)}
 						</tr>
 					{/each}
 				{/if}
@@ -1285,6 +1243,30 @@
 	.sort-btn:hover {
 		background-color: #f2f2f2;
 	}
+	/* the label and whatever hangs off it travel together, so the arrow keeps
+	   the cell's right edge */
+	.sort-label {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+	}
+	/* the has-a-tooltip mark, in the ring the app uses for quiet asides */
+	.col-info {
+		flex: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 12px;
+		height: 12px;
+		border: 1px solid rgba(0, 0, 0, 0.35);
+		border-radius: 50%;
+		font-size: 9px;
+		font-style: italic;
+		font-weight: 700;
+		line-height: 1;
+		color: rgba(0, 0, 0, 0.5);
+		cursor: help;
+	}
 	/* cut from a box rather than set as a glyph: the edges stay straight and
 	   the point sharp at this size, which ▴/▾ soften into a blur */
 	.sort-arrow {
@@ -1300,8 +1282,9 @@
 	th:last-child {
 		border-right: none;
 	}
+	/* room for the label, the note beside it and the sort arrow */
 	.col-order {
-		width: 76px;
+		width: 92px;
 	}
 	/* the grip leads the row, in the table's own left margin clear of every
 	   column: it acts on the whole row, and the drag never crosses content */

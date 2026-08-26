@@ -546,12 +546,15 @@
 		margin: 17px auto 0 auto;
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		/* the label all but leads the pills it names; the picker after them is
+		   a separate thing and keeps the wider distance */
+		gap: 8px;
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
 	}
 	/* the chapter the cards file into, trailing the type it pairs with */
 	.stage-picker {
+		margin-left: 4px;
 		display: flex;
 		align-items: center;
 		gap: 4px;

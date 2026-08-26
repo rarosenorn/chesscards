@@ -646,6 +646,7 @@
 		display: flex;
 		justify-content: start;
 		position: relative;
+		overflow-wrap: anywhere;
 	}
 	.single-board-block {
 		display: flex;

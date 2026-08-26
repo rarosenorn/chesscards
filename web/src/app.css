@@ -259,6 +259,10 @@ body.piece-grabbing * {
 	   viewport. The editors stay uncapped, so a line there breaks wider than
 	   it will on the card. */
 	max-width: min(var(--card-text-measure), 100%);
+	margin-inline: 3px;
+	/* a long unbroken run (a URL, a pasted token) breaks rather than
+	   spilling past the card's rim */
+	overflow-wrap: anywhere;
 	font-size: var(--card-text-size);
 	line-height: var(--card-text-leading);
 }

@@ -681,6 +681,7 @@
 		justify-content: start;
 		position: relative;
 		padding-top: 10px;
+		overflow-wrap: anywhere;
 	}
 	.single-board-block {
 		display: flex;

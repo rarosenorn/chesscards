@@ -896,9 +896,14 @@
 										     the handle it wants is simply absent until they hold -->
 										<span
 											class="col-info"
-											aria-hidden="true"
 											title="Drag to reorder cards. Possible when cards are sorted ascending by order and not filtered"
-										>i</span>
+										>
+											<svg viewBox="0 0 16 16" aria-hidden="true">
+												<circle cx="8" cy="8" r="7.1" fill="none" stroke="currentColor" stroke-width="1.4"/>
+												<circle cx="8" cy="4.5" r="1.05" fill="currentColor"/>
+												<rect x="7.1" y="6.7" width="1.8" height="5.4" rx="0.9" fill="currentColor"/>
+											</svg>
+										</span>
 									{/if}
 								</span>
 								{#if draft.sortColumn === column}
@@ -1250,22 +1255,22 @@
 		align-items: center;
 		gap: 5px;
 	}
-	/* the has-a-tooltip mark, in the ring the app uses for quiet asides */
+	/* the has-a-tooltip mark: drawn rather than set, so the ring stays round
+	   and the stem square at a size this small */
 	.col-info {
 		flex: none;
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 12px;
-		height: 12px;
-		border: 1px solid rgba(0, 0, 0, 0.35);
-		border-radius: 50%;
-		font-size: 9px;
-		font-style: italic;
-		font-weight: 700;
-		line-height: 1;
-		color: rgba(0, 0, 0, 0.5);
+		width: 15px;
+		height: 15px;
+		color: rgba(0, 0, 0, 0.4);
 		cursor: help;
+	}
+	.col-info:hover {
+		color: rgba(0, 0, 0, 0.65);
+	}
+	.col-info svg {
+		width: 100%;
+		height: 100%;
 	}
 	/* cut from a box rather than set as a glyph: the edges stay straight and
 	   the point sharp at this size, which ▴/▾ soften into a blur */

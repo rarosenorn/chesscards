@@ -12,6 +12,7 @@
 				<th>New</th>
 				<th>Learn</th>
 				<th>Due</th>
+				<th>Total</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -19,19 +20,11 @@
 				<tr>
 					<td><a href={`my-flashcards/${deck.id}/study`}>
 							{deck.name}
-							<!-- the deck's whole size, said beside its name: the
-							     columns count only what is waiting today -->
-							<span class="deck-total">({deck.no_cards})</span>
 					</a></td>
-					<td>{deck.new_cards}</td>
-					<td>{deck.learn_cards}</td>
-					<td class="due">
-						{#if deck.review_cards > 0}
-							<span class="due-pill">{deck.review_cards}</span>
-						{:else}
-							{deck.review_cards}
-						{/if}
-					</td>
+					<td class="count new" class:none={deck.new_cards == 0}>{deck.new_cards}</td>
+					<td class="count learn" class:none={deck.learn_cards == 0}>{deck.learn_cards}</td>
+					<td class="count review" class:none={deck.review_cards == 0}>{deck.review_cards}</td>
+					<td>{deck.no_cards}</td>
 				</tr>
 			{/each}
 		</tbody>
@@ -70,10 +63,6 @@
 	td:nth-child(n + 2) {
 		text-align: center;
 	}
-	/* the size rides with the name, in the name's own row-link */
-	.deck-total {
-		color: rgba(0, 0, 0, 0.45);
-	}
 	th {
 		text-align: left;
 	}
@@ -110,14 +99,24 @@
 	td.due {
 		color: rgba(0, 0, 0, 0.45);
 	}
-	.due-pill {
-		display: inline-block;
-		background-color: var(--accent-subtle-strong);
-		color: var(--accent);
-		border-radius: 10px;
-		padding: 1px 9px;
-		font-size: 0.85rem;
+	/* anki's deck browser colours, count by count: blue for new, rust for
+	   what is being learned, green for the reviews coming round. Nothing
+	   waiting is grey — the colour is the call to study */
+	.count {
 		font-weight: 500;
+	}
+	.count.new {
+		color: #00a;
+	}
+	.count.learn {
+		color: #c35617;
+	}
+	.count.review {
+		color: #070;
+	}
+	.count.none {
+		color: rgba(0, 0, 0, 0.35);
+		font-weight: 400;
 	}
 	/* section titles, larger than the deck rows they head */
 	th:first-child {

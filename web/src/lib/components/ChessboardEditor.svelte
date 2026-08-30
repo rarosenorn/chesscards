@@ -417,7 +417,7 @@
 			// can always sit between rows. Such a split row continues its
 			// move: it keeps the number ("1 e4 / Back / 1 … d5").
 			const continuesLast = color === "b" && last?.white && !last.black;
-			if (continuesLast && index !== solutionFrom) {
+			if (continuesLast && index !== solutionFrom && !unfolded) {
 				last.black = move;
 			} else {
 				if (!continuesLast) number += 1;
@@ -451,6 +451,12 @@
 		return { destroy: () => el.removeEventListener(type, handler) };
 	}
 	const dividerHandle = el => listen(el, "mousedown", startDividerDrag);
+
+	// While the divider is being dragged the list unfolds to one move per
+	// row (below), so every boundary is a row gap the rule can sit in — a
+	// paired row would make the gap between its two moves unreachable by the
+	// only motion a full-width rule invites, straight down.
+	let unfolded = $state(false);
 
 	// The moves' boxes, measured. Frozen for the length of a drag: a boundary
 	// falling mid-pair splits that row in two, which pushes every move below
@@ -489,8 +495,13 @@
 		e.preventDefault();
 		e.stopPropagation();
 		draggingDivider = true;
-		dragRects = moveRects();
+		// unfold first, then measure what it laid out — the drag reads the
+		// list it will actually be moving through
+		unfolded = true;
+		dragRects = null;
+		tick().then(() => { dragRects = moveRects() });
 		const move = ev => {
+			if (!dragRects) return;
 			const gap = gapAtY(ev.clientY);
 			// past the last move: nothing is back
 			solutionFrom = gap >= moves.length ? null : gap;
@@ -499,6 +510,7 @@
 			window.removeEventListener("mousemove", move);
 			window.removeEventListener("mouseup", up);
 			draggingDivider = false;
+			unfolded = false;
 			dragRects = null;
 			// the release lands on a move as often as not, and its click
 			// would step the board; the drag was the whole gesture

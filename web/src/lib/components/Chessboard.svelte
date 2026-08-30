@@ -430,8 +430,11 @@
 					{/each}
 				</span>
 			{/each}
-			<!-- the resting spot: a line that is all front (solutionFrom null) -->
-			{#if splitEditable && shownGap === lineMoves.length}{@render backMarker()}{/if}
+			<!-- The end spot: a line that is all front. Only while the marker is
+			     being dragged there — a board with no boundary says so by
+			     showing nothing, and the board's own editor is where one is
+			     made from scratch. -->
+			{#if splitEditable && dragGap != null && shownGap === lineMoves.length}{@render backMarker()}{/if}
 		</div>
 	{/if}
 </div>

@@ -460,29 +460,27 @@
 	const moveRects = () => dragRects
 		?? [...(moveListElement?.querySelectorAll("button.move-btn") ?? [])].map(btn => btn.getBoundingClientRect());
 
-	// the gap nearest a point: the move whose box is closest, taken on the
-	// side the point falls. Distance to the box picks the row; within a row
-	// the horizontal midpoint picks between its two moves.
-	const gapNearest = (x, y) => {
+	// The gap the pointer is over. The list reads top to bottom and the
+	// divider is a full-width rule between rows, so the drag is vertical
+	// alone: each row's band splits in two, its top half standing for the
+	// gap before its first move and its bottom half for the gap before its
+	// second — dragging straight down walks every boundary in turn, mid-pair
+	// ones included, instead of stepping a whole pair at a time.
+	const gapAtY = y => {
 		const rects = moveRects();
 		if (rects.length === 0) return moves.length;
-		// the list reads top to bottom, so past its ends the row is the whole
-		// answer: below the last move nothing is back, above the first all is
-		if (y > rects[rects.length - 1].bottom) return moves.length;
-		if (y < rects[0].top) return 0;
-		let best = null;
-		let bestDist = Infinity;
+		if (y >= rects[rects.length - 1].bottom) return moves.length;
+		if (y <= rects[0].top) return 0;
+		// a row is the moves sharing a top edge (white and its black reply)
+		const rows = [];
 		rects.forEach((r, i) => {
-			const dx = Math.max(r.left - x, 0, x - r.right);
-			const dy = Math.max(r.top - y, 0, y - r.bottom);
-			const dist = dx * dx + dy * dy;
-			if (dist < bestDist) {
-				bestDist = dist;
-				best = { i, r };
-			}
+			const last = rows[rows.length - 1];
+			if (last && Math.abs(last.top - r.top) < 2) last.plies.push(i);
+			else rows.push({ top: r.top, bottom: r.bottom, plies: [i] });
 		});
-		if (!best) return moves.length;
-		return x > best.r.left + best.r.width / 2 ? best.i + 1 : best.i;
+		const row = rows.find(r => y < r.bottom) ?? rows[rows.length - 1];
+		const lower = y - row.top >= (row.bottom - row.top) / 2;
+		return row.plies[lower && row.plies.length > 1 ? 1 : 0];
 	}
 
 	let draggingDivider = $state(false);
@@ -493,7 +491,7 @@
 		draggingDivider = true;
 		dragRects = moveRects();
 		const move = ev => {
-			const gap = gapNearest(ev.clientX, ev.clientY);
+			const gap = gapAtY(ev.clientY);
 			// past the last move: nothing is back
 			solutionFrom = gap >= moves.length ? null : gap;
 		};

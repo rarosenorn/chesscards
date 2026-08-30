@@ -8,7 +8,6 @@
 	import { Markers } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { normalizeBoard } from "$lib/card-utils.js"
 	import { replayMoves, showAnnotations, isPositionFinished } from "$lib/board-utils.js"
-	import { boardCaret } from "$lib/block-caret-state.svelte.js"
 	import { playMoveSound } from "$lib/sounds.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
 
@@ -26,7 +25,7 @@
 	// the card has more than one board (the block editor numbers with a CSS
 	// counter instead — see CardSideBlockEditor — because numbering there runs
 	// across blocks in document order).
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, autoFocus = false, children } = $props();
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, autoFocus = false, inEditor = false, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -202,6 +201,13 @@
 	// blur, so the ring belongs to focus that arrived by tabbing.
 	let pointerFocus = $state(false);
 	const takeFocus = () => {
+		// inEditor: the text editor keeps the keyboard. A board living in a
+		// document is not a focus stop — taking focus here blurs ProseMirror,
+		// which greys the menu bar and hands bare letters back to the deck's
+		// tab shortcuts instead of typing them. Stepping still works (the
+		// buttons and the wheel never needed focus), and the arrows belong to
+		// the virtual board caret.
+		if (inEditor) return;
 		pointerFocus = true;
 		wrapperElement.focus({ preventScroll: true });
 	}
@@ -240,13 +246,9 @@
 		}
 	}
 
+	// only reached outside an editor (inEditor boards take no focus, so the
+	// arrows are the document's — the virtual board caret's — throughout)
 	const handleKeyDown = e => {
-		// while the block editor's virtual board caret is active, arrows
-		// belong to it (the keydown also bubbles to ProseMirror's keymap —
-		// stepping moves here would double-act). Only boards living in a
-		// block can double-act: a board in study/browse has no editor above
-		// it, and must keep stepping even if a caret was left set elsewhere.
-		if (boardCaret.blockId != null && wrapperElement?.closest(".board-block")) return;
 		if (e.key === "ArrowLeft") {
 			e.preventDefault();
 			previous();
@@ -270,10 +272,10 @@
 		if (document.hasFocus()) pointerFocus = false;
 	}}
 	bind:this={wrapperElement}
-	tabindex={hasMoves ? 0 : undefined}
+	tabindex={hasMoves && !inEditor ? 0 : undefined}
 	role="group"
-	aria-label={hasMoves ? "Chessboard, use arrow keys to step through moves" : "Chessboard"}
-	onkeydown={hasMoves ? handleKeyDown : undefined}
+	aria-label={hasMoves && !inEditor ? "Chessboard, use arrow keys to step through moves" : "Chessboard"}
+	onkeydown={hasMoves && !inEditor ? handleKeyDown : undefined}
 >
 	<!-- The strip above every board: its number (when the card has more than
 	     one) and the side to move, which takes the number's place on a lone

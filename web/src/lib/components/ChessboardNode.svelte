@@ -171,7 +171,7 @@
 	/>
 {:else}
 	<div class="board-area">
-		<Chessboard {board} minWidth={boardMinWidth} flushBottom authorView={!isBack} revealed={isBack ? true : showBack}>
+		<Chessboard {board} minWidth={boardMinWidth} flushBottom inEditor authorView={!isBack} revealed={isBack ? true : showBack}>
 			<div class="button-row">
 				<input
 					class:invalid-fen={fenInvalid}

@@ -607,8 +607,19 @@
 	}
 	/* where the boundary can be moved, the marker is the handle */
 	.back-divider.draggable {
+		position: relative;
 		cursor: grab;
 		user-select: none;
+	}
+	/* the handle takes the move line's full height: the text itself is a few
+	   pixels tall, and a press that misses it by a hair grabs the board
+	   instead and drags that. Absolute, so the line's layout is untouched,
+	   and only vertical slack — horizontal would eat into the moves beside
+	   it (this element is positioned, so it paints over them) */
+	.back-divider.draggable::before {
+		content: "";
+		position: absolute;
+		inset: -7px 0;
 	}
 	/* at rest past the last move: the line is all front, and the marker is
 	   only there to be taken hold of */

@@ -452,20 +452,27 @@
 	}
 	const dividerHandle = el => listen(el, "mousedown", startDividerDrag);
 
+	// The moves' boxes, measured. Frozen for the length of a drag: a boundary
+	// falling mid-pair splits that row in two, which pushes every move below
+	// it down a row — measured live, that shift puts the next gap under the
+	// cursor at once and the divider skips straight past the mid-pair stop.
+	let dragRects = null;
+	const moveRects = () => dragRects
+		?? [...(moveListElement?.querySelectorAll("button.move-btn") ?? [])].map(btn => btn.getBoundingClientRect());
+
 	// the gap nearest a point: the move whose box is closest, taken on the
 	// side the point falls. Distance to the box picks the row; within a row
 	// the horizontal midpoint picks between its two moves.
 	const gapNearest = (x, y) => {
-		const btns = [...(moveListElement?.querySelectorAll("button.move-btn") ?? [])];
-		if (btns.length === 0) return moves.length;
+		const rects = moveRects();
+		if (rects.length === 0) return moves.length;
 		// the list reads top to bottom, so past its ends the row is the whole
 		// answer: below the last move nothing is back, above the first all is
-		if (y > btns[btns.length - 1].getBoundingClientRect().bottom) return moves.length;
-		if (y < btns[0].getBoundingClientRect().top) return 0;
+		if (y > rects[rects.length - 1].bottom) return moves.length;
+		if (y < rects[0].top) return 0;
 		let best = null;
 		let bestDist = Infinity;
-		btns.forEach((btn, i) => {
-			const r = btn.getBoundingClientRect();
+		rects.forEach((r, i) => {
 			const dx = Math.max(r.left - x, 0, x - r.right);
 			const dy = Math.max(r.top - y, 0, y - r.bottom);
 			const dist = dx * dx + dy * dy;
@@ -484,6 +491,7 @@
 		e.preventDefault();
 		e.stopPropagation();
 		draggingDivider = true;
+		dragRects = moveRects();
 		const move = ev => {
 			const gap = gapNearest(ev.clientX, ev.clientY);
 			// past the last move: nothing is back
@@ -493,6 +501,7 @@
 			window.removeEventListener("mousemove", move);
 			window.removeEventListener("mouseup", up);
 			draggingDivider = false;
+			dragRects = null;
 			// the release lands on a move as often as not, and its click
 			// would step the board; the drag was the whole gesture
 			window.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation() }, { capture: true, once: true });

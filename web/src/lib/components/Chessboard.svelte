@@ -259,15 +259,22 @@
 	const shownGap = $derived(dragGap ?? solutionFrom ?? lineMoves.length);
 	const markerAt = g => authorView && (splitEditable ? shownGap === g : solutionFrom === g);
 
+	// The moves' boxes, measured. Frozen for the length of a drag: the marker
+	// takes room in the line, so every gap it lands on pushes the moves after
+	// it along — measured live, that shift moves the next gap under the
+	// cursor and the marker runs away down the line on its own.
+	let dragRects = null;
+	const moveRects = () => dragRects
+		?? [...(moveLineEl?.querySelectorAll(".move-btn") ?? [])].map(btn => btn.getBoundingClientRect());
+
 	// the gap nearest a point: the move whose box is closest, taken on the
 	// side the point falls. Distance to the box (not to its centre) picks the
 	// right move on a wrapped line, where rows sit far apart vertically.
 	const gapNearest = (x, y) => {
-		const btns = [...(moveLineEl?.querySelectorAll(".move-btn") ?? [])];
+		const rects = moveRects();
 		let best = null;
 		let bestDist = Infinity;
-		btns.forEach((btn, i) => {
-			const r = btn.getBoundingClientRect();
+		rects.forEach((r, i) => {
 			const dx = Math.max(r.left - x, 0, x - r.right);
 			const dy = Math.max(r.top - y, 0, y - r.bottom);
 			const dist = dx * dx + dy * dy;
@@ -298,6 +305,7 @@
 		if (!splitEditable || e.button !== 0) return;
 		e.preventDefault();
 		e.stopPropagation();
+		dragRects = moveRects();
 		dragGap = shownGap;
 		let moved = false;
 		const move = ev => {
@@ -309,6 +317,7 @@
 			window.removeEventListener("mouseup", up);
 			const gap = dragGap;
 			dragGap = null;
+			dragRects = null;
 			if (moved) {
 				// the release lands on a move button as often as not, and its
 				// click would step the board; the drag was the whole gesture

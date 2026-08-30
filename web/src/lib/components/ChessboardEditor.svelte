@@ -417,7 +417,7 @@
 			// can always sit between rows. Such a split row continues its
 			// move: it keeps the number ("1 e4 / Back / 1 … d5").
 			const continuesLast = color === "b" && last?.white && !last.black;
-			if (continuesLast && index !== solutionFrom && !unfolded) {
+			if (continuesLast && index !== solutionFrom) {
 				last.black = move;
 			} else {
 				if (!continuesLast) number += 1;
@@ -438,86 +438,17 @@
 	// --- dragging the Back divider ---
 	// solutionFrom is a gap in the line: the ply the back begins at, or null
 	// for a line that is all front — the gap past the last move, where the
-	// divider rests. Dragging writes it live, so the rows regroup around the
-	// divider as it moves (the list is the preview). A board that lives on
-	// the back has no split to make.
+	// rule rests. A board that lives on the back has no split to make.
 	const splitEditable = $derived(!boardOnBack && moves.length > 0);
 
-	// A direct listener, not onmousedown: svelte delegates it from the app
-	// root, and inside the card editor the press is stopped short of it (the
-	// board island's press guards) — the divider never heard its own press.
-	const listen = (el, type, handler) => {
-		el.addEventListener(type, handler);
-		return { destroy: () => el.removeEventListener(type, handler) };
-	}
-	const dividerHandle = el => listen(el, "mousedown", startDividerDrag);
-
-	// While the divider is being dragged the list unfolds to one move per
-	// row (below), so every boundary is a row gap the rule can sit in — a
-	// paired row would make the gap between its two moves unreachable by the
-	// only motion a full-width rule invites, straight down.
-	let unfolded = $state(false);
-
-	// The moves' boxes, measured. Frozen for the length of a drag: a boundary
-	// falling mid-pair splits that row in two, which pushes every move below
-	// it down a row — measured live, that shift puts the next gap under the
-	// cursor at once and the divider skips straight past the mid-pair stop.
-	let dragRects = null;
-	const moveRects = () => dragRects
-		?? [...(moveListElement?.querySelectorAll("button.move-btn") ?? [])].map(btn => btn.getBoundingClientRect());
-
-	// The gap the pointer is over. The list reads top to bottom and the
-	// divider is a full-width rule between rows, so the drag is vertical
-	// alone: each row's band splits in two, its top half standing for the
-	// gap before its first move and its bottom half for the gap before its
-	// second — dragging straight down walks every boundary in turn, mid-pair
-	// ones included, instead of stepping a whole pair at a time.
-	const gapAtY = y => {
-		const rects = moveRects();
-		if (rects.length === 0) return moves.length;
-		if (y >= rects[rects.length - 1].bottom) return moves.length;
-		if (y <= rects[0].top) return 0;
-		// a row is the moves sharing a top edge (white and its black reply)
-		const rows = [];
-		rects.forEach((r, i) => {
-			const last = rows[rows.length - 1];
-			if (last && Math.abs(last.top - r.top) < 2) last.plies.push(i);
-			else rows.push({ top: r.top, bottom: r.bottom, plies: [i] });
-		});
-		const row = rows.find(r => y < r.bottom) ?? rows[rows.length - 1];
-		const lower = y - row.top >= (row.bottom - row.top) / 2;
-		return row.plies[lower && row.plies.length > 1 ? 1 : 0];
-	}
-
-	let draggingDivider = $state(false);
-	const startDividerDrag = e => {
-		if (!splitEditable || e.button !== 0) return;
-		e.preventDefault();
-		e.stopPropagation();
-		draggingDivider = true;
-		// unfold first, then measure what it laid out — the drag reads the
-		// list it will actually be moving through
-		unfolded = true;
-		dragRects = null;
-		tick().then(() => { dragRects = moveRects() });
-		const move = ev => {
-			if (!dragRects) return;
-			const gap = gapAtY(ev.clientY);
-			// past the last move: nothing is back
-			solutionFrom = gap >= moves.length ? null : gap;
-		};
-		const up = () => {
-			window.removeEventListener("mousemove", move);
-			window.removeEventListener("mouseup", up);
-			draggingDivider = false;
-			unfolded = false;
-			dragRects = null;
-			// the release lands on a move as often as not, and its click
-			// would step the board; the drag was the whole gesture
-			window.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation() }, { capture: true, once: true });
-		};
-		window.addEventListener("mousemove", move);
-		window.addEventListener("mouseup", up);
+	// The boundary moves a ply at a time, from two chevrons on the rule
+	// itself: up takes the move above it into the back, down hands the move
+	// below back to the front, and past the last move nothing is back at all
+	// (solutionFrom null), which is where the rule rests.
+	const boundaryGap = $derived(solutionFrom ?? moves.length);
+	const nudgeBoundary = step => {
+		const next = Math.min(moves.length, Math.max(0, boundaryGap + step));
+		solutionFrom = next >= moves.length ? null : next;
 	}
 
 	// the annotator draws on right-click; capture its state after the event settles.
@@ -758,14 +689,25 @@
 </script>
 
 {#snippet backDivider(resting)}
-	<!-- svelte-ignore a11y_no_static_element_interactions -- pointer-only drag; the recording toggle sets the same boundary by keyboard -->
-	<div
-		class="back-divider"
-		class:draggable={splitEditable}
-		class:resting={resting}
-		class:dragging={draggingDivider}
-		use:dividerHandle
-	><span>Back</span></div>
+	<div class="back-divider" class:resting={resting}>
+		{#if splitEditable}
+			<button
+				class="nudge-btn"
+				aria-label="Back starts one move earlier"
+				disabled={boundaryGap === 0}
+				onclick={() => nudgeBoundary(-1)}
+			>&#9650;</button>
+		{/if}
+		<span>Back</span>
+		{#if splitEditable}
+			<button
+				class="nudge-btn"
+				aria-label="Back starts one move later"
+				disabled={boundaryGap === moves.length}
+				onclick={() => nudgeBoundary(1)}
+			>&#9660;</button>
+		{/if}
+	</div>
 {/snippet}
 
 <svelte:window onkeydown={handleKeyDown} />
@@ -1370,26 +1312,32 @@
 		font-size: 0.8rem;
 		color: rgba(0, 0, 0, 0.45);
 	}
-	/* where the boundary can be moved, the whole divider is the handle */
-	.back-divider.draggable {
-		cursor: grab;
-		user-select: none;
-		/* a forgiving grab: the rules are hairlines, and a press that misses
-		   lands on the board island and drags the board instead */
-		padding: 4px 0;
-		margin: -2px 0;
+	/* the chevrons that walk the boundary: the rule's own controls, so they
+	   read as part of it rather than as buttons sitting on the list */
+	.nudge-btn {
+		border: none;
+		background: none;
+		padding: 0 2px;
+		font-size: 0.6rem;
+		line-height: 1;
+		color: rgba(0, 0, 0, 0.45);
+		cursor: pointer;
+	}
+	.nudge-btn:hover:enabled {
+		color: rgba(0, 0, 0, 0.8);
+	}
+	.nudge-btn:disabled {
+		color: rgba(0, 0, 0, 0.15);
+		cursor: default;
 	}
 	/* at rest past the last move: the line is all front, and the divider is
-	   only there to be taken hold of */
+	   only there to move back up */
 	.back-divider.resting::before,
 	.back-divider.resting::after {
 		border-top-color: rgba(0, 0, 0, 0.12);
 	}
 	.back-divider.resting span {
 		color: rgba(0, 0, 0, 0.25);
-	}
-	.back-divider.dragging {
-		cursor: grabbing;
 	}
 	.move-btn.current {
 		background-color: var(--accent);

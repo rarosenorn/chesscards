@@ -27,9 +27,20 @@ const getById = async (userId, id) => {
 	return rows[0];
 }
 
+// due and still in play — the shared condition behind every count below
+const DUE = "c.due <= now() and c.finished_at is null";
+
 const getMineWithoutCards = async userId => {
 	const { rows } = 
-		await pool.query(`select d.id, d.name, count(c.id) no_cards, count(c.id) filter (where c.due <= now() and c.finished_at is null) due_cards from decks d left join cards c on d.id = c.deck_id where d.user_id = $1 group by d.id, d.name`, [userId]
+		await pool.query(`select d.id, d.name, count(c.id) no_cards,
+			count(c.id) filter (where ${DUE}) due_cards,
+			-- the deck list's anki columns. A tactic card carries no FSRS
+			-- state, so its reps stand in: never answered is new, otherwise
+			-- it is a card coming round again (there is no learning step)
+			count(c.id) filter (where ${DUE} and (c.state = 0 or (c.state is null and coalesce(c.reps, 0) = 0))) new_cards,
+			count(c.id) filter (where ${DUE} and c.state in (1, 3)) learn_cards,
+			count(c.id) filter (where ${DUE} and (c.state = 2 or (c.state is null and coalesce(c.reps, 0) > 0))) review_cards
+			from decks d left join cards c on d.id = c.deck_id where d.user_id = $1 group by d.id, d.name`, [userId]
 		);
 
 	return rows;

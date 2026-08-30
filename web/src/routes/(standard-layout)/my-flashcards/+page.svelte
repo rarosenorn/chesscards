@@ -9,8 +9,9 @@
 		<thead>
 			<tr>
 				<th>{firstTableHeader}</th>
+				<th>New</th>
+				<th>Learn</th>
 				<th>Due</th>
-				<th>Total</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -18,15 +19,19 @@
 				<tr>
 					<td><a href={`my-flashcards/${deck.id}/study`}>
 							{deck.name}
+							<!-- the deck's whole size, said beside its name: the
+							     columns count only what is waiting today -->
+							<span class="deck-total">({deck.no_cards})</span>
 					</a></td>
+					<td>{deck.new_cards}</td>
+					<td>{deck.learn_cards}</td>
 					<td class="due">
-						{#if deck.due_cards > 0}
-							<span class="due-pill">{deck.due_cards}</span>
+						{#if deck.review_cards > 0}
+							<span class="due-pill">{deck.review_cards}</span>
 						{:else}
-							{deck.due_cards}
+							{deck.review_cards}
 						{/if}
 					</td>
-					<td>{deck.no_cards}</td>
 				</tr>
 			{/each}
 		</tbody>
@@ -58,15 +63,16 @@
 		table-layout: fixed;
 		width: 100%;
 	}
-	th:nth-child(2),
-	th:nth-child(3) {
-		width: 110px;
+	th:nth-child(n + 2) {
+		width: 80px;
 	}
-	th:nth-child(2),
-	th:nth-child(3),
-	td:nth-child(2),
-	td:nth-child(3) {
+	th:nth-child(n + 2),
+	td:nth-child(n + 2) {
 		text-align: center;
+	}
+	/* the size rides with the name, in the name's own row-link */
+	.deck-total {
+		color: rgba(0, 0, 0, 0.45);
 	}
 	th {
 		text-align: left;

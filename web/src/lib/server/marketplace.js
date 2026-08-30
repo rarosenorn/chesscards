@@ -236,9 +236,17 @@ const createDeckInstance = async (userId, marketplaceDeckId) => {
 
 // The user's marketplace deck instances for the My flashcards listing,
 // same shape as decks.getMineWithoutCards
+// due and still in play — the shared condition behind the counts below
+const DUE = "ci.due <= now() and ci.finished_at is null";
+
 const getInstancesWithoutCards = async userId => {
 	const { rows } = await pool.query(`
-		select i.id, md.name, count(ci.id) no_cards, count(ci.id) filter (where ci.due <= now() and ci.finished_at is null) due_cards
+		select i.id, md.name, count(ci.id) no_cards,
+			count(ci.id) filter (where ${DUE}) due_cards,
+			-- the deck list's anki columns (see decks.getMineWithoutCards)
+			count(ci.id) filter (where ${DUE} and (ci.state = 0 or (ci.state is null and coalesce(ci.reps, 0) = 0))) new_cards,
+			count(ci.id) filter (where ${DUE} and ci.state in (1, 3)) learn_cards,
+			count(ci.id) filter (where ${DUE} and (ci.state = 2 or (ci.state is null and coalesce(ci.reps, 0) > 0))) review_cards
 		from marketplace_deck_instances i
 		join marketplace_decks md on md.id = i.marketplace_deck_id
 		left join marketplace_card_instances ci on ci.marketplace_deck_instance_id = i.id

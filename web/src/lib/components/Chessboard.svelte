@@ -25,7 +25,7 @@
 	// the card has more than one board (the block editor numbers with a CSS
 	// counter instead — see CardSideBlockEditor — because numbering there runs
 	// across blocks in document order).
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, autoFocus = false, inEditor = false, children } = $props();
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, autoFocus = false, inEditor = false, onSolutionFromChange = null, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -246,6 +246,88 @@
 		}
 	}
 
+	// --- the front/back boundary marker ---
+	// solutionFrom is a gap in the move line: the ply the back begins at, or
+	// null for a line that is all front — which IS the gap past the last
+	// move, where the marker rests. Hosts that can commit the change (the
+	// card editors, via onSolutionFromChange) make it draggable along the
+	// line; everywhere else it is the read-only "Back:" divider it has always
+	// been, drawn only where a boundary exists.
+	let moveLineEl = $state();
+	let dragGap = $state(null);
+	const splitEditable = $derived(!!onSolutionFromChange && authorView && lineMoves.length > 0);
+	const shownGap = $derived(dragGap ?? solutionFrom ?? lineMoves.length);
+	const markerAt = g => authorView && (splitEditable ? shownGap === g : solutionFrom === g);
+
+	// the gap nearest a point: the move whose box is closest, taken on the
+	// side the point falls. Distance to the box (not to its centre) picks the
+	// right move on a wrapped line, where rows sit far apart vertically.
+	const gapNearest = (x, y) => {
+		const btns = [...(moveLineEl?.querySelectorAll(".move-btn") ?? [])];
+		let best = null;
+		let bestDist = Infinity;
+		btns.forEach((btn, i) => {
+			const r = btn.getBoundingClientRect();
+			const dx = Math.max(r.left - x, 0, x - r.right);
+			const dy = Math.max(r.top - y, 0, y - r.bottom);
+			const dist = dx * dx + dy * dy;
+			if (dist < bestDist) {
+				bestDist = dist;
+				best = { i, r };
+			}
+		});
+		if (!best) return lineMoves.length;
+		return x > best.r.left + best.r.width / 2 ? best.i + 1 : best.i;
+	}
+
+	// the gap past the last move means "nothing is back yet"
+	const commitGap = gap => onSolutionFromChange?.(gap >= lineMoves.length ? null : gap);
+
+	// Direct listeners, not onmousedown/onclick: svelte delegates both from
+	// the app root, and inside the editor the press is stopped short of it
+	// (the board island's own press guards) — the line never heard its own
+	// clicks.
+	const listen = (el, type, handler) => {
+		el.addEventListener(type, handler);
+		return { destroy: () => el.removeEventListener(type, handler) };
+	}
+	const markerHandle = el => listen(el, "mousedown", startMarkerDrag);
+	const lineHandle = el => listen(el, "click", handleLineClick);
+
+	const startMarkerDrag = e => {
+		if (!splitEditable || e.button !== 0) return;
+		e.preventDefault();
+		e.stopPropagation();
+		dragGap = shownGap;
+		let moved = false;
+		const move = ev => {
+			moved = true;
+			dragGap = gapNearest(ev.clientX, ev.clientY);
+		};
+		const up = () => {
+			window.removeEventListener("mousemove", move);
+			window.removeEventListener("mouseup", up);
+			const gap = dragGap;
+			dragGap = null;
+			if (moved) {
+				// the release lands on a move button as often as not, and its
+				// click would step the board; the drag was the whole gesture
+				window.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation() }, { capture: true, once: true });
+				commitGap(gap);
+			}
+		};
+		window.addEventListener("mousemove", move);
+		window.addEventListener("mouseup", up);
+	}
+
+	// a click on the line's own space (between pairs, or the run past the
+	// last move) drops the marker at the nearest gap; clicks on the moves
+	// themselves keep stepping the board
+	const handleLineClick = e => {
+		if (!splitEditable || e.target.closest("button, .back-divider")) return;
+		commitGap(gapNearest(e.clientX, e.clientY));
+	}
+
 	// only reached outside an editor (inEditor boards take no focus, so the
 	// arrows are the document's — the virtual board caret's — throughout)
 	const handleKeyDown = e => {
@@ -258,6 +340,17 @@
 		}
 	}
 </script>
+
+{#snippet backMarker()}
+	<!-- svelte-ignore a11y_no_static_element_interactions -- pointer-only drag; the divider is a label, not a control, wherever it cannot move -->
+	<span
+		class="back-divider"
+		class:draggable={splitEditable}
+		class:resting={splitEditable && shownGap === lineMoves.length}
+		class:dragging={dragGap != null}
+		use:markerHandle
+	>Back:</span>
+{/snippet}
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions, a11y_click_events_have_key_events -->
 <div
@@ -303,7 +396,8 @@
 	></div>
 	{@render children?.()}
 	{#if lineMoves.length > 0}
-		<div class="move-line">
+		<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- pointer-only boundary placing; the editor's own controls set it by keyboard -->
+		<div class="move-line" bind:this={moveLineEl} use:lineHandle>
 			<button
 				class="step-btn"
 				aria-label="Previous move"
@@ -321,14 +415,10 @@
 					<!-- the boundary marker precedes the pair number when the
 					     back starts the pair ("Back: 2 e4"), and sits between
 					     the moves when it starts mid-pair ("2 e4 Back: e5") -->
-					{#if authorView && solutionFrom != null && pair.moves[0]?.index === solutionFrom}
-						<span class="back-divider">Back:</span>
-					{/if}
+					{#if markerAt(pair.moves[0]?.index)}{@render backMarker()}{/if}
 					<span class="move-number">{pair.number}</span>
 					{#each pair.moves as move, moveIndex}
-						{#if authorView && solutionFrom != null && moveIndex > 0 && move.index === solutionFrom}
-							<span class="back-divider">Back:</span>
-						{/if}
+						{#if moveIndex > 0 && markerAt(move.index)}{@render backMarker()}{/if}
 						<button
 							class="move-btn"
 							class:current={displayIndex === move.index + 1}
@@ -340,6 +430,8 @@
 					{/each}
 				</span>
 			{/each}
+			<!-- the resting spot: a line that is all front (solutionFrom null) -->
+			{#if splitEditable && shownGap === lineMoves.length}{@render backMarker()}{/if}
 		</div>
 	{/if}
 </div>
@@ -512,5 +604,22 @@
 	   after the marker misses the pair's own tightening rule */
 	.move-pair .move-btn + .back-divider {
 		margin-right: -2px;
+	}
+	/* where the boundary can be moved, the marker is the handle */
+	.back-divider.draggable {
+		cursor: grab;
+		user-select: none;
+	}
+	/* at rest past the last move: the line is all front, and the marker is
+	   only there to be taken hold of */
+	.back-divider.resting {
+		color: rgba(0, 0, 0, 0.25);
+	}
+	.back-divider.draggable:hover,
+	.back-divider.dragging {
+		color: rgba(0, 0, 0, 0.75);
+	}
+	.back-divider.dragging {
+		cursor: grabbing;
 	}
 </style>

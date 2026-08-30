@@ -11,8 +11,10 @@
 	import { UndoRedo, Dropcursor, Gapcursor } from "@tiptap/extensions"
 	import { Selection } from "@tiptap/pm/state"
 	import { GapCursor } from "@tiptap/pm/gapcursor"
+	import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action"
 	import { setBoardCaret, clearBoardCaret } from "$lib/block-caret-state.svelte.js"
-	import { BlockNode, BlockNavigation, insertChessboardBlock, insertBoardAtCaret, configureBlockUiCleanup } from "$lib/tiptap-chessboard-block/index.js"
+	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
+	import { BlockNode, BlockNavigation, insertChessboardBlock, insertBoardAtCaret, appendBlockWithBoards, configureBlockUiCleanup } from "$lib/tiptap-chessboard-block/index.js"
 
 	// One side of the add-cards editor: a tiptap document where a whole
 	// chessboard block (v1-style, boards inside managed by buttons and
@@ -44,6 +46,34 @@
 		editor.view.focus();
 	}
 	export const clear = () => editor?.commands.clearContent(true);
+
+	// Whether this side already holds a chessboard block — a board dragged in
+	// from the other side lands in that block's own dnd zone, and only a side
+	// WITHOUT one needs the landing pad below.
+	let hasBlock = $state(false);
+	// takes the editor: tiptap fires its first transactions while the Editor
+	// constructor is still running, before `editor` has been assigned
+	const syncHasBlock = ed => {
+		let found = false;
+		ed?.state.doc.forEach(node => { if (node.type.name === "chessboardBlock") found = true });
+		hasBlock = found;
+	}
+
+	// The landing pad for a board dragged onto a side that has no block of its
+	// own. It is mounted at all times (svelte-dnd snapshots its zones when a
+	// drag STARTS — a zone that appears mid-drag is never watched) and stays
+	// out of flow at zero size, taking no space and catching no pointer; only
+	// a running board drag on a blockless side opens it over the editor.
+	let dropItems = $state([]);
+	const padOpen = $derived(blockDnd.dragging && !hasBlock);
+	const bare = ({ [SHADOW_ITEM_MARKER_PROPERTY_NAME]: _shadow, ...board }) => board;
+	const handlePadDrop = e => {
+		const dropped = e.detail.items.map(bare);
+		dropItems = [];
+		blockDnd.dragging = false;
+		document.body.classList.remove("dnd-grabbing");
+		if (dropped.length > 0 && editor) appendBlockWithBoards(editor.view, dropped);
+	}
 
 	onMount(() => {
 		const customHardBreak = HardBreak.extend({
@@ -98,10 +128,10 @@
 			editorProps: {
 				attributes: { spellcheck: "false" }
 			},
-			onUpdate: () => onDocChanged?.(),
+			onUpdate: ({ editor }) => { syncHasBlock(editor); onDocChanged?.() },
 			onFocus: ({ editor }) => onEditorFocus?.(editor),
 			onBlur: ({ editor }) => onEditorBlur?.(editor),
-			onTransaction: ({ editor }) => onEditorTransaction?.(editor),
+			onTransaction: ({ editor }) => { syncHasBlock(editor); onEditorTransaction?.(editor) },
 		})
 		// An existing card's document opens with the caret at its END (where
 		// you continue writing). It must be parked explicitly: PM's default
@@ -112,6 +142,7 @@
 		// let the all-selection paint for a frame (a blue flash).
 		// (no $-prefixed names: svelte reserves that prefix, even though it
 		// is prosemirror's convention for resolved positions)
+		syncHasBlock(editor);
 		if (initialDoc) {
 			const { state } = editor;
 			const end = state.doc.resolve(state.doc.content.size);
@@ -132,10 +163,31 @@
 
 <div class="tiptap" class:duplicate>
 	<div bind:this={element} class="text-area"></div>
+	<!-- svelte-ignore a11y_no_static_element_interactions -- pointer-only drop target -->
+	<div
+		class="board-drop"
+		class:open={padOpen}
+		use:dndzone={{
+			items: dropItems,
+			type: "block-letter-boards",
+			flipDurationMs: 0,
+			useCursorForDetection: true,
+			morphDisabled: true,
+			transformDraggedElement: el => el.style.opacity = "0.85",
+			dropTargetStyle: {}
+		}}
+		onconsider={e => dropItems = e.detail.items}
+		onfinalize={handlePadDrop}
+	>
+		{#each dropItems as item (item.id)}
+			<div class="drop-ghost" style:height={blockDnd.dragHeight + "px"}></div>
+		{/each}
+	</div>
 </div>
 
 <style>
 	.tiptap {
+		position: relative;
 		border: 2px solid rgba(0, 0, 0, 0.2);
 		background: white;
 		width: 100%;
@@ -183,6 +235,36 @@
 	   here than it will on the card. */
 	.tiptap :global(:is(p, ul, ol)) {
 		line-height: var(--card-text-leading);
+	}
+
+	/* the landing pad: nothing at all until a board drag opens it, and never
+	   a pointer target — svelte-dnd finds it by cursor geometry, not by hit
+	   testing, so the editor underneath keeps every click */
+	.board-drop {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 0;
+		height: 0;
+		overflow: hidden;
+		pointer-events: none;
+	}
+	.board-drop.open {
+		inset: 0;
+		width: auto;
+		height: auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 6px;
+		border: 2px dashed rgba(0, 0, 0, 0.25);
+		background: rgba(0, 0, 0, 0.03);
+	}
+	.drop-ghost {
+		width: 100%;
+		max-height: 100%;
+		border-radius: 3px;
+		background: rgba(0, 0, 0, 0.06);
 	}
 
 	/* --- chessboard blocks: one giant letter per block --- */

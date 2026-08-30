@@ -110,6 +110,28 @@ const parkedSelectionAt = (doc, pos, dir) => {
 	return Selection.near($pos, dir);
 }
 
+// Append a block carrying boards at the document's END, replacing the doc
+// when it holds nothing but one empty line. For boards arriving from outside
+// the document — a board dragged onto a side with no block of its own, where
+// there is no selection to insert at (the caret is on the OTHER side).
+export const appendBlockWithBoards = (view, boards) => {
+	const state = view.state;
+	const { doc, schema } = state;
+	const blockNode = schema.nodes.chessboardBlock.create({ id: crypto.randomUUID(), boards });
+	const tr = state.tr;
+	const last = doc.lastChild;
+	const empty = doc.childCount === 1 && last?.isTextblock && last.content.size === 0;
+	const pos = empty ? 0 : doc.content.size;
+	if (empty) tr.replaceWith(0, doc.content.size, blockNode);
+	else tr.insert(pos, blockNode);
+	tr.setSelection(new GapCursor(tr.doc.resolve(pos + blockNode.nodeSize)));
+	tr.scrollIntoView();
+	view.dispatch(tr);
+	setBoardCaret(blockNode.attrs.id, boards.length, "up");
+	view.focus();
+	return blockNode;
+}
+
 // Insert a block carrying boards at the selection's line: replacing an empty
 // line, or after the current one; the real selection parks collapsed beside
 // it and the virtual caret lands after the boards.

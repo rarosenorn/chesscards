@@ -4,3 +4,4 @@
 export { BlockNode } from "./node.svelte.js"
 export { BlockNavigation, configureBlockUiCleanup } from "./caret.js"
 export { insertChessboardBlock, insertBoardAtCaret } from "./insert.js"
+export { appendBlockWithBoards } from "./caret.js"

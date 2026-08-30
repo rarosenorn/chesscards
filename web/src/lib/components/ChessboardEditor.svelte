@@ -435,6 +435,72 @@
 	// the eye shows the back (the board never displays what the eye hides)
 	const moveIsBack = index => solutionFrom != null && index >= solutionFrom;
 
+	// --- dragging the Back divider ---
+	// solutionFrom is a gap in the line: the ply the back begins at, or null
+	// for a line that is all front — the gap past the last move, where the
+	// divider rests. Dragging writes it live, so the rows regroup around the
+	// divider as it moves (the list is the preview). A board that lives on
+	// the back has no split to make.
+	const splitEditable = $derived(!boardOnBack && moves.length > 0);
+
+	// A direct listener, not onmousedown: svelte delegates it from the app
+	// root, and inside the card editor the press is stopped short of it (the
+	// board island's press guards) — the divider never heard its own press.
+	const listen = (el, type, handler) => {
+		el.addEventListener(type, handler);
+		return { destroy: () => el.removeEventListener(type, handler) };
+	}
+	const dividerHandle = el => listen(el, "mousedown", startDividerDrag);
+
+	// the gap nearest a point: the move whose box is closest, taken on the
+	// side the point falls. Distance to the box picks the row; within a row
+	// the horizontal midpoint picks between its two moves.
+	const gapNearest = (x, y) => {
+		const btns = [...(moveListElement?.querySelectorAll("button.move-btn") ?? [])];
+		if (btns.length === 0) return moves.length;
+		// the list reads top to bottom, so past its ends the row is the whole
+		// answer: below the last move nothing is back, above the first all is
+		if (y > btns[btns.length - 1].getBoundingClientRect().bottom) return moves.length;
+		if (y < btns[0].getBoundingClientRect().top) return 0;
+		let best = null;
+		let bestDist = Infinity;
+		btns.forEach((btn, i) => {
+			const r = btn.getBoundingClientRect();
+			const dx = Math.max(r.left - x, 0, x - r.right);
+			const dy = Math.max(r.top - y, 0, y - r.bottom);
+			const dist = dx * dx + dy * dy;
+			if (dist < bestDist) {
+				bestDist = dist;
+				best = { i, r };
+			}
+		});
+		if (!best) return moves.length;
+		return x > best.r.left + best.r.width / 2 ? best.i + 1 : best.i;
+	}
+
+	let draggingDivider = $state(false);
+	const startDividerDrag = e => {
+		if (!splitEditable || e.button !== 0) return;
+		e.preventDefault();
+		e.stopPropagation();
+		draggingDivider = true;
+		const move = ev => {
+			const gap = gapNearest(ev.clientX, ev.clientY);
+			// past the last move: nothing is back
+			solutionFrom = gap >= moves.length ? null : gap;
+		};
+		const up = () => {
+			window.removeEventListener("mousemove", move);
+			window.removeEventListener("mouseup", up);
+			draggingDivider = false;
+			// the release lands on a move as often as not, and its click
+			// would step the board; the drag was the whole gesture
+			window.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation() }, { capture: true, once: true });
+		};
+		window.addEventListener("mousemove", move);
+		window.addEventListener("mouseup", up);
+	}
+
 	// the annotator draws on right-click; capture its state after the event settles.
 	// getArrows/getMarkers instead of getAnnotations: cm-chessboard 8.12.12 binds
 	// getAnnotations to the wrong object, making it throw
@@ -672,6 +738,17 @@
 	}
 </script>
 
+{#snippet backDivider(resting)}
+	<!-- svelte-ignore a11y_no_static_element_interactions -- pointer-only drag; the recording toggle sets the same boundary by keyboard -->
+	<div
+		class="back-divider"
+		class:draggable={splitEditable}
+		class:resting={resting}
+		class:dragging={draggingDivider}
+		use:dividerHandle
+	><span>Back</span></div>
+{/snippet}
+
 <svelte:window onkeydown={handleKeyDown} />
 
 <!-- hidden sprite the palette's <use href="#..."> references (see import) -->
@@ -828,7 +905,7 @@
 			<div class="move-list" bind:this={moveListElement}>
 				{#each moveRows as row}
 					{#if solutionFrom != null && (row.white?.index ?? row.black?.index) === solutionFrom}
-						<div class="back-divider"><span>Back</span></div>
+						{@render backDivider(false)}
 					{/if}
 					<div class="move-row">
 						<span class="move-number">{row.number}</span>
@@ -856,6 +933,10 @@
 						{/if}
 					</div>
 				{/each}
+				<!-- the resting spot: a line that is all front -->
+				{#if splitEditable && solutionFrom == null}
+					{@render backDivider(true)}
+				{/if}
 			</div>
 		{/if}
 		<div class="actions">
@@ -1269,6 +1350,27 @@
 	.back-divider span {
 		font-size: 0.8rem;
 		color: rgba(0, 0, 0, 0.45);
+	}
+	/* where the boundary can be moved, the whole divider is the handle */
+	.back-divider.draggable {
+		cursor: grab;
+		user-select: none;
+		/* a forgiving grab: the rules are hairlines, and a press that misses
+		   lands on the board island and drags the board instead */
+		padding: 4px 0;
+		margin: -2px 0;
+	}
+	/* at rest past the last move: the line is all front, and the divider is
+	   only there to be taken hold of */
+	.back-divider.resting::before,
+	.back-divider.resting::after {
+		border-top-color: rgba(0, 0, 0, 0.12);
+	}
+	.back-divider.resting span {
+		color: rgba(0, 0, 0, 0.25);
+	}
+	.back-divider.dragging {
+		cursor: grabbing;
 	}
 	.move-btn.current {
 		background-color: var(--accent);

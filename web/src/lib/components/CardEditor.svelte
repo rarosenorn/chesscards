@@ -133,17 +133,20 @@
 		focusNewBoardEditor(board.id);
 	}
 
-	// t toggles the focused thing's Q/A: an open board editor's recording
-	// layer, otherwise the containing block. Never while typing.
+	// t toggles the focused thing's Q/A: alt+t an open board editor's
+	// recording layer (a modifier, so the letter stays the writing's — see
+	// ChessboardNode), bare t the containing block. Never while typing.
 	const handleQAShortcut = e => {
-		if ((e.key !== "t" && e.key !== "T") || e.ctrlKey || e.metaKey || e.altKey) return;
-		if (e.target.closest?.("input, textarea, [contenteditable='true']")) return;
+		if (e.code !== "KeyT" || e.ctrlKey || e.metaKey) return;
 		const boardEl = e.target.closest?.("[data-board-id]");
-		if (boardEl && isEditing(boardEl.dataset.boardId)) {
-			boardEditors[boardEl.dataset.boardId]?.toggleAnswer();
-			e.preventDefault();
+		if (e.altKey) {
+			if (boardEl && isEditing(boardEl.dataset.boardId)) {
+				boardEditors[boardEl.dataset.boardId]?.toggleAnswer();
+				e.preventDefault();
+			}
 			return;
 		}
+		if (e.target.closest?.("input, textarea, [contenteditable='true']")) return;
 		const blockEl = e.target.closest?.("[data-block-id]");
 		const block = blockEl && blocks.find(b => b.id === blockEl.dataset.blockId);
 		if (block) {

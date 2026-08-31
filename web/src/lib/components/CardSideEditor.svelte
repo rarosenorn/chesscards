@@ -131,11 +131,11 @@
 		focusNewBoardEditor(board.id);
 	}
 
-	// t toggles an open board editor's front/back recording layer when focus
-	// is inside it (never while typing)
+	// alt+t toggles an open board editor's front/back recording layer when
+	// focus is inside it — the modifier keeps a bare letter for the writing
+	// (see ChessboardNode for why the code, not the key)
 	const handleLayerShortcut = e => {
-		if ((e.key !== "t" && e.key !== "T") || e.ctrlKey || e.metaKey || e.altKey) return;
-		if (e.target.closest?.("input, textarea, [contenteditable='true']")) return;
+		if (e.code !== "KeyT" || !e.altKey || e.ctrlKey || e.metaKey) return;
 		const boardEl = e.target.closest?.("[data-board-id]");
 		if (boardEl && isEditing(boardEl.dataset.boardId)) {
 			boardEditors[boardEl.dataset.boardId]?.toggleAnswer();

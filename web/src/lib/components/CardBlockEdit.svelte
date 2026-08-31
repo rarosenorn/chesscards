@@ -3,6 +3,7 @@
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
+	import { createTabTrap } from "$lib/tab-trap.js"
 	import { sideToDoc, docSideJsonBlocks, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
 
 	// The add-cards editing surface for an EXISTING card: both sides as
@@ -101,6 +102,25 @@
 		bag.backDoc = backEditor?.getJson() ?? bag.backDoc;
 	});
 
+	// --- tab trap ---
+	// the add-cards page's cycle, with its Add card replaced by the two
+	// buttons that end this edit: front, back, Cancel, Save
+	let container;
+	let cancelBtn = $state(), saveBtn = $state();
+
+	const trapStops = () => {
+		const [front, back] = [...container.querySelectorAll(".editor-wrap")]
+			.map(w => w.querySelector(".text-area > .ProseMirror"));
+		return [
+			{ el: front, focus: () => frontEditor.focusEnd() },
+			{ el: back, focus: () => backEditor.focusEnd() },
+			{ el: cancelBtn, focus: () => cancelBtn.focus() },
+			{ el: saveBtn, focus: () => saveBtn.focus() }
+		].filter(stop => stop.el && !stop.el.disabled && stop.el.offsetParent !== null);
+	}
+
+	const { handleKeydown: handleTrapKeydown, handleFocusIn } = createTabTrap(trapStops);
+
 	const handleKeyDown = e => {
 		if (e.ctrlKey || e.metaKey) {
 			if (e.key === "Enter") {
@@ -116,6 +136,15 @@
 
 <svelte:window onkeydown={handleKeyDown} />
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- the trap needs an element to listen on, but the host lays these out as
+     its own flex children: display: contents keeps the box out of the way -->
+<div
+	class="trap-root"
+	bind:this={container}
+	onkeydowncapture={handleTrapKeydown}
+	onfocusin={handleFocusIn}
+>
 <div class="menu-holder">
 	<DocEditorMenuBar {menu} onAddChessboard={addChessboard} />
 </div>
@@ -151,11 +180,15 @@
 	/>
 </div>
 <div class="edit-actions">
-	<button class="std-btn" onclick={onCancel}>Cancel</button>
-	<button class="std-btn" title="ctrl+enter" onclick={save}>Save</button>
+	<button class="std-btn" bind:this={cancelBtn} onclick={onCancel}>Cancel</button>
+	<button class="std-btn" bind:this={saveBtn} title="ctrl+enter" onclick={save}>Save</button>
+</div>
 </div>
 
 <style>
+	.trap-root {
+		display: contents;
+	}
 	/* flush with the editors' right edge, like add-cards' Add card */
 	.edit-actions {
 		align-self: end;

@@ -17,6 +17,7 @@
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
+	import { createTabTrap } from "$lib/tab-trap.js"
 	import { createStage } from "../browse/browse.remote.js"
 	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
 
@@ -229,13 +230,7 @@
 
 	// --- tab trap ---
 	// Tab cycles the three card-editing stops only — front text, back text,
-	// Add card — wrapping around. Everything the boards own (FEN inputs, the
-	// per-board buttons, an open board editor's controls) stays out of the
-	// cycle: they are reached by clicking or by the board caret, not by Tab.
-	// Escape releases the trap (WCAG 2.1.2) so native tabbing can leave the
-	// form; focusing a stop again re-arms it. Capture phase, so ProseMirror
-	// never sees the Tab first.
-	let trapEnabled = $state(true);
+	// Add card — wrapping around; see $lib/tab-trap.js for the rules.
 	let container;
 
 	// tabbing into a side lands the caret at its end, in one step: focusEnd
@@ -252,30 +247,7 @@
 		].filter(stop => stop.el && !stop.el.disabled && stop.el.offsetParent !== null);
 	}
 
-	// focus inside a board sits inside the side's ProseMirror, so it counts as
-	// that side's stop — tabbing out of a board lands on the next stop
-	const stopOf = (stops, node) => stops.findIndex(({ el }) => el === node || el.contains(node));
-
-	const handleTrapKeydown = e => {
-		if (e.key === "Escape") {
-			trapEnabled = false;
-			document.activeElement?.blur();
-			return;
-		}
-		if (e.key !== "Tab" || !trapEnabled) return;
-		const stops = trapStops();
-		if (stops.length === 0) return;
-		e.preventDefault();
-		const i = stopOf(stops, e.target);
-		const next = e.shiftKey
-			? stops[i <= 0 ? stops.length - 1 : i - 1]
-			: stops[(i + 1) % stops.length];
-		next.focus();
-	}
-
-	const handleFocusIn = e => {
-		if (stopOf(trapStops(), e.target) !== -1) trapEnabled = true;
-	}
+	const { handleKeydown: handleTrapKeydown, handleFocusIn } = createTabTrap(trapStops);
 
 	const handleKeyDown = e => {
 		// F9 freezes the side being written: the side whose editor holds focus

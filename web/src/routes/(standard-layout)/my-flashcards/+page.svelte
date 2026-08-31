@@ -57,7 +57,7 @@
 		width: 100%;
 	}
 	th:nth-child(n + 2) {
-		width: 80px;
+		width: 65px;
 	}
 	th:nth-child(n + 2),
 	td:nth-child(n + 2) {
@@ -120,7 +120,7 @@
 	}
 	/* section titles, larger than the deck rows they head */
 	th:first-child {
-		font-size: 1.15rem;
+		font-size: 1.05rem;
 	}
 	/* the create field belongs to the deck list it adds to, so it sits
 	   closer to it than the two tables sit to each other */

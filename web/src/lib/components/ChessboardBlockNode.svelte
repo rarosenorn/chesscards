@@ -363,6 +363,7 @@
 					onEditingChange={value => setEditing(board.id, value)}
 					onDuplicate={() => duplicateBoard(i)}
 					onCaretAfter={() => { setBoardCaret(blockId, i + 1, "up"); onCaretActivated?.(); }}
+					caretParked={active && sideFocused && boardCaret.index === i + 1}
 				/>
 				{#if caretBefore(i) || caretAfter(i)}
 					<div class="board-caret" use:caretPosition={{ before: caretBefore(i) }}></div>

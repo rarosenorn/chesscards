@@ -18,7 +18,7 @@
 	// node views, so an open editor survives the view being destroyed and
 	// recreated (PM does that on drags) and the page can apply open editors on
 	// submit.
-	let { board, isBack, ui, onUpdate, onEditingChange, onCaretAfter, onDuplicate = null, boardMinWidth = "380px" } = $props();
+	let { board, isBack, ui, onUpdate, onEditingChange, onCaretAfter, onDuplicate = null, boardMinWidth = "380px", caretParked = false } = $props();
 
 	// svelte-ignore state_referenced_locally -- seeding local state from the shared set on mount is the point
 	let isEditing = $state(ui.editingIds.has(board.id));
@@ -123,18 +123,34 @@
 	let showBack = $state(true);
 
 	// v1: t toggles an open board editor's front/back recording layer when
-	// focus is inside it (never while typing)
+	// the keyboard is in the board (never while typing). Two ways it can be:
+	// focus sits inside the board's own DOM (v1 focuses the board on open, and
+	// a click on it does the same), or — in the block editor, which keeps the
+	// document focused with its caret parked beside the board it just opened
+	// — caretParked says the keyboard belongs to this board.
+	//
+	// Capture phase on window: with the caret parked, the block editor's own
+	// keydown plugin would otherwise type the t into the document first.
 	const handleLayerShortcut = e => {
 		if (!isEditing) return;
 		if ((e.key !== "t" && e.key !== "T") || e.ctrlKey || e.metaKey || e.altKey) return;
-		if (e.target.closest?.("input, textarea, [contenteditable='true']")) return;
-		if (!e.target.closest?.(`[data-board-id="${board.id}"]`)) return;
+		const cell = e.target.closest?.(`[data-board-id="${board.id}"]`);
+		if (!cell && !caretParked) return;
+		// only fields inside the board count as typing: the block editor's
+		// island sits within the document's contenteditable, which a bare
+		// closest() matched from anywhere in the editor
+		const field = e.target.closest?.("input, textarea, [contenteditable='true']");
+		if (field && cell?.contains(field)) return;
 		editorRef?.toggleAnswer();
 		e.preventDefault();
+		e.stopPropagation();
 	}
-</script>
 
-<svelte:window onkeydown={handleLayerShortcut} />
+	$effect(() => {
+		window.addEventListener("keydown", handleLayerShortcut, true);
+		return () => window.removeEventListener("keydown", handleLayerShortcut, true);
+	});
+</script>
 
 {#if isEditing}
 	<ChessboardEditor

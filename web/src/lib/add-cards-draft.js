@@ -6,6 +6,7 @@
 const draftKey = deckId => `chesscards:add-cards-draft:${deckId}`;
 const cardTypeKey = deckId => `chesscards:card-type:${deckId}`;
 const frozenKey = deckId => `chesscards:frozen-sides:${deckId}`;
+const frozenBoardsKey = deckId => `chesscards:frozen-boards:${deckId}`;
 const stageKey = deckId => `chesscards:add-cards-stage:${deckId}`;
 
 // Anki-style mode: applies to every card added until changed
@@ -79,6 +80,21 @@ const loadFrozenSides = deckId => {
 const saveFrozenSides = (deckId, frozen) =>
 	write(frozenKey(deckId), JSON.stringify({ front: !!frozen.front, back: !!frozen.back }));
 
+// Single boards can be frozen too, by id: the side around them clears on
+// submit and they stay, for a run of cards off one position. Kept as an
+// id -> true map so the page can read it reactively per board.
+const loadFrozenBoards = deckId => {
+	try {
+		const stored = JSON.parse(read(frozenBoardsKey(deckId)));
+		return Array.isArray(stored) ? Object.fromEntries(stored.map(id => [id, true])) : {};
+	} catch {
+		return {};
+	}
+}
+
+const saveFrozenBoards = (deckId, frozen) =>
+	write(frozenBoardsKey(deckId), JSON.stringify(Object.keys(frozen).filter(id => frozen[id])));
+
 // which stage new cards are filed into, like the card type a mode of writing
 // the deck; the page falls back to the last stage when the stored one is gone
 const loadStageId = deckId => read(stageKey(deckId));
@@ -87,6 +103,6 @@ const saveStageId = (deckId, stageId) => write(stageKey(deckId), stageId);
 
 export {
 	DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft,
-	loadFrozenSides, saveFrozenSides,
+	loadFrozenSides, saveFrozenSides, loadFrozenBoards, saveFrozenBoards,
 	loadStageId, saveStageId
 }

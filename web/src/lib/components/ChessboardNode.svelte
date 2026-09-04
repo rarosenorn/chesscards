@@ -1,6 +1,7 @@
 <script>
 	import { tick } from "svelte"
 	import Chessboard from "$lib/components/Chessboard.svelte"
+	import Snowflake from "$lib/icons/Snowflake.svelte"
 	import ChessboardEditor from "$lib/components/ChessboardEditor.svelte"
 	import EyeIcon from "$lib/icons/Eye.svelte"
 	import EyeOffIcon from "$lib/icons/EyeOff.svelte"
@@ -122,6 +123,12 @@
 	// default; toggling off shows the student's pre-turn view
 	let showBack = $state(true);
 
+	// Add cards freezes single boards as well as whole sides: the flake shows
+	// and toggles this board's flag. Only that page passes the two through
+	// boardUi, so everywhere else the button is simply absent.
+	const canFreeze = $derived(!!ui.toggleFrozenBoard);
+	const frozen = $derived(!!ui.frozenBoards?.[board.id]);
+
 	// v1: t toggles an open board editor's front/back recording layer when
 	// the keyboard is in the board (never while typing). Two ways it can be:
 	// focus sits inside the board's own DOM (v1 focuses the board on open, and
@@ -158,6 +165,8 @@
 		board={{ ...board, fenInput: fenDraft ?? board.fenInput ?? undefined }}
 		boardOnBack={isBack}
 		startInMoves={openInMoves}
+		{frozen}
+		onToggleFrozen={canFreeze ? () => ui.toggleFrozenBoard(board.id) : null}
 		onFenValidityChange={valid => {
 			if (!ui.invalidBoards) return;
 			if (valid) delete ui.invalidBoards[board.id];
@@ -219,6 +228,17 @@
 				<button onclick={onDuplicate}>Duplicate</button>
 			{/if}
 			<button class="edit-btn" bind:this={editBtn} onclick={openEditor}>Edit</button>
+			{#if canFreeze}
+				<button
+					class="freeze-btn"
+					class:frozen
+					aria-pressed={frozen}
+					aria-label={frozen ? "Unfreeze this board — it will clear with its side" : "Freeze this board — it will stay for the next card"}
+					onclick={() => ui.toggleFrozenBoard(board.id)}
+				>
+					<Snowflake />
+				</button>
+			{/if}
 			</div>
 		</Chessboard>
 	</div>
@@ -281,6 +301,27 @@
 		box-sizing: border-box;
 		padding: 3px 12px;
 		white-space: nowrap;
+	}
+	/* the freeze flake is an icon in a row of worded buttons: no wider than
+	   the flake needs, a near black until it is holding something (greyscale
+	   + a low brightness darkens it without flattening its shape) */
+	.button-row .freeze-btn {
+		flex: 0 0 auto;
+		width: 30px;
+		min-width: 30px;
+		padding: 3px 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.05rem;
+		line-height: 0;
+	}
+	.freeze-btn :global(svg) {
+		filter: grayscale(1) brightness(0.3);
+		transition: filter 110ms ease;
+	}
+	.freeze-btn.frozen :global(svg) {
+		filter: none;
 	}
 	/* fixed width so the eye toggles without shifting the row (v1) */
 	.button-row .show-back-btn {

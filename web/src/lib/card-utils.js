@@ -192,6 +192,12 @@ const docCountBoardsBlocks = doc => (doc?.content ?? []).reduce(
 	(n, node) => node.type === "chessboardBlock" ? n + (node.attrs?.boards?.length ?? 0) : n, 0
 );
 
+// every board in a blocks doc, in reading order (the boards of each
+// chessboard block, blocks in document order)
+const docBoardsBlocks = doc => (doc?.content ?? []).flatMap(
+	node => node.type === "chessboardBlock" ? (node.attrs?.boards ?? []) : []
+);
+
 // v1's invalid-FEN gating over a blocks doc: display numbers of boards whose
 // FEN is invalid — live in an open editor (ui.invalidBoards) or pending in
 // fenInput otherwise
@@ -294,4 +300,4 @@ const firstBoardWithMoves = (front, back) => {
 	return null;
 }
 
-export { newBoard, normalizeBoard, boardForJson, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage }
+export { newBoard, normalizeBoard, boardForJson, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage }

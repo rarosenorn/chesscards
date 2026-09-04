@@ -23,6 +23,7 @@
 	import FlipIcon from "$lib/icons/Flip.svelte"
 	import EyeIcon from "$lib/icons/Eye.svelte"
 	import EyeOffIcon from "$lib/icons/EyeOff.svelte"
+	import Snowflake from "$lib/icons/Snowflake.svelte"
 
 	const boardPrefs = getContext("boardPrefs") ?? (() => DEFAULT_BOARD_PREFS);
 	// the palette follows the user's piece set
@@ -36,7 +37,11 @@
 	// the toggle disappears and everything records as the visible layer
 	// startInMoves: the position was pasted in from somewhere else, so there is
 	// nothing to set up — open on the moves stage
-	let { board: boardData, restore, persistState, onFenValidityChange, onSave, onCancel, onLiveChange = null, boardOnBack = false, startInMoves = false } = $props();
+	// frozen/onToggleFrozen: add-cards can freeze a single board so it outlives
+	// the card being written; the flake shows the flag on the open editor too.
+	// Without the callback (v1's editors, browse) there is nothing to freeze
+	// and the button is absent.
+	let { board: boardData, restore, persistState, onFenValidityChange, onSave, onCancel, onLiveChange = null, boardOnBack = false, startInMoves = false, frozen = false, onToggleFrozen = null } = $props();
 
 	const emptyPlacement = "8/8/8/8/8/8/8/8"
 	const startPlacement = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
@@ -765,6 +770,17 @@
 					<span>Back</span>
 				</button>
 			{/if}
+			{#if onToggleFrozen}
+				<button
+					class="std-btn freeze-btn"
+					class:frozen
+					aria-pressed={frozen}
+					aria-label={frozen ? "Unfreeze this board — it will clear with its side" : "Freeze this board — it will stay for the next card"}
+					onclick={onToggleFrozen}
+				>
+					<Snowflake />
+				</button>
+			{/if}
 		</div>
 	</div>
 	<div class="side-panel">
@@ -1034,6 +1050,17 @@
 	.board-column:has(.board.black-border) .fen-row {
 		margin-top: -2px;
 	}
+	/* the flake keeps the flip button's square footprint. Off it is a near
+	   black, reading as the icons it sits beside (greyscale + a low
+	   brightness, which darkens the flake without flattening its shape); on
+	   it is simply itself */
+	.freeze-btn :global(svg) {
+		filter: grayscale(1) brightness(0.3);
+		transition: filter 110ms ease;
+	}
+	.freeze-btn.frozen :global(svg) {
+		filter: none;
+	}
 	.fen-input {
 		flex-grow: 1;
 		min-width: 0;
@@ -1053,6 +1080,7 @@
 	}
 	/* joins the FEN bar seamlessly: shared border via the -1px overlap */
 	.flip-btn,
+	.freeze-btn,
 	.show-back-btn {
 		display: flex;
 		align-items: center;
@@ -1062,6 +1090,12 @@
 	}
 	.flip-btn {
 		padding: 3px 30px;
+	}
+	.freeze-btn {
+		width: 36px;
+		padding: 3px 0;
+		font-size: 1.05rem;
+		line-height: 0;
 	}
 	/* fixed width so the eye toggling open/closed never shifts the bar;
 	   font matches the saved boards' bar buttons (their default size) */

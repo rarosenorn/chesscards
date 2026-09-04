@@ -11,7 +11,7 @@
 	import { browser } from "$app/environment"
 	import { page } from "$app/state"
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
-	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft, loadFrozenSides, saveFrozenSides, loadStageId, saveStageId } from "$lib/add-cards-draft.js"
+	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft, loadFrozenSides, saveFrozenSides, loadFrozenBoards, saveFrozenBoards, loadStageId, saveStageId } from "$lib/add-cards-draft.js"
 	import { stageName } from "$lib/stages.js"
 	import Snowflake from "$lib/icons/Snowflake.svelte"
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
@@ -19,7 +19,7 @@
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
 	import { createTabTrap } from "$lib/tab-trap.js"
 	import { createStage } from "../browse/browse.remote.js"
-	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
+	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
 
 	// the shared deck context (layout); new cards are pushed into it so
 	// browse/study see them without a reload
@@ -104,11 +104,33 @@
 		saveFrozenSides(deckId, frozenSides);
 	}
 
+	// A single board can be frozen instead of its whole side: the side clears
+	// around it and the position stays. Held by board id (a $state map, so the
+	// snowflake on the board follows it) and handed to the boards through
+	// boardUi, which is what already reaches every one of them.
+	const frozenBoards = $state(browser ? loadFrozenBoards(deckId) : {});
+	const toggleFrozenBoard = id => {
+		if (frozenBoards[id]) delete frozenBoards[id];
+		else frozenBoards[id] = true;
+		saveFrozenBoards(deckId, frozenBoards);
+	}
+	const frozenBoardsOf = doc => docBoardsBlocks(doc).filter(board => frozenBoards[board.id]);
+	// boards that went with a filed or deleted card leave their flag behind;
+	// drop the ones the two sides no longer hold
+	const pruneFrozenBoards = () => {
+		const live = new Set([
+			...docBoardsBlocks(frontEditor?.getJson()),
+			...docBoardsBlocks(backEditor?.getJson())
+		].map(board => board.id));
+		for (const id of Object.keys(frozenBoards)) if (!live.has(id)) delete frozenBoards[id];
+		saveFrozenBoards(deckId, frozenBoards);
+	}
+
 	// shared board-editing state (see ChessboardNode.svelte): survives PM node
 	// view recreation on drags, and lets the submit apply open editors; board
 	// ids are unique, so one store serves both sides. invalidBoards mirrors
 	// v1's live FEN-validity reporting from open editors.
-	const boardUi = { editingIds: new Set(), editorStates: {}, applyEditors: {}, invalidBoards: {} };
+	const boardUi = { editingIds: new Set(), editorStates: {}, applyEditors: {}, invalidBoards: {}, frozenBoards, toggleFrozenBoard };
 
 	// v1's board numbers: shown when the card has more than one board, the
 	// back side continuing the front's count (CSS counters read these)
@@ -464,14 +486,22 @@
 				deck.cards.push(result.data.card);
 				boardUi.editingIds.clear();
 				boardUi.editorStates = {};
-				// a frozen side stays for the next card, boards and all
-				if (!frozenSides.front) frontEditor.clear();
-				if (!frozenSides.back) backEditor.clear();
+				// a frozen side stays for the next card, boards and all; an
+				// unfrozen one clears down to the single boards frozen inside
+				// it (captured before the clear, which takes the docs away)
+				const keptFront = frozenSides.front ? null : frozenBoardsOf(front);
+				const keptBack = frozenSides.back ? null : frozenBoardsOf(back);
+				if (keptFront) frontEditor.clearKeeping(keptFront);
+				if (keptBack) backEditor.clearKeeping(keptBack);
+				pruneFrozenBoards();
 				// the card is saved: the clears above have scheduled a write of
 				// what is left, which drops the draft when nothing is
 				flushDraft();
-				// land in the side that was emptied, not the one kept
-				(frozenSides.front && !frozenSides.back ? backEditor : frontEditor).focus();
+				// land in the side that was emptied, not the one kept — a side
+				// holding a frozen board counts as kept
+				const frontKept = frozenSides.front || keptFront?.length > 0;
+				const backKept = frozenSides.back || keptBack?.length > 0;
+				(frontKept && !backKept ? backEditor : frontEditor).focus();
 				showAddedToast();
 			}
 		}}

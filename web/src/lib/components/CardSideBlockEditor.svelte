@@ -47,6 +47,14 @@
 	}
 	export const clear = () => editor?.commands.clearContent(true);
 
+	// the submit's clear, with frozen boards surviving it: what is left is one
+	// block holding them, in the order they were written (add-cards)
+	export const clearKeeping = boards => {
+		if (!editor) return;
+		editor.commands.clearContent(true);
+		if (boards.length > 0) appendBlockWithBoards(editor.view, boards);
+	}
+
 	// Whether this side already holds a chessboard block — a board dragged in
 	// from the other side lands in that block's own dnd zone, and only a side
 	// WITHOUT one needs the landing pad below.

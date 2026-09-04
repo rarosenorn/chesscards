@@ -178,8 +178,14 @@
 		await updateCardStudyStateAndAddLog({ card, log });
 	}
 
-	const formatTimeUntil = dueDate => {
-		const minutes = (Date.parse(dueDate) - Date.now()) / 1000 / 60;
+	// `from` is the clock the interval is measured against. The grade previews
+	// pass previewAt — the instant they were computed from — so "1m" under
+	// Again stays 1m however long the answer sits on screen; measuring them
+	// against the current time counts that reading time down and goes
+	// negative. Grading itself starts a fresh clock, so previewAt is also the
+	// promise it keeps.
+	const formatTimeUntil = (dueDate, from = Date.now()) => {
+		const minutes = (Date.parse(dueDate) - from) / 1000 / 60;
 		if (minutes < 60)
 			return Math.round(minutes * 10) / 10 + "m";
 		if (minutes / 60 < 24)
@@ -191,7 +197,7 @@
 	}
 
 	const getTimeUntilDuePreviewText = rating =>
-		formatTimeUntil(preview[rating].card.due);
+		formatTimeUntil(preview[rating].card.due, previewAt);
 
 	// same thresholds as formatTimeUntil, spelled out ("3.5 hours")
 	const formatTimeUntilLong = dueDate => {

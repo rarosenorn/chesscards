@@ -1,6 +1,11 @@
+<script module>
+	// once per app load, across every deck the tab visits
+	let editorWarmed = false;
+</script>
+
 <script>
 	import { page } from "$app/state"
-	import { beforeNavigate, goto } from "$app/navigation"
+	import { beforeNavigate, goto, preloadCode } from "$app/navigation"
 	import { setContext } from "svelte"
 	import { sideHasContent, syncTextBlocks } from "$lib/card-utils.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
@@ -52,6 +57,27 @@
 			? ["Add cards 2"] : []),
 		...(cardDrafts.browse?.editingCardId != null ? ["Cards"] : [])
 	];
+
+	// The editor (tiptap + the chessboard block + dnd) is a chunk of its own,
+	// and waiting for it is the pause on study's e, on Cards and on Add cards.
+	// The first editable deck warms it in the background once the page is
+	// idle, so the first edit finds it already there. The flag is module-level
+	// and the modules themselves stay loaded for the life of the tab, so this
+	// happens once per app load — moving between decks does not redo it.
+	$effect(() => {
+		if (editorWarmed || deck.isMarketplace) return;
+		editorWarmed = true;
+		const warm = () => {
+			const base = `/my-flashcards/${page.params.id}`;
+			preloadCode(`${base}/browse`);
+			preloadCode(`${base}/add-cards`);
+			// study imports this one on demand; loading it here fills the
+			// module cache its import() reads
+			import("$lib/components/CardBlockEdit.svelte");
+		};
+		const idle = window.requestIdleCallback ?? (cb => setTimeout(cb, 200));
+		idle(warm);
+	});
 
 	// set once the user confirmed leaving, so the re-navigation passes through
 	let leaveConfirmed = false;

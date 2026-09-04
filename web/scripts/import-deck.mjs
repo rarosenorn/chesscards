@@ -269,10 +269,12 @@ try {
 		"select id from decks where user_id = $1 and name = $2", [user.id, spec.deck])
 	const deckExisted = Boolean(deck)
 	if (!deck) {
+		// the implicit first stage is named for the spec's first chapter:
+		// stages.name is NOT NULL, and the app names its own "Chapter 1"
 		({ rows: [deck] } = await client.query(`
 			with d as (insert into decks(user_id, name) values($1, $2) returning id),
-			s as (insert into stages(deck_id, position) select id, 1 from d)
-			select id from d`, [user.id, spec.deck]))
+			s as (insert into stages(deck_id, name, position) select id, $3, 1 from d)
+			select id from d`, [user.id, spec.deck, chapters[0].name]))
 	}
 
 	const { rows: existingCards } = await client.query(
@@ -290,7 +292,8 @@ try {
 	const { rows: existingStages } = await client.query(
 		"select id, name, position from stages where deck_id = $1 order by position", [deck.id])
 	const stageByName = new Map(existingStages.filter(s => s.name).map(s => [s.name, s]))
-	// a brand-new deck has one unnamed stage; adopt it for the first chapter
+	// legacy decks may still carry an unnamed stage; adopt it for the first
+	// chapter (new decks get their first chapter's name at creation above)
 	let unnamed = existingStages.find(s => !s.name) ?? null
 
 	for (const chapter of chapters) {

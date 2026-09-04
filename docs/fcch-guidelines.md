@@ -129,10 +129,13 @@ scheduled independently.
   reveals that board's hidden moves and annotations **in place**. Putting a
   plain board on the front and a solved copy on the back shows the position
   twice on the answer screen and is always wrong. The back is for prose.
-- The moves leading to the position are context on the front. Put them in the
-  board's `moves` with `solutionFrom` set to the index where the answer
-  begins: everything before it shows on the front, everything from it is
-  hidden until the card is turned.
+- **A card asking "what do you play here" starts at the position.** Give the
+  board the derived `fen` and no `moves` at all: the lead-in moves are not the
+  question, and replaying them each review is work that teaches nothing. Name
+  the line in the prompt text instead ("Black pins your knight with 3...Bg4").
+- Keep `moves` with `solutionFrom` for the cards whose answer really is a
+  *sequence* — a forced three-ply punishment, a tactic. Everything from
+  `solutionFrom` stays hidden until the card is turned.
 - **Anything that gives the answer away must ride the solution layer.**
   `annotations` (`arrows`/`markers`) show immediately, including before the
   turn; `solutionAnnotations` (`solutionArrows`/`solutionMarkers`) appear only
@@ -142,12 +145,36 @@ scheduled independently.
 - Set `orientation` to the side being played, always. A Caro-Kann deck is
   studied from Black's side.
 
+## Card the position the author is talking about
+
+A claim stated in general terms is nearly always made *about* a concrete
+position, and the pieces on that board are part of the claim. Find the position
+the author is standing on when he says it, and card that one — not the earliest
+position where the structure appears.
+
+The tell is the line he gives to back the claim. Replay it from the FEN you
+chose: if it is illegal there, you have the wrong position. If it is legal but
+lands differently than he describes, some piece is doing work the card has to
+name — "the knight covers e5, so the trade wins nothing there" is the whole
+point of the note, and a card without the knight teaches the opposite.
+
+This is the one place the importer cannot help: it replays a board's `moves`,
+so a card whose answer only *names* a line in prose is unchecked. Put the line
+on the board (`moves` with `solutionFrom`), and the check comes for free.
+
 ## Card types
 
-**Move cards** — a position, "what do you play and why?", answer = the move
-plus one line of reasoning. The backbone of an opening deck. The *why* is not
-optional: a move memorized without its idea does not survive the first
-deviation.
+**Move cards** — a position, the prompt **"What do you play and why?"** word
+for word, answer = the move plus one line of reasoning. The backbone of an
+opening deck. The *why* is not optional: a move memorized without its idea does
+not survive the first deviation.
+
+The prompt is the same on every such card because the board already says which
+position is being asked about — a preamble restating Black's last move is
+reading, not retrieval. Add a clause only for what the board cannot show ("or
+4...Nd7 instead of taking"). Cards whose answer is a forced *sequence* keep
+their own verb ("Punish it"), and plan, recognition and why-cards ask their own
+question.
 
 **Plan cards** — "what is Black's plan in this structure?", "which piece is
 White's problem piece and why?". Prose, no single forced move. These are the
@@ -193,17 +220,29 @@ importer's checks will silently store broken cards.
 
 ## Annotations
 
-Arrows and markers (`success | warning | info | danger`) go on the **answer**
-side, to show the idea rather than restate the move: the diagonal a bishop
-wants, the square a knight is heading for, the pawn-break target. Use them
-sparingly — a board covered in arrows teaches nothing.
+**An arrow is a move, and a move arrow is green.** On a card that starts at its
+position, the answer is revealed as `solutionArrows` in `success` green, drawn
+from the moving piece's square to its destination — that is what arrows are
+for, and the only thing they are for. It is also the only way to say "any of
+these two or three moves", which a played `moves` list cannot express.
 
-**Never draw an arrow along a move that the board already plays.** The move
-line under the board names every move and the pieces visibly move, so an arrow
-from c8 to f5 beside the move `3...Bf5` is pure noise. Arrows earn their place
-only where there is no move to read: a move being *recommended* but not played,
-a plan several moves ahead, a line of force, a square under pressure. If a
-board's arrow and one of its `moves` describe the same thing, drop the arrow.
+- Green (`success`) for every move arrow, whoever plays the move — Black's
+  mistake gets the same green as White's answer.
+- No idea arrows: the diagonal a bishop wants, the square a knight heads for,
+  a piece's line of force. Those go in the answer prose, not on the board.
+- **Never draw an arrow along a move that the board already plays.** On a
+  sequence card the move line names every move and the pieces visibly move, so
+  the arrow would be pure noise. Arrows and `moves` are alternatives, never
+  both for the same move.
+- Markers still mark a *square* the answer turns on (the mate square, the
+  outpost). Use them sparingly — a board covered in annotation teaches
+  nothing.
+
+## Formatting
+
+**Bold only where the source bolds.** The card text carries the book's own
+emphasis and nothing else: no bolding of moves, names or key phrases that the
+book sets in plain text. `**` in a spec should be traceable to the page.
 
 ## Inherited from `/fc`
 
@@ -247,3 +286,17 @@ Aug 2026 (78M games) — after 1 e4 c6 2 d4 d5: 3 e5 41%, 3 exd5 31%, 3 Nc3 19%,
 FCO's print order is Exchange -> Panov -> Advance; this deck leads with the
 Advance and puts the Classical after the Exchange, per the measured
 frequencies.
+
+### sielecki e4 ai — created 2026-09-03
+
+Source: Sielecki's 1.e4 course on Chessable, read in book mode through the
+browser rather than from a PDF (https://www.chessable.com/learn/188863).
+Studied from White's side. Spec: `~/chesscards/specs/sielecki-e4-ai.json`.
+
+Division: one chapter per course variation, cards in the variation's own
+order — the author's sidelines (his A/B/C/D options) carded where he raises
+them, rather than gathered at the end. Chapter order will follow how often
+the defence is met, once there is more than one.
+
+1. Philidor 3...Bg4 — 1.e4 e5 2.Nf3 d6 3.d4 Bg4 4.dxe5!, the Opera Game
+   refutation, plus the 3.d4 overview that opens the variation.

@@ -1,0 +1,24 @@
+{
+  "deck": "sielecki e4 ai",
+  "cards": {
+    "phil-bg4-name": "4ce68070-d7fe-4d3a-a4b9-68f10857ce09",
+    "phil-bg4-passive": "dd9eed9e-079b-4a08-ad6b-d5015a2ee264",
+    "phil-bg4-move3": "53e1d132-a6d9-48f2-acf0-489d426a09ea",
+    "phil-bg4-d4-idea": "2f42ab49-9a7a-4a5f-ac16-210c428024c4",
+    "phil-bg4-blacks-best": "7384b438-e02b-47fd-9f55-006a90829a7f",
+    "phil-bg4-blacks-mistake": "f911db01-1aa7-4788-bff8-7e20f70bdf54",
+    "phil-bg4-vs-nc6": "d41012f1-1fbb-481d-99d0-365dcdf308d4",
+    "phil-bg4-vs-rare": "9feb85b3-e65e-4d0e-aaab-f47043214a09",
+    "phil-bg4-no-trade-e5": "70b6ef0f-798d-49dd-901c-530adb945cf6",
+    "phil-bg4-refute": "e9047a30-c123-4095-80b8-134defaed1b7",
+    "phil-bg4-dxe5-punish": "49fbd9b1-1e6e-41b7-84eb-c9fb42300a62",
+    "phil-bg4-vs-nc6-nd7": "837aaf30-d851-4b2a-8d47-90536650ce8d",
+    "phil-bg4-bxf3-concession": "a99b2bae-eda3-42af-a08d-326dc741a7ff",
+    "phil-bg4-qxf3": "65b74cb1-1915-4cfe-90db-5fe32d2de4c6",
+    "phil-bg4-bc4": "5b30822b-d2e6-4c0d-9680-1f010c00f313",
+    "phil-bg4-qb3": "2b71c6d3-db2f-4461-97a4-504f1bb24db2",
+    "phil-bg4-vs-qf6": "b7d5dafe-f48a-4b40-adb5-b159ae50fa22",
+    "phil-bg4-b6-mate": "229d8216-fc99-42ac-9073-d20e251c5aea",
+    "phil-bg4-vs-qe7": "357a72fe-6e72-4a5a-8427-68639897188b"
+  }
+}

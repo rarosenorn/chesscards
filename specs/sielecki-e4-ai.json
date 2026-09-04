@@ -1,0 +1,426 @@
+{
+  "deck": "sielecki e4 ai",
+  "chapters": [
+    {
+      "name": "Philidor 3...Bg4",
+      "cards": [
+        {
+          "id": "phil-bg4-name",
+          "front": {
+            "text": "Black has just played 2...d6. Which defence is this, and what does the move cost Black?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3",
+                "orientation": "w"
+              }
+            ]
+          },
+          "back": {
+            "text": "The Philidor Defense. 2...d6 covers the e5-pawn but does not develop a piece and locks in the f8-bishop."
+          }
+        },
+        {
+          "id": "phil-bg4-passive",
+          "front": {
+            "text": "Why does the Philidor have the reputation of being slightly passive?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3",
+                "orientation": "w"
+              }
+            ]
+          },
+          "back": {
+            "text": "C: Black voluntarily limits their options: the king's bishop can't join the game early on c5 or b4, as it can after 2...Nc6 or 2...Nf6."
+          }
+        },
+        {
+          "id": "phil-bg4-move3",
+          "front": {
+            "text": "What do you play and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "d2",
+                      "d4"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "3.d4. White's main candidates are 3.Nc3, 3.Bc4 and 3.d4; the first two are good moves that follow basic principles, but the immediate 3.d4 attacks Black's e-pawn and exerts more pressure, often leading to an inferior reply."
+          }
+        },
+        {
+          "id": "phil-bg4-d4-idea",
+          "front": {
+            "text": "You have played 3.d4 against the Philidor. What does the move achieve?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/ppp2ppp/3p4/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq - 0 3",
+                "orientation": "w"
+              }
+            ]
+          },
+          "back": {
+            "text": "We open the center, prepare the development of the c1-bishop, and attack Black's e5-pawn."
+          }
+        },
+        {
+          "id": "phil-bg4-blacks-best",
+          "front": {
+            "text": "White has played 3.d4 in the Philidor. Which reply is Black's best and most popular, and what does it concede?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/ppp2ppp/3p4/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq - 0 3",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "e5",
+                      "d4"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "3...exd4. Black gives up the e5-pawn and captures our d-pawn; after 4.Nxd4 White still enjoys some advantage."
+          }
+        },
+        {
+          "id": "phil-bg4-blacks-mistake",
+          "front": {
+            "text": "White has played 3.d4 in the Philidor. Which mistake do you meet frequently here, and what is Black going for?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/ppp2ppp/3p4/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq - 0 3",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "c8",
+                      "g4"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "3...Bg4? — Black goes for a tempting pin, but it falls short."
+          }
+        },
+        {
+          "id": "phil-bg4-vs-nc6",
+          "front": {
+            "text": "What do you play and why?",
+            "boards": [
+              {
+                "fen": "r1bqkbnr/ppp2ppp/2np4/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 1 4",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "b1",
+                      "c3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "4.Nc3, which fits best to our concept and reaches the position we investigate via 1.e4 e5 2.Nf3 Nc6 3.Nc3 d6 4.d4. The logical 4.Bc4 and 4.Bb5 are good too."
+          }
+        },
+        {
+          "id": "phil-bg4-vs-rare",
+          "front": {
+            "text": "Black meets 3.d4 with a rare third move. How do you develop?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/ppp2ppp/3p4/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq - 0 3",
+                "orientation": "w"
+              }
+            ]
+          },
+          "back": {
+            "text": "Healthy development: knight to c3, bishop to c4, and castle kingside next."
+          }
+        },
+        {
+          "id": "phil-bg4-no-trade-e5",
+          "front": {
+            "text": "Black has played 3...Nc6 and the e5-pawn is there for the taking. In this central configuration (e4 & d4 against e5 & d6), why is taking on e5 not as promising as it looks?",
+            "boards": [
+              {
+                "fen": "r1bqkbnr/ppp2ppp/2np4/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 1 4",
+                "orientation": "w",
+                "moves": [
+                  "dxe5",
+                  "dxe5",
+                  "Qxd8+",
+                  "Kxd8"
+                ],
+                "solutionFrom": 0
+              }
+            ]
+          },
+          "back": {
+            "text": "C: Black's knight covers e5, so the trade wins nothing there — with no knight on c6 the same sequence ends 6.Nxe5, a clean pawn (that is the 3...Bg4? line).\n\nWe trade a more active pawn for a passive one and therefore help Black to gain scope for their pieces, in particular the king's bishop, which is limited by the d6-pawn.\n\nBlack has lost castling rights, but this is less of an issue once the queens are traded."
+          }
+        },
+        {
+          "id": "phil-bg4-refute",
+          "front": {
+            "text": "What do you play and why?",
+            "boards": [
+              {
+                "fen": "rn1qkbnr/ppp2ppp/3p4/4p3/3PP1b1/5N2/PPP2PPP/RNBQKB1R w KQkq - 1 4",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "d4",
+                      "e5"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "4.dxe5! We usually don't want to trade on e5, but this is an exception: concrete move sequences always beat general concepts."
+          }
+        },
+        {
+          "id": "phil-bg4-dxe5-punish",
+          "front": {
+            "text": "Black recaptures with 4...dxe5. How do you punish it?",
+            "boards": [
+              {
+                "fen": "rn1qkbnr/ppp2ppp/8/4p3/4P1b1/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 5",
+                "orientation": "w",
+                "moves": [
+                  "Qxd8+",
+                  "Kxd8",
+                  "Nxe5"
+                ],
+                "solutionFrom": 0
+              }
+            ]
+          },
+          "back": {
+            "text": "5.Qxd8+ Kxd8 6.Nxe5 is fantastic for White. We win the most important pawn on the board, spoil Black's castling rights, and even win time by attacking Black's g4-bishop."
+          }
+        },
+        {
+          "id": "phil-bg4-vs-nc6-nd7",
+          "front": {
+            "text": "Black tries 4...Nc6 or 4...Nd7 instead of taking. What do you play and why?",
+            "boards": [
+              {
+                "fen": "r2qkbnr/ppp2ppp/2np4/4P3/4P1b1/5N2/PPP2PPP/RNBQKB1R w KQkq - 1 5",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "e5",
+                      "d6"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "Take on d6 and enjoy an extra pawn."
+          }
+        },
+        {
+          "id": "phil-bg4-bxf3-concession",
+          "front": {
+            "text": "Black has played 4...Bxf3. What has Black conceded?",
+            "boards": [
+              {
+                "fen": "rn1qkbnr/ppp2ppp/3p4/4P3/4P3/5b2/PPP2PPP/RNBQKB1R w KQkq - 0 5",
+                "orientation": "w"
+              }
+            ]
+          },
+          "back": {
+            "text": "The bishop pair, and it speeds up our development — a welcome sight."
+          }
+        },
+        {
+          "id": "phil-bg4-qxf3",
+          "front": {
+            "text": "What do you play and why?",
+            "boards": [
+              {
+                "fen": "rn1qkbnr/ppp2ppp/3p4/4P3/4P3/5b2/PPP2PPP/RNBQKB1R w KQkq - 0 5",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "d1",
+                      "f3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "5.Qxf3. We keep our pawn structure intact and place our queen on an active square."
+          }
+        },
+        {
+          "id": "phil-bg4-bc4",
+          "front": {
+            "text": "What do you play and why?",
+            "boards": [
+              {
+                "fen": "rn1qkbnr/ppp2ppp/8/4p3/4P3/5Q2/PPP2PPP/RNB1KB1R w KQkq - 0 6",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "f1",
+                      "c4"
+                    ]
+                  ]
+                },
+                "solutionMarkers": {
+                  "0": [
+                    [
+                      "danger",
+                      "f7"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "6.Bc4 — the ideal type of move. We develop our bishop to a great square and threaten mate on f7."
+          }
+        },
+        {
+          "id": "phil-bg4-qb3",
+          "front": {
+            "text": "What do you play and why?",
+            "boards": [
+              {
+                "fen": "rn1qkb1r/ppp2ppp/5n2/4p3/2B1P3/5Q2/PPP2PPP/RNB1K2R w KQkq - 2 7",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "f3",
+                      "b3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "7.Qb3! You shouldn't move the queen too often in the opening — unless it's good for you. It attacks both b7 and, even more importantly, the f7-pawn."
+          }
+        },
+        {
+          "id": "phil-bg4-vs-qf6",
+          "front": {
+            "text": "What do you play and why?",
+            "boards": [
+              {
+                "fen": "rn2kbnr/ppp2ppp/5q2/4p3/2B1P3/5Q2/PPP2PPP/RNB1K2R w KQkq - 2 7",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "f3",
+                      "b3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "7.Qb3!, keeping the queens on. 7.Qxf6? Nxf6 only helps Black to develop; Qb3 keeps the initiative and attacks the b-pawn. We are already ahead in development, an advantage that increases after 7...b6 8.Nc3, intending Nd5."
+          }
+        },
+        {
+          "id": "phil-bg4-b6-mate",
+          "front": {
+            "text": "Black defends the b-pawn with 7...b6. Punish it.",
+            "boards": [
+              {
+                "fen": "rn1qkb1r/p1p2ppp/1p3n2/4p3/2B1P3/1Q6/PPP2PPP/RNB1K2R w KQkq - 0 8",
+                "orientation": "w",
+                "moves": [
+                  "Bxf7+",
+                  "Kd7",
+                  "Qe6#"
+                ],
+                "solutionFrom": 0
+              }
+            ]
+          },
+          "back": {
+            "text": "8.Bxf7+ Kd7 9.Qe6# — Black can't give up the f-pawn."
+          }
+        },
+        {
+          "id": "phil-bg4-vs-qe7",
+          "front": {
+            "text": "What do you play and why?",
+            "boards": [
+              {
+                "fen": "rn2kb1r/ppp1qppp/5n2/4p3/2B1P3/1Q6/PPP2PPP/RNB1K2R w KQkq - 4 8",
+                "orientation": "w",
+                "solutionArrows": {
+                  "0": [
+                    [
+                      "success",
+                      "b3",
+                      "b7"
+                    ],
+                    [
+                      "success",
+                      "b1",
+                      "c3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "8.Qxb7 wins a clean pawn and secures a large advantage. 8.Nc3 is Morphy's move, playing for an attack."
+          }
+        }
+      ]
+    }
+  ]
+}

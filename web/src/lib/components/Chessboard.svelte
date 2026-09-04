@@ -180,6 +180,9 @@
 		}
 		currentIndex = index;
 	}
+	// a click in the list is a jump, not a step: it can cross a dozen moves,
+	// so the board snaps to that position and nothing is sounded
+	const jumpTo = index => { currentIndex = index; }
 	const previous = () => { if (displayIndex > 0) goTo(displayIndex - 1); }
 	const next = () => { if (displayIndex < positions.length - 1) goTo(displayIndex + 1); }
 
@@ -432,7 +435,7 @@
 							class="move-btn"
 							class:current={displayIndex === move.index + 1}
 							disabled={authorView && !revealed && solutionFrom != null && move.index >= solutionFrom}
-							onclick={() => goTo(move.index + 1)}
+							onclick={() => jumpTo(move.index + 1)}
 						>
 							{pair.ellipsis && moveIndex === 0 ? "…" + move.san : move.san}
 						</button>

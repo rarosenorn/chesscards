@@ -100,6 +100,11 @@
 	let mode = $state(resume?.mode ?? (initial.moves.length > 0 || (startInMoves && isValidFen(currentFen)) ? "moves" : "setup"));
 	// position shown in moves mode; editing continues from the last move
 	let currentIndex = $state(resume?.currentIndex ?? initial.moves.length);
+	// set by jumpToIndex (a move-list click) for the one position change that
+	// follows it: the board snaps there instead of animating the way. A plain
+	// let, not $state — the position effect reads and clears it, and a tracked
+	// read would put that effect in a loop.
+	let snapNextPosition = false;
 	let replay = $derived(replayMoves({ fen: currentFen, moves }));
 	let positions = $derived(replay.fens);
 
@@ -147,7 +152,7 @@
 			if (fenPasted) {
 				switchMode("moves");
 				// a pasted position is ready to record on: hand the board the
-				// keyboard, so arrows and the wheel keep stepping without a click
+				// keyboard, so the wheel steps it without a click first
 				tick().then(() => boardElement?.focus({ preventScroll: true }));
 			}
 		}
@@ -483,8 +488,9 @@
 		// mid-typing an invalid FEN there is no position to show — the board
 		// keeps the last accepted one, as it does in setup
 		if (mode === "moves" && fenIsValid) {
-			board.setPosition(positions[Math.min(currentIndex, viewLimit)], true);
+			board.setPosition(positions[Math.min(currentIndex, viewLimit)], !snapNextPosition);
 		}
+		snapNextPosition = false;
 		showAnnotations(board, displayedAnnotation);
 	})
 
@@ -646,28 +652,19 @@
 		currentIndex = index;
 	}
 
-	const handleKeyDown = e => {
-		if (mode !== "moves" || e.target.tagName === "INPUT") return;
-		if (e.key === "ArrowLeft") {
-			e.preventDefault();
-			goToIndex(Math.max(Math.min(currentIndex, viewLimit) - 1, 0));
-		} else if (e.key === "ArrowRight") {
-			e.preventDefault();
-			goToIndex(Math.min(currentIndex + 1, viewLimit));
-		}
+	// A click in the move list jumps to that position rather than playing the
+	// way there: no sound, and the board snaps instead of animating (a click
+	// can cross a dozen moves, which the animation would race through).
+	const jumpToIndex = index => {
+		snapNextPosition = true;
+		currentIndex = index;
 	}
 
-	// in moves mode the recorder owns arrow presses from inside the editor:
-	// handle them here and keep them from bubbling on to the block editor's
-	// virtual-caret keymap (in an add-cards board island, ProseMirror sits
-	// above us in the DOM and would step the caret too)
-	const claimArrows = e => {
-		if (mode !== "moves" || e.target.tagName === "INPUT") return;
-		if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-			e.stopPropagation();
-			handleKeyDown(e);
-		}
-	}
+	// No arrow stepping in here: the editor is open inside a card being
+	// written (add-cards keeps the document focused with its caret parked
+	// beside the board), and the arrows belong to that text and that caret
+	// throughout. The wheel over the board and a click in the move list are
+	// the ways through the recording.
 
 	// scroll steps through the moves like on the card boards (lichess-style);
 	// deltas accumulate so trackpads don't fire a step per micro-tick, and
@@ -715,13 +712,10 @@
 	</div>
 {/snippet}
 
-<svelte:window onkeydown={handleKeyDown} />
-
 <!-- hidden sprite the palette's <use href="#..."> references (see import) -->
 <div class="sprite-host" aria-hidden="true">{@html pieceSprite}</div>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -- keyboard routing, not an interactive control -->
-<div class="editor" onkeydown={claimArrows}>
+<div class="editor">
 	<div class="board-column">
 		<div class="ghost-host">
 			<!-- focusable (tabindex -1) so a freshly opened editor can receive
@@ -891,7 +885,7 @@
 								class="move-btn"
 								class:current={Math.min(currentIndex, viewLimit) === row.white.index + 1}
 								disabled={!showBack && moveIsBack(row.white.index)}
-								onclick={() => goToIndex(row.white.index + 1)}
+								onclick={() => jumpToIndex(row.white.index + 1)}
 							>
 								{row.white.san}
 							</button>
@@ -903,7 +897,7 @@
 								class="move-btn"
 								class:current={Math.min(currentIndex, viewLimit) === row.black.index + 1}
 								disabled={!showBack && moveIsBack(row.black.index)}
-								onclick={() => goToIndex(row.black.index + 1)}
+								onclick={() => jumpToIndex(row.black.index + 1)}
 							>
 								{row.black.san}
 							</button>
@@ -914,6 +908,22 @@
 				{#if splitEditable && solutionFrom == null}
 					{@render backDivider(true)}
 				{/if}
+			</div>
+			<!-- stepping through the recording, for the pointer: the arrow keys
+			     belong to the card's text while an editor is open -->
+			<div class="step-row">
+				<button
+					class="std-btn step-btn"
+					aria-label="Previous move"
+					disabled={Math.min(currentIndex, viewLimit) === 0}
+					onclick={() => goToIndex(Math.max(Math.min(currentIndex, viewLimit) - 1, 0))}
+				>&#9664;</button>
+				<button
+					class="std-btn step-btn"
+					aria-label="Next move"
+					disabled={Math.min(currentIndex, viewLimit) === viewLimit}
+					onclick={() => goToIndex(Math.min(currentIndex + 1, viewLimit))}
+				>&#9654;</button>
 			</div>
 		{/if}
 		<div class="actions">
@@ -1295,7 +1305,10 @@
 	.move-list {
 		display: flex;
 		flex-direction: column;
-		flex-grow: 1;
+		/* sized by its moves, shrinking (and scrolling) only once they outrun
+		   the panel: the step row below rides just under the last move until
+		   the list fills, and from then on sits at the panel's bottom */
+		flex: 0 1 auto;
 		min-height: 0;
 		overflow-y: auto;
 	}
@@ -1384,6 +1397,20 @@
 	}
 	.position-buttons > .std-btn {
 		white-space: nowrap;
+	}
+	/* the two steps sit right under the move list they walk, at the panel's
+	   right edge like the Cancel/Save row further down */
+	.step-row {
+		display: flex;
+		justify-content: flex-end;
+		gap: 8px;
+		margin-top: 8px;
+	}
+	.step-btn {
+		width: 64px;
+		padding: 3px 0;
+		font-size: 0.8rem;
+		line-height: 1.6;
 	}
 	.actions {
 		display: flex;

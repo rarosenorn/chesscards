@@ -382,7 +382,7 @@
 		if (!on && solutionFrom != null) currentIndex = Math.min(currentIndex, solutionFrom);
 	}
 
-	// for the card editor's alt+t shortcut
+	// for the card editor's T shortcut
 	export const toggleAnswer = () => {
 		if (!boardOnBack && !answerLocked) setRecording(!recordingAnswer);
 	}
@@ -781,7 +781,7 @@
 			>
 				Moves and annotations for
 			</span>
-			<div class="layer-segments" role="radiogroup" aria-labelledby="layer-label" title="Shortcut key: alt+t">
+			<div class="layer-segments" role="radiogroup" aria-labelledby="layer-label" title="Shortcut key: t">
 				<button
 					role="radio"
 					aria-checked={!recordingAnswerEffective}

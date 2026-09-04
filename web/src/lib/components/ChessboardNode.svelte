@@ -122,26 +122,35 @@
 	// default; toggling off shows the student's pre-turn view
 	let showBack = $state(true);
 
-	// v1's t, now alt+t: a bare letter belongs to the text being written, and
-	// the block editor's board islands sit inside the document itself. It
-	// toggles an open board editor's front/back recording layer when the
-	// keyboard is in the board — either focus sits inside the board's own DOM
-	// (v1 focuses the board on open, and a click on it does the same), or, in
-	// the block editor, the document holds focus with its caret parked beside
-	// the board it just opened (caretParked).
+	// v1: t toggles an open board editor's front/back recording layer when
+	// the keyboard is in the board (never while typing). Two ways it can be:
+	// focus sits inside the board's own DOM (v1 focuses the board on open, and
+	// a click on it does the same), or — in the block editor, which keeps the
+	// document focused with its caret parked beside the board it just opened
+	// — caretParked says the keyboard belongs to this board.
 	//
-	// e.code, not e.key: with alt held, the key a layout produces is anyone's
-	// guess (macOS makes it †), while the physical T stays the physical T.
+	// Capture phase on window: with the caret parked, the block editor's own
+	// keydown plugin would otherwise type the t into the document first.
 	const handleLayerShortcut = e => {
 		if (!isEditing) return;
-		if (e.code !== "KeyT" || !e.altKey || e.ctrlKey || e.metaKey) return;
-		if (!e.target.closest?.(`[data-board-id="${board.id}"]`) && !caretParked) return;
+		if ((e.key !== "t" && e.key !== "T") || e.ctrlKey || e.metaKey || e.altKey) return;
+		const cell = e.target.closest?.(`[data-board-id="${board.id}"]`);
+		if (!cell && !caretParked) return;
+		// only fields inside the board count as typing: the block editor's
+		// island sits within the document's contenteditable, which a bare
+		// closest() matched from anywhere in the editor
+		const field = e.target.closest?.("input, textarea, [contenteditable='true']");
+		if (field && cell?.contains(field)) return;
 		editorRef?.toggleAnswer();
 		e.preventDefault();
+		e.stopPropagation();
 	}
-</script>
 
-<svelte:window onkeydown={handleLayerShortcut} />
+	$effect(() => {
+		window.addEventListener("keydown", handleLayerShortcut, true);
+		return () => window.removeEventListener("keydown", handleLayerShortcut, true);
+	});
+</script>
 
 {#if isEditing}
 	<ChessboardEditor

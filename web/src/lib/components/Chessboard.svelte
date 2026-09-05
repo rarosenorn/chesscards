@@ -45,15 +45,23 @@
 	// so back moves are inert while it is closed
 	let lineMoves = $derived(authorView ? replay.moveInfos : replay.moveInfos.slice(0, visiblePlies));
 
-	let currentIndex = $state(0);
+	// A card opens at its question, not at the start of its line: the moves
+	// before solutionFrom are how the position came about, and replaying them
+	// on every review is reading rather than retrieval. They stay on the move
+	// line under the board, a step away.
+	// with nothing hidden, the whole line is context and its last move is the
+	// position the card is about
+	let openAt = $derived(solutionFrom ?? replay.moveInfos.length);
+	// svelte-ignore state_referenced_locally -- the effect below re-seeds it per card
+	let currentIndex = $state(openAt);
 	// Stepping is the only thing a board animates for, and goTo below is the
 	// only way to step — so it says so outright. Inferring it from what
 	// changed cannot: a swapped-in card, a reveal that lengthens the line and
 	// a re-render all reach the same effect with a new position to show, and
 	// tweening any of them reads as the pieces shuffling into place.
 	let stepping = false;
-	// a different board (e.g. next flashcard) starts back at its start position
-	$effect(() => { void board; currentIndex = 0; });
+	// a different board (e.g. next flashcard) starts back at its own question
+	$effect(() => { void board; currentIndex = openAt; });
 	let displayIndex = $derived(Math.min(currentIndex, positions.length - 1));
 
 	// Whose move it is in the board's START position — the puzzle's premise,
@@ -95,26 +103,46 @@
 			: normalized.annotations[displayIndex]
 	);
 
+	// Everything that is not a step arrives at once: the position is written
+	// into the board and drawn in the very frame the rest of the card changed
+	// in. setPosition() cannot do that — even a duration-0 change goes through
+	// cm-chessboard's animation queue, which holds the previous card's pieces
+	// on screen for a frame or two and then slides them into place. That lag,
+	// against text and layout that swapped instantly, is the shuffle.
+	// Enqueued all the same: the queue is empty in the ordinary case and runs
+	// this synchronously, and when a step is still in flight it keeps our
+	// draw after the one that animation ends with, which would otherwise
+	// paint the old card's position over the new one.
+	const snapTo = fen => {
+		cmBoard.state.position.setFen(fen);
+		cmBoard.positionAnimationsQueue.enqueue(() => {
+			if (cmBoard.view) cmBoard.view.redrawPieces();
+			return Promise.resolve();
+		});
+	}
+
 	$effect(() => {
 		const fen = positions[displayIndex];
 		const annotation = displayedAnnotation;
 		if (!cmBoard) return;
+		// Only a step animates, and only within the board it stepped on: study
+		// and browse reuse this component across cards, and tweening one
+		// card's position into the next card's reads as the pieces shuffling
+		// around rather than a new card arriving.
+		const stepped = stepping && renderedBoard === normalized;
 		if (cmBoard.getOrientation() !== normalized.orientation) {
 			// not setOrientation(): its queued board-turn ritual (empty the
 			// board, flip, refill) runs even "un-animated", and on a card swap
 			// it plays out as the old pieces shuffling around before the new
 			// card lands. Here orientation only ever changes because a
 			// different board swapped in — a fact of the new diagram, not a
-			// change to watch — so write it and redraw in place.
+			// change to watch — so write it and redraw in place. The pieces
+			// follow from the snap below, in the same frame.
 			cmBoard.state.orientation = normalized.orientation;
 			cmBoard.view.redrawBoard();
-			cmBoard.view.redrawPieces();
 		}
-		// Only a step animates, and only within the board it stepped on: study
-		// and browse reuse this component across cards, and tweening one
-		// card's position into the next card's reads as the pieces shuffling
-		// around rather than a new card arriving.
-		cmBoard.setPosition(fen, stepping && renderedBoard === normalized);
+		if (stepped) cmBoard.setPosition(fen, true);
+		else snapTo(fen);
 		stepping = false;
 		renderedBoard = normalized;
 		showAnnotations(cmBoard, annotation);
@@ -124,7 +152,7 @@
 
 	onMount(() => {
 		cmBoard = withSpriteCache(boardPrefs().pieceSet, () => new Chessboard(chessboardElement, {
-			position: positions[0],
+			position: positions[displayIndex],
 			orientation: normalized.orientation,
 			assetsUrl: "/chessboard-assets/", // wherever you copied the assets folder to, could also be in the node_modules folder
 			style: boardStyleProps(boardPrefs()),
@@ -349,6 +377,14 @@
 		} else if (e.key === "ArrowRight") {
 			e.preventDefault();
 			next();
+		} else if (e.key === "ArrowUp") {
+			// lichess's jump to either end of the line: both are jumps, not
+			// steps, so neither is sounded or animated
+			e.preventDefault();
+			jumpTo(0);
+		} else if (e.key === "ArrowDown") {
+			e.preventDefault();
+			jumpTo(positions.length - 1);
 		}
 	}
 </script>

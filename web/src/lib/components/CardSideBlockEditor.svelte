@@ -15,6 +15,7 @@
 	import { setBoardCaret, clearBoardCaret } from "$lib/block-caret-state.svelte.js"
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
 	import { BlockNode, BlockNavigation, insertChessboardBlock, insertBoardAtCaret, appendBlockWithBoards, configureBlockUiCleanup } from "$lib/tiptap-chessboard-block/index.js"
+	import { MoveRef } from "$lib/tiptap-move-ref.js"
 
 	// One side of the add-cards editor: a tiptap document where a whole
 	// chessboard block (v1-style, boards inside managed by buttons and
@@ -130,6 +131,7 @@
 				Document, Paragraph, customHardBreak, Text, Bold, Italic,
 				customOrderedList, customBulletList, ListItem, UndoRedo,
 				Dropcursor, BlockNavigation, Gapcursor, chessboardShortcut,
+				MoveRef,
 				BlockNode.configure({ ui: boardUi, isBack })
 			],
 			content: initialDoc ?? "",
@@ -243,6 +245,18 @@
 	   here than it will on the card. */
 	.tiptap :global(:is(p, ul, ol)) {
 		line-height: var(--card-text-leading);
+	}
+
+	/* a move wired to a board reads as ordinary text — it is text — and says
+	   so on hover, as it does on the card (app.css) */
+	.tiptap :global(.move-ref) {
+		border-radius: 3px;
+		padding: 0 2px;
+		margin: 0 -2px;
+		white-space: nowrap;
+	}
+	.tiptap :global(.move-ref:hover) {
+		background-color: gainsboro;
 	}
 
 	/* the landing pad: nothing at all until a board drag opens it, and never

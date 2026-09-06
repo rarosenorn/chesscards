@@ -7,6 +7,7 @@
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
+	import { parseMoveRef } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState } from "$lib/modals.svelte.js"
 	import { zen, zenActive, loadZen, setZen } from "$lib/zen-state.svelte.js"
@@ -171,6 +172,21 @@
 	let showBoardNumbers = $derived(
 		currentCard && frontBoardCount + countBoards(currentCard.back) > 1
 	);
+
+	// A move written in the card's text drives the board it names (see
+	// tiptap-move-ref.js): the click is handed to that board by number, and
+	// the nonce makes a second click on the same move a second request. One
+	// store for the whole card, front and back alike; the next card starts
+	// with nothing followed.
+	let asides = $state({});
+	let clicks = 0;
+	$effect(() => { void currentCard; asides = {} });
+	const handleTextClick = e => {
+		const token = e.target.closest?.("[data-move-ref]");
+		if (!token) return;
+		const ref = parseMoveRef(token);
+		if (ref) asides[ref.board] = { ...ref, nonce: ++clicks };
+	}
 
 	const evaluateCard = async rating => {
 		const cardAndLog =
@@ -386,7 +402,8 @@
 >
 	{#each side as block, blockIndex}
 		{#if block.type === "text"}
-			<div class="text-block">
+			<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- the moves inside are pointer targets; the board's own move line is the keyboard's way through a line -->
+			<div class="text-block" onclick={handleTextClick}>
 				{@html ttGenerateHTML(block.content)}
 			</div>
 		{:else if block.type === "chessboards"}
@@ -397,6 +414,9 @@
 				}}
 			>
 				{#each block.content as chessboard, boardIndex}
+					<!-- the board's number is what the text calls it by, whether
+					     or not the card is showing numbers -->
+					{@const n = boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1}
 					<div class="board-container">
 						<!-- low floor: two squeezed boards must shrink, not overflow
 					     their cells and crush the gap between them -->
@@ -410,8 +430,9 @@
 						{revealed}
 						authorView={marksBack}
 						minWidth="280px"
-						number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null}
-						autoFocus={boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex === focusBoardNumber}
+						number={showBoardNumbers ? n : null}
+						autoFocus={n - 1 === focusBoardNumber}
+						aside={asides[n]}
 					/>
 					</div>
 				{/each}

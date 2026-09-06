@@ -2,9 +2,10 @@
 	import { onMount, onDestroy } from "svelte"
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
+	import MoveRefDialog from "$lib/components/MoveRefDialog.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
 	import { createTabTrap } from "$lib/tab-trap.js"
-	import { sideToDoc, docSideJsonBlocks, docHasContentBlocks, docCountBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
+	import { sideToDoc, docSideJsonBlocks, docHasContentBlocks, docCountBoardsBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
 
 	// The add-cards editing surface for an EXISTING card: both sides as
 	// block-editor documents initialized from the stored card, sharing one
@@ -63,6 +64,24 @@
 		if (menu.editor === editor) menu = { ...menu, editor };
 		recount();
 	});
+
+	// moves written into the text, wired to a board — the add-cards page's
+	// panel, on the same terms (see there)
+	let movesOpen = $state(false);
+	let movesBoards = $state([]);
+	let movesEditor = null;
+	const cardBoards = () =>
+		[...docBoardsBlocks(frontEditor?.getJson()), ...docBoardsBlocks(backEditor?.getJson())]
+			.map((board, i) => ({ number: i + 1, fen: board.fen, moves: board.moves ?? [] }));
+	const openMoves = () => {
+		movesEditor = menu.editor ?? frontEditor?.getEditor();
+		movesBoards = cardBoards();
+		movesOpen = movesBoards.length > 0;
+	}
+	const insertMoves = content => {
+		movesOpen = false;
+		movesEditor?.chain().focus().insertContent(content).run();
+	}
 
 	const addChessboard = () => {
 		const editor = menu.editor ?? frontEditor.getEditor();
@@ -146,7 +165,19 @@
 	onfocusin={handleFocusIn}
 >
 <div class="menu-holder">
-	<DocEditorMenuBar {menu} onAddChessboard={addChessboard} />
+	<DocEditorMenuBar
+		{menu}
+		onAddChessboard={addChessboard}
+		onInsertMoves={openMoves}
+		movesDisabled={frontBoards + backBoards === 0}
+	/>
+	{#if movesOpen}
+		<MoveRefDialog
+			boards={movesBoards}
+			onInsert={insertMoves}
+			onClose={() => movesOpen = false}
+		/>
+	{/if}
 </div>
 <p class="side-indicator">Front</p>
 {#if invalidFenNumbers.length > 0}
@@ -197,6 +228,8 @@
 		margin-top: 12px;
 	}
 	.menu-holder {
+		/* the moves panel hangs from this */
+		position: relative;
 		align-self: stretch;
 		margin-bottom: 4px;
 	}

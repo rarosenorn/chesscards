@@ -359,6 +359,22 @@ body.piece-grabbing * {
 .flashcard .text-block p:last-child {
 	margin-bottom: 0;
 }
+/* A move written in the card's text and wired to one of its boards
+   (tiptap-move-ref.js): a click on it plays that board to the move. It is
+   text, not a control — the prose reads the same with it as without — so it
+   takes no colour of its own and shows what it is on hover, the way the move
+   line under a board does. */
+.flashcard .move-ref {
+	cursor: pointer;
+	border-radius: 3px;
+	padding: 0 2px;
+	margin: 0 -2px;
+	white-space: nowrap;
+}
+.flashcard .move-ref:hover {
+	background-color: gainsboro;
+}
+
 /* the sides read as two halves of one card: a divider line with the same
    breathing room on both sides, a little less than the 24px the card's own
    rim keeps, so the line reads as the lighter break of the two; the gap only

@@ -16,6 +16,7 @@
 	import Snowflake from "$lib/icons/Snowflake.svelte"
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
+	import MoveRefDialog from "$lib/components/MoveRefDialog.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
 	import { createTabTrap } from "$lib/tab-trap.js"
 	import { createStage } from "../browse/browse.remote.js"
@@ -239,6 +240,26 @@
 
 	// + Chessboard inserts at the virtual caret's gap when one is active,
 	// otherwise as a new block in the last-focused editor
+	// --- moves written into the text, wired to a board (tiptap-move-ref.js) ---
+	// The editor that had focus is kept: the panel takes it while it is open,
+	// and what it writes belongs to the side that was being written in.
+	let movesOpen = $state(false);
+	let movesBoards = $state([]);
+	let movesEditor = null;
+	// the card's boards in reading order, numbered as the card numbers them
+	const cardBoards = () =>
+		[...docBoardsBlocks(frontEditor?.getJson()), ...docBoardsBlocks(backEditor?.getJson())]
+			.map((board, i) => ({ number: i + 1, fen: board.fen, moves: board.moves ?? [] }));
+	const openMoves = () => {
+		movesEditor = menu.editor ?? frontEditor?.getEditor();
+		movesBoards = cardBoards();
+		movesOpen = movesBoards.length > 0;
+	}
+	const insertMoves = content => {
+		movesOpen = false;
+		movesEditor?.chain().focus().insertContent(content).run();
+	}
+
 	const addChessboard = () => {
 		const editor = menu.editor ?? frontEditor.getEditor();
 		if (!insertBoardAtCaret(editor, boardUi)) insertChessboardBlock(editor, boardUi);
@@ -412,7 +433,19 @@
 	onfocusin={handleFocusIn}
 >
 	<div class="menu-bar-holder">
-		<DocEditorMenuBar {menu} onAddChessboard={addChessboard} />
+		<DocEditorMenuBar
+			{menu}
+			onAddChessboard={addChessboard}
+			onInsertMoves={openMoves}
+			movesDisabled={frontBoards + backBoards === 0}
+		/>
+		{#if movesOpen}
+			<MoveRefDialog
+				boards={movesBoards}
+				onInsert={insertMoves}
+				onClose={() => movesOpen = false}
+			/>
+		{/if}
 	</div>
 	{@render sideLabel("Front", "front")}
 	{#if formAttemptedAndInvalid}
@@ -706,6 +739,8 @@
 	   full card width (white, so content passes underneath cleanly) while the
 	   bar's buttons start where the editors do */
 	.menu-bar-holder {
+		/* sticky already establishes the containing block the moves panel
+		   hangs from */
 		position: sticky;
 		top: 0;
 		z-index: 20;

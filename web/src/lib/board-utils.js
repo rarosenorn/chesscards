@@ -149,6 +149,12 @@ const replayMoves = board => {
 	return { fens, moveInfos };
 }
 
+// How a move reads in a line: white carries its number, black carries one only
+// where it opens the line (nothing precedes it to hang from) — "5.Bd3",
+// "5…Nf6", and a bare "Nf6" after its white move.
+const moveLabel = ({ san, color, number }, index) =>
+	color === "w" ? `${number}.${san}` : index === 0 ? `${number}…${san}` : san;
+
 // Annotations are stored with type keys ("success", "danger", ...) instead of
 // cm-chessboard's type objects, so they serialize cleanly to JSON.
 const arrowKeyFromType = type =>
@@ -208,4 +214,4 @@ const isFinishedFor = fen => {
 
 const isPositionFinished = fen => isFinishedFor(fen) || isFinishedFor(flipTurn(fen));
 
-export { isPositionFinished, FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations }
+export { isPositionFinished, FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, moveLabel, serializeAnnotations, hasAnnotations, showAnnotations }

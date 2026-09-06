@@ -1,5 +1,5 @@
 <script>
-	import { onMount, getContext } from "svelte"
+	import { onMount, getContext, untrack } from "svelte"
 	import "cm-chessboard/assets/chessboard.css"
 	import "cm-chessboard/assets/extensions/arrows/arrows.css"
 	import "cm-chessboard/assets/extensions/markers/markers.css"
@@ -7,7 +7,7 @@
 	import { Arrows } from "cm-chessboard/src/extensions/arrows/Arrows.js"
 	import { Markers } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { normalizeBoard } from "$lib/card-utils.js"
-	import { replayMoves, showAnnotations, isPositionFinished } from "$lib/board-utils.js"
+	import { replayMoves, showAnnotations, isPositionFinished, moveLabel } from "$lib/board-utils.js"
 	import { playMoveSound } from "$lib/sounds.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
 
@@ -25,7 +25,11 @@
 	// the card has more than one board (the block editor numbers with a CSS
 	// counter instead — see CardSideBlockEditor — because numbering there runs
 	// across blocks in document order).
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, autoFocus = false, inEditor = false, onSolutionFromChange = null, children } = $props();
+	// `aside` is a move clicked in the card's text (tiptap-move-ref): { from,
+	// moves, at, nonce }, the branch to play and which of its moves to stop on.
+	// The nonce is the click — clicking the same move twice is twice a request
+	// to go there.
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, autoFocus = false, inEditor = false, onSolutionFromChange = null, aside = null, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -39,7 +43,14 @@
 		revealed || solutionFrom == null ? replay.moveInfos.length : solutionFrom
 	);
 	let positions = $derived(replay.fens.slice(0, visiblePlies + 1));
-	let hasMoves = $derived(positions.length > 1);
+	// the aside being followed off this board's line, if any, and how far into
+	// it the board has gone — the rest of it is below, past the line's own
+	// stepping, which it borrows
+	let following = $state(null);
+	let asidePly = $state(null);
+	// something to step through: the board's own line, or an aside followed
+	// onto a board that has none
+	let hasMoves = $derived(positions.length > 1 || following != null);
 	// author view lists the whole line at all times (a divider marks where
 	// the back begins); the eye only governs what the board itself shows,
 	// so back moves are inert while it is closed
@@ -60,9 +71,49 @@
 	// a re-render all reach the same effect with a new position to show, and
 	// tweening any of them reads as the pieces shuffling into place.
 	let stepping = false;
-	// a different board (e.g. next flashcard) starts back at its own question
-	$effect(() => { void board; currentIndex = openAt; });
+	// a different board (e.g. next flashcard) starts back at its own question,
+	// with nothing followed off it
+	$effect(() => { void board; currentIndex = openAt; following = null; asidePly = null; });
 	let displayIndex = $derived(Math.min(currentIndex, positions.length - 1));
+
+	// An aside: moves the card's text writes off this board's line, at a ply of
+	// it. Clicking one in the text plays it here — `following` is the branch
+	// being played and `asidePly` which of its moves is on the board. The
+	// board's own line is untouched underneath, so stepping back off the
+	// aside's first move lands on the ply it left. (Its two state fields are
+	// declared above, where the line's own reader needs them.)
+	let asideReplay = $derived(
+		following ? replayMoves({ fen: replay.fens[following.from], moves: following.moves }) : null
+	);
+	let asideMoves = $derived(asideReplay?.moveInfos ?? []);
+	// where the aside hangs in the move line: after the move it branches from,
+	// or before the line when it leaves the start position
+	let asideAfter = $derived(following ? following.from - 1 : null);
+
+	const followAside = ({ from, moves, at }) => {
+		// a move the answer is still hiding stays hidden: the text may name it,
+		// the board does not show it before the reveal
+		if (from < 0 || from > visiblePlies) return;
+		currentIndex = from;
+		// A move of the board's own line is a jump, nothing more. So is an
+		// aside that no longer plays from there — text outlives the board it
+		// was written against, and a card that has been edited under it should
+		// still land on the position it names.
+		const played = moves.length > 0 ? replayMoves({ fen: replay.fens[from], moves }) : null;
+		if (!played || played.moveInfos.length < moves.length) {
+			following = null;
+			asidePly = null;
+			return;
+		}
+		following = { from, moves };
+		asidePly = Math.min(Math.max(at, 1), moves.length);
+	}
+	// the click arrives as a prop, so only the click is a dependency: the
+	// request is answered once, not again when the board re-renders around it
+	$effect(() => {
+		const request = aside;
+		if (request) untrack(() => followAside(request));
+	});
 
 	// Whose move it is in the board's START position — the puzzle's premise,
 	// which the position alone cannot show and a card's text may not say.
@@ -95,12 +146,20 @@
 	let cmBoard = $state();
 	let renderedBoard = null;
 
+	// the position on the board: the aside's, while one is being followed
+	let displayFen = $derived(
+		(asidePly != null ? asideReplay?.fens[asidePly] : null) ?? positions[displayIndex]
+	);
+
 	// on reveal the solution layer displaces the question annotations wherever
-	// it has an entry for the position
+	// it has an entry for the position; an aside's positions are the text's,
+	// and carry none of the line's own marks
 	let displayedAnnotation = $derived(
-		revealed
-			? normalized.solutionAnnotations[displayIndex] ?? normalized.annotations[displayIndex]
-			: normalized.annotations[displayIndex]
+		asidePly != null
+			? null
+			: revealed
+				? normalized.solutionAnnotations[displayIndex] ?? normalized.annotations[displayIndex]
+				: normalized.annotations[displayIndex]
 	);
 
 	// Everything that is not a step arrives at once: the position is written
@@ -122,7 +181,7 @@
 	}
 
 	$effect(() => {
-		const fen = positions[displayIndex];
+		const fen = displayFen;
 		const annotation = displayedAnnotation;
 		if (!cmBoard) return;
 		// Only a step animates, and only within the board it stepped on: study
@@ -152,7 +211,7 @@
 
 	onMount(() => {
 		cmBoard = withSpriteCache(boardPrefs().pieceSet, () => new Chessboard(chessboardElement, {
-			position: positions[displayIndex],
+			position: displayFen,
 			orientation: normalized.orientation,
 			assetsUrl: "/chessboard-assets/", // wherever you copied the assets folder to, could also be in the node_modules folder
 			style: boardStyleProps(boardPrefs()),
@@ -210,9 +269,46 @@
 	}
 	// a click in the list is a jump, not a step: it can cross a dozen moves,
 	// so the board snaps to that position and nothing is sounded
-	const jumpTo = index => { currentIndex = index; }
-	const previous = () => { if (displayIndex > 0) goTo(displayIndex - 1); }
-	const next = () => { if (displayIndex < positions.length - 1) goTo(displayIndex + 1); }
+	const jumpTo = index => {
+		asidePly = null;
+		currentIndex = index;
+	}
+	// the same two, inside an aside. Leaving it backwards is a step like any
+	// other — the move being unmade is the aside's first — and it lands on the
+	// ply the aside branched at, where the board's own line carries on.
+	const stepAside = ply => {
+		playMoveSound(asideMoves[ply > asidePly ? ply - 1 : asidePly - 1]?.san);
+		stepping = true;
+		asidePly = ply;
+	}
+	const leaveAside = () => {
+		playMoveSound(asideMoves[0]?.san);
+		stepping = true;
+		asidePly = null;
+	}
+	const jumpAside = ply => { asidePly = ply; }
+	// An aside is a dead end forwards: its last move is the last thing the text
+	// claimed, and running on into the line's own continuation would be a
+	// different game. Backwards it rejoins the line it left.
+	let atLineStart = $derived(asidePly == null && displayIndex === 0);
+	let atLineEnd = $derived(
+		asidePly != null ? asidePly >= asideMoves.length : displayIndex === positions.length - 1
+	);
+	const previous = () => {
+		if (asidePly != null) {
+			if (asidePly > 1) stepAside(asidePly - 1);
+			else leaveAside();
+			return;
+		}
+		if (displayIndex > 0) goTo(displayIndex - 1);
+	}
+	const next = () => {
+		if (asidePly != null) {
+			if (asidePly < asideMoves.length) stepAside(asidePly + 1);
+			return;
+		}
+		if (displayIndex < positions.length - 1) goTo(displayIndex + 1);
+	}
 
 	let wrapperElement = $state();
 
@@ -389,6 +485,24 @@
 	}
 </script>
 
+{#snippet asideLine()}
+	<!-- The aside, in the line it leaves: the text wrote these moves, so they
+	     are shown as an aside is written, in brackets after the move they
+	     follow. They only appear once one has been clicked in the text — a
+	     card's line reads as its own until then. -->
+	<span class="move-aside">
+		<span class="aside-bracket">(</span>
+		{#each asideMoves as info, i}
+			<button
+				class="move-btn"
+				class:current={asidePly === i + 1}
+				onclick={() => jumpAside(i + 1)}
+			>{moveLabel(info, i)}</button>
+		{/each}
+		<span class="aside-bracket">)</span>
+	</span>
+{/snippet}
+
 {#snippet backMarker()}
 	<!-- svelte-ignore a11y_no_static_element_interactions -- pointer-only drag; the divider is a label, not a control, wherever it cannot move -->
 	<span
@@ -443,21 +557,24 @@
 		onclick={hasMoves ? takeFocus : undefined}
 	></div>
 	{@render children?.()}
-	{#if lineMoves.length > 0}
+	{#if lineMoves.length > 0 || following}
 		<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- pointer-only boundary placing; the editor's own controls set it by keyboard -->
 		<div class="move-line" bind:this={moveLineEl} use:lineHandle>
 			<button
 				class="step-btn"
 				aria-label="Previous move"
-				disabled={displayIndex === 0}
+				disabled={atLineStart}
 				onclick={previous}
 			>‹</button>
 			<button
 				class="step-btn"
 				aria-label="Next move"
-				disabled={displayIndex === positions.length - 1}
+				disabled={atLineEnd}
 				onclick={next}
 			>›</button>
+			<!-- an aside off the start position, or off a board with no line of
+			     its own, opens the line -->
+			{#if following && asideAfter < 0}{@render asideLine()}{/if}
 			{#each moveLine as pair}
 				<span class="move-pair">
 					<!-- the boundary marker precedes the pair number when the
@@ -469,7 +586,7 @@
 						{#if moveIndex > 0 && markerAt(move.index)}{@render backMarker()}{/if}
 						<button
 							class="move-btn"
-							class:current={displayIndex === move.index + 1}
+							class:current={asidePly == null && displayIndex === move.index + 1}
 							disabled={authorView && !revealed && solutionFrom != null && move.index >= solutionFrom}
 							onclick={() => jumpTo(move.index + 1)}
 						>
@@ -477,6 +594,7 @@
 						</button>
 					{/each}
 				</span>
+				{#if following && pair.moves.some(move => move.index === asideAfter)}{@render asideLine()}{/if}
 			{/each}
 			<!-- The end spot: a line that is all front. Only while the marker is
 			     being dragged there — a board with no boundary says so by
@@ -641,6 +759,21 @@
 	.move-btn.current {
 		background-color: var(--accent);
 		color: white;
+	}
+	/* the aside sits in the line as a bracketed group, wrapping as a whole
+	   where the line runs out of room */
+	.move-aside {
+		display: inline-flex;
+		align-items: baseline;
+		column-gap: 2px;
+	}
+	.aside-bracket {
+		color: rgba(0, 0, 0, 0.45);
+	}
+	/* the brackets close on their moves, not on the gap the line keeps
+	   between pairs */
+	.move-aside .move-btn {
+		margin: 0 -2px;
 	}
 	/* the front/back boundary in the author view's always-complete line;
 	   tucked toward what precedes it, spaced from what it introduces */

@@ -12,7 +12,7 @@
 	// on focus/blur and every transaction. Read via menu.editor everywhere —
 	// deriving the editor once would collapse reactivity to the stable editor
 	// instance, and isActive/can would never be re-read.
-	let { menu, onAddChessboard } = $props();
+	let { menu, onAddChessboard, onInsertMoves = null, movesDisabled = false } = $props();
 </script>
 
 <!-- preventDefault on mousedown stops the browser from stealing focus from
@@ -61,6 +61,14 @@ the editor when a menu button is pressed, click still fires -->
 			onclick={onAddChessboard}
 		><ChessboardAddIcon />
 		</button>
+		<!-- moves written into the text, wired to one of the card's boards; a
+		     card with no board has nothing to wire them to -->
+		<button
+			class="moves-btn"
+			title="Insert moves from a board"
+			disabled={movesDisabled}
+			onclick={onInsertMoves}
+		>e4</button>
 	</div>
 	<span class="seperator"></span>
 	<div class="button-row">
@@ -111,5 +119,10 @@ the editor when a menu button is pressed, click still fires -->
 	}
 	.add-board-btn :global(svg) {
 		height: 1rem;
+	}
+	/* the only lettered button in the bar: a move is what it writes */
+	.moves-btn {
+		font-size: 0.8rem;
+		font-weight: 600;
 	}
 </style>

@@ -3,8 +3,24 @@
 	import { ttGenerateHTML } from "../tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "../card-utils.js"
 	import Chessboard from "./Chessboard.svelte"
+	import { parseMoveRef } from "$lib/tiptap-move-ref.js"
 
 	let { card } = $props();
+
+	// A move written in the card's text drives the board it names (see
+	// tiptap-move-ref.js): the click is handed to that board by number, and
+	// the nonce makes a second click on the same move a second request. One
+	// store for the whole card — a board on the front is as nameable from the
+	// back's text as from its own side's.
+	let asides = $state({});
+	let clicks = 0;
+	$effect(() => { void card; asides = {} });
+	const handleTextClick = e => {
+		const token = e.target.closest?.("[data-move-ref]");
+		if (!token) return;
+		const ref = parseMoveRef(token);
+		if (ref) asides[ref.board] = { ...ref, nonce: ++clicks };
+	}
 
 	// where the arrows land: the card's first board that has moves to step
 	let focusBoardNumber = $derived(firstBoardWithMoves(card.front, card.back));
@@ -20,7 +36,8 @@
 >
 	{#each side as block, blockIndex}
 		{#if block.type === "text"}
-			<div class="text-block">
+			<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- the moves inside are pointer targets; the board's own move line is the keyboard's way through a line -->
+			<div class="text-block" onclick={handleTextClick}>
 				{@html ttGenerateHTML(block.content)}
 			</div>
 		{:else if block.type === "chessboards"}
@@ -31,6 +48,9 @@
 				}}
 			>
 				{#each block.content as chessboard, boardIndex}
+					<!-- the board's number is what the text calls it by, whether
+					     or not the card is showing numbers -->
+					{@const n = boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1}
 					<div class="board-container">
 						<!-- low floor: two squeezed boards must shrink, not overflow
 					     their cells and crush the gap between them -->
@@ -38,8 +58,9 @@
 						board={chessboard}
 						{authorView}
 						minWidth="280px"
-						number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null}
-						autoFocus={boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex === focusBoardNumber}
+						number={showBoardNumbers ? n : null}
+						autoFocus={n - 1 === focusBoardNumber}
+						aside={asides[n]}
 					/>
 					</div>
 				{/each}

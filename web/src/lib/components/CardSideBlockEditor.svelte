@@ -251,13 +251,13 @@
 	   (app.css), so what will be clickable is visible as it is written */
 	.tiptap :global(.move-ref) {
 		border-radius: 3px;
-		padding: 0 2px;
+		padding: 1px 4px;
 		margin: 0 -2px;
 		white-space: nowrap;
-		background-color: rgba(0, 0, 0, 0.06);
+		background-color: rgba(0, 0, 0, 0.1);
 	}
 	.tiptap :global(.move-ref:hover) {
-		background-color: gainsboro;
+		background-color: rgba(0, 0, 0, 0.18);
 	}
 
 	/* the landing pad: nothing at all until a board drag opens it, and never

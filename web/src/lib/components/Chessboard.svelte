@@ -92,6 +92,10 @@
 		// the board does not show it before the reveal
 		if (from < 0 || from > visiblePlies) return;
 		currentIndex = from;
+		// The click was in the text, so the board does not have the keyboard —
+		// and the arrows are how you walk back out of what you just clicked.
+		// Taken quietly, as a click on the board itself takes it.
+		takeFocus();
 		// A move of the board's own line is a jump, nothing more. So is an
 		// aside that no longer plays from there — text outlives the board it
 		// was written against, and a card that has been edited under it should

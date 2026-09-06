@@ -378,13 +378,15 @@ body.piece-grabbing * {
 .flashcard .move-ref {
 	cursor: pointer;
 	border-radius: 3px;
-	padding: 0 2px;
+	padding: 1px 4px;
+	/* the pill is wider than the word, so it eats back into the spaces around
+	   it — the prose keeps its own rhythm */
 	margin: 0 -2px;
 	white-space: nowrap;
-	background-color: rgba(0, 0, 0, 0.06);
+	background-color: rgba(0, 0, 0, 0.1);
 }
 .flashcard .move-ref:hover {
-	background-color: gainsboro;
+	background-color: rgba(0, 0, 0, 0.18);
 }
 .flashcard .move-ref.current {
 	background-color: var(--accent);

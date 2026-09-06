@@ -109,6 +109,25 @@ describe("a move written in a card's text", () => {
 		unmount(app);
 	});
 
+	it("hands the board the keyboard, so the arrows walk back out of it", async () => {
+		const branchFen = replayMoves({ fen: START, moves: ["e4", "e5", "Nf3"] }).fens.at(-1);
+		const parsed = parseAside(branchFen, "Nc6 Bb5");
+		const content = moveRefContent({ board: 1, from: 3, moves: parsed.moves, infos: parsed.infos });
+		const { target, app } = mountCard(cardWith(content, ["e4", "e5", "Nf3"]));
+		await tick();
+
+		target.querySelectorAll("[data-move-ref]")[1].click();
+		await tick();
+		const wrapper = target.querySelector(".board-wrapper");
+		expect(document.activeElement).toBe(wrapper);
+
+		wrapper.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+		await settle();
+		expect(pieces(target)).toBe(pieces_of(replayMoves({ fen: START, moves: ["e4", "e5", "Nf3", "Nc6"] }).fens.at(-1)));
+
+		unmount(app);
+	});
+
 	it("steps back out of the aside onto the line it left", async () => {
 		const branchFen = replayMoves({ fen: START, moves: ["e4", "e5", "Nf3"] }).fens.at(-1);
 		const parsed = parseAside(branchFen, "Nc6 Bb5");

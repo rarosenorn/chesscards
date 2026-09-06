@@ -618,12 +618,15 @@
 		   evenly, and the bias below is the only thing that moves it down */
 		--card-margin: 0px;
 		--page-bottom: 0px;
-		/* the air the card may never eat into, 60px above it and 55px below:
-		   it is taken out of the board's height budget, so a short window
-		   shrinks the board rather than pushing the card against the screen.
-		   Wider than the page's own 30px — with no bars around it, the card
-		   is the only thing the window has to frame. */
-		--zen-frame: 115px;
+		/* The air the card may never eat into: it is taken out of the board's
+		   height budget, so a short window shrinks the board rather than
+		   pushing the card against the screen. Wider than the page's own 30px
+		   — with no bars around it, the card is the only thing the window has
+		   to frame — and wider again in fullscreen below, where the window's
+		   own edges are gone too. */
+		--zen-air-top: 40px;
+		--zen-air-bottom: 35px;
+		--zen-frame: calc(var(--zen-air-top) + var(--zen-air-bottom));
 		/* Where the card hangs: a little over half the room left over by the
 		   whole card, answer included — the air reads better above the card
 		   than below it. Measured against the question instead, the lift
@@ -633,13 +636,27 @@
 		   an answer longer than the room held for it grows downwards rather
 		   than lifting the board. */
 		--zen-room: calc(100dvh - var(--solo-board-size) - var(--card-furniture));
-		--zen-lift: calc(var(--zen-room) * 0.52);
+		/* On a window the board's height governs, the room left over IS the
+		   frame, so the max() hands the top its share as asked. The ratio
+		   only takes over on a window tall enough that the board stops at its
+		   width instead: the leftover is larger than the frame there, and the
+		   card centres in it, a little high. */
+		--zen-lift: max(var(--zen-air-top), calc(var(--zen-room) * 0.53));
 		/* The bias is a luxury: on a window that the card nearly fills, an
 		   uneven split is just a lopsided card, so it stays at zero until
 		   there is room to spare and then takes a fifth of it, up to 20px.
 		   It rides on top of --card-margin rather than in it, so the board's
 		   height budget (which reads --card-margin) sees a constant. */
 		--zen-bias: clamp(0px, (var(--zen-room) - 160px) * 0.2, 20px);
+	}
+	/* fullscreen: no window chrome either, so the card can afford more air
+	   still. The board gives the difference back, as it does for the rest of
+	   the frame. */
+	@media all and (display-mode: fullscreen) {
+		.flashcard.zen {
+			--zen-air-top: 60px;
+			--zen-air-bottom: 55px;
+		}
 	}
 	.flashcard {
 		align-items: center;

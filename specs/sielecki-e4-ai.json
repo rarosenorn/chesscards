@@ -43,7 +43,7 @@
             ]
           },
           "back": {
-            "text": "C: Black voluntarily limits their options: the king's bishop can't join the game early on c5 or b4, as it can after [2...Nc6] or [2...Nf6]."
+            "text": "C: Black voluntarily limits their options: the king's bishop can't join the game early on c5 or b4, as it can after 2...Nc6 or 2...Nf6."
           }
         },
         {
@@ -73,7 +73,7 @@
             ]
           },
           "back": {
-            "text": "[3.d4], the strongest move. White's main candidates are [3.Nc3], [3.Bc4] and [3.d4]; the first two are good moves that follow basic principles, but the immediate [3.d4] attacks Black's e-pawn and exerts more pressure, often leading to an inferior reply. We also open the center and prepare the development of the c1-bishop."
+            "text": "3.d4, the strongest move. White's main candidates are 3.Nc3, 3.Bc4 and 3.d4; the first two are good moves that follow basic principles, but the immediate 3.d4 attacks Black's e-pawn and exerts more pressure, often leading to an inferior reply. We also open the center and prepare the development of the c1-bishop."
           }
         },
         {
@@ -105,7 +105,7 @@
             ]
           },
           "back": {
-            "text": "[4.Nc3], which fits best to our concept and reaches the position we investigate via [1.e4 e5 2.Nf3 Nc6 3.Nc3 d6 4.d4]. The logical [4.Bc4] and [4.Bb5] are good too."
+            "text": "4.Nc3, which fits best to our concept and reaches the position we investigate via [1.e4 e5 2.Nf3 Nc6 3.Nc3 d6 4.d4]. The logical 4.Bc4 and 4.Bb5 are good too."
           }
         },
         {
@@ -155,7 +155,7 @@
             ]
           },
           "back": {
-            "text": "C: Black's knight covers e5, so the trade wins nothing there — with no knight on c6 the same sequence ends [3...Bg4 4.dxe5 dxe5 5.Qxd8+ Kxd8 | 6.Nxe5], a clean pawn (that is the [3...Bg4]? line).\n\nWe trade a more active pawn for a passive one and therefore help Black to gain scope for their pieces, in particular the king's bishop, which is limited by the d6-pawn.\n\nBlack has lost castling rights, but this is less of an issue once the queens are traded."
+            "text": "C: Black's knight covers e5, so the trade wins nothing there — with no knight on c6 the same sequence ends [3...Bg4 4.dxe5 dxe5 5.Qxd8+ Kxd8 | 6.Nxe5], a clean pawn (that is the 3...Bg4? line).\n\nWe trade a more active pawn for a passive one and therefore help Black to gain scope for their pieces, in particular the king's bishop, which is limited by the d6-pawn.\n\nBlack has lost castling rights, but this is less of an issue once the queens are traded."
           }
         },
         {
@@ -187,7 +187,7 @@
             ]
           },
           "back": {
-            "text": "[4.dxe5]! We usually don't want to trade on e5, but this is an exception: concrete move sequences always beat general concepts."
+            "text": "4.dxe5! We usually don't want to trade on e5, but this is an exception: concrete move sequences always beat general concepts."
           }
         },
         {
@@ -222,7 +222,7 @@
         {
           "id": "phil-bg4-vs-nc6-nd7",
           "front": {
-            "text": "What do you play and why? ([4...Nd7] is met the same way.)",
+            "text": "What do you play and why? (4...Nd7 is met the same way.)",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -284,7 +284,7 @@
             ]
           },
           "back": {
-            "text": "[5.Qxf3]. We keep our pawn structure intact and place our queen on an active square. Black has given up the bishop pair and speeded up our development — a welcome sight."
+            "text": "5.Qxf3. We keep our pawn structure intact and place our queen on an active square. Black has given up the bishop pair and speeded up our development — a welcome sight."
           }
         },
         {
@@ -333,7 +333,7 @@
             ]
           },
           "back": {
-            "text": "Bc4 and Qb3, both hitting f7. [6.Bc4] is the ideal type of move — we develop our bishop to a great square and threaten mate on f7 — and 7.Qb3! attacks b7 as well. You shouldn't move the queen too often in the opening, unless it's good for you."
+            "text": "Bc4 and Qb3, both hitting f7. 6.Bc4 is the ideal type of move — we develop our bishop to a great square and threaten mate on f7 — and 7.Qb3! attacks b7 as well. You shouldn't move the queen too often in the opening, unless it's good for you."
           }
         },
         {
@@ -371,7 +371,7 @@
             ]
           },
           "back": {
-            "text": "[7.Qb3]!, keeping the queens on. [7.Qxf6]? Nxf6 only helps Black to develop; Qb3 keeps the initiative and attacks the b-pawn. We are already ahead in development, an advantage that increases after [7.Qb3 | 7...b6 8.Nc3], intending Nd5."
+            "text": "7.Qb3!, keeping the queens on. 7.Qxf6? Nxf6 only helps Black to develop; Qb3 keeps the initiative and attacks the b-pawn. We are already ahead in development, an advantage that increases after [7.Qb3 | 7...b6 8.Nc3], intending Nd5."
           }
         },
         {
@@ -446,7 +446,7 @@
             ]
           },
           "back": {
-            "text": "[8.Qxb7] wins a clean pawn and secures a large advantage. [8.Nc3] is Morphy's move, playing for an attack."
+            "text": "8.Qxb7 wins a clean pawn and secures a large advantage. 8.Nc3 is Morphy's move, playing for an attack."
           }
         }
       ]
@@ -483,7 +483,7 @@
             ]
           },
           "back": {
-            "text": "[4.Nxd4]. We recapture the pawn and centralize our knight. A key idea of playing an early d4 is removing the e5-pawn to gain control of this central square for our knight."
+            "text": "4.Nxd4. We recapture the pawn and centralize our knight. A key idea of playing an early d4 is removing the e5-pawn to gain control of this central square for our knight."
           }
         },
         {
@@ -517,7 +517,7 @@
             ]
           },
           "back": {
-            "text": "[5.Ne2]. It looks odd, but it is the same concept as 6.Nde2 a move later: the knight heads for d5 via f4."
+            "text": "5.Ne2. It looks odd, but it is the same concept as 6.Nde2 a move later: the knight heads for d5 via f4."
           }
         },
         {
@@ -553,7 +553,7 @@
             ]
           },
           "back": {
-            "text": "[6.Nde2]! Black has weakened d5, and from e2 we can quickly reach that square via f4 — our c3-knight is already connected to it. Compare [6.Nb3], where rerouting takes ages (b3-d2-c4-e3).\n\nC: [6.Bb5+] is a strong alternative; the manoeuvre is the author's choice for what it teaches."
+            "text": "6.Nde2! Black has weakened d5, and from e2 we can quickly reach that square via f4 — our c3-knight is already connected to it. Compare 6.Nb3, where rerouting takes ages (b3-d2-c4-e3).\n\nC: 6.Bb5+ is a strong alternative; the manoeuvre is the author's choice for what it teaches."
           }
         },
         {
@@ -620,7 +620,7 @@
             ]
           },
           "back": {
-            "text": "[8.Bc4], which demonstrates our basic idea: we have full control of d5 and Black suffers due to a bad e7-bishop and a potentially weak d-pawn."
+            "text": "8.Bc4, which demonstrates our basic idea: we have full control of d5 and Black suffers due to a bad e7-bishop and a potentially weak d-pawn."
           }
         }
       ]
@@ -661,7 +661,7 @@
             ]
           },
           "back": {
-            "text": "[6.Bf4], the most aggressive move: Qd2 and O-O-O next, and then a kingside pawn storm. Black's setup is modest but rather solid, and both sides' forces are not in direct contact, which gives us a range of options — [6.g3], intending Bg2 and O-O, is a good alternative."
+            "text": "6.Bf4, the most aggressive move: Qd2 and O-O-O next, and then a kingside pawn storm. Black's setup is modest but rather solid, and both sides' forces are not in direct contact, which gives us a range of options — 6.g3, intending Bg2 and O-O, is a good alternative."
           }
         },
         {
@@ -704,7 +704,7 @@
         {
           "id": "phil-be7-rare-5th",
           "front": {
-            "text": "What do you play and why? ([5...c6] and [5...Nc6] are met the same way.)",
+            "text": "What do you play and why? (5...c6 and 5...Nc6 are met the same way.)",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -734,7 +734,7 @@
             ]
           },
           "back": {
-            "text": "[6.Bf4]. Against all these setups, we can play as we do against [5...Be7], by developing our bishop to f4, followed by Qd2 and O-O-O."
+            "text": "6.Bf4. Against all these setups, we can play as we do against 5...Be7, by developing our bishop to f4, followed by Qd2 and O-O-O."
           }
         }
       ]
@@ -790,7 +790,7 @@
             ]
           },
           "back": {
-            "text": "[3.Nc3], covering our attacked e4-pawn. It also fits our repertoire: after [3.Nc3 | 3...Nc6 4.d4] we reach the Four Knights Scotch, a cornerstone of our concept. The alternatives are [3.Nxe5] and [3.d4]."
+            "text": "3.Nc3, covering our attacked e4-pawn. It also fits our repertoire: after [3.Nc3 | 3...Nc6 4.d4] we reach the Four Knights Scotch, a cornerstone of our concept. The alternatives are 3.Nxe5 and 3.d4."
           }
         },
         {
@@ -822,7 +822,7 @@
             ]
           },
           "back": {
-            "text": "[4.d4], the starting position of the Four Knights Scotch. 3...Nc6 looks like Black's best and most reliable option."
+            "text": "4.d4, the starting position of the Four Knights Scotch. 3...Nc6 looks like Black's best and most reliable option."
           }
         },
         {
@@ -854,7 +854,7 @@
             ]
           },
           "back": {
-            "text": "[4.d4]. We reach positions that usually occur via the Philidor move order [2...d6 3.d4 Nf6 4.Nc3], and [4.d4 | 4...exd4 5.Nxd4] transposes to our Philidor chapter. 3...d6 is possible, but not in the spirit of the Petroff."
+            "text": "4.d4. We reach positions that usually occur via the Philidor move order [2...d6 3.d4 Nf6 4.Nc3], and [4.d4 | 4...exd4 5.Nxd4] transposes to our Philidor chapter. 3...d6 is possible, but not in the spirit of the Petroff."
           }
         },
         {
@@ -886,7 +886,7 @@
             ]
           },
           "back": {
-            "text": "[4.Nxe5]. Black sacrifices their e-pawn for insufficient compensation — if you can win Black's e-pawn for no obvious compensation, you should go for it."
+            "text": "4.Nxe5. Black sacrifices their e-pawn for insufficient compensation — if you can win Black's e-pawn for no obvious compensation, you should go for it."
           }
         },
         {
@@ -920,7 +920,7 @@
             ]
           },
           "back": {
-            "text": "[5.Nf3]. Black has no compensation for the pawn at all. We are ready for Be2 and O-O, and may play d2-d4 soon to occupy the center."
+            "text": "5.Nf3. Black has no compensation for the pawn at all. We are ready for Be2 and O-O, and may play d2-d4 soon to occupy the center."
           }
         },
         {
@@ -954,7 +954,7 @@
             ]
           },
           "back": {
-            "text": "[5.Nxc6], the simplest solution. The alternative [5.Nf3] is not bad either."
+            "text": "5.Nxc6, the simplest solution. The alternative 5.Nf3 is not bad either."
           }
         },
         {
@@ -1017,7 +1017,7 @@
             ]
           },
           "back": {
-            "text": "[6.h3]! Black's idea was to attack our vulnerable f2-spot with ...Ng4, which is a dangerous knight jump. It is uncommon and usually wrong to move a flank pawn early in the game, but here the little pawn move is essential."
+            "text": "6.h3! Black's idea was to attack our vulnerable f2-spot with ...Ng4, which is a dangerous knight jump. It is uncommon and usually wrong to move a flank pawn early in the game, but here the little pawn move is essential."
           }
         },
         {
@@ -1049,7 +1049,7 @@
             ]
           },
           "back": {
-            "text": "[6.Bc4]?? and after [6.Bc4 | Ng4 7.O-O Qh4] White already collapses due to the threats on h2 and f2!"
+            "text": "6.Bc4?? and after [6.Bc4 | Ng4 7.O-O Qh4] White already collapses due to the threats on h2 and f2!"
           }
         },
         {
@@ -1087,7 +1087,7 @@
             ]
           },
           "back": {
-            "text": "[7.Qf3]. It stops the mate on f2 and plans d2-d3 and Be3 next."
+            "text": "7.Qf3. It stops the mate on f2 and plans d2-d3 and Be3 next."
           }
         },
         {
@@ -1125,7 +1125,7 @@
             ]
           },
           "back": {
-            "text": "[7.d3] covers e4 reliably and intends Be2 and O-O next. Once we have played d2-d3, Bc1-e3 is a logical idea to trade off Black's most active piece."
+            "text": "7.d3 covers e4 reliably and intends Be2 and O-O next. Once we have played d2-d3, Bc1-e3 is a logical idea to trade off Black's most active piece."
           }
         }
       ]

@@ -618,12 +618,12 @@
 		   evenly, and the bias below is the only thing that moves it down */
 		--card-margin: 0px;
 		--page-bottom: 0px;
-		/* the air the card may never eat into, 40px at each end: it is taken
-		   out of the board's height budget, so a short window shrinks the
-		   board rather than pushing the card against the screen. A little
-		   wider than the page's own 30px — with no bars around it, the card
+		/* the air the card may never eat into, 60px above it and 55px below:
+		   it is taken out of the board's height budget, so a short window
+		   shrinks the board rather than pushing the card against the screen.
+		   Wider than the page's own 30px — with no bars around it, the card
 		   is the only thing the window has to frame. */
-		--zen-frame: 80px;
+		--zen-frame: 115px;
 		/* Where the card hangs: a little over half the room left over by the
 		   whole card, answer included — the air reads better above the card
 		   than below it. Measured against the question instead, the lift
@@ -633,7 +633,7 @@
 		   an answer longer than the room held for it grows downwards rather
 		   than lifting the board. */
 		--zen-room: calc(100dvh - var(--solo-board-size) - var(--card-furniture));
-		--zen-lift: calc(var(--zen-room) * 0.55);
+		--zen-lift: calc(var(--zen-room) * 0.52);
 		/* The bias is a luxury: on a window that the card nearly fills, an
 		   uneven split is just a lopsided card, so it stays at zero until
 		   there is room to spare and then takes a fifth of it, up to 20px.

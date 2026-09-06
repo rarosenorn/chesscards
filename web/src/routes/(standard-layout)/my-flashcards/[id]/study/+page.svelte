@@ -618,10 +618,12 @@
 		   evenly, and the bias below is the only thing that moves it down */
 		--card-margin: 0px;
 		--page-bottom: 0px;
-		/* the air the card may never eat into, 30px at each end: it is taken
+		/* the air the card may never eat into, 40px at each end: it is taken
 		   out of the board's height budget, so a short window shrinks the
-		   board rather than pushing the card against the screen */
-		--zen-frame: 60px;
+		   board rather than pushing the card against the screen. A little
+		   wider than the page's own 30px — with no bars around it, the card
+		   is the only thing the window has to frame. */
+		--zen-frame: 80px;
 		/* Where the card hangs: a little over half the room left over by the
 		   whole card, answer included — the air reads better above the card
 		   than below it. Measured against the question instead, the lift

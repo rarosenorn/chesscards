@@ -98,12 +98,13 @@ describe("a move written in a card's text", () => {
 		await tick();
 		expect(pieces(target)).toBe(pieces_of(replayMoves({ fen: START, moves: ["e4", "e5", "Nf3", "Nc6", "Bb5"] }).fens.at(-1)));
 
-		// the aside is now in the board's move line, bracketed after the move
-		// it branches from
-		const asideEl = target.querySelector(".move-aside");
-		expect([...asideEl.querySelectorAll(".move-btn")].map(el => el.textContent.trim()))
-			.toEqual(["2…Nc6", "3.Bb5"]);
-		expect(asideEl.previousElementSibling.textContent).toContain("Nf3");
+		// the aside stays out of the board's own move line — the text is where
+		// it reads — and the move the board stands on is marked there instead
+		expect(target.querySelector(".move-line").textContent).not.toContain("Bb5");
+		expect(tokens.map(el => el.classList.contains("current"))).toEqual([false, true]);
+		tokens[0].click();
+		await tick();
+		expect(tokens.map(el => el.classList.contains("current"))).toEqual([true, false]);
 
 		unmount(app);
 	});
@@ -115,7 +116,8 @@ describe("a move written in a card's text", () => {
 		const { target, app } = mountCard(cardWith(content, ["e4", "e5", "Nf3"]));
 		await tick();
 
-		target.querySelectorAll("[data-move-ref]")[1].click();
+		const tokens = [...target.querySelectorAll("[data-move-ref]")];
+		tokens[1].click();
 		await tick();
 		const back = target.querySelector('[aria-label="Previous move"]');
 		const forward = target.querySelector('[aria-label="Next move"]');
@@ -125,8 +127,11 @@ describe("a move written in a card's text", () => {
 
 		back.click();          // 3.Bb5 unmade
 		await settle();
+		// the mark in the text follows the board through the aside
+		expect(tokens.map(el => el.classList.contains("current"))).toEqual([true, false]);
 		back.click();          // 2...Nc6 unmade: back on the board's own line
 		await settle();
+		expect(tokens.some(el => el.classList.contains("current"))).toBe(false);
 		expect(pieces(target)).toBe(pieces_of(replayMoves({ fen: START, moves: ["e4", "e5", "Nf3"] }).fens.at(-1)));
 		// the board's own line ended there, so forward is still the end of the
 		// road — an aside is left backwards, never run out of forwards

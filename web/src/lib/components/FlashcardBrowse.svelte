@@ -3,7 +3,7 @@
 	import { ttGenerateHTML } from "../tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "../card-utils.js"
 	import Chessboard from "./Chessboard.svelte"
-	import { parseMoveRef } from "$lib/tiptap-move-ref.js"
+	import { parseMoveRef, markMoveRefs } from "$lib/tiptap-move-ref.js"
 
 	let { card } = $props();
 
@@ -15,6 +15,11 @@
 	let asides = $state({});
 	let clicks = 0;
 	$effect(() => { void card; asides = {} });
+	// ...and each board answers with where it now stands, so the move it is
+	// showing is marked in the text that named it — an aside is nowhere else
+	let boardAt = $state({});
+	let cardElement = $state();
+	$effect(() => { void card; markMoveRefs(cardElement, boardAt) });
 	const handleTextClick = e => {
 		const token = e.target.closest?.("[data-move-ref]");
 		if (!token) return;
@@ -61,6 +66,7 @@
 						number={showBoardNumbers ? n : null}
 						autoFocus={n - 1 === focusBoardNumber}
 						aside={asides[n]}
+						onPosition={at => boardAt[n] = at}
 					/>
 					</div>
 				{/each}
@@ -73,6 +79,7 @@
 <div
 	class="flashcard card-surface"
 	data-boards={boardsAllAlone(card) ? "solo" : null}
+	bind:this={cardElement}
 >
 	{@render side(card.front, 0, true)}
 	<!-- the divider only when the back has VISIBLE content — a card whose

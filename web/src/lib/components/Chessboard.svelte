@@ -7,7 +7,7 @@
 	import { Arrows } from "cm-chessboard/src/extensions/arrows/Arrows.js"
 	import { Markers } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { normalizeBoard } from "$lib/card-utils.js"
-	import { replayMoves, showAnnotations, isPositionFinished, moveLabel } from "$lib/board-utils.js"
+	import { replayMoves, showAnnotations, isPositionFinished } from "$lib/board-utils.js"
 	import { playMoveSound } from "$lib/sounds.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
 
@@ -28,8 +28,9 @@
 	// `aside` is a move clicked in the card's text (tiptap-move-ref): { from,
 	// moves, at, nonce }, the branch to play and which of its moves to stop on.
 	// The nonce is the click — clicking the same move twice is twice a request
-	// to go there.
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, autoFocus = false, inEditor = false, onSolutionFromChange = null, aside = null, children } = $props();
+	// to go there. `onPosition` answers back with where the board now stands,
+	// in the same terms, so the text can mark the move it is showing.
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, autoFocus = false, inEditor = false, onSolutionFromChange = null, aside = null, onPosition = null, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -86,10 +87,6 @@
 		following ? replayMoves({ fen: replay.fens[following.from], moves: following.moves }) : null
 	);
 	let asideMoves = $derived(asideReplay?.moveInfos ?? []);
-	// where the aside hangs in the move line: after the move it branches from,
-	// or before the line when it leaves the start position
-	let asideAfter = $derived(following ? following.from - 1 : null);
-
 	const followAside = ({ from, moves, at }) => {
 		// a move the answer is still hiding stays hidden: the text may name it,
 		// the board does not show it before the reveal
@@ -113,6 +110,14 @@
 	$effect(() => {
 		const request = aside;
 		if (request) untrack(() => followAside(request));
+	});
+
+	// where the board stands, for whoever wants to show it: a ply of its own
+	// line, or a ply of the aside it is following
+	$effect(() => {
+		onPosition?.(asidePly != null && following
+			? { from: following.from, moves: following.moves.join(" "), at: asidePly }
+			: { from: displayIndex, moves: "", at: 0 });
 	});
 
 	// Whose move it is in the board's START position — the puzzle's premise,
@@ -286,7 +291,6 @@
 		stepping = true;
 		asidePly = null;
 	}
-	const jumpAside = ply => { asidePly = ply; }
 	// An aside is a dead end forwards: its last move is the last thing the text
 	// claimed, and running on into the line's own continuation would be a
 	// different game. Backwards it rejoins the line it left.
@@ -485,24 +489,6 @@
 	}
 </script>
 
-{#snippet asideLine()}
-	<!-- The aside, in the line it leaves: the text wrote these moves, so they
-	     are shown as an aside is written, in brackets after the move they
-	     follow. They only appear once one has been clicked in the text — a
-	     card's line reads as its own until then. -->
-	<span class="move-aside">
-		<span class="aside-bracket">(</span>
-		{#each asideMoves as info, i}
-			<button
-				class="move-btn"
-				class:current={asidePly === i + 1}
-				onclick={() => jumpAside(i + 1)}
-			>{moveLabel(info, i)}</button>
-		{/each}
-		<span class="aside-bracket">)</span>
-	</span>
-{/snippet}
-
 {#snippet backMarker()}
 	<!-- svelte-ignore a11y_no_static_element_interactions -- pointer-only drag; the divider is a label, not a control, wherever it cannot move -->
 	<span
@@ -557,6 +543,9 @@
 		onclick={hasMoves ? takeFocus : undefined}
 	></div>
 	{@render children?.()}
+	<!-- an aside is not listed here: the text it was written in is where it
+	     reads, and the highlight moves with the board over there. The line
+	     still renders while one is being followed, for its step buttons. -->
 	{#if lineMoves.length > 0 || following}
 		<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- pointer-only boundary placing; the editor's own controls set it by keyboard -->
 		<div class="move-line" bind:this={moveLineEl} use:lineHandle>
@@ -572,9 +561,6 @@
 				disabled={atLineEnd}
 				onclick={next}
 			>›</button>
-			<!-- an aside off the start position, or off a board with no line of
-			     its own, opens the line -->
-			{#if following && asideAfter < 0}{@render asideLine()}{/if}
 			{#each moveLine as pair}
 				<span class="move-pair">
 					<!-- the boundary marker precedes the pair number when the
@@ -594,7 +580,6 @@
 						</button>
 					{/each}
 				</span>
-				{#if following && pair.moves.some(move => move.index === asideAfter)}{@render asideLine()}{/if}
 			{/each}
 			<!-- The end spot: a line that is all front. Only while the marker is
 			     being dragged there — a board with no boundary says so by
@@ -759,21 +744,6 @@
 	.move-btn.current {
 		background-color: var(--accent);
 		color: white;
-	}
-	/* the aside sits in the line as a bracketed group, wrapping as a whole
-	   where the line runs out of room */
-	.move-aside {
-		display: inline-flex;
-		align-items: baseline;
-		column-gap: 2px;
-	}
-	.aside-bracket {
-		color: rgba(0, 0, 0, 0.45);
-	}
-	/* the brackets close on their moves, not on the gap the line keeps
-	   between pairs */
-	.move-aside .move-btn {
-		margin: 0 -2px;
 	}
 	/* the front/back boundary in the author view's always-complete line;
 	   tucked toward what precedes it, spaced from what it introduces */

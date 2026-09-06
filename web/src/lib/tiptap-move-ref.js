@@ -55,6 +55,22 @@ export const MoveRef = Mark.create({
 	}
 })
 
+// The token each board is standing on, marked in the text: same board, same
+// branch, same ply. An aside is not listed in the move line under the board —
+// the text it was written in is where it reads — so this is what says where
+// the board is while one is being followed, and it marks a plain reference to
+// the line just as well.
+export const markMoveRefs = (root, boards) => {
+	if (!root) return;
+	for (const token of root.querySelectorAll("[data-move-ref]")) {
+		const at = boards[Number(token.dataset.moveRef)];
+		token.classList.toggle("current", !!at
+			&& Number(token.dataset.from) === at.from
+			&& (token.dataset.moves ?? "") === at.moves
+			&& Number(token.dataset.at) === at.at);
+	}
+}
+
 // what a click on a rendered token asks of its board
 export const parseMoveRef = el => {
 	const board = Number(el.dataset.moveRef);

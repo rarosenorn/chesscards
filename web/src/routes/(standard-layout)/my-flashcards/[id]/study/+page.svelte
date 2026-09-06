@@ -7,7 +7,7 @@
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
-	import { parseMoveRef } from "$lib/tiptap-move-ref.js"
+	import { parseMoveRef, markMoveRefs } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState } from "$lib/modals.svelte.js"
 	import { zen, zenActive, loadZen, setZen } from "$lib/zen-state.svelte.js"
@@ -181,6 +181,11 @@
 	let asides = $state({});
 	let clicks = 0;
 	$effect(() => { void currentCard; asides = {} });
+	// ...and each board answers with where it now stands, so the move it is
+	// showing is marked in the text that named it — an aside is nowhere else
+	let boardAt = $state({});
+	let cardElement = $state();
+	$effect(() => { void currentCard; void isCardTurned; markMoveRefs(cardElement, boardAt) });
 	const handleTextClick = e => {
 		const token = e.target.closest?.("[data-move-ref]");
 		if (!token) return;
@@ -433,6 +438,7 @@
 						number={showBoardNumbers ? n : null}
 						autoFocus={n - 1 === focusBoardNumber}
 						aside={asides[n]}
+						onPosition={at => boardAt[n] = at}
 					/>
 					</div>
 				{/each}
@@ -467,6 +473,7 @@
 	<div
 		class="flashcard card-surface"
 		class:zen={zenActive()}
+		bind:this={cardElement}
 		data-boards={boardsAllAlone(currentCard) ? "solo" : null}
 	>
 		<!-- turning reveals front boards' back layers (moves/annotations) in

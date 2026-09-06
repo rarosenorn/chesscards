@@ -369,19 +369,26 @@ body.piece-grabbing * {
 	margin-bottom: 0;
 }
 /* A move written in the card's text and wired to one of its boards
-   (tiptap-move-ref.js): a click on it plays that board to the move. It is
-   text, not a control — the prose reads the same with it as without — so it
-   takes no colour of its own and shows what it is on hover, the way the move
-   line under a board does. */
+   (tiptap-move-ref.js): a click on it plays that board to the move. The quiet
+   grey is on at all times — a move you can play is worth spotting in a
+   paragraph — and deepens under the pointer. An aside is not listed in the
+   move line under the board, so this is where the board's place in one shows:
+   the move it stands on takes the same blue the move line gives its current
+   move. */
 .flashcard .move-ref {
 	cursor: pointer;
 	border-radius: 3px;
 	padding: 0 2px;
 	margin: 0 -2px;
 	white-space: nowrap;
+	background-color: rgba(0, 0, 0, 0.06);
 }
 .flashcard .move-ref:hover {
 	background-color: gainsboro;
+}
+.flashcard .move-ref.current {
+	background-color: var(--accent);
+	color: white;
 }
 
 /* the sides read as two halves of one card: a divider line with the same

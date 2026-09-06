@@ -247,13 +247,14 @@
 		line-height: var(--card-text-leading);
 	}
 
-	/* a move wired to a board reads as ordinary text — it is text — and says
-	   so on hover, as it does on the card (app.css) */
+	/* a move wired to a board wears the same quiet grey it wears on the card
+	   (app.css), so what will be clickable is visible as it is written */
 	.tiptap :global(.move-ref) {
 		border-radius: 3px;
 		padding: 0 2px;
 		margin: 0 -2px;
 		white-space: nowrap;
+		background-color: rgba(0, 0, 0, 0.06);
 	}
 	.tiptap :global(.move-ref:hover) {
 		background-color: gainsboro;

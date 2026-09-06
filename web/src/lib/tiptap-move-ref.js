@@ -1,5 +1,5 @@
 import { Mark, mergeAttributes } from "@tiptap/core"
-import { looseChess, moveLabel } from "$lib/board-utils.js"
+import { looseChess, moveLabel } from "./board-utils.js"
 
 // A move written in a card's text, wired to one of the card's boards: click it
 // and that board plays it. What the mark stores is where the move sits, not
@@ -69,14 +69,16 @@ export const parseMoveRef = el => {
 
 // "5...Nf6", "5.", "6" — a move number the author typed or pasted along with
 // the move; the aside is stored as moves alone and numbered from the position
-// it branches at, so a line copied out of a book works as it was written
-const stripNumber = token => token.replace(/^\d+[.…]*/, "");
+// it branches at, so a line copied out of a book works as it was written.
+// Trailing !? go the same way: they are the writer's opinion of the move, and
+// chess.js refuses a move wearing more than one of them.
+const clean = token => token.replace(/^\d+[.…]*/, "").replace(/[!?]+$/, "");
 
 // The moves of an aside, played from `fen`. Returns them normalized (chess.js's
 // own SAN, so "0-0" is stored as "O-O") with the info each needs to be
 // numbered, or the first move that does not play.
 export const parseAside = (fen, text) => {
-	const sans = text.trim().split(/\s+/).map(stripNumber).filter(Boolean);
+	const sans = text.trim().split(/\s+/).map(clean).filter(Boolean);
 	const moves = [];
 	const infos = [];
 	let current = fen;
@@ -106,15 +108,20 @@ export const parseAside = (fen, text) => {
 // the move line would. The aside starts where the two part company — which is
 // how a whole line written out ("1.e4 e5 2.Nf3 Nc6") wires itself up, half of
 // it to the board's line and the rest to the branch it leaves.
-export const moveRefContent = ({ board, from, moves, infos, line = [] }) => {
+//
+// `hidden` counts moves the aside must be played through but that the text
+// does not write out: prose says "after 7...b6 8.Nc3" about a position the
+// answer's own move leads to, and that move has to be made for the rest to
+// mean anything. They belong to the aside, they just get no token.
+export const moveRefContent = ({ board, from, moves, infos, line = [], hidden = 0 }) => {
 	let shared = 0;
 	while (shared < moves.length && line[from + shared] === moves[shared]) shared += 1;
 	const branch = moves.slice(shared).join(" ");
-	return infos.flatMap((info, i) => [
-		...(i > 0 ? [{ type: "text", text: " " }] : []),
+	return infos.flatMap((info, i) => i < hidden ? [] : [
+		...(i > hidden ? [{ type: "text", text: " " }] : []),
 		{
 			type: "text",
-			text: moveLabel(info, i),
+			text: moveLabel(info, i - hidden),
 			marks: [{
 				type: "moveRef",
 				attrs: i < shared

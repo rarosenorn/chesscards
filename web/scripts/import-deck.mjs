@@ -46,10 +46,33 @@
 //
 // <side> = {
 //   "text": "paragraphs, blank-line separated. **bold** supported.
-//            lines starting with '1. ' become an ordered list.",
+//            lines starting with '1. ' become an ordered list.
+//            [moves] are wired to a board — see below.",
 //   "boards": [ <board>, ... ]           // optional
 // }
 // A side may also be given as a bare string, meaning { text: <string> }.
+//
+// Moves in the text
+// -----------------
+// Square brackets make the moves inside them clickable: clicking one plays it
+// on the card's board, which is what the card is about (tiptap-move-ref.js).
+//
+//   "[3.d4] attacks the e-pawn"      the moves leave the board's line at the
+//                                    position the FIRST move's number names —
+//                                    "3." white's third, "3..." black's — or
+//                                    at the end of the line if it has none
+//   "as after [2...Nc6]"             a move that replaces one of the line's own
+//   "[8.Bxf7+ Kd7 9.Qe6#]"           moves already on the line: each token
+//                                    steps the board to itself
+//   "[6.Bf4](2)"                     board 2, on a card with more than one
+//                                    (boards are numbered front then back, as
+//                                    the card numbers them)
+//   "[4.d4 | 4...exd4 5.Nxd4]"       moves before the bar are played but not
+//                                    written out — for prose that talks about
+//                                    a position the answer's own move reaches
+//
+// A move that does not play from where it is hung fails validation, so the
+// prose and the boards cannot drift apart unnoticed.
 //
 // <board> = {
 //   "fen": "rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3",
@@ -72,6 +95,8 @@ import { Chess } from "chess.js"
 import pg from "pg"
 import { createEmptyCard } from "ts-fsrs"
 import { isValidFen } from "../src/lib/isValidFen.js"
+import { replayMoves, looseChess } from "../src/lib/board-utils.js"
+import { parseAside, moveRefContent } from "../src/lib/tiptap-move-ref.js"
 
 const DEFAULT_USER_EMAIL = "rasmusrjakobsen@gmail.com"
 const ANNOTATION_TYPES = new Set(["success", "warning", "info", "danger"])
@@ -83,17 +108,85 @@ const text = (t, marks) => ({ type: "text", text: t, ...(marks ? { marks } : {})
 const paragraph = content => ({ type: "paragraph", content })
 
 // **bold** -> bold marks; everything else is plain text
-const inline = str => {
+const bolded = str => {
 	const nodes = []
 	for (const [i, part] of str.split(/\*\*/).entries()) {
 		if (part === "") continue
 		nodes.push(i % 2 === 1 ? text(part, [{ type: "bold" }]) : text(part))
 	}
+	return nodes
+}
+
+// [moves] and [moves](board): moves the reader can click, wired to the board
+// they are about
+const MOVE_REF = /\[([^\][]+)\](?:\((\d+)\))?/g
+
+// Where a written aside leaves the board's line: the number its first move
+// carries ("3..." is black's third), or the end of the line when it carries
+// none. The line's own numbering is used, so a board that starts mid-game
+// counts as it does.
+const branchPly = (written, line, label) => {
+	const match = /^(\d+)(\.{2,3}|…)?/.exec(written.trim().split(/\s+/)[0] ?? "")
+	if (!match) return line.moveInfos.length
+	const number = Number(match[1])
+	const color = match[2] ? "b" : "w"
+	const at = line.moveInfos.findIndex(info => info.number === number && info.color === color)
+	if (at >= 0) return at
+	try {
+		// past the last move: the position the line leaves off in
+		const end = looseChess(line.fens.at(-1))
+		if (end.moveNumber() === number && end.turn() === color) return line.moveInfos.length
+	} catch { /* an invalid FEN is already reported by buildBoard */ }
+	bad(`${label}: [${written}] — the board's line has no move ${number}${color === "b" ? "..." : "."} to hang them off`)
+	return null
+}
+
+const moveRefNodes = (raw, boardNumber, ctx) => {
+	const { label, boards } = ctx
+	const bar = raw.indexOf("|")
+	const lead = bar < 0 ? "" : raw.slice(0, bar).trim()
+	const written = `${lead} ${bar < 0 ? raw : raw.slice(bar + 1)}`.trim()
+	const board = boardNumber == null ? boards[0] : boards.find(b => b.number === boardNumber)
+	if (!board) {
+		bad(`${label}: [${raw}] names board ${boardNumber ?? 1}, which the card does not have`)
+		return [text(raw)]
+	}
+	const line = replayMoves(board)
+	const from = branchPly(written, line, label)
+	if (from == null) return [text(raw)]
+	const parsed = parseAside(line.fens[from], written)
+	if (parsed.error) {
+		bad(`${label}: [${raw}] — ${parsed.error} does not play after ${line.fens[from]}`)
+		return [text(raw)]
+	}
+	if (parsed.moves.length === 0) {
+		bad(`${label}: [${raw}] — no moves in the brackets`)
+		return [text(raw)]
+	}
+	return moveRefContent({
+		board: board.number,
+		from,
+		moves: parsed.moves,
+		infos: parsed.infos,
+		line: line.moveInfos.map(info => info.san),
+		hidden: lead ? parseAside(line.fens[from], lead).moves.length : 0
+	})
+}
+
+const inline = (str, ctx) => {
+	const nodes = []
+	let last = 0
+	for (const match of str.matchAll(MOVE_REF)) {
+		if (match.index > last) nodes.push(...bolded(str.slice(last, match.index)))
+		nodes.push(...moveRefNodes(match[1], match[2] ? Number(match[2]) : null, ctx))
+		last = match.index + match[0].length
+	}
+	if (last < str.length) nodes.push(...bolded(str.slice(last)))
 	return nodes.length > 0 ? nodes : [text("")]
 }
 
 // blank-line separated paragraphs; a run of "1. " lines becomes an orderedList
-const textDoc = str => {
+const textDoc = (str, ctx) => {
 	const content = []
 	for (const chunk of str.trim().split(/\n\s*\n/)) {
 		const lines = chunk.split("\n").map(l => l.trim()).filter(Boolean)
@@ -102,11 +195,11 @@ const textDoc = str => {
 				type: "orderedList",
 				content: lines.map(l => ({
 					type: "listItem",
-					content: [paragraph(inline(l.replace(/^\d+\.\s+/, "")))]
+					content: [paragraph(inline(l.replace(/^\d+\.\s+/, ""), ctx))]
 				}))
 			})
 		} else {
-			content.push(paragraph(inline(lines.join(" "))))
+			content.push(paragraph(inline(lines.join(" "), ctx)))
 		}
 	}
 	return { type: "doc", content }
@@ -185,15 +278,32 @@ const buildBoard = (spec, label) => {
 	}
 }
 
-const buildSide = (spec, label) => {
+const sideSpec = spec => spec == null ? null : typeof spec === "string" ? { text: spec } : spec
+
+const buildSide = (spec, label, boards, cardBoards) => {
 	if (spec == null) return null
-	if (typeof spec === "string") spec = { text: spec }
 	const blocks = []
-	if (spec.text?.trim()) blocks.push({ type: "text", content: textDoc(spec.text) })
-	const boards = (spec.boards ?? []).map((b, i) => buildBoard(b, `${label} board ${i + 1}`))
+	if (spec.text?.trim()) blocks.push({ type: "text", content: textDoc(spec.text, { label, boards: cardBoards }) })
 	if (boards.length > 0) blocks.push({ type: "chessboards", content: boards })
 	if (blocks.length === 0) bad(`${label}: empty — needs text or at least one board`)
 	return blocks
+}
+
+// A card's boards are built before either side's text, since the text of one
+// side may point at a board on the other, and both count from the same
+// numbering the card shows.
+const buildCard = (card, label) => {
+	const front = sideSpec(card.front)
+	const back = sideSpec(card.back)
+	const build = (spec, sideLabel) =>
+		(spec?.boards ?? []).map((b, i) => buildBoard(b, `${sideLabel} board ${i + 1}`))
+	const frontBoards = build(front, `${label} front`)
+	const backBoards = build(back, `${label} back`)
+	const cardBoards = [...frontBoards, ...backBoards].map((board, i) => ({ ...board, number: i + 1 }))
+	return {
+		front: buildSide(front, `${label} front`, frontBoards, cardBoards),
+		back: buildSide(back, `${label} back`, backBoards, cardBoards)
+	}
 }
 
 // jsonb does not preserve key order, so compare canonically (mirrors
@@ -239,7 +349,7 @@ const chapters = (spec.chapters ?? []).map((chapter, ci) => {
 				else if (specIds.has(card.id)) bad(`${label}: duplicate id "${card.id}"`)
 				else specIds.add(card.id)
 			}
-			return { id: card.id ?? null, type, front: buildSide(card.front, `${label} front`), back: buildSide(card.back, `${label} back`) }
+			return { id: card.id ?? null, type, ...buildCard(card, label) }
 		})
 	}
 })

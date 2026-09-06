@@ -101,3 +101,21 @@ describe("moves that follow the board's own line", () => {
 		]);
 	});
 });
+
+// prose that talks about a position the answer's own move reaches: the move is
+// played, but the sentence does not write it out
+describe("an aside with a lead-in", () => {
+	const parsed = parseAside(after(["e4", "e5", "Nf3", "Nf6"]), "Nc3 Nc6 d4");
+	const content = moveRefContent({
+		board: 1, from: 4, moves: parsed.moves, infos: parsed.infos, line: [], hidden: 1
+	});
+
+	it("writes only the moves past the lead-in, numbering from the first of them", () => {
+		expect(content.map(node => node.text)).toEqual(["3…Nc6", " ", "4.d4"]);
+	});
+
+	it("but plays the whole aside, lead-in included", () => {
+		expect(content[0].marks[0].attrs).toEqual({ board: 1, from: 4, moves: "Nc3 Nc6 d4", at: 2 });
+		expect(content[2].marks[0].attrs.at).toBe(3);
+	});
+});

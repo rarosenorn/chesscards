@@ -410,13 +410,15 @@
 	.board-grid-block.single > .board-cell:not(.cell-editing) {
 		/* The card's solo rule, read off this block's own width: one cell of
 		   the pair beside it, scaled up the same way — and held to the same
-		   ceiling the window puts on a card's board (--solo-board-size), or
-		   the editor would show a board a couple of hundred pixels wider than
-		   the card it is being written for. */
+		   ceiling the window puts on a card's board (--solo-board-size), a
+		   little under: a board being written does not have to be the size it
+		   will be answered at, and the editor has its own furniture to leave
+		   room for. Without the ceiling it drew a board a couple of hundred
+		   pixels wider than the card it is written for. */
 		width: min(
 			calc((100% - var(--board-col-gap)) / 2 * var(--board-solo-scale)),
 			100%,
-			var(--solo-board-size)
+			calc(var(--solo-board-size) * 0.85)
 		);
 		min-width: min-content;
 	}

@@ -67,6 +67,11 @@
 	   after it, and the same board serves both states. A longer answer than
 	   two lines scrolls, and that is the rare card. */
 	--card-furniture: 336px;
+	/* The part of the furniture the answer brings: the divider (18px either
+	   side of its line) and two lines of text. Named because zen has to
+	   place a card by the size it will have once revealed, not by the
+	   question it starts as. */
+	--card-answer: 86px;
 	--board-height-budget: 384px;
 	/* The card's floor is composed on the card itself (see .flashcard below),
 	   not here: it has to read --board-height-budget, and a custom property

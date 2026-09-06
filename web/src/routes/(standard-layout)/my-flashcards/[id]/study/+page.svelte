@@ -622,31 +622,30 @@
 		   out of the board's height budget, so a short window shrinks the
 		   board rather than pushing the card against the screen */
 		--zen-frame: 60px;
-		/* the move line runs to two rows on a deep card, and zen is where the
-		   full line shows: the board gives that room back rather than pushing
-		   the prompt and the moves against the card's edges. The rest of the
-		   difference from the page's figure is the lift: zen hangs the card
-		   below centre by a share of the room its question leaves, and the
-		   answer then grows past that — so the board gives back enough for a
-		   revealed card to still stop 30px short of the window, whatever the
-		   window's height (the two cancel out of that arithmetic). */
-		--card-furniture: 390px;
-		/* Where the card hangs: a little under half the room left over by its
-		   question, so it sits slightly high of centre. The answer then grows
-		   into the space below rather than lifting the board. */
-		--zen-lift: calc(
-			(100dvh - var(--solo-board-size) - var(--card-stack)) * 0.45
+		/* Zen's furniture is the card itself with the board taken out —
+		   nothing more, since there is no page around it to keep clear of.
+		   The air is the frame above, 30px at each end, and the board takes
+		   everything between. (A deep card's move line runs to a second row
+		   and spends a little of the frame; that is the rare card, and it
+		   scrolls rather than shrinking every board for it.) */
+		--card-furniture: calc(var(--card-stack) + var(--card-answer));
+		/* Where the card hangs: a little under half the room left over by the
+		   whole card, answer included. Measured against the question instead,
+		   the lift counted the answer's room as spare and spent nearly half
+		   of it above the card — pushing the top gap down the window and the
+		   answer against its bottom edge. The card still hangs from a fixed
+		   top, so the answer grows into the space below rather than lifting
+		   the board. */
+		--zen-room: calc(
+			100dvh - var(--solo-board-size) - var(--card-stack) - var(--card-answer)
 		);
+		--zen-lift: calc(var(--zen-room) * 0.45);
 		/* The bias is a luxury: on a window that the card nearly fills, an
 		   uneven split is just a lopsided card, so it stays at zero until
 		   there is room to spare and then takes a fifth of it, up to 20px.
 		   It rides on top of --card-margin rather than in it, so the board's
 		   height budget (which reads --card-margin) sees a constant. */
-		--zen-bias: clamp(
-			0px,
-			(100dvh - var(--solo-board-size) - var(--card-stack) - 160px) * 0.2,
-			20px
-		);
+		--zen-bias: clamp(0px, (var(--zen-room) - 160px) * 0.2, 20px);
 	}
 	.flashcard {
 		align-items: center;

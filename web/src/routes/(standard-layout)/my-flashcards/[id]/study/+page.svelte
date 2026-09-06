@@ -598,12 +598,12 @@
 	.zen-btn:active {
 		transform: translateY(1px);
 	}
-	/* The floor is exactly what a question holds — the prompt line, one board
-	   with its move line, and the grade row — so nothing is reserved that the
-	   card is not showing. The answer expands it from there. (--card-stack is
-	   that furniture; the board size is decided in app.css, where the same
-	   value sizes the board itself.) Layout inside the card comes from
-	   app.css ("card board layout"), shared with browse. */
+	/* The floor is the card the question will become: its board, its own
+	   furniture and the room held for the answer (--card-furniture, in
+	   app.css, where the same figure sizes the board). A question is
+	   therefore already the height it will keep, and the reveal fills room
+	   rather than pushing the card down the window. Layout inside the card
+	   comes from app.css ("card board layout"), shared with browse. */
 	/* zen: with the bars gone the card would sit against the window's edge, so
 	   it takes twice its usual air above. The mode keeps it through a peek —
 	   the bars sliding in is movement enough without the card shifting too */
@@ -622,17 +622,16 @@
 		   out of the board's height budget, so a short window shrinks the
 		   board rather than pushing the card against the screen */
 		--zen-frame: 60px;
-		/* Where the card hangs: a little under half the room left over by the
-		   whole card, answer included. Measured against the question instead,
-		   the lift counted the answer's room as spare and spent nearly half
-		   of it above the card — pushing the top gap down the window and the
-		   answer against its bottom edge. The card still hangs from a fixed
-		   top, so the answer grows into the space below rather than lifting
-		   the board. */
-		--zen-room: calc(
-			100dvh - var(--solo-board-size) - var(--card-stack) - var(--card-answer)
-		);
-		--zen-lift: calc(var(--zen-room) * 0.45);
+		/* Where the card hangs: a little over half the room left over by the
+		   whole card, answer included — the air reads better above the card
+		   than below it. Measured against the question instead, the lift
+		   counted the answer's room as spare and spent nearly half of it
+		   above the card, pushing the top gap down the window and the answer
+		   against its bottom edge. The card still hangs from a fixed top, so
+		   an answer longer than the room held for it grows downwards rather
+		   than lifting the board. */
+		--zen-room: calc(100dvh - var(--solo-board-size) - var(--card-furniture));
+		--zen-lift: calc(var(--zen-room) * 0.55);
 		/* The bias is a luxury: on a window that the card nearly fills, an
 		   uneven split is just a lopsided card, so it stays at zero until
 		   there is room to spare and then takes a fifth of it, up to 20px.
@@ -652,7 +651,11 @@
 			var(--study-chrome, 110px) + var(--card-margin) + var(--card-furniture)
 				+ var(--page-bottom, 24px) + var(--zen-frame, 0px)
 		);
-		min-height: calc(var(--solo-board-size) + var(--card-stack));
+		/* The card stands at the height it was budgeted for: its board and the
+		   whole furniture, the answer's room included. A question therefore
+		   opens at the size it will keep, and the reveal fills room the card
+		   was already holding instead of growing into the page. */
+		min-height: calc(var(--solo-board-size) + var(--card-furniture));
 		/* the top is the card's rim, wider than the divider's 18px between
 		   the sides; the row below closes the card at the 10px it has always
 		   kept from the bottom edge */

@@ -92,6 +92,15 @@
 	   moves to name. */
 	--card-stack: 207px;
 	--grade-row: 48px;
+	/* A lone board's size for everything that is not a study card: browse's
+	   preview and the editors, which show the board at the size the card will
+	   give it. The card recomposes this on .flashcard from its own budget —
+	   a custom property declared here resolves its var()s here, so the study
+	   card's tighter budget could never reach it from this distance. */
+	--solo-board-size: min(
+		((var(--flashcard-width) - 74px) / 2 - var(--board-col-gap) / 2) * var(--board-solo-scale),
+		100dvh - var(--board-height-budget)
+	);
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the
    window scrollbar: that shifts the viewport width and makes the responsive

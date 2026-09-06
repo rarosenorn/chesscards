@@ -408,9 +408,16 @@
 		width: 100%;
 	}
 	.board-grid-block.single > .board-cell:not(.cell-editing) {
-		/* the card's solo rule, read off this block's own width: one cell of
-		   the pair beside it, scaled up the same way */
-		width: min(calc((100% - var(--board-col-gap)) / 2 * var(--board-solo-scale)), 100%);
+		/* The card's solo rule, read off this block's own width: one cell of
+		   the pair beside it, scaled up the same way — and held to the same
+		   ceiling the window puts on a card's board (--solo-board-size), or
+		   the editor would show a board a couple of hundred pixels wider than
+		   the card it is being written for. */
+		width: min(
+			calc((100% - var(--board-col-gap)) / 2 * var(--board-solo-scale)),
+			100%,
+			var(--solo-board-size)
+		);
 		min-width: min-content;
 	}
 	.board-cell {

@@ -622,13 +622,6 @@
 		   out of the board's height budget, so a short window shrinks the
 		   board rather than pushing the card against the screen */
 		--zen-frame: 60px;
-		/* Zen's furniture is the card itself with the board taken out —
-		   nothing more, since there is no page around it to keep clear of.
-		   The air is the frame above, 30px at each end, and the board takes
-		   everything between. (A deep card's move line runs to a second row
-		   and spends a little of the frame; that is the rare card, and it
-		   scrolls rather than shrinking every board for it.) */
-		--card-furniture: calc(var(--card-stack) + var(--card-answer));
 		/* Where the card hangs: a little under half the room left over by the
 		   whole card, answer included. Measured against the question instead,
 		   the lift counted the answer's room as spare and spent nearly half
@@ -650,6 +643,10 @@
 	.flashcard {
 		align-items: center;
 		--card-margin: 24px;
+		/* the air under a revealed card, matching the 30px zen keeps at each
+		   end of its frame — the furniture holds none of its own, so this is
+		   the whole of it */
+		--page-bottom: 30px;
 		margin-top: calc(var(--card-margin) + var(--zen-bias, 0px) + var(--zen-lift, 0px));
 		--board-height-budget: calc(
 			var(--study-chrome, 110px) + var(--card-margin) + var(--card-furniture)

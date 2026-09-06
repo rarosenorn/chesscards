@@ -58,15 +58,19 @@
 	   above it, and the card's own furniture, which never moves. This figure
 	   is the fallback for anything not doing that arithmetic.
 
-	   The furniture is a whole card, answer included, not just the question:
-	   the rim, a one-line prompt, the strip above the board, the move line
-	   under it, the divider and two lines of answer text, the grade row, and
-	   the air the card keeps under itself. Budgeting for the question alone
-	   is what made a revealed card push its own bottom edge off the window —
-	   the answer is what the card is FOR, so the board takes what is left
-	   after it, and the same board serves both states. A longer answer than
-	   two lines scrolls, and that is the rare card. */
-	--card-furniture: 336px;
+	   The furniture is the card with its board taken out, and it is a whole
+	   card, answer included, not just the question: the rim, a one-line
+	   prompt, the strip above the board, the move line under it, the divider
+	   and two lines of answer text, and the grade row. Budgeting for the
+	   question alone is what made a revealed card push its own bottom edge
+	   off the window — the answer is what the card is FOR, so the board takes
+	   what is left after it, and the same board serves both states. A longer
+	   answer than two lines scrolls, and that is the rare card.
+
+	   It holds no air of its own: what a card keeps under itself is the
+	   page's own bottom padding, or in zen its frame, which is why the two
+	   modes leave the same gap under a revealed card. */
+	--card-furniture: calc(var(--card-stack) + var(--card-answer));
 	/* The part of the furniture the answer brings: the divider (18px either
 	   side of its line) and two lines of text. Named because zen has to
 	   place a card by the size it will have once revealed, not by the

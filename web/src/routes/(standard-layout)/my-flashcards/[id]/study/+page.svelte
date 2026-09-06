@@ -1,5 +1,5 @@
 <script>
-	import { getContext } from "svelte"
+	import { getContext, onMount } from "svelte"
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating } from "ts-fsrs"
 	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
@@ -8,7 +8,8 @@
 	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
-	import { confirmModal } from "$lib/modals.svelte.js"
+	import { confirmModal, modalState } from "$lib/modals.svelte.js"
+	import { zen, zenActive, loadZen, setZen } from "$lib/zen-state.svelte.js"
 	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
 	import { updateCardContent, updateCardType, deleteCards } from "../browse/browse.remote.js"
 
@@ -99,10 +100,33 @@
 	const gated = card =>
 		progression && !isSeen(card) && !unlockedStages.has(card.stage_id);
 
+	// The clock the queue is measured against. It ticks only while nothing is
+	// on screen (see below), so a card that comes due mid-review can never
+	// replace the one being looked at.
+	let now = $state(Date.now());
+	const isDue = card =>
+		!card.finished_at && Date.parse(card.due) <= now && !gated(card);
+
+	// Anki's three counts, on the same split the deck list uses (decks.js):
+	// a card is new while it has never been graded, learning while it is
+	// stepping through the short intervals, due once it is on a real
+	// schedule. Gated and finished cards are not waiting, so they are not
+	// counted.
+	const queueOf = card =>
+		card.state === 1 || card.state === 3 ? "learn"
+			: card.state === 0 || (card.state == null && (card.reps ?? 0) === 0) ? "new"
+			: "review";
+	let counts = $derived.by(() => {
+		const due = deck.cards.filter(isDue);
+		return {
+			new: due.filter(card => queueOf(card) === "new").length,
+			learn: due.filter(card => queueOf(card) === "learn").length,
+			review: due.filter(card => queueOf(card) === "review").length
+		};
+	});
+
 	let currentCard = $derived.by(() => {
-		const due = deck.cards.filter(card =>
-			!card.finished_at && Date.parse(card.due) <= Date.now() && !gated(card)
-		);
+		const due = deck.cards.filter(isDue);
 		const reviews = due.filter(isReviewState);
 		if (reviews.length) {
 			return reviews.reduce((min, card) => shuffleKey(card.id) < shuffleKey(min.id) ? card : min);
@@ -121,6 +145,8 @@
 	$effect(() => { studyState.turnedCardId = isCardTurned ? currentCard?.id ?? null : null; });
 
 	let isTactic = $derived(currentCard?.card_type === "tactic");
+	// which of the three the card on screen came out of
+	let currentQueue = $derived(currentCard ? queueOf(currentCard) : null);
 
 	// The clock the due-time previews are measured from. It has to be taken
 	// when the answer is revealed, not when this component runs: `new Date()`
@@ -244,9 +270,63 @@
 		};
 	});
 
+	// Zen mode: the page's two bars step aside while a card is up (the store
+	// carries it to the layouts that own them; the counters and Edit stay).
+	// It is the study page that holds the mode — mounted here, dropped on the
+	// way out — so the preference outlives the visit without following the
+	// user into Cards or the deck list.
+	onMount(() => {
+		loadZen();
+		return () => { zen.studying = false; zen.peeking = false };
+	});
+	// On the "finished for now" screen the next card is often minutes away (the
+	// learning steps are 1m and 10m), so the clock ticks there and the card
+	// arrives on its own. It stops the moment one does — a queue that
+	// re-derives under a card being studied would swap it out mid-thought.
+	$effect(() => {
+		if (currentCard) return;
+		const id = setInterval(() => now = Date.now(), 30_000);
+		return () => clearInterval(id);
+	});
+
+	// zen holds only while a card is up: the deck's "finished for now" screen
+	// is the end of the session, and the page's chrome belongs back on it.
+	// The preference itself stays on, so the next card enters zen again.
+	$effect(() => {
+		zen.studying = currentCard != null;
+		if (!currentCard) zen.peeking = false;
+	});
+
+	// The bars come back while the pointer is at the top of the window, which
+	// is what keeps a chromeless page from being a trap. Two thresholds, not
+	// one: they slide in at the very edge but only leave once the pointer is
+	// clear of where they now sit, or a bar would vanish from under a cursor
+	// on its way to a tab.
+	const PEEK_IN = 40;
+	const PEEK_OUT = 150;
+	const handleMouseMove = e => {
+		if (!zenActive()) return;
+		if (e.clientY <= PEEK_IN) zen.peeking = true;
+		else if (e.clientY > PEEK_OUT) zen.peeking = false;
+	}
+
 	const handleKeyDown = e => {
 		// while editing, the card editor owns the keyboard (Ctrl+Enter saves)
 		if (editingCard) return;
+		const typing = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA"
+			|| e.target.isContentEditable;
+		if (e.key === "z" && !e.ctrlKey && !e.metaKey && !e.altKey && !typing) {
+			e.preventDefault();
+			setZen(!zen.on);
+			return;
+		}
+		// Escape always leaves, whatever put you here — unless a modal is up,
+		// where Escape is the modal's cancel and nothing else's
+		if (e.key === "Escape" && zen.on && !modalState.current) {
+			e.preventDefault();
+			setZen(false);
+			return;
+		}
 		if (
 			e.key === "e" && !e.ctrlKey && !e.metaKey && !e.altKey &&
 			!readonly && currentCard &&
@@ -297,7 +377,7 @@
 	}
 
 </script>
-<svelte:window onkeydown={handleKeyDown} />
+<svelte:window onkeydown={handleKeyDown} onmousemove={handleMouseMove} />
 
 {#snippet side(side, boardNumberOffset, revealed, marksBack = false)}
 <div
@@ -365,6 +445,7 @@
 {:else if currentCard}
 	<div
 		class="flashcard card-surface"
+		class:zen={zenActive()}
 		data-boards={boardsAllAlone(currentCard) ? "solo" : null}
 	>
 		<!-- turning reveals front boards' back layers (moves/annotations) in
@@ -377,15 +458,29 @@
 			{@render side(currentCard.back, frontBoardCount, true)}
 		{/if}
 		<div class="card-actions">
+		<!-- Anki's counts, in Anki's colours: what is still waiting in this
+		     deck, kept out of the centred button row's way -->
+		<!-- Written without whitespace between the spans: a newline here is a
+		     space in the rendered line, and the gap is the plus's own margin.
+		     The hair spaces inside each count are what widen its underline —
+		     chrome draws the rule across the text, so padding cannot. -->
+		<p class="deck-counts"><span class="count new" class:current={currentQueue === "new"}><span class="hair">{"\u200a"}</span>{counts.new}<span class="hair">{"\u200a"}</span></span><span class="plus">+</span><span class="count learn" class:current={currentQueue === "learn"}><span class="hair">{"\u200a"}</span>{counts.learn}<span class="hair">{"\u200a"}</span></span><span class="plus">+</span><span class="count review" class:current={currentQueue === "review"}><span class="hair">{"\u200a"}</span>{counts.review}<span class="hair">{"\u200a"}</span></span></p>
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
-				<button
-					class="std-btn"
-					onclick={showAnswer}
-					title="Shortcut key: Space"
-				>
-					Show
-				</button>
+				<!-- carried in the same shape as a grade button, label and all,
+				     so the row is the height it will be after the reveal: the
+				     card must not resize under the pointer when the answer
+				     comes in. The label is a spacer, hence aria-hidden. -->
+				<div class="eval-btn">
+					<p aria-hidden="true">&nbsp;</p>
+					<button
+						class="std-btn"
+						onclick={showAnswer}
+						title="Shortcut key: Space"
+					>
+						Show
+					</button>
+				</div>
 			{:else}
 					{#snippet evalBtn(text, rating, title)}
 						<div class="eval-btn">
@@ -450,7 +545,7 @@
 		</div>
 	</div>
 {:else}
-	<div class="deck-done">
+	<div class="deck-done" class:zen={zenActive()}>
 		{#if lockedNote}
 			<p>All caught up here for now.</p>
 			<p class="next-review">
@@ -467,23 +562,105 @@
 	</div>
 {/if}
 
+<!-- The way in, for a pointer: zen's own key is z, but a mode with no button
+     is a mode nobody finds. It shows only while the chrome does, and once zen
+     is on the top-edge peek and Escape are the ways back. -->
+{#if !zen.on}
+	<button
+		class="zen-btn"
+		title="Shortcut key: z"
+		onclick={() => setZen(true)}
+	>Zen mode</button>
+{/if}
 
 <style>
-	/* The card grows past its floor by whatever it holds: the question alone
-	   at first, then the answer when that shows. The floor is browse's card
-	   floor plus what the controls add here — 24px of air, the 59px row, and
-	   14px less rim below them (10px, not 24) — so a card holding the usual
-	   text/board/answer neither resizes on reveal nor strands the buttons
-	   mid-card. Board/text layout inside the card comes from app.css ("card
-	   board layout"), shared with browse */
+	/* bottom left of the window, out of the card's way: it belongs to the page
+	   rather than to the card, and the card is centred */
+	.zen-btn {
+		position: fixed;
+		left: 16px;
+		bottom: 16px;
+		z-index: 30;
+		border: 1px solid lightgrey;
+		border-bottom: 1px solid darkgrey;
+		background-color: #f5f5f5;
+		border-radius: 4px;
+		padding: 5px 12px;
+		font-size: 0.85rem;
+		color: rgba(0, 0, 0, 0.55);
+		cursor: pointer;
+		transition: color 110ms ease, background-color 110ms ease;
+	}
+	.zen-btn:hover {
+		color: black;
+		background-color: #f8f8f8;
+	}
+	.zen-btn:active {
+		transform: translateY(1px);
+	}
+	/* The floor is exactly what a question holds — the prompt line, one board
+	   with its move line, and the grade row — so nothing is reserved that the
+	   card is not showing. The answer expands it from there. (--card-stack is
+	   that furniture; the board size is decided in app.css, where the same
+	   value sizes the board itself.) Layout inside the card comes from
+	   app.css ("card board layout"), shared with browse. */
+	/* zen: with the bars gone the card would sit against the window's edge, so
+	   it takes twice its usual air above. The mode keeps it through a peek —
+	   the bars sliding in is movement enough without the card shifting too */
+	/* The one thing that differs by mode is how much air the card takes above
+	   it; the chrome above that comes from the layout. Both feed the board's
+	   height budget below, so the three modes can't drift apart. */
+	/* zen centres the card (app.css), and the card's own margin is what makes
+	   the top gap larger than the bottom one — so this is the bias itself,
+	   not the air: a little high of centre, in every window. */
+	.flashcard.zen {
+		/* no margin of its own: a window the card nearly fills should centre it
+		   evenly, and the bias below is the only thing that moves it down */
+		--card-margin: 0px;
+		--page-bottom: 0px;
+		/* the air the card may never eat into, 30px at each end: it is taken
+		   out of the board's height budget, so a short window shrinks the
+		   board rather than pushing the card against the screen */
+		--zen-frame: 60px;
+		/* the move line runs to two rows on a deep card, and zen is where the
+		   full line shows: the board gives that room back rather than pushing
+		   the prompt and the moves against the card's edges. The rest of the
+		   difference from the page's figure is the lift: zen hangs the card
+		   below centre by a share of the room its question leaves, and the
+		   answer then grows past that — so the board gives back enough for a
+		   revealed card to still stop 30px short of the window, whatever the
+		   window's height (the two cancel out of that arithmetic). */
+		--card-furniture: 390px;
+		/* Where the card hangs: a little under half the room left over by its
+		   question, so it sits slightly high of centre. The answer then grows
+		   into the space below rather than lifting the board. */
+		--zen-lift: calc(
+			(100dvh - var(--solo-board-size) - var(--card-stack)) * 0.45
+		);
+		/* The bias is a luxury: on a window that the card nearly fills, an
+		   uneven split is just a lopsided card, so it stays at zero until
+		   there is room to spare and then takes a fifth of it, up to 20px.
+		   It rides on top of --card-margin rather than in it, so the board's
+		   height budget (which reads --card-margin) sees a constant. */
+		--zen-bias: clamp(
+			0px,
+			(100dvh - var(--solo-board-size) - var(--card-stack) - 160px) * 0.2,
+			20px
+		);
+	}
 	.flashcard {
 		align-items: center;
-		margin-top: 24px;
-		min-height: calc(var(--flashcard-min-height) + 69px);
+		--card-margin: 24px;
+		margin-top: calc(var(--card-margin) + var(--zen-bias, 0px) + var(--zen-lift, 0px));
+		--board-height-budget: calc(
+			var(--study-chrome, 110px) + var(--card-margin) + var(--card-furniture)
+				+ var(--page-bottom, 24px) + var(--zen-frame, 0px)
+		);
+		min-height: calc(var(--solo-board-size) + var(--card-stack));
 		/* the top is the card's rim, wider than the divider's 18px between
 		   the sides; the row below closes the card at the 10px it has always
 		   kept from the bottom edge */
-		padding: 24px 37px 10px 37px;
+		padding: 32px 37px 10px 37px;
 	}
 	/* The controls close the card, one centred row on one 20px rhythm. The
 	   auto margin drops the row to the card's floor — on a card shorter than
@@ -491,7 +668,52 @@
 	   — and the padding holds their distance from the content once the card
 	   is full. Bottom-aligned, since the due-time labels sit above the
 	   rating buttons. */
+	/* the counts hang in the row's bottom-right corner without displacing the
+	   buttons, which stay centred on the card */
+	.deck-counts {
+		position: absolute;
+		right: 0;
+		/* the button's own padding and border, so the numbers sit on the same
+		   line as the words in the row rather than on the row's box edge */
+		bottom: 5px;
+		/* not a flex row: a flex item is blockified, and an underline only
+		   runs under an INLINE box's padding — which is what widens the rule
+		   under the current count past its digit */
+		white-space: nowrap;
+		font-size: 0.9rem;
+		font-weight: 500;
+	}
+	/* anki's deck browser colours: blue for new, rust for what is being
+	   learned, green for the reviews coming round. A zero keeps its colour
+	   here — the three are read as one running total, and a grey gap in the
+	   middle of it breaks the line up */
+	.deck-counts .new {
+		color: #00a;
+	}
+	.deck-counts .learn {
+		color: #c35617;
+	}
+	.deck-counts .review {
+		color: #070;
+	}
+	/* the hair space that widens the underline, shrunk a touch further: the
+	   space scales with its own font size, so this is the fine adjustment */
+	.deck-counts .hair {
+		font-size: 0.7em;
+	}
+	.deck-counts .plus {
+		color: black;
+		font-weight: 400;
+		margin-inline: 1px;
+	}
+	/* which of the three the card on screen came from — underlined in its own
+	   colour, as anki marks the queue it is drawing from */
+	.deck-counts .current {
+		text-decoration: underline;
+		text-underline-offset: 1px;
+	}
 	.card-actions {
+		position: relative;
 		align-self: stretch;
 		margin-top: auto;
 		padding-top: 14px;
@@ -570,12 +792,20 @@
 	.party :global(svg) {
 		display: block;
 	}
+	/* The panel sits 28% down the space it has to sit in. In zen that space
+	   is the whole window rather than what the two bars leave, so the same
+	   share is further down the page by 28% of the bars' ~110px — without it
+	   the message rides visibly higher in zen than out of it. Fullscreen needs
+	   nothing of its own: the dvh it is measured in already grew. */
 	.deck-done {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 4px;
-		margin-top: 28vh;
+		margin-top: 28dvh;
+	}
+	.deck-done.zen {
+		margin-top: calc(28dvh + 30px);
 	}
 	.next-review {
 		font-size: 0.9rem;

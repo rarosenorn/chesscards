@@ -42,25 +42,47 @@
 	   the pair it would sit in. */
 	--board-col-gap: 20px;
 	/* A card whose boards all stand alone has no column to line up with, so
-	   its boards take this much more than a grid cell — 1.6 puts a lone board
-	   at ~698px of the 892px card, leaving the rim its air. The earlier 1.411
+	   its boards take this much more than a grid cell — 1.8 puts a lone board
+	   at ~718px of the card's 818px of content, leaving the rim its air. The
+	   earlier 1.411
 	   only held the board at the 563px it rendered before the card narrowed;
 	   a solo board can afford the width nothing else is using. */
-	--board-solo-scale: 1.6;
-	/* The card's floor, derived from the board it has to hold: a lone board's
-	   own width (the card less its 74px of rims, halved into cells, one cell
-	   less half the gap, taken up by the solo scale) plus 132px for the move
-	   line, a line of text and the air a sparse card keeps under them. Both
-	   numbers come from the 695px this used to be fixed at, back when a solo
-	   board rendered 563px wide — so any change to the board size moves the
-	   floor with it rather than leaving a taller board in the same box.
-	   It is deliberately NOT the revealed height: padding the question out to
-	   where the answer will leave it strands the board above a field of
-	   empty card, which reads worse than the card growing when the answer
-	   comes in. Browse (which shows no controls) sizes a card as study does. */
-	--flashcard-min-height: calc(
-		((var(--flashcard-width) - 74px) / 2 - var(--board-col-gap) / 2) * var(--board-solo-scale) + 132px
-	);
+	--board-solo-scale: 1.8;
+	/* What a lone board does NOT get: everything stacked above and below it.
+	   A board is square, so subtracting this from the viewport gives the width
+	   the window's HEIGHT can afford — the cap keeps a position from needing a
+	   scroll to be seen, the one thing a study card can't ask for.
+
+	   The study card composes its own budget out of the three parts, since two
+	   of them move with zen and fullscreen: the chrome above it, the margin
+	   above it, and the card's own furniture, which never moves. This figure
+	   is the fallback for anything not doing that arithmetic.
+
+	   The furniture is a whole card, answer included, not just the question:
+	   the rim, a one-line prompt, the strip above the board, the move line
+	   under it, the divider and two lines of answer text, the grade row, and
+	   the air the card keeps under itself. Budgeting for the question alone
+	   is what made a revealed card push its own bottom edge off the window —
+	   the answer is what the card is FOR, so the board takes what is left
+	   after it, and the same board serves both states. A longer answer than
+	   two lines scrolls, and that is the rare card. */
+	--card-furniture: 336px;
+	--board-height-budget: 384px;
+	/* The card's floor is composed on the card itself (see .flashcard below),
+	   not here: it has to read --board-height-budget, and a custom property
+	   declared at :root resolves its own var()s at :root — which is how the
+	   floor came to use a different budget from the board it was sizing for.
+	   What lives here is the part that never moves. */
+	/* The card's stack around a lone board, measured rather than guessed: the
+	   32/10 rims, a one-line prompt, the board block's 12px margins, and the
+	   grade row with its padding, plus the move line under the board (all
+	   measured on a live card, not guessed).
+	   The move line IS reserved: a question and its answer show the same
+	   board, so without it the card would grow under the pointer the moment
+	   the answer came in. The cost is that much air under a board with no
+	   moves to name. */
+	--card-stack: 207px;
+	--grade-row: 48px;
 }
 /* page-height changes (e.g. switching editor stages) must not toggle the
    window scrollbar: that shifts the viewport width and makes the responsive
@@ -245,6 +267,40 @@ body.piece-grabbing * {
    numbers that set how large a board renders. */
 .flashcard {
 	max-width: var(--flashcard-width);
+	/* A lone board's size, decided once per card: the card's share of its
+	   width, or what the window's height leaves — whichever is smaller. The
+	   board reads it, and so does the floor below, so the two can never be
+	   sized from different budgets. */
+	--solo-board-size: min(
+		((var(--flashcard-width) - 74px) / 2 - var(--board-col-gap) / 2) * var(--board-solo-scale),
+		100dvh - var(--board-height-budget)
+	);
+}
+/* the study page (its grade row is the tell) is measured to fit the window,
+   so the page's own bottom room shrinks to the card's own breathing space */
+/* .layout in front: this ties with the root layout's own scoped `main` rule
+   on specificity otherwise, and loses on order */
+.layout main:has(.flashcard-btn-row) {
+	padding-bottom: var(--page-bottom, 24px);
+}
+/* In zen the card is alone on the page, so it centres in it rather than
+   hanging from the top with the leftover room piling up underneath. Its own
+   top margin is still in the box, so centring leaves exactly that much more
+   space above than below — the card sits a little high of centre, which is
+   where the eye expects it. */
+.layout.zen main:has(.flashcard-btn-row) {
+	display: flex;
+	flex-direction: column;
+	/* NOT centred: the card grows when the answer comes in, and a centred
+	   card would push its top edge up by half of that — the board would slide
+	   under the pointer on every reveal. The card carries the offset centring
+	   would have given its QUESTION height instead (--zen-lift), so the answer
+	   expands downwards only. */
+	justify-content: flex-start;
+	/* the card is pinned from the top, so this only shows once the answer has
+	   grown it past the window: the room it keeps under itself when the page
+	   has to scroll, rather than the card ending at the very edge */
+	padding-bottom: 30px;
 }
 /* one side of a card: the blocks stack here rather than directly in the
    card, so the side can carry its own reading axis (see side-alignment.js) */
@@ -340,7 +396,10 @@ body.piece-grabbing * {
    line up with and the half-width cell is only a habit — the boards take
    the solo share of the card instead. */
 .flashcard[data-boards="solo"] .single-board-block > .board-container {
-	width: calc((50% - var(--board-col-gap) / 2) * var(--board-solo-scale));
+	/* the card's share, or what the window's height leaves — whichever is
+	   smaller. min-width above still holds the floor, so a very short window
+	   scrolls rather than crushing the board to nothing */
+	width: var(--solo-board-size);
 }
 .flashcard .board-grid-block {
 	display: grid;

@@ -119,11 +119,10 @@ export const parseAside = (fen, text) => {
 // reads as a sentence does.
 //
 // `line` is the board's own moves, and however far the written ones simply
-// follow it, they ARE it: those tokens name a ply of the line rather than
-// opening an aside, so clicking one steps the board exactly as clicking it in
-// the move line would. The aside starts where the two part company — which is
-// how a whole line written out ("1.e4 e5 2.Nf3 Nc6") wires itself up, half of
-// it to the board's line and the rest to the branch it leaves.
+// follow it, they ARE it: the board already plays them and its move line
+// already names them, so they are written as ordinary prose — nothing to
+// click, nothing to go to. The aside starts where the two part company, and
+// only that part becomes moves you can play.
 //
 // `hidden` counts moves the aside must be played through but that the text
 // does not write out: prose says "after 7...b6 8.Nc3" about a position the
@@ -138,12 +137,12 @@ export const moveRefContent = ({ board, from, moves, infos, line = [], hidden = 
 		{
 			type: "text",
 			text: moveLabel(info, i - hidden),
-			marks: [{
-				type: "moveRef",
-				attrs: i < shared
-					? { board, from: from + i + 1, moves: "", at: 0 }
-					: { board, from: from + shared, moves: branch, at: i - shared + 1 }
-			}]
+			...(i < shared ? {} : {
+				marks: [{
+					type: "moveRef",
+					attrs: { board, from: from + shared, moves: branch, at: i - shared + 1 }
+				}]
+			})
 		}
 	]);
 }

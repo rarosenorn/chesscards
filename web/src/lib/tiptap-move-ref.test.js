@@ -83,19 +83,16 @@ describe("a card holding one", () => {
 describe("moves that follow the board's own line", () => {
 	const line = ["e4", "e5", "Nf3"];
 	const parsed = parseAside(START, "1.e4 e5 2.Nf3 Nc6 3.Bb5");
-	const attrs = moveRefContent({ board: 1, from: 0, moves: parsed.moves, infos: parsed.infos, line })
-		.filter(node => node.marks).map(node => node.marks[0].attrs);
+	const nodes = moveRefContent({ board: 1, from: 0, moves: parsed.moves, infos: parsed.infos, line })
+		.filter(node => node.text.trim());
 
-	it("name a ply of it, so a click steps the line to that move", () => {
-		expect(attrs.slice(0, 3)).toEqual([
-			{ board: 1, from: 1, moves: "", at: 0 },
-			{ board: 1, from: 2, moves: "", at: 0 },
-			{ board: 1, from: 3, moves: "", at: 0 }
-		]);
+	it("are written as prose: the board plays them, and its move line names them", () => {
+		expect(nodes.slice(0, 3).map(node => [node.text, !!node.marks]))
+			.toEqual([["1.e4", false], ["e5", false], ["2.Nf3", false]]);
 	});
 
-	it("and the aside starts where the two part company", () => {
-		expect(attrs.slice(3)).toEqual([
+	it("and only what leaves the line is a move you can play", () => {
+		expect(nodes.slice(3).map(node => node.marks[0].attrs)).toEqual([
 			{ board: 1, from: 3, moves: "Nc6 Bb5", at: 1 },
 			{ board: 1, from: 3, moves: "Nc6 Bb5", at: 2 }
 		]);

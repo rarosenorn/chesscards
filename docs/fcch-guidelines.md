@@ -8,9 +8,13 @@ wins.
 
 ## Workflow
 
-1. Extract the named chapter/section from the book PDF in `/home/kvothe/books/`
-   (they are large — use `pdftotext` on the page range; find the range by
-   extracting the whole text once and locating the chapter heading).
+1. Read the named chapter. From a book PDF in `/home/kvothe/books/` (they are
+   large — use `pdftotext` on the page range; find the range by extracting the
+   whole text once and locating the chapter heading), or from a Chessable
+   course through Claude in Chrome: open the chapter's /learn/ URL, switch the
+   side panel to book mode, and step its variations with "Next variation".
+   Never answer MoveTrainer's prompts — that writes study progress to the
+   user's account. The `/fcch` command has the details.
 2. Draft the cards per the rules below.
 3. Show the cards in the reply as readable pairs — position, prompt, answer —
    and wait for approval. Do NOT write anything yet.
@@ -129,13 +133,20 @@ scheduled independently.
   reveals that board's hidden moves and annotations **in place**. Putting a
   plain board on the front and a solved copy on the back shows the position
   twice on the answer screen and is always wrong. The back is for prose.
-- **A card asking "what do you play here" starts at the position.** Give the
-  board the derived `fen` and no `moves` at all: the lead-in moves are not the
-  question, and replaying them each review is work that teaches nothing. Name
-  the line in the prompt text instead ("Black pins your knight with 3...Bg4").
-- Keep `moves` with `solutionFrom` for the cards whose answer really is a
-  *sequence* — a forced three-ply punishment, a tactic. Everything from
-  `solutionFrom` stays hidden until the card is turned.
+- **The line goes on the board, and the board opens at the question.** Give
+  the board the start position and the whole line the source gives up to the
+  position being asked about. The board opens at its last move
+  (`Chessboard.svelte`), so the lead-in is never replayed — it sits in the
+  move line underneath, one step away, for when the position needs explaining.
+- **A single-move answer is a green arrow, not a played move.** The line stops
+  at the question and `solutionArrows` reveals the move, keyed by the ply the
+  board is showing (the number of context moves). It is also the only way to
+  say "any of these two or three moves".
+- **An answer that is a sequence goes in `moves`**, with `solutionFrom` at the
+  ply where it begins: everything from there is hidden until the card is
+  turned. A forced three-ply punishment, a tactic.
+- The prompt therefore says none of it: "What do you play and why?" and
+  nothing more, because the board carries the road to the position.
 - **Anything that gives the answer away must ride the solution layer.**
   `annotations` (`arrows`/`markers`) show immediately, including before the
   turn; `solutionAnnotations` (`solutionArrows`/`solutionMarkers`) appear only
@@ -164,22 +175,44 @@ on the board (`moves` with `solutionFrom`), and the check comes for free.
 
 ## Card types
 
-**Move cards** — a position, the prompt **"What do you play and why?"** word
-for word, answer = the move plus one line of reasoning. The backbone of an
+**Move cards** — a position, the prompt **"What do you play and why?"**,
+answer = the move plus one line of reasoning. The backbone of an
 opening deck. The *why* is not optional: a move memorized without its idea does
 not survive the first deviation.
 
-The prompt is the same on every such card because the board already says which
-position is being asked about — a preamble restating Black's last move is
-reading, not retrieval. Add a clause only for what the board cannot show ("or
-4...Nd7 instead of taking"). Cards whose answer is a forced *sequence* keep
-their own verb ("Punish it"), and plan, recognition and why-cards ask their own
-question.
+The prompt is that question and nothing else: the moves that reach the position
+ride on the board, as many as the source gives, and the board opens at the last
+of them (see "The atom is a position"). Add a clause only for what the board
+cannot show ("4...Nd7 is met the same way"). Cards whose answer is a forced
+sequence keep their own verb ("punish it"), and plan, recognition and why-cards
+ask their own question.
 
 **Plan cards** — "what is Black's plan in this structure?", "which piece is
 White's problem piece and why?". Prose, no single forced move. These are the
 cards that make the repertoire transferable, and they are the ones books like
 FCO are actually written to teach. Do not let move cards crowd them out.
+
+### Plans and branches, not every move
+
+Card the positions where the player has something to **decide** or a plan to
+**hold** — not every move of the line. Three shapes carry a chapter:
+
+- **Plan cards** — "your king is on the queenside, what is your plan?", "why is
+  taking on e5 not as promising as it looks?" The idea the position turns on,
+  stated once and deep enough to cover the next few moves.
+- **Response cards** — one per option the opponent really has at a branch,
+  asked at the position where they have just played it. The board shows their
+  move, so the prompt stays "What do you play and why?".
+- **Move cards only where the move is the point** — a refutation, a trap, or a
+  counter-intuitive move the source itself flags (4.dxe5!, 6.Nde2!, 6.h3!).
+
+Do not card the routine moves in between: recaptures, developing moves and plan
+continuations whose only *why* is the plan a plan card already carries (5.Nc3,
+"we cover the pawn and develop our knight"; 7.Qd2, "we continue with our plan").
+A deck built from a Chessable course has a further reason to skip them —
+MoveTrainer already drills move-by-move recall, so the deck's job is what the
+trainer does not test: the plans, and the replies to the moves that leave the
+course's line.
 
 **Trap and refutation cards** — "White has just played X, which loses a pawn —
 how?". Card the punishment for the natural mistake, not every sideline.
@@ -230,13 +263,33 @@ these two or three moves", which a played `moves` list cannot express.
   mistake gets the same green as White's answer.
 - No idea arrows: the diagonal a bishop wants, the square a knight heads for,
   a piece's line of force. Those go in the answer prose, not on the board.
-- **Never draw an arrow along a move that the board already plays.** On a
-  sequence card the move line names every move and the pieces visibly move, so
-  the arrow would be pure noise. Arrows and `moves` are alternatives, never
-  both for the same move.
+- **Never draw an arrow along a move that the board already plays.** The move
+  line names every move and the pieces visibly move, so the arrow would be pure
+  noise — and since the answer now rides in `moves` behind `solutionFrom`, most
+  cards need no arrow at all. One earns its place where there is no move to
+  read: two or three moves that would all do, a plan several moves ahead.
 - Markers still mark a *square* the answer turns on (the mate square, the
   outpost). Use them sparingly — a board covered in annotation teaches
   nothing.
+
+## Moves in the text
+
+Square brackets in a spec's `text` make the moves inside them clickable: the
+card's board plays them (`import-deck.mjs` documents the syntax — `[3...exd4
+4.Nxd4]`, `[6.Bf4](2)` for a second board, `[4.d4 | 4...exd4 5.Nxd4]` to play a
+move the sentence does not write out).
+
+- **Only moves the board does not already play.** A move on the board's own
+  line is named by the move line under it and reached by stepping there, so a
+  bracket around it buys nothing and pills the prose for no reason. Where a run
+  starts on the line and then leaves it, only the part that leaves is
+  clickable — the importer splits it there.
+- **A line, not a move.** A single move named in an answer is prose: on most
+  cards it IS the answer, and the board is right in front of you. Brackets earn
+  their place around a sequence the reader cannot otherwise reach — a
+  transposition, a refutation, the sample line a plan runs through.
+- A move that does not play from where it is hung fails validation, so the
+  prose and the boards cannot drift apart unnoticed.
 
 ## Formatting
 
@@ -298,5 +351,20 @@ order — the author's sidelines (his A/B/C/D options) carded where he raises
 them, rather than gathered at the end. Chapter order will follow how often
 the defence is met, once there is more than one.
 
+Reworked 2026-09-05 to "Plans and branches, not every move": the routine
+move cards were merged into plan cards and pruned.
+
 1. Philidor 3...Bg4 — 1.e4 e5 2.Nf3 d6 3.d4 Bg4 4.dxe5!, the Opera Game
    refutation, plus the 3.d4 overview that opens the variation.
+2. Philidor 3...exd4: 5...c5? — 4.Nxd4 Nf6 5.Nc3 c5? 6.Nde2!, the knight's
+   road to d5 (Nd4-e2-f4) and why the pawn push weakens it. The chapter's
+   note on Black's rare fifth moves waits for the 5...Be7 chapter, which is
+   where that setup is taught.
+3. Philidor 3...exd4: 5...Be7 — 5.Nc3 Be7 6.Bf4!, the queenside-castling plan
+   (Qd2, O-O-O) and the f3/g4/h4 pawn storm, plus the rare fifth moves
+   (5...g6, 5...c6, 5...Nc6), which get the same setup.
+4. Petroff 3.Nc3 Bc5? — 2...Nf6 3.Nc3 (the transpositions it invites: 3...Nc6
+   4.d4 Four Knights Scotch, 3...d6 4.d4 Philidor) and the refutation of the
+   Stafford-style gambit 3...Bc5? 4.Nxe5, with 6.h3! and the 6.Bc4?? Ng4! trap.
+   Appended after the Philidor chapters rather than ahead of them (2...Nf6 is
+   the more common defence, but those chapters are already studied).

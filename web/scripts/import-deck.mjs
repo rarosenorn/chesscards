@@ -56,6 +56,9 @@
 // -----------------
 // Square brackets make the moves inside them clickable: clicking one plays it
 // on the card's board, which is what the card is about (tiptap-move-ref.js).
+// Only moves the board does NOT already play become clickable — the ones it
+// does are named by the move line under it, so they are written as prose and
+// a run that starts on the line and leaves it is split where it leaves.
 //
 //   "[3.d4] attacks the e-pawn"      the moves leave the board's line at the
 //                                    position the FIRST move's number names —

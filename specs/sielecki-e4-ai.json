@@ -216,7 +216,7 @@
             ]
           },
           "back": {
-            "text": "[5.Qxd8+ Kxd8 6.Nxe5] is fantastic for White. We win the most important pawn on the board, spoil Black's castling rights, and even win time by attacking Black's g4-bishop."
+            "text": "5.Qxd8+ Kxd8 6.Nxe5 is fantastic for White. We win the most important pawn on the board, spoil Black's castling rights, and even win time by attacking Black's g4-bishop."
           }
         },
         {
@@ -406,7 +406,7 @@
             ]
           },
           "back": {
-            "text": "[8.Bxf7+ Kd7 9.Qe6#] — Black can't give up the f-pawn."
+            "text": "8.Bxf7+ Kd7 9.Qe6# — Black can't give up the f-pawn."
           }
         },
         {
@@ -698,7 +698,7 @@
             ]
           },
           "back": {
-            "text": "A sample line is [8...Nxd4 9.Qxd4 Re8 10.f3], followed by g4 and h4, the pawn storm on the kingside. It is difficult for Black to generate any counterplay."
+            "text": "A sample line is 8...Nxd4 9.Qxd4 Re8 10.f3, followed by g4 and h4, the pawn storm on the kingside. It is difficult for Black to generate any counterplay."
           }
         },
         {
@@ -1049,7 +1049,7 @@
             ]
           },
           "back": {
-            "text": "6.Bc4?? and after [6.Bc4 | Ng4 7.O-O Qh4] White already collapses due to the threats on h2 and f2!"
+            "text": "6.Bc4?? and after Ng4 7.O-O Qh4 White already collapses due to the threats on h2 and f2!"
           }
         },
         {

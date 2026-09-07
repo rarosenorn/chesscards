@@ -688,6 +688,12 @@
 	}
 	.flashcard {
 		align-items: center;
+		/* No card under the card: the position, its text and the grades sit on
+		   the page itself. The surface class still shapes the column and its
+		   width — it just stops painting. */
+		background-color: transparent;
+		box-shadow: none;
+		border-radius: 0;
 		--card-margin: 24px;
 		/* the air under a revealed card, matching the 30px zen keeps at each
 		   end of its frame — the furniture holds none of its own, so this is

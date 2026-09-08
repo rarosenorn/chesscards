@@ -626,12 +626,13 @@
 	.zen-btn:active {
 		transform: translateY(1px);
 	}
-	/* The floor is the card the question will become: its board, its own
-	   furniture and the room held for the answer (--card-furniture, in
-	   app.css, where the same figure sizes the board). A question is
-	   therefore already the height it will keep, and the reveal fills room
-	   rather than pushing the card down the window. Layout inside the card
-	   comes from app.css ("card board layout"), shared with browse. */
+	/* The floor is what a question holds — its board, one line of prompt, the
+	   move line and the grade row (--card-stack) — so a card reserves no room
+	   for something it is not showing. The answer grows it from there, into
+	   room the BOARD was already sized around (--card-furniture, in app.css,
+	   which counts the answer as well): the board is small enough that a
+	   revealed card still ends where it should. Layout inside the card comes
+	   from app.css ("card board layout"), shared with browse. */
 	/* zen: with the bars gone the card would sit against the window's edge, so
 	   it takes twice its usual air above. The mode keeps it through a peek —
 	   the bars sliding in is movement enough without the card shifting too */
@@ -702,7 +703,7 @@
 		   whole furniture, the answer's room included. A question therefore
 		   opens at the size it will keep, and the reveal fills room the card
 		   was already holding instead of growing into the page. */
-		min-height: calc(var(--solo-board-size) + var(--card-furniture));
+		min-height: calc(var(--solo-board-size) + var(--card-stack));
 		/* the top is the card's rim, wider than the divider's 18px between
 		   the sides; the row below closes the card at the 10px it has always
 		   kept from the bottom edge */

@@ -309,11 +309,11 @@ body.piece-grabbing * {
 .layout.zen main:has(.flashcard-btn-row) {
 	display: flex;
 	flex-direction: column;
-	/* NOT centred: the card holds the answer's room from the start (its floor
-	   is board + furniture), so it is already the height centring would place,
-	   and it carries that offset as a margin (--zen-lift) instead. An answer
-	   longer than the room held for it then grows downwards rather than
-	   sliding the board out from under the pointer. */
+	/* NOT centred: a question stands at its own height and the answer grows it,
+	   so centring would lift the board on every reveal. The card hangs from a
+	   fixed top instead, at the offset centring would have given it once
+	   revealed (--zen-lift, computed for the whole card), and the answer grows
+	   downwards into the room below. */
 	justify-content: flex-start;
 	/* the card is pinned from the top, so this only shows once the answer has
 	   grown it past the window: the room it keeps under itself when the page

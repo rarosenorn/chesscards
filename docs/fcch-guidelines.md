@@ -187,6 +187,14 @@ cannot show ("4...Nd7 is met the same way"). Cards whose answer is a forced
 sequence keep their own verb ("punish it"), and plan, recognition and why-cards
 ask their own question.
 
+**Every prompt names the opening.** A deck spans several defences and the board
+cannot say which one it is showing, so the prompt opens with the name: "In the
+Philidor, what do you play and why?", "In the Petroff, what is your plan?" The
+name and nothing else — never the moves that reach the position ("in the
+Petroff after 3.Nc3 Bb4"), because the move line under the board already spells
+them out. The exception is the recognition card whose answer *is* the name
+("Which defence is this?"), which stays silent.
+
 **Plan cards** — "what is Black's plan in this structure?", "which piece is
 White's problem piece and why?". Prose, no single forced move. These are the
 cards that make the repertoire transferable, and they are the ones books like
@@ -368,3 +376,7 @@ move cards were merged into plan cards and pruned.
    Stafford-style gambit 3...Bc5? 4.Nxe5, with 6.h3! and the 6.Bc4?? Ng4! trap.
    Appended after the Philidor chapters rather than ahead of them (2...Nf6 is
    the more common defence, but those chapters are already studied).
+5. Petroff 3.Nc3 Bb4 — 4.Nxe5 and the concept that answers every move order
+   Black uses to regain the pawn (Nd3 retreat, always dxc3, Be2 and O-O), the
+   5...Nxe4?? 6.Qg4! double attack, and the two plans after 8.O-O: f3/Bg5 to
+   evict the e4-knight, and Nf4/c4 to open the position for the bishops.

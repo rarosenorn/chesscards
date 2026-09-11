@@ -34,6 +34,13 @@
     "petroff-h3": "830b9d9a-8b25-4a55-8192-813e88ccf067",
     "petroff-bc4-trap": "7ffdb743-b6bc-4baf-a9ec-8ec73dcb70ea",
     "petroff-qd4": "49c6560e-56a6-4f6d-bb84-56ab22ce5d77",
-    "petroff-oo-d3": "be1d6a65-5794-4443-ac38-337b28cc1e46"
+    "petroff-oo-d3": "be1d6a65-5794-4443-ac38-337b28cc1e46",
+    "petroff-bb4-nxe5": "be9a9427-2b80-42de-9c14-09509dc2a941",
+    "petroff-bb4-concept": "abf0c2ae-4916-45d1-89f2-1dd0f67c11df",
+    "petroff-bb4-nxe4-trap": "43f62f21-7f60-4adf-bec8-c7d4a065c946",
+    "petroff-bb4-nd3": "12c460ab-61e8-429b-abb2-bcbbf6339f71",
+    "petroff-bb4-result": "1601d25c-af63-4e8e-83aa-b49b62241859",
+    "petroff-bb4-evict": "efa91d0a-f9bf-4daf-8252-e0fa780dca1f",
+    "petroff-bb4-nf4-open": "71550bfe-27fc-455d-8bfb-07ee33092a02"
   }
 }

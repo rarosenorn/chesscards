@@ -49,7 +49,7 @@
         {
           "id": "phil-bg4-move3",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Philidor, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -79,7 +79,7 @@
         {
           "id": "phil-bg4-vs-nc6",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Philidor, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -111,7 +111,7 @@
         {
           "id": "phil-bg4-vs-rare",
           "front": {
-            "text": "Black meets 3.d4 with a rare third move. How do you develop?",
+            "text": "In the Philidor, Black meets 3.d4 with a rare third move. How do you develop?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -133,7 +133,7 @@
         {
           "id": "phil-bg4-no-trade-e5",
           "front": {
-            "text": "Black has played 3...Nc6 and the e5-pawn is there for the taking. In this central configuration (e4 & d4 against e5 & d6), why is taking on e5 not as promising as it looks?",
+            "text": "In the Philidor, Black has played 3...Nc6 and the e5-pawn is there for the taking. In this central configuration (e4 & d4 against e5 & d6), why is taking on e5 not as promising as it looks?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -161,7 +161,7 @@
         {
           "id": "phil-bg4-refute",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Philidor, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -193,7 +193,7 @@
         {
           "id": "phil-bg4-dxe5-punish",
           "front": {
-            "text": "How do you punish Black's recapture?",
+            "text": "In the Philidor, how do you punish Black's recapture?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -222,7 +222,7 @@
         {
           "id": "phil-bg4-vs-nc6-nd7",
           "front": {
-            "text": "What do you play and why? (4...Nd7 is met the same way.)",
+            "text": "In the Philidor, what do you play and why? (4...Nd7 is met the same way.)",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -256,7 +256,7 @@
         {
           "id": "phil-bg4-qxf3",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Philidor, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -290,7 +290,7 @@
         {
           "id": "phil-bg4-bc4",
           "front": {
-            "text": "Black's king is stuck in the centre and you have the bishop pair. What is your plan?",
+            "text": "In the Philidor, Black's king is stuck in the centre and you have the bishop pair. What is your plan?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -339,7 +339,7 @@
         {
           "id": "phil-bg4-vs-qf6",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Philidor, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -377,7 +377,7 @@
         {
           "id": "phil-bg4-b6-mate",
           "front": {
-            "text": "Black has defended the b-pawn. Punish it.",
+            "text": "In the Philidor, Black has defended the b-pawn. Punish it.",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -412,7 +412,7 @@
         {
           "id": "phil-bg4-vs-qe7",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Philidor, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -457,7 +457,7 @@
         {
           "id": "phil-exd4-nxd4",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Philidor, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -489,7 +489,7 @@
         {
           "id": "phil-exd4-vs-early-c5",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Philidor, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -523,7 +523,7 @@
         {
           "id": "phil-exd4-nde2",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Philidor, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -559,7 +559,7 @@
         {
           "id": "phil-exd4-why-c5-bad",
           "front": {
-            "text": "Why is the pawn push a mistake?",
+            "text": "In the Philidor, why is the pawn push a mistake?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -586,7 +586,7 @@
         {
           "id": "phil-exd4-bc4",
           "front": {
-            "text": "The knight has reached f4 and Black has castled. What is your plan?",
+            "text": "In the Philidor, the knight has reached f4 and Black has castled. What is your plan?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -631,7 +631,7 @@
         {
           "id": "phil-be7-bf4",
           "front": {
-            "text": "Black has chosen the modest 5...Be7. What do you play, and what is the plan?",
+            "text": "In the Philidor, Black has chosen the modest 5...Be7. What do you play, and what is the plan?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -667,7 +667,7 @@
         {
           "id": "phil-be7-storm",
           "front": {
-            "text": "You have castled long. What is your plan?",
+            "text": "In the Philidor, you have castled long. What is your plan?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -704,7 +704,7 @@
         {
           "id": "phil-be7-rare-5th",
           "front": {
-            "text": "What do you play and why? (5...c6 and 5...Nc6 are met the same way.)",
+            "text": "In the Philidor, what do you play and why? (5...c6 and 5...Nc6 are met the same way.)",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -766,7 +766,7 @@
         {
           "id": "petroff-nc3",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Petroff, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -796,7 +796,7 @@
         {
           "id": "petroff-nc6-transpose",
           "front": {
-            "text": "What do you play, and which opening do you reach?",
+            "text": "In the Petroff, what do you play, and which opening do you reach?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -828,7 +828,7 @@
         {
           "id": "petroff-d6-transpose",
           "front": {
-            "text": "What do you play, and which opening do you reach?",
+            "text": "In the Petroff, what do you play, and which opening do you reach?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -860,7 +860,7 @@
         {
           "id": "petroff-bc5-nxe5",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Petroff, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -892,7 +892,7 @@
         {
           "id": "petroff-bc5-d6",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Petroff, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -926,7 +926,7 @@
         {
           "id": "petroff-nxc6",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Petroff, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -987,7 +987,7 @@
         {
           "id": "petroff-h3",
           "front": {
-            "text": "Black is set up for the Stafford. What is Black's idea, and how do you stop it?",
+            "text": "In the Petroff, Black is set up for the Stafford. What is Black's idea, and how do you stop it?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -1023,7 +1023,7 @@
         {
           "id": "petroff-bc4-trap",
           "front": {
-            "text": "Why is the natural 6.Bc4 a blunder here?",
+            "text": "In the Petroff, why is the natural 6.Bc4 a blunder here?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -1055,7 +1055,7 @@
         {
           "id": "petroff-qd4",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Petroff, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -1093,7 +1093,7 @@
         {
           "id": "petroff-oo-d3",
           "front": {
-            "text": "What do you play and why?",
+            "text": "In the Petroff, what do you play and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -1126,6 +1126,240 @@
           },
           "back": {
             "text": "7.d3 covers e4 reliably and intends Be2 and O-O next. Once we have played d2-d3, Bc1-e3 is a logical idea to trade off Black's most active piece."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Petroff 3.Nc3 Bb4",
+      "cards": [
+        {
+          "id": "petroff-bb4-nxe5",
+          "front": {
+            "text": "In the Petroff, what do you play and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "orientation": "w",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nf6",
+                  "Nc3",
+                  "Bb4"
+                ],
+                "solutionArrows": {
+                  "6": [
+                    [
+                      "success",
+                      "f3",
+                      "e5"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "4.Nxe5. We grab the central pawn — Black has not blundered it, though: by playing ...Bb4 they prepared to capture our knight on c3, followed by ...Nxe4. 3...Bb4 is Black's best move if they want to avoid 3...Nc6."
+          }
+        },
+        {
+          "id": "petroff-bb4-concept",
+          "front": {
+            "text": "In the Petroff, Black will regain the pawn, in one of several move orders. What is your concept?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "orientation": "w",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nf6",
+                  "Nc3",
+                  "Bb4",
+                  "Nxe5"
+                ]
+              }
+            ]
+          },
+          "back": {
+            "text": "1. If Black attacks the knight with ...Qe7 or ...d6, retreat to d3, attacking Black's bishop in the process.\n2. If Black takes on c3, always recapture with the d-pawn — this speeds up our development, as the c1-bishop gains immediate scope.\n3. Secure our king quickly with Be2 and O-O."
+          }
+        },
+        {
+          "id": "petroff-bb4-nxe4-trap",
+          "front": {
+            "text": "In the Petroff, Black has grabbed a second pawn with 5...Nxe4??. Punish it.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "orientation": "w",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nf6",
+                  "Nc3",
+                  "Bb4",
+                  "Nxe5",
+                  "Bxc3",
+                  "dxc3",
+                  "Nxe4",
+                  "Qg4"
+                ],
+                "solutionFrom": 10
+              }
+            ]
+          },
+          "back": {
+            "text": "6.Qg4! We attack not only the knight but also the g-pawn — Black has no good defense against this double attack."
+          }
+        },
+        {
+          "id": "petroff-bb4-nd3",
+          "front": {
+            "text": "In the Petroff, what do you play and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "orientation": "w",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nf6",
+                  "Nc3",
+                  "Bb4",
+                  "Nxe5",
+                  "Bxc3",
+                  "dxc3",
+                  "d6"
+                ],
+                "solutionArrows": {
+                  "10": [
+                    [
+                      "success",
+                      "e5",
+                      "d3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": {
+            "text": "6.Nd3, our standard retreat square in this line. From d3 our knight can jump to f4 later, aiming at d5 — a more effective spot than f3 — and at a later stage we can play f2-f3 to push back Black's centralized knight."
+          }
+        },
+        {
+          "id": "petroff-bb4-result",
+          "front": {
+            "text": "In the Petroff, the opening phase is complete. What have you got out of it?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "orientation": "w",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nf6",
+                  "Nc3",
+                  "Bb4",
+                  "Nxe5",
+                  "Bxc3",
+                  "dxc3",
+                  "d6",
+                  "Nd3",
+                  "Nxe4",
+                  "Be2",
+                  "O-O",
+                  "O-O"
+                ]
+              }
+            ]
+          },
+          "back": {
+            "text": "The pair of bishops in an open position, which is a good opening result. 3...Bb4 is solid, but comfortable for White."
+          }
+        },
+        {
+          "id": "petroff-bb4-evict",
+          "front": {
+            "text": "In the Petroff, Black's knight sits on e4. How do you evict it, and what comes with it?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "orientation": "w",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nf6",
+                  "Nc3",
+                  "Bb4",
+                  "Nxe5",
+                  "Bxc3",
+                  "dxc3",
+                  "d6",
+                  "Nd3",
+                  "Nxe4",
+                  "Be2",
+                  "O-O",
+                  "O-O",
+                  "Nc6",
+                  "f3",
+                  "Nf6",
+                  "Bg5"
+                ],
+                "solutionFrom": 16
+              }
+            ]
+          },
+          "back": {
+            "text": "9.f3 Nf6 10.Bg5. The move 10.Bg5 is very unpleasant for Black, as there is no simple way to break the pin."
+          }
+        },
+        {
+          "id": "petroff-bb4-nf4-open",
+          "front": {
+            "text": "In the Petroff, Black has played 8...d5. What is your plan?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "orientation": "w",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nf6",
+                  "Nc3",
+                  "Bb4",
+                  "Nxe5",
+                  "Bxc3",
+                  "dxc3",
+                  "d6",
+                  "Nd3",
+                  "Nxe4",
+                  "Be2",
+                  "O-O",
+                  "O-O",
+                  "d5",
+                  "Nf4",
+                  "c6",
+                  "Be3",
+                  "Nd7",
+                  "c4"
+                ],
+                "solutionFrom": 16
+              }
+            ]
+          },
+          "back": {
+            "text": "9.Nf4 c6 10.Be3 Nd7 11.c4 — this shows how Nf4 can help us open the position for our bishops."
           }
         }
       ]

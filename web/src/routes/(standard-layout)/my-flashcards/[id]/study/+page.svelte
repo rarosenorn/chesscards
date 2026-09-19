@@ -134,8 +134,16 @@
 		};
 	});
 
+	const byDueTime = (min, card) => Date.parse(card.due) < Date.parse(min.due) ? card : min;
+
 	let currentCard = $derived.by(() => {
 		const due = deck.cards.filter(isDue);
+		// Learning cards are time-critical, so they come first and in the order
+		// they fell due — Anki fetches them the same way. This is what brings a
+		// card graded Again back into the session a minute later instead of
+		// leaving it to the end.
+		const learning = due.filter(card => queueOf(card) === "learn");
+		if (learning.length) return learning.reduce(byDueTime);
 		const reviews = due.filter(isReviewState);
 		if (reviews.length) {
 			return reviews.reduce((min, card) => shuffleKey(card.id) < shuffleKey(min.id) ? card : min);
@@ -145,9 +153,7 @@
 		// on, nearest first. Only ever from an empty queue, so a card fetched
 		// early can never displace one that is genuinely due.
 		const soon = deck.cards.filter(isDueSoon);
-		return soon.length
-			? soon.reduce((min, card) => Date.parse(card.due) < Date.parse(min.due) ? card : min)
-			: undefined;
+		return soon.length ? soon.reduce(byDueTime) : undefined;
 	});
 
 	// A revealed answer belongs to the deck layout, not to this page, so
@@ -210,10 +216,16 @@
 		if (ref) asides[ref.board] = { ...ref, nonce: ++clicks };
 	}
 
+	// Grading is the one moment the queue may move under you: the card on
+	// screen is leaving anyway. Reading the clock here is what lets a learning
+	// step that has elapsed come back now rather than at the end of the
+	// session — the timer below only runs while nothing is up.
+	const advanceQueueClock = () => { now = Date.now() };
 	const evaluateCard = async rating => {
 		const cardAndLog =
 			scheduler.next(currentCard, new Date(), rating);
 		isCardTurned = false;
+		advanceQueueClock();
 		deck.cards[deck.cards.indexOf(currentCard)] = cardAndLog.card;
 		await updateCardStudyStateAndAddLog(cardAndLog);
 	}
@@ -221,6 +233,7 @@
 	// tactic cards: Correct finishes the card for good, Incorrect re-queues
 	// it a day later (a post-fail success can't come from short-term memory)
 	const evaluateTactic = async correct => {
+		// shadows the queue's clock, which is advanced below like evaluateCard's
 		const now = new Date();
 		const card = {
 			...currentCard,
@@ -239,6 +252,7 @@
 		};
 		isCardTurned = false;
 		deck.cards[deck.cards.indexOf(currentCard)] = card;
+		advanceQueueClock();
 		await updateCardStudyStateAndAddLog({ card, log });
 	}
 

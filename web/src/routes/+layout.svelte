@@ -1,5 +1,6 @@
 <script>
 	import { setContext } from "svelte"
+	import { zenHidden } from "$lib/zen-state.svelte.js"
 	import { browser } from "$app/environment"
 	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, readPreview, applySchemeVars, applyFontVar, applyBannerVariant } from "$lib/design-preview.js"
 	import favicon from '$lib/assets/favicon.svg';
@@ -7,6 +8,7 @@
 	import ModalHost from "$lib/components/ModalHost.svelte"
 	import GlobalTooltip from "$lib/components/GlobalTooltip.svelte"
 	import { DEFAULT_BOARD_PREFS } from "$lib/board-prefs.js"
+	import { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE } from "$lib/rollover.js"
 	import "../reset.css"
 	import "../app.css"
 
@@ -15,6 +17,24 @@
 	// every chessboard in the app reads the user's board preferences from here
 	// (a getter so consumers stay reactive to profile changes)
 	setContext("boardPrefs", () => data.boardPrefs ?? DEFAULT_BOARD_PREFS);
+
+	// The hour a study day begins, read wherever a due date is (study, and the
+	// deck list's counts on the server).
+	setContext("rolloverHour", () => data.rolloverHour ?? DEFAULT_ROLLOVER_HOUR);
+
+	// ...and the zone it is read in, which only the browser knows. The server
+	// renders the deck list's counts and has no one to ask, so the browser
+	// leaves its zone in a cookie for the next request. It is rewritten on
+	// every load, so landing in another country moves the boundary with you.
+	if (browser) {
+		try {
+			const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			if (zone) document.cookie = `${TZ_COOKIE}=${encodeURIComponent(zone)}; path=/; max-age=31536000; samesite=lax`;
+		} catch {
+			// no zone means the server falls back to its own, which is what it
+			// did before there was a cookie at all
+		}
+	}
 
 	// design tryouts (/design): a scheme, menu font or banner variant being
 	// tried rides along on every page until reset there
@@ -32,8 +52,8 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<div class="layout">
-	<div id="topbar">
+<div class="layout" class:zen={zenHidden()}>
+	<div id="topbar" class:zen-hidden={zenHidden()}>
 		<div class="left-nav">
 			<a id="logo-anchor-tag" href="/"><Logo /><span class="wordmark">Chesscards</span></a>
 			<nav>
@@ -67,6 +87,22 @@
 	.layout {
 		display: flex;
 		flex-direction: column;
+		/* what main sits under, and so what it must leave out of its own
+		   height — zen hides the bar and hands the room back */
+		--top-bar-height: 72px;
+		/* both bars over a study card: this one and the deck's own. What the
+		   card subtracts from the window before sizing its board. */
+		--study-chrome: 110px;
+	}
+	.layout.zen {
+		--top-bar-height: 0px;
+		--study-chrome: 0px;
+	}
+	/* zen mode: the bar leaves the flow outright, so the page rises into the
+	   room it held. The peek puts it straight back — the layout that returns
+	   is the ordinary one, spacing and all (see zen-state.svelte.js) */
+	#topbar.zen-hidden {
+		display: none;
 	}
 	#topbar {
 		height: 72px;
@@ -176,7 +212,19 @@
 	}
 	main {
 		background-color: #efefef;
-		min-height: 100vh;
+		/* the window less the bar above it: a plain 100vh here made every
+		   page 72px taller than the window and gave it a scrollbar with
+		   nothing under it. Border-box, so the padding below is inside this
+		   rather than added to it. */
+		/* the +1px is deliberate: a document that fits exactly cannot be
+		   overscrolled, so the browser's bounce at the top and bottom never
+		   fires. One pixel of scroll costs nothing (the gutter is already
+		   reserved) and gives every page that give. */
+		min-height: calc(100dvh - var(--top-bar-height) + 1px);
+		/* room under a page that scrolls anyway. The study page is sized to
+		   fit the window instead, so it takes the small version (below) —
+		   100px of empty ground under the card is exactly the scroll nobody
+		   asked for. */
 		padding-bottom: 100px;
 		position: relative;
 		flex-grow: 1;

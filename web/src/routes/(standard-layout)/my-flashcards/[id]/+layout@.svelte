@@ -7,6 +7,7 @@
 	import { page } from "$app/state"
 	import { beforeNavigate, goto, preloadCode } from "$app/navigation"
 	import { setContext } from "svelte"
+	import { zenHidden } from "$lib/zen-state.svelte.js"
 	import { sideHasContent, syncTextBlocks } from "$lib/card-utils.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
 
@@ -115,12 +116,14 @@
 	// there for the one thing that is theirs, resetting their study progress.
 	// the editor trials (add-cards-2/-3/-5) keep their routes but not their
 	// tabs: the block editor won, and only it is offered
+	// study1 is the side-by-side trial of the study card (text left, board
+	// right); it keeps a tab of its own until the two can be compared
 	const paths = deck.isMarketplace
-		? ["study", "browse", "settings"]
-		: ["study", "browse", "add-cards", "settings"];
+		? ["study", "study1", "browse", "settings"]
+		: ["study", "study1", "browse", "add-cards", "settings"];
 	const names = deck.isMarketplace
-		? ["Study", "Cards", "Settings"]
-		: ["Study", "Cards", "Add cards", "Settings"];
+		? ["Study", "Study 1", "Cards", "Settings"]
+		: ["Study", "Study 1", "Cards", "Add cards", "Settings"];
 
 	// s/c/a/i jump between the deck's tabs. Bare letters, so they stand down
 	// wherever the keyboard is already spoken for — a text field, a card
@@ -143,7 +146,7 @@
 
 <svelte:window onkeydown={handleKeyDown} />
 
-<div class="deck-nav-container">
+<div class="deck-nav-container" class:zen-hidden={zenHidden()}>
 	<div class="breadcrumbs">
 		<a href="/my-flashcards">My flashcards</a>
 		<span>{"->"}</span>
@@ -169,6 +172,12 @@
 {@render children()}
 
 <style>
+	/* zen mode: the bar goes with the site bar above it, out of the flow
+	   entirely — and comes back in it, so the card keeps its usual distance
+	   from the chrome whenever the chrome is showing */
+	.deck-nav-container.zen-hidden {
+		display: none;
+	}
 	.deck-nav-container {
 		display: flex;
 		box-shadow: inset 0 -4px 6px -4px rgba(0, 0, 0, 0.2);

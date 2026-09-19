@@ -407,7 +407,24 @@
 		align-items: center;
 		width: 100%;
 	}
+	/* ...but a side holding a pair somewhere pins its lone boards left, where
+	   they line up with the column above or below instead of sitting off in
+	   the middle (app.css, .card-side[data-board-align="left"]) */
+	:global(.boards-left) .board-grid-block.single {
+		align-items: flex-start;
+	}
+	/* The card's default: a lone board is exactly one cell of the two-column
+	   grid, so it lines up with the pairs elsewhere on the card (app.css,
+	   .single-board-block > .board-container). */
 	.board-grid-block.single > .board-cell:not(.cell-editing) {
+		width: calc((100% - var(--board-col-gap)) / 2);
+		min-width: min-content;
+	}
+	/* ...and only when NO block on the card holds a pair does the board take
+	   the solo share — the card asks this of both sides at once
+	   (side-alignment.js), so the flag comes down from the editor wrapper
+	   rather than from this block's own board count. */
+	:global(.boards-solo) .board-grid-block.single > .board-cell:not(.cell-editing) {
 		/* The card's solo rule, read off this block's own width: one cell of
 		   the pair beside it, scaled up the same way — and held to the same
 		   ceiling the window puts on a card's board (--solo-board-size), a

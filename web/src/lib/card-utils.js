@@ -198,6 +198,13 @@ const docBoardsBlocks = doc => (doc?.content ?? []).flatMap(
 	node => node.type === "chessboardBlock" ? (node.attrs?.boards ?? []) : []
 );
 
+// a blocks doc putting two boards on one row — the editor's side of
+// boardAlignment (side-alignment.js), which decides a lone board's size from
+// the WHOLE card: one pair anywhere gives every board a column to line up with
+const docHasBoardPairBlocks = doc => (doc?.content ?? []).some(
+	node => node.type === "chessboardBlock" && (node.attrs?.boards?.length ?? 0) > 1
+);
+
 // v1's invalid-FEN gating over a blocks doc: display numbers of boards whose
 // FEN is invalid — live in an open editor (ui.invalidBoards) or pending in
 // fenInput otherwise
@@ -300,4 +307,4 @@ const firstBoardWithMoves = (front, back) => {
 	return null;
 }
 
-export { newBoard, normalizeBoard, boardForJson, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage }
+export { newBoard, normalizeBoard, boardForJson, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docBoardsBlocks, docHasBoardPairBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage }

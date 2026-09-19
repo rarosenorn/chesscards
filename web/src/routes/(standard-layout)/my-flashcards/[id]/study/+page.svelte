@@ -696,6 +696,7 @@
 		/* no margin of its own: a window the card nearly fills should centre it
 		   evenly, and the bias below is the only thing that moves it down */
 		--card-margin: 0px;
+		--card-lead: 0px;
 		--page-bottom: 0px;
 		/* The air the card may never eat into: it is taken out of the board's
 		   height budget, so a short window shrinks the board rather than
@@ -720,7 +721,16 @@
 		   only takes over on a window tall enough that the board stops at its
 		   width instead: the leftover is larger than the frame there, and the
 		   card centres in it, a little high. */
-		--zen-lift: max(var(--zen-air-top), calc(var(--zen-room) * 0.53));
+		/* The floor takes a share of the answer's room with it. Measured from
+		   the question alone the card hung right at the top air, with the
+		   answer's whole reserve below it — the question read high even though
+		   the revealed card would sit true. Carrying part of that reserve
+		   upwards brings the question towards the middle while leaving the
+		   card most of its room to grow down into. */
+		--zen-lift: max(
+			calc(var(--zen-air-top) + var(--card-answer) * 0.4),
+			calc(var(--zen-room) * 0.53)
+		);
 		/* A card with no board has no board's height to stand at, and in zen
 		   it is the only thing on the screen: held to the board's floor it
 		   was a mostly empty sheet with one line along its top. It takes the
@@ -750,12 +760,21 @@
 	}
 	.flashcard {
 		align-items: center;
-		--card-margin: 24px;
-		/* the air under a revealed card, matching the 30px zen keeps at each
-		   end of its frame — the furniture holds none of its own, so this is
-		   the whole of it */
-		--page-bottom: 30px;
-		margin-top: calc(var(--card-margin) + var(--zen-bias, 0px) + var(--zen-lift, 0px));
+		--card-margin: 15px;
+		/* The air under a revealed card — the furniture holds none of its own,
+		   so this is the whole of it. Thinner than the 30px zen keeps at each
+		   end of its frame: the page's own edge is below it either way, and
+		   the room reads better spent on the card than under it. */
+		--page-bottom: 0px;
+		/* The gap under the deck's menu. It rides on top of the margin rather
+		   than in it, so it lowers the card without taking the room out of the
+		   board's budget below — what it spends is the slack the card already
+		   leaves under itself. Zen has no menu above it, and no slack to
+		   spare, so it drops this. */
+		--card-lead: 14px;
+		margin-top: calc(
+			var(--card-margin) + var(--card-lead) + var(--zen-bias, 0px) + var(--zen-lift, 0px)
+		);
 		--board-height-budget: calc(
 			var(--study-chrome, 110px) + var(--card-margin) + var(--card-furniture)
 				+ var(--page-bottom, 24px) + var(--zen-frame, 0px)

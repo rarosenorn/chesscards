@@ -11,10 +11,17 @@
 	// a marketplace deck instance's listing is its author's: shown, not edited
 	let editable = $derived(!data.deck.isMarketplace);
 
-	// svelte-ignore state_referenced_locally -- starting values only; the user edits them freely
-	let name = $state(data.listing.name);
-	// svelte-ignore state_referenced_locally
-	let theme = $state(data.listing.theme ?? "");
+	let thumbnailSrc = $derived(
+		editable
+			? data.listing.imageVersion && `/my-flashcards/${data.listing.id}/thumbnail?v=${data.listing.imageVersion}`
+			: `/marketplace/${data.listing.marketplaceDeckId}/thumbnail`
+	);
+
+	// the listing shows as the marketplace would; Edit swaps in the fields,
+	// filled from what is saved, and Cancel drops whatever they became
+	let editing = $state(false);
+	let name = $state("");
+	let theme = $state("");
 	let descriptionEditor = $state(null);
 
 	// a newly chosen image, shown in the crop box in place of the thumbnail
@@ -24,7 +31,14 @@
 	let cropper = $state(null);
 
 	let errors = $state([]);
-	let saved = $state(false);
+
+	const startEditing = () => {
+		name = data.listing.name;
+		theme = data.listing.theme ?? "";
+		file = null;
+		errors = [];
+		editing = true;
+	}
 
 	const handleFileChange = event => {
 		const chosen = event.target.files[0];
@@ -52,7 +66,7 @@
 			if (result.type === "success") {
 				await invalidateAll();
 				file = null;
-				saved = true;
+				editing = false;
 			} else {
 				errors = result.data?.errors ?? ["Something went wrong. Please try again."];
 			}
@@ -64,92 +78,93 @@
 </script>
 
 <StandardLayout>
-	{#if editable}
-		<!-- any edit takes back the "Saved" that was about the fields before it -->
-		<div class="listing" oninput={() => saved = false}>
-			<div class="deck-header">
-				<div class="thumbnail-column">
-					{#if file}
-						<ThumbnailCrop {file} bind:this={cropper} />
-					{:else if data.listing.imageVersion}
-						<img
-							class="thumbnail"
-							src="/my-flashcards/{data.listing.id}/thumbnail?v={data.listing.imageVersion}"
-							alt={data.listing.name}
-						/>
-					{:else}
-						<div class="thumbnail placeholder">No thumbnail</div>
-					{/if}
-					<div class="image-actions">
-						<button type="button" class="std-btn" onclick={() => fileInput.click()}>
-							{file || data.listing.imageVersion ? "Change image" : "Choose image"}
-						</button>
-						{#if file}
-							<button type="button" class="std-btn" onclick={() => file = null}>Cancel</button>
-						{/if}
-					</div>
-					<input
-						bind:this={fileInput}
-						type="file"
-						accept="image/jpeg,image/png,image/webp"
-						hidden
-						onchange={handleFileChange}
-					/>
-				</div>
-				<div class="deck-side">
-					<input class="name-input" aria-label="Name" bind:value={name} maxlength="100" autocomplete="off" />
-					<div class="deck-info">
-						<p><span>Author:</span> {data.listing.author}</p>
-						<p>
-							<label for="deck-theme">Theme:</label>
-							<select id="deck-theme" bind:value={theme}>
-								<option value="">No theme</option>
-								{#each data.themes as themeOption}
-									<option value={themeOption}>{themeOption}</option>
-								{/each}
-							</select>
-						</p>
-						<p><span>No. of cards:</span> {data.listing.cardCount}</p>
-					</div>
-				</div>
-			</div>
+	{#snippet headerActions()}
+		{#if editable && !editing}
+			<button type="button" class="std-btn" onclick={startEditing}>Edit</button>
+		{/if}
+	{/snippet}
 
-			<p class="field-label">Description</p>
-			<TextEditor bind:this={descriptionEditor} content={data.listing.description ?? ""} />
-
-			{#if errors.length > 0}
-				<ul class="errors">
-					{#each errors as error}
-						<li>{error}</li>
-					{/each}
-				</ul>
-			{/if}
-			<div class="save-row">
-				{#if saved}
-					<span class="saved-note">Saved</span>
-				{/if}
-				<button type="button" class="std-btn" onclick={save}>Save</button>
-			</div>
-		</div>
-	{:else}
+	{#if editing}
 		<div class="deck-header">
-			<img
-				class="thumbnail"
-				src="/marketplace/{data.listing.marketplaceDeckId}/thumbnail"
-				alt={data.listing.name}
-			/>
+			<div class="thumbnail-column">
+				{#if file}
+					<ThumbnailCrop {file} bind:this={cropper} />
+				{:else if thumbnailSrc}
+					<img class="thumbnail" src={thumbnailSrc} alt={data.listing.name} />
+				{:else}
+					<div class="thumbnail placeholder">No thumbnail</div>
+				{/if}
+				<div class="image-actions">
+					<button type="button" class="std-btn" onclick={() => fileInput.click()}>
+						{file || thumbnailSrc ? "Change image" : "Choose image"}
+					</button>
+					{#if file}
+						<button type="button" class="std-btn" onclick={() => file = null}>Keep current</button>
+					{/if}
+				</div>
+				<input
+					bind:this={fileInput}
+					type="file"
+					accept="image/jpeg,image/png,image/webp"
+					hidden
+					onchange={handleFileChange}
+				/>
+			</div>
 			<div class="deck-side">
-				<h2>{data.listing.name}</h2>
+				<input class="name-input" aria-label="Name" bind:value={name} maxlength="100" autocomplete="off" />
 				<div class="deck-info">
 					<p><span>Author:</span> {data.listing.author}</p>
-					<p class="theme"><span>Theme:</span> {data.listing.theme}</p>
+					<p>
+						<label for="deck-theme">Theme:</label>
+						<select id="deck-theme" bind:value={theme}>
+							<option value="">No theme</option>
+							{#each data.themes as themeOption}
+								<option value={themeOption}>{themeOption}</option>
+							{/each}
+						</select>
+					</p>
 					<p><span>No. of cards:</span> {data.listing.cardCount}</p>
 				</div>
 			</div>
 		</div>
-		<div class="description">
-			{@html ttGenerateHTML(data.listing.description)}
+
+		<p class="field-label">Description</p>
+		<TextEditor bind:this={descriptionEditor} content={data.listing.description ?? ""} />
+
+		{#if errors.length > 0}
+			<ul class="errors">
+				{#each errors as error}
+					<li>{error}</li>
+				{/each}
+			</ul>
+		{/if}
+		<div class="save-row">
+			<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
+			<button type="button" class="std-btn" onclick={save}>Save</button>
 		</div>
+	{:else}
+		<div class="deck-header">
+			{#if thumbnailSrc}
+				<img class="thumbnail" src={thumbnailSrc} alt={data.listing.name} />
+			{:else}
+				<div class="thumbnail placeholder">No thumbnail</div>
+			{/if}
+			<div class="deck-side">
+				<h2>{data.listing.name}</h2>
+				<div class="deck-info">
+					<p><span>Author:</span> {data.listing.author}</p>
+					<p class="theme"><span>Theme:</span> {data.listing.theme ?? "none"}</p>
+					<p><span>No. of cards:</span> {data.listing.cardCount}</p>
+				</div>
+			</div>
+		</div>
+		{#if data.listing.description}
+			<div class="description">
+				{@html ttGenerateHTML(data.listing.description)}
+			</div>
+		{:else}
+			<p class="description empty">No description</p>
+		{/if}
 	{/if}
 </StandardLayout>
 
@@ -224,10 +239,10 @@
 		display: flex;
 		justify-content: end;
 		align-items: center;
-		gap: 12px;
+		gap: 8px;
 		margin-top: 16px;
 	}
-	.saved-note {
-		color: rgba(0, 0, 0, 0.6);
+	.empty {
+		color: rgba(0, 0, 0, 0.5);
 	}
 </style>

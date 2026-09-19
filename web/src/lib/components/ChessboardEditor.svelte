@@ -968,10 +968,10 @@
 			<div class="cut-row">
 				<button
 					class="std-btn cut-btn"
-					aria-label="Delete the moves from here on"
+					aria-label="Delete the moves after this position"
 					disabled={cutIndex >= moves.length}
 					onclick={truncateMoves}
-				><TrashIcon /> from current</button>
+				><TrashIcon /> after current</button>
 			</div>
 			</div>
 		{/if}

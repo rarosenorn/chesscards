@@ -310,6 +310,14 @@
 		z-index: 2;
 	}
 
+	/* lists flush with the prose, as the card shows them (app.css) */
+	.tiptap :global(:is(ul, ol)) {
+		padding-inline-start: 1.2em;
+		margin: 0.6em 0;
+	}
+	.tiptap :global(:is(ul, ol) li p) {
+		margin: 0;
+	}
 	/* v1's board numbers, shown when the card has more than one board
 	   (.show-board-numbers on the page's wrapper); CSS counters number
 	   across blocks in document order */

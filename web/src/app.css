@@ -358,6 +358,17 @@ body.piece-grabbing * {
 .flashcard .card-side[data-board-align="left"] .single-board-block {
 	align-items: flex-start;
 }
+/* Lists sit flush with the prose around them: the marker takes the column's
+   left edge and the text hangs in from it, rather than the browser's 40px
+   which pushed a whole list — and any paragraph tiptap nests inside a list
+   item — away from the paragraphs above it. */
+.flashcard .text-block :is(ul, ol) {
+	padding-inline-start: 1.2em;
+	margin: 0.6em 0;
+}
+.flashcard .text-block :is(ul, ol) li p {
+	margin: 0;
+}
 /* paragraph rhythm inside card text, matching the editor's 0.6em */
 .flashcard .text-block p {
 	margin: 0.6em 0;

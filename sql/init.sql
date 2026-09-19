@@ -92,12 +92,15 @@ create table decks (
 	-- the next); off = every stage is open, Anki style. Only bites while
 	-- chapters is on — a deck with no chapters has nothing to gate.
 	stage_progression boolean not null default true,
-	-- the deck's own listing (its Deck tab): an upload request is made from
-	-- it, and editing it never reaches a listing already on the marketplace
+	-- the deck's own listing (its Deck tab): an upload request starts from
+	-- it, and editing it never reaches a listing already on the marketplace.
+	-- A description is blocks, like a card's side (text and boards), and the
+	-- sample cards are ordered ids of the deck's cards
 	description jsonb,
 	theme deck_theme,
 	image bytea,
 	image_type text,
+	preview_card_ids uuid[] not null default '{}',
 	unique(user_id, name)
 );
 

@@ -106,6 +106,7 @@ const remove = async (id, userId) => {
 const getListing = async (userId, id) => {
 	const { rows } = await pool.query(`
 		select d.id, d.name, d.description, d.theme, left(md5(d.image), 8) "imageVersion", u.email author,
+			d.preview_card_ids "previewCardIds",
 			(select count(*) from cards c where c.deck_id = d.id)::int "cardCount"
 		from decks d
 		join "user" u on u.id = d.user_id
@@ -132,6 +133,22 @@ const updateListing = async (userId, id, { name, description, theme, image, imag
 			image = coalesce($6, image), image_type = coalesce($7, image_type)
 		where user_id = $1 and id = $2`,
 		[userId, id, name, description, theme, image, imageType]
+	);
+
+	return rowCount === 1;
+}
+
+// the deck's sample cards, in the given order; ids that are not the deck's
+// cards are dropped
+const updatePreviewCards = async (userId, id, cardIds) => {
+	const { rowCount } = await pool.query(`
+		update decks d set preview_card_ids = array(
+			select c.id from unnest($3::uuid[]) with ordinality ids(id, n)
+			join cards c on c.id = ids.id and c.deck_id = d.id
+			order by ids.n
+		)
+		where d.user_id = $1 and d.id = $2`,
+		[userId, id, cardIds]
 	);
 
 	return rowCount === 1;
@@ -418,4 +435,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }
+export { BOUNDS, create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }

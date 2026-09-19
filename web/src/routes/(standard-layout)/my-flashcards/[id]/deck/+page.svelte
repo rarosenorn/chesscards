@@ -1,10 +1,12 @@
 <script>
 	import { deserialize } from "$app/forms"
 	import { invalidateAll } from "$app/navigation"
+	import { page } from "$app/state"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
-	import TextEditor from "$lib/components/TextEditor.svelte"
+	import DescriptionEditor from "$lib/components/DescriptionEditor.svelte"
+	import DescriptionView from "$lib/components/DescriptionView.svelte"
+	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import ThumbnailCrop from "$lib/components/ThumbnailCrop.svelte"
-	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 
 	let { data } = $props();
 
@@ -32,6 +34,10 @@
 
 	let errors = $state([]);
 
+	// the marketplace page's Description | Sample cards tabs, client-side;
+	// the sample card picker sends you back to its own
+	let view = $state(page.url.searchParams.get("view") === "sample-cards" ? "sample-cards" : "description");
+
 	const startEditing = () => {
 		name = data.listing.name;
 		theme = data.listing.theme ?? "";
@@ -47,14 +53,14 @@
 	}
 
 	const save = async () => {
-		errors = [];
+		const description = descriptionEditor.read();
+		errors = description.errors;
+		if (errors.length > 0) return;
 		try {
 			const formData = new FormData();
 			formData.set("name", name);
 			formData.set("theme", theme);
-			formData.set("description", JSON.stringify(
-				descriptionEditor.isEmpty() ? null : descriptionEditor.getJson()
-			));
+			formData.set("description", JSON.stringify(description.blocks));
 			if (file) formData.set("image", await cropper.crop(), "thumbnail.jpg");
 
 			const response = await fetch("?/save", {
@@ -123,7 +129,7 @@
 		</div>
 
 		<p class="field-label">Description</p>
-		<TextEditor bind:this={descriptionEditor} content={data.listing.description ?? ""} />
+		<DescriptionEditor bind:this={descriptionEditor} blocks={data.listing.description} onSubmit={save} />
 
 		{#if errors.length > 0}
 			<ul class="errors">
@@ -152,18 +158,37 @@
 				</div>
 			</div>
 		</div>
-		{#if data.listing.description}
-			<div class="description">
-				{@html ttGenerateHTML(data.listing.description)}
-			</div>
+		<div class="tabs">
+			<button class:active={view === "description"} onclick={() => view = "description"}>
+				Description
+			</button>
+			<button class:active={view === "sample-cards"} onclick={() => view = "sample-cards"}>
+				Sample cards
+			</button>
+		</div>
+		<!-- each tab's edit sits below it, as Cards puts Edit card below the card -->
+		{#if view === "description"}
+			{#if data.listing.description}
+				<DescriptionView blocks={data.listing.description} />
+			{:else}
+				<p class="empty">No description</p>
+			{/if}
+			{#if editable}
+				<div class="actions">
+					<button type="button" class="std-btn" onclick={startEditing}>Edit deck</button>
+				</div>
+			{/if}
 		{:else}
-			<p class="description empty">No description</p>
-		{/if}
-		<!-- below the listing, as Cards puts Edit card below the card -->
-		{#if editable}
-			<div class="actions">
-				<button type="button" class="std-btn" onclick={startEditing}>Edit deck</button>
-			</div>
+			{#each data.sampleCards as card (card.id)}
+				<FlashcardBrowse {card} />
+			{:else}
+				<p class="empty">No sample cards</p>
+			{/each}
+			{#if editable}
+				<div class="actions">
+					<a class="std-btn" href="/my-flashcards/{data.listing.id}/sample-cards">Edit sample cards</a>
+				</div>
+			{/if}
 		{/if}
 	{/if}
 </StandardLayout>
@@ -219,12 +244,32 @@
 	.deck-info label {
 		font-weight: 600;
 	}
-	.description {
-		margin: 24px 0 16px 0;
-		max-width: 70ch;
+	/* the marketplace deck page's tabs */
+	.tabs {
+		margin-top: 24px;
+		border-bottom: 1px solid #e3e1e1;
+		display: flex;
+		gap: 8px;
 	}
-	.description :global(p) {
-		margin: 0 0 12px 0;
+	.tabs > button {
+		border: none;
+		background: none;
+		cursor: pointer;
+		color: rgba(0, 0, 0, 0.6);
+		font-weight: 500;
+		padding: 8px 12px;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -1px;
+	}
+	.tabs > button:hover {
+		color: black;
+		background-color: rgba(0, 0, 0, 0.03);
+		border-radius: 4px 4px 0 0;
+	}
+	.tabs > button.active {
+		color: black;
+		font-weight: 600;
+		border-bottom-color: var(--accent);
 	}
 	.field-label {
 		margin: 24px 0 6px 0;
@@ -242,6 +287,11 @@
 		margin-top: 12px;
 	}
 	.empty {
+		margin: 16px 0;
 		color: rgba(0, 0, 0, 0.5);
+	}
+	.actions a {
+		text-decoration: none;
+		color: inherit;
 	}
 </style>

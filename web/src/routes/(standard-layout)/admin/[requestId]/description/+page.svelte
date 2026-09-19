@@ -2,7 +2,7 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import FormErrors from "$lib/components/FormErrors.svelte"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
-	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
+	import DescriptionView from "$lib/components/DescriptionView.svelte"
 
 	let { data, form } = $props();
 
@@ -69,9 +69,7 @@
 		</button>
 	</div>
 	{#if activeTab === "description"}
-		<div class="description">
-			{@html ttGenerateHTML(data.request.description)}
-		</div>
+		<DescriptionView blocks={data.request.description} />
 	{:else if previewCards.length === 0}
 		<p class="no-preview">No preview cards</p>
 	{:else}
@@ -144,13 +142,6 @@
 		color: black;
 		font-weight: 600;
 		border-bottom-color: var(--accent);
-	}
-	.description {
-		margin: 16px 0;
-		max-width: 70ch;
-	}
-	.description :global(p) {
-		margin: 0 0 12px 0;
 	}
 	.no-preview {
 		margin-top: 16px;

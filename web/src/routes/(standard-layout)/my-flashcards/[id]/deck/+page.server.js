@@ -1,6 +1,7 @@
 import { error, fail } from "@sveltejs/kit"
 import * as decks from "$lib/server/decks.js"
 import * as marketplace from "$lib/server/marketplace.js"
+import { sideHasContent } from "$lib/card-utils.js"
 
 export const load = async ({ locals, params, parent }) => {
 	// a marketplace deck instance shows the listing it was bought from
@@ -9,9 +10,17 @@ export const load = async ({ locals, params, parent }) => {
 		? await marketplace.getInstanceListing(locals.userId, params.id)
 		: await decks.getListing(locals.userId, params.id);
 
+	// the sample cards as the marketplace shows them, in their order
+	const sampleCards = deck.isMarketplace
+		? await marketplace.getDeckPreviewCards(listing.marketplaceDeckId)
+		: listing.previewCardIds
+			.map(id => deck.cards.find(card => card.id === id))
+			.filter(card => card !== undefined);
+
 	return {
 		pageTitle: "Deck",
 		listing,
+		sampleCards,
 		themes: marketplace.themes
 	}
 }
@@ -32,12 +41,17 @@ export const actions = {
 			return fail(400, { errors: ["Choose a valid theme"] });
 		}
 
+		// blocks, like a card's side; an empty one is no description
 		let description;
 		try {
-			description = JSON.parse(data.get("description") ?? "null");
+			description = JSON.parse(data.get("description") ?? "[]");
 		} catch {
 			return fail(400, { errors: ["Invalid description"] });
 		}
+		if (!Array.isArray(description)) {
+			return fail(400, { errors: ["Invalid description"] });
+		}
+		if (!sideHasContent(description)) description = null;
 
 		const image = data.get("image");
 		const hasImage = image instanceof File && image.size > 0;

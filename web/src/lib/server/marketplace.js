@@ -18,17 +18,18 @@ const getUploadRequestForDeck = async (userId, deckId) => {
 	return rows[0];
 }
 
-// Creates a pending upload request from the deck's own listing (its Deck
-// tab) as it stands now. Throws if the user doesn't own the deck, the deck is
-// empty, or a pending/approved request already exists.
-const createUploadRequest = async (userId, deckId, { price, previewCardIds }) => {
+// Creates a pending upload request. A null image is the deck's own
+// thumbnail. Throws if the user doesn't own the deck, the deck is empty, or a
+// pending/approved request already exists.
+const createUploadRequest = async (userId, deckId, { name, description, theme, price, image, imageType, previewCardIds }) => {
 	const { rows } = await pool.query(
-		`select (select count(*) from cards where deck_id = d.id) card_count
+		`select (select count(*) from cards where deck_id = d.id) card_count, d.image is not null has_image
 		from decks d where d.id = $1 and d.user_id = $2`,
 		[deckId, userId]
 	);
 	if (!rows[0]) throw new Error("Unauthorized");
 	if (rows[0].card_count === "0") throw new Error("Deck has no cards");
+	if (!image && !rows[0].has_image) throw new Error("A thumbnail image is required");
 
 	const existing = await getUploadRequestForDeck(userId, deckId);
 	if (existing?.status === "pending" || existing?.status === "approved") {
@@ -45,10 +46,10 @@ const createUploadRequest = async (userId, deckId, { price, previewCardIds }) =>
 
 	const { rows: inserted } = await pool.query(
 		`insert into marketplace_upload_requests(deck_id, user_id, name, description, theme, price, image, image_type, preview_card_ids)
-		select d.id, d.user_id, d.name, d.description, d.theme, $3, d.image, d.image_type, $4
+		select d.id, d.user_id, $3, $4, $5, $6, coalesce($7, d.image), coalesce($8, d.image_type), $9
 		from decks d where d.id = $1 and d.user_id = $2
 		returning id, name, theme, status`,
-		[deckId, userId, price, preview]
+		[deckId, userId, name, description, theme, price, image, imageType, preview]
 	);
 
 	return inserted[0];

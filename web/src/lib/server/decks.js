@@ -27,12 +27,31 @@ const getById = async (userId, id) => {
 	return rows[0];
 }
 
-// due and still in play — the shared condition behind every count below
-const DUE = "c.due <= now() and c.finished_at is null";
+// Due and still in play — the shared condition behind every count below, and
+// the SQL twin of isDueAt (lib/rollover.js). An interval of a day or more is
+// read against the day boundary rather than the clock time it was graded at,
+// so a card graded at 10pm is waiting at 4am; the short learning steps keep
+// their exact times. bounds.day_end is the end of the rollover day we are in.
+const DUE = `c.finished_at is null and (
+	c.due <= now()
+	or (c.last_review is not null
+		and c.due - c.last_review >= interval '1 day'
+		and c.due < bounds.day_end)
+)`;
 
-const getMineWithoutCards = async userId => {
-	const { rows } = 
-		await pool.query(`select d.id, d.name, count(c.id) no_cards,
+// The end of the current rollover day, from the user's hour ($3) and the zone
+// the browser left in a cookie ($2) — the server renders these counts and has
+// no one to ask. Subtracting the hour before truncating is what puts the small
+// hours in the previous day: at 1am the day started at 4am YESTERDAY.
+const BOUNDS = `select ((
+	date_trunc('day', (now() at time zone $2) - make_interval(hours => $3))
+		+ make_interval(hours => $3) + interval '1 day'
+) at time zone $2) day_end`;
+
+const getMineWithoutCards = async (userId, { timeZone, rolloverHour }) => {
+	const { rows } =
+		await pool.query(`with bounds as (${BOUNDS})
+			select d.id, d.name, count(c.id) no_cards,
 			count(c.id) filter (where ${DUE}) due_cards,
 			-- the deck list's anki columns. A tactic card carries no FSRS
 			-- state, so its reps stand in: never answered is new, otherwise
@@ -40,7 +59,9 @@ const getMineWithoutCards = async userId => {
 			count(c.id) filter (where ${DUE} and (c.state = 0 or (c.state is null and coalesce(c.reps, 0) = 0))) new_cards,
 			count(c.id) filter (where ${DUE} and c.state in (1, 3)) learn_cards,
 			count(c.id) filter (where ${DUE} and (c.state = 2 or (c.state is null and coalesce(c.reps, 0) > 0))) review_cards
-			from decks d left join cards c on d.id = c.deck_id where d.user_id = $1 group by d.id, d.name`, [userId]
+			from decks d left join cards c on d.id = c.deck_id cross join bounds
+			where d.user_id = $1 group by d.id, d.name`,
+			[userId, timeZone, rolloverHour]
 		);
 
 	return rows;
@@ -360,4 +381,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }
+export { BOUNDS, create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }

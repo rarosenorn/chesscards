@@ -6,6 +6,7 @@
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
+	import { crossesDay, isDueAt, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import { parseMoveRef, markMoveRefs } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
@@ -15,6 +16,7 @@
 	import { updateCardContent, updateCardType, deleteCards } from "../browse/browse.remote.js"
 
 	let deck = getContext("deck");
+	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
 	// marketplace deck instances can only be viewed, not edited
 	const readonly = deck.isMarketplace;
 
@@ -116,14 +118,20 @@
 	let now = $state(Date.now());
 	// still owed, whenever it falls due
 	const isWaiting = card => !card.finished_at && !gated(card);
-	const isDue = card => isWaiting(card) && Date.parse(card.due) <= now;
+	// An interval of a day or more is read against the day boundary, not the
+	// clock time it was graded at (see rollover.js) — so a card graded at 10pm
+	// is waiting at 4am, the way Anki has it.
+	const isDue = card => isWaiting(card) && isDueAt(card, now, rolloverHour());
 	// Anki's learn-ahead limit. Without it the tail of a session dead-ends: the
 	// last card is graded Again, comes back in a minute, and the page says
 	// "finished for now" for a card that could be answered right now. Only the
 	// short steps are ever within reach — everything on a real schedule is days
 	// away — so this needs no test for which queue a card is in.
 	const LEARN_AHEAD_MS = 20 * 60 * 1000;
-	const isDueSoon = card => isWaiting(card) && Date.parse(card.due) <= now + LEARN_AHEAD_MS;
+	// Only the short steps are reached for. A day-scale card already waits for
+	// its boundary, and reaching past that would be handing over tomorrow.
+	const isDueSoon = card =>
+		isWaiting(card) && !crossesDay(card) && Date.parse(card.due) <= now + LEARN_AHEAD_MS;
 
 	// Anki's three counts, on the same split the deck list uses (decks.js):
 	// a card is new while it has never been graded, learning while it is

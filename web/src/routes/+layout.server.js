@@ -16,7 +16,9 @@ const load = async ({ locals }) => {
 			borderType: user.borderType,
 			showCoordinates: user.showCoordinates,
 			animationDuration: user.animationDuration
-		}
+		},
+		// the hour a study day begins; the zone it is read in is the browser's
+		rolloverHour: user.rolloverHour
 	}
 }
 

@@ -2,11 +2,19 @@ import { fail } from "@sveltejs/kit"
 import * as decks from "$lib/server/decks.js"
 import * as marketplace from "$lib/server/marketplace.js"
 import * as zod from "$lib/zod-schemas.js"
+import { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE } from "$lib/rollover.js"
 
-const load = async ({ locals }) => {
+const load = async ({ locals, cookies }) => {
+	// the day boundary these counts are read against: the user's hour, in the
+	// zone the browser left behind (rollover.js). A first visit has no cookie
+	// yet, and falls back to the server's own zone for that one render.
+	const when = {
+		timeZone: cookies.get(TZ_COOKIE) || Intl.DateTimeFormat().resolvedOptions().timeZone,
+		rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR
+	};
 	return {
-		decks: await decks.getMineWithoutCards(locals.userId),
-		marketplaceDecks: await marketplace.getInstancesWithoutCards(locals.userId),
+		decks: await decks.getMineWithoutCards(locals.userId, when),
+		marketplaceDecks: await marketplace.getInstancesWithoutCards(locals.userId, when),
 		pageTitle: "My flashcards"
 	}
 }

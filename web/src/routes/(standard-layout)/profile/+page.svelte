@@ -6,12 +6,16 @@
 	import { Chessboard } from "cm-chessboard/src/Chessboard.js"
 	import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS, boardStyleProps, hasBlackBorder } from "$lib/board-prefs.js"
 	import { typedConfirmModal } from "$lib/modals.svelte.js"
+	import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 
 	let { data, form } = $props();
 
 	let displayName = $state(data.user.displayName ?? "");
 	let prefs = $state({ ...data.boardPrefs });
 	let stageProgressionMode = $state(data.stageProgressionMode ?? "all");
+	let rolloverHour = $state(data.rolloverHour ?? DEFAULT_ROLLOVER_HOUR);
+	// 4 -> "4am", for the pills below
+	const hourLabel = hour => `${hour}am`;
 	// a deck's own toggle knocks the mode back to per-deck server-side; a
 	// revisit shows it, this stays bound to what was loaded meanwhile
 	const modeLabels = { "per-deck": "Per deck", "all": "All decks", "none": "No decks" };
@@ -211,6 +215,31 @@
 				changing one deck's own setting afterwards puts this back to
 				per deck. Only decks that use chapters are affected — a flat
 				deck has nothing to unlock.
+			</p>
+		</fieldset>
+	</form>
+	<form
+		method="POST"
+		action="?/rollover"
+		use:enhance={keepState}
+		onchange={e => e.currentTarget.requestSubmit()}
+	>
+		<fieldset>
+			<legend>A new day starts at</legend>
+			<div class="pills">
+				{#each ROLLOVER_HOURS as hour}
+					<label class="pill" class:selected={rolloverHour === hour}>
+						<input type="radio" name="rollover-hour" value={hour} bind:group={rolloverHour} />
+						{hourLabel(hour)}
+					</label>
+				{/each}
+			</div>
+			<p class="hint">
+				A card scheduled a day or more ahead waits for this hour rather
+				than for the time of day you last saw it — so studying past
+				midnight is still the same day's session instead of two days'
+				cards at once. The short learning steps are unaffected. Pick an
+				hour you are reliably asleep at.
 			</p>
 		</fieldset>
 	</form>

@@ -93,7 +93,8 @@ export const auth = betterAuth({
 			boardTheme: { type: "string", defaultValue: "default", input: false },
 			borderType: { type: "string", defaultValue: "black", input: false },
 			showCoordinates: { type: "boolean", defaultValue: true, input: false },
-			animationDuration: { type: "number", defaultValue: 300, input: false }
+			animationDuration: { type: "number", defaultValue: 300, input: false },
+			rolloverHour: { type: "number", defaultValue: 4, input: false }
 		},
 		deleteUser: {
 			enabled: true,

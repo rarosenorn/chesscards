@@ -26,7 +26,12 @@ create table "user" (
 	-- what the profile's stage-progression control shows: 'all'/'none' were
 	-- bulk-applied to every deck; touching one deck's own toggle puts this
 	-- back to 'per-deck' (decks keep their own flags either way)
-	"stageProgressionMode" text default 'all' not null check ("stageProgressionMode" in ('per-deck', 'all', 'none'))
+	"stageProgressionMode" text default 'all' not null check ("stageProgressionMode" in ('per-deck', 'all', 'none')),
+	-- the hour a new study day begins ("next day starts at", Anki's 4am): a
+	-- card scheduled a day or more out waits for this boundary rather than
+	-- for the clock time it was graded at, so studying past midnight is still
+	-- the same day's session. The zone it is read in comes from the browser.
+	"rolloverHour" smallint default 4 not null check ("rolloverHour" between 0 and 23)
 );
 
 create table "session" (

@@ -425,6 +425,17 @@
 		return x > best.r.left + best.r.width / 2 ? best.i + 1 : best.i;
 	}
 
+	// How far a click may sit from a move and still be meant for it. The line
+	// runs the board's full width, so most of it is empty air past the last
+	// move — and a click out there was landing on the nearest move, which is
+	// always the last one. Placing the boundary is aiming at a gap between two
+	// moves, and that is never far from both.
+	const GAP_REACH = 14;
+	const nearAMove = (x, y) => moveRects().some(r =>
+		Math.max(r.left - x, 0, x - r.right) <= GAP_REACH
+			&& Math.max(r.top - y, 0, y - r.bottom) <= GAP_REACH
+	);
+
 	// the gap past the last move means "nothing is back yet"
 	const commitGap = gap => onSolutionFromChange?.(gap >= lineMoves.length ? null : gap);
 
@@ -472,6 +483,9 @@
 	// themselves keep stepping the board
 	const handleLineClick = e => {
 		if (!splitEditable || e.target.closest("button, .back-divider")) return;
+		// the empty run of line past the last move belongs to nothing: a click
+		// there moved the boundary to the end, and the board with it
+		if (!nearAMove(e.clientX, e.clientY)) return;
 		commitGap(gapNearest(e.clientX, e.clientY));
 	}
 

@@ -771,7 +771,7 @@
 		   board's budget below — what it spends is the slack the card already
 		   leaves under itself. Zen has no menu above it, and no slack to
 		   spare, so it drops this. */
-		--card-lead: 14px;
+		--card-lead: 6px;
 		margin-top: calc(
 			var(--card-margin) + var(--card-lead) + var(--zen-bias, 0px) + var(--zen-lift, 0px)
 		);

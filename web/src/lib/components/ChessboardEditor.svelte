@@ -971,7 +971,7 @@
 					aria-label="Delete the moves from here on"
 					disabled={cutIndex >= moves.length}
 					onclick={truncateMoves}
-				><TrashIcon /></button>
+				><TrashIcon /> from current</button>
 			</div>
 			</div>
 		{/if}
@@ -1500,23 +1500,17 @@
 		display: flex;
 		justify-content: flex-end;
 	}
-	/* the steppers' own size, so the three read as one control despite
-	   sitting on two rows */
+	/* as wide as both steppers and the gap between them, so it closes the
+	   block off square; the same height and type as they have */
 	.cut-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 64px;
+		gap: 6px;
+		width: calc(64px * 2 + 8px);
 		padding: 3px 0;
 		font-size: 0.8rem;
 		line-height: 1.6;
-	}
-	/* an empty strut of the steppers' line box: their height comes from the
-	   arrow glyph's line, and an icon alone would leave this button shorter */
-	.cut-btn::before {
-		content: "";
-		width: 0;
-		height: 1.6em;
 	}
 	.cut-btn :global(svg) {
 		width: 15px;

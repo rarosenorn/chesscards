@@ -1,7 +1,7 @@
 <script>
 	import { getContext, onMount } from "svelte"
 	import { enhance } from "$app/forms"
-	import { fsrs, Rating } from "ts-fsrs"
+	import { fsrs, Rating, StrategyMode, GenSeedStrategyWithCardId } from "ts-fsrs"
 	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
@@ -69,7 +69,16 @@
 		isCardTurned = false;
 	}
 
-	const scheduler = fsrs();
+	// Fuzz, as Anki does it: a little randomness on each interval so cards
+	// introduced together and graded alike stop arriving on the same day
+	// forever — a deck added in one sitting would otherwise come back in one
+	// sitting for good.
+	// The seed is the card, not the clock: ts-fsrs's default seeds on the
+	// review instant, which would fuzz the preview under the button and the
+	// grade that follows it differently, and the button would be promising a
+	// date the card does not get.
+	const scheduler = fsrs({ enable_fuzz: true })
+		.useStrategy(StrategyMode.SEED, GenSeedStrategyWithCardId("id"));
 
 	// --- the queue ---
 	// Due reviews come first, shuffled once per visit (the keys live for the

@@ -522,6 +522,7 @@
 	<div
 		class="flashcard card-surface"
 		class:zen={zenActive()}
+		class:no-boards={cardBoardCount === 0}
 		bind:this={cardElement}
 		data-boards={boardsAllAlone(currentCard) ? "solo" : null}
 	>
@@ -720,6 +721,17 @@
 		   width instead: the leftover is larger than the frame there, and the
 		   card centres in it, a little high. */
 		--zen-lift: max(var(--zen-air-top), calc(var(--zen-room) * 0.53));
+		/* A card with no board has no board's height to stand at, and in zen
+		   it is the only thing on the screen: held to the board's floor it
+		   was a mostly empty sheet with one line along its top. It takes the
+		   furniture's height instead, and the same lift then hangs it where
+		   every other card hangs — just off centre, a little high. The floor
+		   outside zen stays the window's, so the grade row keeps its place
+		   from card to card where there is a page around it. */
+		&.no-boards {
+			min-height: var(--card-stack);
+			--zen-room: calc(100dvh - var(--card-furniture));
+		}
 		/* The bias is a luxury: on a window that the card nearly fills, an
 		   uneven split is just a lopsided card, so it stays at zero until
 		   there is room to spare and then takes a fifth of it, up to 20px.

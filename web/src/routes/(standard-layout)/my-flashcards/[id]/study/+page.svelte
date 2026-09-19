@@ -523,7 +523,6 @@
 		class="flashcard card-surface"
 		class:zen={zenActive()}
 		bind:this={cardElement}
-		class:no-boards={cardBoardCount === 0}
 		data-boards={boardsAllAlone(currentCard) ? "solo" : null}
 	>
 		<!-- turning reveals front boards' back layers (moves/annotations) in
@@ -754,12 +753,6 @@
 		   opens at the size it will keep, and the reveal fills room the card
 		   was already holding instead of growing into the page. */
 		min-height: calc(var(--solo-board-size) + var(--card-stack));
-		/* ...and a card with no board at all reserves no room for one: the
-		   floor is the stack alone, so a text card is the size of its text
-		   instead of standing as tall as the diagram it never had. */
-		&.no-boards {
-			min-height: var(--card-stack);
-		}
 		/* the top is the card's rim, wider than the divider's 18px between
 		   the sides; the row below closes the card at the 10px it has always
 		   kept from the bottom edge */

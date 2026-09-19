@@ -138,10 +138,6 @@
 				{/each}
 			</ul>
 		{/if}
-		<div class="actions">
-			<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
-			<button type="button" class="std-btn" onclick={save}>Save</button>
-		</div>
 	{:else}
 		<div class="deck-header">
 			{#if thumbnailSrc}
@@ -166,17 +162,11 @@
 				Sample cards
 			</button>
 		</div>
-		<!-- each tab's edit sits below it, as Cards puts Edit card below the card -->
 		{#if view === "description"}
 			{#if data.listing.description}
 				<DescriptionView blocks={data.listing.description} />
 			{:else}
 				<p class="empty">No description</p>
-			{/if}
-			{#if editable}
-				<div class="actions">
-					<button type="button" class="std-btn" onclick={startEditing}>Edit deck</button>
-				</div>
 			{/if}
 		{:else}
 			{#each data.sampleCards as card (card.id)}
@@ -184,14 +174,24 @@
 			{:else}
 				<p class="empty">No sample cards</p>
 			{/each}
-			{#if editable}
-				<div class="actions">
-					<a class="std-btn" href="/my-flashcards/{data.listing.id}/sample-cards">Edit sample cards</a>
-				</div>
-			{/if}
 		{/if}
 	{/if}
 </StandardLayout>
+
+<!-- under the page, flush with its right edge, as Cards puts Edit card
+     under the card -->
+{#if editable}
+	<div class="actions">
+		{#if editing}
+			<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
+			<button type="button" class="std-btn" onclick={save}>Save</button>
+		{:else if view === "description"}
+			<button type="button" class="std-btn" onclick={startEditing}>Edit deck</button>
+		{:else}
+			<a class="std-btn" href="/my-flashcards/{data.listing.id}/sample-cards">Edit sample cards</a>
+		{/if}
+	</div>
+{/if}
 
 <style>
 	/* the marketplace deck page's header, so the tab reads as the listing */
@@ -280,11 +280,13 @@
 		padding-left: 16px;
 		margin: 12px 0 0 0;
 	}
+	/* StandardLayout's page width, and Cards' toolbar spacing */
 	.actions {
 		display: flex;
 		justify-content: end;
 		gap: 8px;
-		margin-top: 12px;
+		max-width: 1000px;
+		margin: 8px auto 40px auto;
 	}
 	.empty {
 		margin: 16px 0;

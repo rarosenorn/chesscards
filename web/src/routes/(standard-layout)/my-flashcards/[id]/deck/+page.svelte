@@ -78,12 +78,6 @@
 </script>
 
 <StandardLayout>
-	{#snippet headerActions()}
-		{#if editable && !editing}
-			<button type="button" class="std-btn" onclick={startEditing}>Edit</button>
-		{/if}
-	{/snippet}
-
 	{#if editing}
 		<div class="deck-header">
 			<div class="thumbnail-column">
@@ -138,7 +132,7 @@
 				{/each}
 			</ul>
 		{/if}
-		<div class="save-row">
+		<div class="actions">
 			<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
 			<button type="button" class="std-btn" onclick={save}>Save</button>
 		</div>
@@ -164,6 +158,12 @@
 			</div>
 		{:else}
 			<p class="description empty">No description</p>
+		{/if}
+		<!-- below the listing, as Cards puts Edit card below the card -->
+		{#if editable}
+			<div class="actions">
+				<button type="button" class="std-btn" onclick={startEditing}>Edit deck</button>
+			</div>
 		{/if}
 	{/if}
 </StandardLayout>
@@ -235,12 +235,11 @@
 		padding-left: 16px;
 		margin: 12px 0 0 0;
 	}
-	.save-row {
+	.actions {
 		display: flex;
 		justify-content: end;
-		align-items: center;
 		gap: 8px;
-		margin-top: 16px;
+		margin-top: 12px;
 	}
 	.empty {
 		color: rgba(0, 0, 0, 0.5);

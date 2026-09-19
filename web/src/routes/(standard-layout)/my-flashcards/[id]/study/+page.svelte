@@ -10,7 +10,7 @@
 	import { parseMoveRef, markMoveRefs } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState } from "$lib/modals.svelte.js"
-	import { zen, zenActive, loadZen, setZen } from "$lib/zen-state.svelte.js"
+	import { zen, zenActive, resetZen, setZen } from "$lib/zen-state.svelte.js"
 	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
 	import { updateCardContent, updateCardType, deleteCards } from "../browse/browse.remote.js"
 
@@ -294,10 +294,10 @@
 	// Zen mode: the page's two bars step aside while a card is up (the store
 	// carries it to the layouts that own them; the counters and Edit stay).
 	// It is the study page that holds the mode — mounted here, dropped on the
-	// way out — so the preference outlives the visit without following the
-	// user into Cards or the deck list.
+	// way out — and it is not remembered between visits: each arrival starts
+	// with the chrome up and z is what takes it away.
 	onMount(() => {
-		loadZen();
+		resetZen();
 		return () => { zen.studying = false; zen.peeking = false };
 	});
 	// On the "finished for now" screen the next card is often minutes away (the
@@ -312,7 +312,7 @@
 
 	// zen holds only while a card is up: the deck's "finished for now" screen
 	// is the end of the session, and the page's chrome belongs back on it.
-	// The preference itself stays on, so the next card enters zen again.
+	// The mode itself stays on, so the next card enters zen again.
 	$effect(() => {
 		zen.studying = currentCard != null;
 		if (!currentCard) zen.peeking = false;

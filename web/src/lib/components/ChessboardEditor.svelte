@@ -14,7 +14,7 @@
 	import { RightClickAnnotator } from "cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js"
 	import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
 	import { isValidFen } from "$lib/isValidFen.js"
-	import { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations } from "$lib/board-utils.js"
+	import { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations, isPositionFinished } from "$lib/board-utils.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
 	// inlined so the palette's <use href="#wk"> works in Firefox, which doesn't
 	// render <use> that references an external SVG file
@@ -88,6 +88,14 @@
 		}
 	}
 	let canRecordMoves = $derived(fenIsValid);
+
+	// The strip the finished board carries (Chessboard's .board-header), kept
+	// here so opening the editor does not take the number and the side-to-move
+	// square away — and does not shift the board up by the strip's height.
+	// Whose move it is in the START position, exactly as there: a property of
+	// the diagram, not of the position currently on screen.
+	let blackToMove = $derived(currentFen.split(" ")[1] === "b");
+	let positionFinished = $derived(fenIsValid && isPositionFinished(currentFen));
 
 	// report FEN validity live (and revert to valid on unmount) so callers can
 	// show which boards block a save
@@ -370,6 +378,24 @@
 
 	// index of the position annotations are attached to right now
 	let annotationIndex = $derived(mode === "setup" ? 0 : Math.min(currentIndex, viewLimit));
+
+	// Cutting the line at the shown position — the same thing recording a move
+	// here does to what followed it (commitMove), minus the new move. Standing
+	// at the start it empties the line, which is how the whole recording goes.
+	let cutIndex = $derived(Math.min(currentIndex, viewLimit));
+	const truncateMoves = () => {
+		if (cutIndex >= moves.length) return;
+		moves = moves.slice(0, cutIndex);
+		for (const key of Object.keys(annotations)) {
+			if (Number(key) > cutIndex) delete annotations[key];
+		}
+		for (const key of Object.keys(solutionAnnotations)) {
+			if (Number(key) > cutIndex) delete solutionAnnotations[key];
+		}
+		// a back layer starting past the new end has nothing left to hide
+		if (solutionFrom != null && solutionFrom >= moves.length) solutionFrom = null;
+		currentIndex = cutIndex;
+	}
 
 	// Beyond the back's start every position is back territory: anything
 	// recorded there continues the back line, so the toggle locks on there
@@ -717,6 +743,19 @@
 
 <div class="editor">
 	<div class="board-column">
+		<!-- the same strip the closed board shows, in the same place: its
+		     number (drawn by the page's board counter onto .board-header) and
+		     the side to move -->
+		<div class="board-header">
+			{#if !positionFinished}
+				<span
+					class="side-to-move"
+					class:black={blackToMove}
+					role="img"
+					aria-label={blackToMove ? "Black to move" : "White to move"}
+				></span>
+			{/if}
+		</div>
 		<div class="ghost-host">
 			<!-- focusable (tabindex -1) so a freshly opened editor can receive
 			     focus on the board itself without scrolling to the FEN input -->
@@ -924,6 +963,12 @@
 					disabled={Math.min(currentIndex, viewLimit) === viewLimit}
 					onclick={() => goToIndex(Math.min(currentIndex + 1, viewLimit))}
 				>&#9654;</button>
+				<button
+					class="std-btn cut-btn"
+					aria-label="Delete the moves from here on"
+					disabled={cutIndex >= moves.length}
+					onclick={truncateMoves}
+				><TrashIcon /></button>
 			</div>
 		{/if}
 		<div class="actions">
@@ -956,6 +1001,32 @@
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
+	}
+	/* Chessboard's strip, repeated here so a board keeps its number and its
+	   side-to-move square while it is being edited — same metrics, so the
+	   board does not move when the editor opens or closes. The number itself
+	   is drawn by the page's counter rule onto ::before (CardSideBlockEditor),
+	   which is why the strip is always rendered even when it is empty. */
+	.board-header {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		min-height: 1.26rem;
+		margin-bottom: 2px;
+		padding-left: 6px;
+		box-sizing: border-box;
+	}
+	.side-to-move {
+		/* whole pixels, not rem: at a fractional size the border rasterizes
+		   thicker on two sides and the square reads as a rectangle */
+		width: 14px;
+		height: 14px;
+		background: white;
+		border: 1px solid #262626;
+		box-sizing: border-box;
+	}
+	.side-to-move.black {
+		background: #262626;
 	}
 	.board {
 		border-radius: 2px 2px 0 0;
@@ -1411,6 +1482,22 @@
 		padding: 3px 0;
 		font-size: 0.8rem;
 		line-height: 1.6;
+	}
+	/* at the far end of the row, away from the two steppers: it is the one
+	   button here that takes something away, and the pointer is on the
+	   steppers a lot */
+	.cut-btn {
+		order: -1;
+		margin-right: auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 30px;
+		padding: 3px 0;
+	}
+	.cut-btn :global(svg) {
+		width: 15px;
+		height: 15px;
 	}
 	.actions {
 		display: flex;

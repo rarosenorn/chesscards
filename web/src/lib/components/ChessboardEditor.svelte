@@ -950,6 +950,7 @@
 			</div>
 			<!-- stepping through the recording, for the pointer: the arrow keys
 			     belong to the card's text while an editor is open -->
+			<div class="step-controls">
 			<div class="step-row">
 				<button
 					class="std-btn step-btn"
@@ -970,7 +971,8 @@
 					aria-label="Delete the moves from here on"
 					disabled={cutIndex >= moves.length}
 					onclick={truncateMoves}
-				><TrashIcon /> from current</button>
+				><TrashIcon /></button>
+			</div>
 			</div>
 		{/if}
 		<div class="actions">
@@ -1477,7 +1479,6 @@
 		display: flex;
 		justify-content: flex-end;
 		gap: 8px;
-		margin-top: 8px;
 	}
 	.step-btn {
 		width: 64px;
@@ -1487,19 +1488,35 @@
 	}
 	/* Its own row under the steppers: it is the one button here that takes
 	   something away, and the pointer is on the steppers a lot. */
+	/* the three buttons are one control on two lines, so they keep the 8px
+	   the arrows keep from each other — the panel's own 10px gap sits above
+	   the group, not inside it */
+	.step-controls {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
 	.cut-row {
 		display: flex;
 		justify-content: flex-end;
-		margin-top: 8px;
 	}
+	/* the steppers' own size, so the three read as one control despite
+	   sitting on two rows */
 	.cut-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 6px;
-		padding: 3px 10px;
+		width: 64px;
+		padding: 3px 0;
 		font-size: 0.8rem;
 		line-height: 1.6;
+	}
+	/* an empty strut of the steppers' line box: their height comes from the
+	   arrow glyph's line, and an icon alone would leave this button shorter */
+	.cut-btn::before {
+		content: "";
+		width: 0;
+		height: 1.6em;
 	}
 	.cut-btn :global(svg) {
 		width: 15px;

@@ -9,6 +9,7 @@
 	// small (phone) only deck and card table stacked, selected card in popover
 
 	import { getContext, untrack, tick } from "svelte"
+	import { availableAt, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import { flip } from "svelte/animate"
 	import { SvelteSet } from "svelte/reactivity"
 	import { page } from "$app/state"
@@ -21,6 +22,7 @@
 	import { updateCardContent, updateCardType, deleteCards, createStage, renameStage, deleteStage, moveCards } from "./browse.remote.js"
 
 	let deck = getContext("deck");
+	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
 	// marketplace deck instances can only be viewed, not edited
 	const readonly = deck.isMarketplace;
 
@@ -687,13 +689,16 @@
 
 	const stateNames = ["New", "Learning", "Review", "Relearning"];
 
+	// the day the card arrives, which for a day-scale card is its rollover
+	// day — a card due at 2am belongs to the day that began at 4am the
+	// morning before, and listing its raw date would name the wrong one
+	const dueDay = card => new Date(availableAt(card, rolloverHour())).toLocaleDateString();
+
 	const formatDue = card => {
 		if (card.finished_at) return null;
 		if (card.card_type === "tactic")
-			return Date.parse(card.due) > Date.now()
-				? new Date(card.due).toLocaleDateString()
-				: "New";
-		return card.state === 0 ? "New" : new Date(card.due).toLocaleDateString();
+			return Date.parse(card.due) > Date.now() ? dueDay(card) : "New";
+		return card.state === 0 ? "New" : dueDay(card);
 	}
 
 	// The keys the page claims (e, Up/Down, Delete) belong to a focused field

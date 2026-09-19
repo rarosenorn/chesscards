@@ -6,7 +6,7 @@
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
-	import { crossesDay, isDueAt, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
+	import { crossesDay, isDueAt, availableAt, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import { parseMoveRef, markMoveRefs } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
@@ -315,10 +315,10 @@
 	// below speaks for them
 	let nextDue = $derived.by(() => {
 		const unfinished = deck.cards.filter(card => !card.finished_at && !gated(card));
+		// the card that arrives first, by when it ACTUALLY arrives: a day-scale
+		// card is waiting at its day's boundary, not at the hour it was graded
 		return unfinished.length
-			? unfinished.reduce((min, card) =>
-				Date.parse(card.due) < Date.parse(min.due) ? card : min
-			).due
+			? new Date(Math.min(...unfinished.map(card => availableAt(card, rolloverHour())))).toISOString()
 			: null;
 	});
 

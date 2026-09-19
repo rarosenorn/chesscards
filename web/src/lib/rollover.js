@@ -44,10 +44,19 @@ const dayEnd = (at, hour = DEFAULT_ROLLOVER_HOUR) => {
 // ...and the start of it, for reading a due date as "which day is this for"
 const dayStart = (at, hour = DEFAULT_ROLLOVER_HOUR) => dayEnd(at, hour) - DAY_MS;
 
+// When the card actually arrives — the instant isDueAt below starts saying
+// yes. A day-scale card arrives at the start of the rollover day its due
+// falls in, which is NOT the same calendar day when the due time lands in the
+// small hours: a card due at 2am belongs to the day that began at 4am
+// yesterday. Anything that tells the user when to expect a card has to say
+// this, not the raw timestamp.
+const availableAt = (card, hour = DEFAULT_ROLLOVER_HOUR) =>
+	crossesDay(card) ? dayStart(Date.parse(card.due), hour) : Date.parse(card.due);
+
 // is this card's time up, as of `now`?
 const isDueAt = (card, now, hour = DEFAULT_ROLLOVER_HOUR) =>
 	crossesDay(card)
 		? Date.parse(card.due) < dayEnd(now, hour)
 		: Date.parse(card.due) <= now;
 
-export { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE, ROLLOVER_HOURS, DAY_MS, crossesDay, dayStart, dayEnd, isDueAt }
+export { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE, ROLLOVER_HOURS, DAY_MS, crossesDay, dayStart, dayEnd, availableAt, isDueAt }

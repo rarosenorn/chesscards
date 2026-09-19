@@ -49,7 +49,8 @@ const createUploadRequest = async (userId, deckId, { name, description, theme, p
 		select d.id, d.user_id, $3, $4, $5, $6, coalesce($7, d.image), coalesce($8, d.image_type), $9
 		from decks d where d.id = $1 and d.user_id = $2
 		returning id, name, theme, status`,
-		[deckId, userId, name, description, theme, price, image, imageType, preview]
+		// the description as JSON text, as pg would send its blocks array as a postgres array
+		[deckId, userId, name, JSON.stringify(description), theme, price, image, imageType, preview]
 	);
 
 	return inserted[0];

@@ -126,13 +126,14 @@ const getImage = async (userId, id) => {
 	return rows[0];
 }
 
-// a null image keeps the one the deck has
+// a null image keeps the one the deck has. The description goes as JSON
+// text: pg would send its blocks array as a postgres array
 const updateListing = async (userId, id, { name, description, theme, image, imageType }) => {
 	const { rowCount } = await pool.query(`
 		update decks set name = $3, description = $4, theme = $5,
 			image = coalesce($6, image), image_type = coalesce($7, image_type)
 		where user_id = $1 and id = $2`,
-		[userId, id, name, description, theme, image, imageType]
+		[userId, id, name, description && JSON.stringify(description), theme, image, imageType]
 	);
 
 	return rowCount === 1;

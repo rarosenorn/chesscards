@@ -34,7 +34,7 @@
 	let showBoardNumbers = $derived(frontBoardCount + countBoards(card.back) > 1);
 </script>
 
-{#snippet side(side, boardNumberOffset, authorView)}
+{#snippet side(side, boardNumberOffset, authorView, onBack = false)}
 <div
 	class="card-side"
 	data-board-align={boardAlignment(side)}
@@ -62,6 +62,7 @@
 					<Chessboard
 						board={chessboard}
 						{authorView}
+						{onBack}
 						minWidth="280px"
 						number={showBoardNumbers ? n : null}
 						autoFocus={n - 1 === focusBoardNumber}
@@ -87,7 +88,7 @@
 	{#if sideHasContent(card.back)}
 		<div class="side-gap"></div>
 	{/if}
-	{@render side(card.back, frontBoardCount, false)}
+	{@render side(card.back, frontBoardCount, false, true)}
 </div>
 
 <style>

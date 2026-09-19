@@ -168,10 +168,12 @@
 	let focusBoardNumber = $derived(
 		currentCard ? firstBoardWithMoves(currentCard.front, currentCard.back) : null
 	);
-	// board numbers are only shown when the card has several boards to reference
-	let showBoardNumbers = $derived(
-		currentCard && frontBoardCount + countBoards(currentCard.back) > 1
+	// how many boards the whole card holds, front and back
+	let cardBoardCount = $derived(
+		currentCard ? frontBoardCount + countBoards(currentCard.back) : 0
 	);
+	// board numbers are only shown when the card has several boards to reference
+	let showBoardNumbers = $derived(cardBoardCount > 1);
 
 	// A move written in the card's text drives the board it names (see
 	// tiptap-move-ref.js): the click is handed to that board by number, and
@@ -400,7 +402,7 @@
 </script>
 <svelte:window onkeydown={handleKeyDown} onmousemove={handleMouseMove} />
 
-{#snippet side(side, boardNumberOffset, revealed, marksBack = false)}
+{#snippet side(side, boardNumberOffset, revealed, marksBack = false, onBack = false)}
 <div
 	class="card-side"
 	data-board-align={boardAlignment(side)}
@@ -433,6 +435,7 @@
 					<Chessboard
 						board={chessboard}
 						{revealed}
+						{onBack}
 						authorView={marksBack}
 						minWidth="280px"
 						number={showBoardNumbers ? n : null}
@@ -474,6 +477,7 @@
 		class="flashcard card-surface"
 		class:zen={zenActive()}
 		bind:this={cardElement}
+		class:no-boards={cardBoardCount === 0}
 		data-boards={boardsAllAlone(currentCard) ? "solo" : null}
 	>
 		<!-- turning reveals front boards' back layers (moves/annotations) in
@@ -483,7 +487,7 @@
 			{#if sideHasContent(currentCard.back)}
 				<div class="side-gap"></div>
 			{/if}
-			{@render side(currentCard.back, frontBoardCount, true)}
+			{@render side(currentCard.back, frontBoardCount, true, false, true)}
 		{/if}
 		<div class="card-actions">
 		<!-- Anki's counts, in Anki's colours: what is still waiting in this
@@ -704,6 +708,12 @@
 		   opens at the size it will keep, and the reveal fills room the card
 		   was already holding instead of growing into the page. */
 		min-height: calc(var(--solo-board-size) + var(--card-stack));
+		/* ...and a card with no board at all reserves no room for one: the
+		   floor is the stack alone, so a text card is the size of its text
+		   instead of standing as tall as the diagram it never had. */
+		&.no-boards {
+			min-height: var(--card-stack);
+		}
 		/* the top is the card's rim, wider than the divider's 18px between
 		   the sides; the row below closes the card at the 10px it has always
 		   kept from the bottom edge */

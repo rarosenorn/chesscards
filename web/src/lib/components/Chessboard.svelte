@@ -30,7 +30,7 @@
 	// The nonce is the click — clicking the same move twice is twice a request
 	// to go there. `onPosition` answers back with where the board now stands,
 	// in the same terms, so the text can mark the move it is showing.
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, number = null, autoFocus = false, inEditor = false, onSolutionFromChange = null, aside = null, onPosition = null, children } = $props();
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, onSolutionFromChange = null, aside = null, onPosition = null, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -63,7 +63,10 @@
 	// line under the board, a step away.
 	// with nothing hidden, the whole line is context and its last move is the
 	// position the card is about
-	let openAt = $derived(solutionFrom ?? replay.moveInfos.length);
+	// ...but a board on the card's BACK is the answer itself: its moves are
+	// what was to be recalled, so it opens at the start of them and plays
+	// forward, rather than handing over the finished position.
+	let openAt = $derived(onBack ? 0 : (solutionFrom ?? replay.moveInfos.length));
 	// svelte-ignore state_referenced_locally -- the effect below re-seeds it per card
 	let currentIndex = $state(openAt);
 	// Stepping is the only thing a board animates for, and goTo below is the

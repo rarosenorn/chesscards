@@ -92,6 +92,12 @@ create table decks (
 	-- the next); off = every stage is open, Anki style. Only bites while
 	-- chapters is on — a deck with no chapters has nothing to gate.
 	stage_progression boolean not null default true,
+	-- the deck's own listing (its Deck tab): an upload request is made from
+	-- it, and editing it never reaches a listing already on the marketplace
+	description jsonb,
+	theme deck_theme,
+	image bytea,
+	image_type text,
 	unique(user_id, name)
 );
 

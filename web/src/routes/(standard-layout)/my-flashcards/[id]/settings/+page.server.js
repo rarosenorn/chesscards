@@ -9,7 +9,7 @@ export const load = async ({ locals, params, parent }) => {
 	const { deck } = await parent();
 
 	return {
-		pageTitle: "Deck",
+		pageTitle: "Settings",
 		uploadRequest: deck.isMarketplace
 			? null
 			: await marketplace.getUploadRequestForDeck(locals.userId, params.id)

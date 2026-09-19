@@ -119,17 +119,17 @@
 	// study1 is the side-by-side trial of the study card (text left, board
 	// right); it keeps a tab of its own until the two can be compared
 	const paths = deck.isMarketplace
-		? ["study", "study1", "browse", "settings"]
-		: ["study", "study1", "browse", "add-cards", "settings"];
+		? ["study", "study1", "browse", "deck", "settings"]
+		: ["study", "study1", "browse", "add-cards", "deck", "settings"];
 	const names = deck.isMarketplace
-		? ["Study", "Study 1", "Cards", "Settings"]
-		: ["Study", "Study 1", "Cards", "Add cards", "Settings"];
+		? ["Study", "Study 1", "Cards", "Deck", "Settings"]
+		: ["Study", "Study 1", "Cards", "Add cards", "Deck", "Settings"];
 
-	// s/c/a/i jump between the deck's tabs. Bare letters, so they stand down
+	// s/c/a/d/i jump between the deck's tabs. Bare letters, so they stand down
 	// wherever the keyboard is already spoken for — a text field, a card
 	// editor, or any modifier combo — the way study's own e/h/1-4 do. Settings
 	// takes i, not its own t: a focused board answers t by turning itself over.
-	const TAB_KEYS = { s: "study", c: "browse", a: "add-cards", i: "settings" };
+	const TAB_KEYS = { s: "study", c: "browse", a: "add-cards", d: "deck", i: "settings" };
 	const shortcutFor = path => Object.keys(TAB_KEYS).find(key => TAB_KEYS[key] === path);
 	const handleKeyDown = e => {
 		if (e.ctrlKey || e.metaKey || e.altKey) return;

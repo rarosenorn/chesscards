@@ -100,6 +100,43 @@ const remove = async (id, userId) => {
 	return rowCount === 1;
 }
 
+// The deck's own listing for its Deck tab, shaped like a marketplace deck's.
+// The image itself goes out through the deck's thumbnail route; only a hash
+// of it travels here, for the tab to put in that route's url
+const getListing = async (userId, id) => {
+	const { rows } = await pool.query(`
+		select d.id, d.name, d.description, d.theme, left(md5(d.image), 8) "imageVersion", u.email author,
+			(select count(*) from cards c where c.deck_id = d.id)::int "cardCount"
+		from decks d
+		join "user" u on u.id = d.user_id
+		where d.user_id = $1 and d.id = $2`,
+		[userId, id]
+	);
+
+	return rows[0];
+}
+
+const getImage = async (userId, id) => {
+	const { rows } = await pool.query(
+		'select image, image_type "imageType" from decks where user_id = $1 and id = $2 and image is not null',
+		[userId, id]
+	);
+
+	return rows[0];
+}
+
+// a null image keeps the one the deck has
+const updateListing = async (userId, id, { name, description, theme, image, imageType }) => {
+	const { rowCount } = await pool.query(`
+		update decks set name = $3, description = $4, theme = $5,
+			image = coalesce($6, image), image_type = coalesce($7, image_type)
+		where user_id = $1 and id = $2`,
+		[userId, id, name, description, theme, image, imageType]
+	);
+
+	return rowCount === 1;
+}
+
 // pg returns numeric as string and timestamptz as Date; normalize to the
 // shape the json_agg deck load produces (ts-fsrs treats a truthy string
 // stability/difficulty as an existing — and invalid — memory state)
@@ -381,4 +418,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }
+export { BOUNDS, create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }

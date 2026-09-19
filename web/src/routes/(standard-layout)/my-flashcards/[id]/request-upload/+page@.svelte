@@ -3,37 +3,16 @@
 	import { goto } from "$app/navigation"
 	import { page } from "$app/state"
 	import { deserialize } from "$app/forms"
-	import TextEditor from "$lib/components/TextEditor.svelte"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
-	import { ttGenerateText } from "$lib/tiptap-utility.js"
+	import { ttGenerateHTML, ttGenerateText } from "$lib/tiptap-utility.js"
 
 	let { data } = $props();
 
-	// crop box matches the marketplace card thumbnail ratio (3:2);
-	// the uploaded crop is rendered at 2x this size
-	const previewWidth = 300;
-	const previewHeight = 200;
-	const outputWidth = 600;
-	const outputHeight = 400;
-
-	// two-step wizard, client-side: real routes would destroy the crop,
-	// description editor and selection state on every switch.
-	// step 1 = details form, step 2 = choose preview cards + send the request
+	// two-step wizard, client-side: a real route would destroy the selection
+	// state on every switch.
+	// step 1 = the listing + price, step 2 = choose preview cards + send the request
 	let step = $state(1);
 
-	// null whenever step 2 is open: bind:this clears it on unmount
-	let descriptionEditor = $state(null);
-	// Step 2 unmounts the details panel, so the description editor is only
-	// alive on step 1: its content is captured on the way out, which is what
-	// the request sends and what step 1 is restored from — reading the editor
-	// itself from step 2 was reading null.
-	let descriptionJson = $state(null);
-	const captureDescription = () => {
-		if (descriptionEditor) descriptionJson = descriptionEditor.getJson();
-	}
-	// svelte-ignore state_referenced_locally -- default value only; the user edits it freely
-	let name = $state(data.deck.name);
-	let theme = $state("");
 	let price = $state(0);
 	let errors = $state([]);
 	let submitting = $state(false);
@@ -118,125 +97,19 @@
 		previewIds.splice(index, 0, id);
 	}
 
-	// the chosen image and its placement inside the crop box:
-	// cover-fit base scale times a user-controlled zoom factor.
-	// Zooming out below 1 letterboxes the image (white fills the rest).
-	let imageElement = $state(null);
-	let baseScale = $state(0);
-	let zoom = $state(1);
-	let scale = $derived(baseScale * zoom);
-	let offsetX = $state(0);
-	let offsetY = $state(0);
-	let imageUrl = null;
-
-	// contain-fit (whole image visible) is the zoom-out limit
-	let minZoom = $state(1);
-	const maxZoom = 4;
-
-	// An axis where the image overflows the box is clamped so no gap appears;
-	// an axis where it's smaller than the box stays centered.
-	const clampOffsets = atScale => {
-		const width = imageElement.naturalWidth * atScale;
-		const height = imageElement.naturalHeight * atScale;
-		offsetX = width >= previewWidth
-			? Math.min(0, Math.max(previewWidth - width, offsetX))
-			: (previewWidth - width) / 2;
-		offsetY = height >= previewHeight
-			? Math.min(0, Math.max(previewHeight - height, offsetY))
-			: (previewHeight - height) / 2;
-	}
-
-	const handleFileChange = event => {
-		const file = event.target.files[0];
-		if (!file) return;
-		if (imageUrl) URL.revokeObjectURL(imageUrl);
-		imageUrl = URL.createObjectURL(file);
-		const img = new Image();
-		img.onload = () => {
-			// cover-fit: scale so the image fills the box, center the overflow
-			baseScale = Math.max(previewWidth / img.naturalWidth, previewHeight / img.naturalHeight);
-			const containScale = Math.min(previewWidth / img.naturalWidth, previewHeight / img.naturalHeight);
-			// zoom out to half of contain-fit, so well past whole-image
-			minZoom = containScale / baseScale / 2;
-			zoom = 1;
-			offsetX = (previewWidth - img.naturalWidth * baseScale) / 2;
-			offsetY = (previewHeight - img.naturalHeight * baseScale) / 2;
-			imageElement = img;
-		}
-		img.src = imageUrl;
-	}
-
-	// zooms while keeping the point at the center of the crop box fixed
-	const setZoom = newZoom => {
-		if (!imageElement) return;
-		newZoom = Math.min(maxZoom, Math.max(minZoom, newZoom));
-		const oldScale = scale;
-		const newScale = baseScale * newZoom;
-		offsetX = previewWidth / 2 - (previewWidth / 2 - offsetX) / oldScale * newScale;
-		offsetY = previewHeight / 2 - (previewHeight / 2 - offsetY) / oldScale * newScale;
-		zoom = newZoom;
-		clampOffsets(newScale);
-	}
-
-	const handleWheel = event => {
-		if (!imageElement) return;
-		event.preventDefault();
-		setZoom(zoom * (event.deltaY < 0 ? 1.1 : 1 / 1.1));
-	}
-
-	// drag to choose which part of the image the thumbnail shows
-	let dragStart = null;
-
-	const handlePointerDown = event => {
-		if (!imageElement) return;
-		event.preventDefault();
-		dragStart = { x: event.clientX - offsetX, y: event.clientY - offsetY };
-		event.target.setPointerCapture(event.pointerId);
-	}
-
-	const handlePointerMove = event => {
-		if (!dragStart || !imageElement) return;
-		offsetX = event.clientX - dragStart.x;
-		offsetY = event.clientY - dragStart.y;
-		clampOffsets(scale);
-	}
-
-	const handlePointerUp = () => dragStart = null;
-
-	// renders the crop box exactly as shown (crop, zoom, letterboxing)
-	// to a jpeg blob at the output size
-	const cropImage = () => new Promise(resolve => {
-		const canvas = document.createElement("canvas");
-		canvas.width = outputWidth;
-		canvas.height = outputHeight;
-		const context = canvas.getContext("2d");
-		// white behind letterboxing and transparent png/webp regions
-		context.fillStyle = "white";
-		context.fillRect(0, 0, outputWidth, outputHeight);
-		const factor = outputWidth / previewWidth;
-		context.drawImage(
-			imageElement,
-			offsetX * factor, offsetY * factor,
-			imageElement.naturalWidth * scale * factor, imageElement.naturalHeight * scale * factor
-		);
-		canvas.toBlob(resolve, "image/jpeg", 0.9);
-	})
-
-	// details beyond native form validation; checked before step 2 opens and
-	// again on submit, where only the captured description is left to check
-	const descriptionIsEmpty = () =>
-		descriptionEditor
-			? descriptionEditor.isEmpty()
-			: !descriptionJson || ttGenerateText(descriptionJson).trim().length === 0;
-
+	// the listing is the deck's own, edited in its Deck tab, and the request
+	// is made from it; what it still lacks is listed here and again by the
+	// server on submit
+	let listing = $derived(data.listing);
 	const detailsErrors = () => [
-		...(imageElement ? [] : ["A thumbnail image is required"]),
-		...(descriptionIsEmpty() ? ["A description is required"] : [])
+		...(listing.name.length < 4 || listing.name.length > 100 ? ["Name must be between 4 and 100 characters"] : []),
+		...(listing.imageVersion ? [] : ["A thumbnail image is required"]),
+		...(listing.theme ? [] : ["A theme is required"]),
+		...(listing.description && ttGenerateText(listing.description).trim().length > 0 ? [] : ["A description is required"])
 	];
 
 	// the details <form>'s submit handler: its native validation has passed
 	const goNext = () => {
-		captureDescription();
 		errors = detailsErrors();
 		if (errors.length === 0) step = 2;
 	}
@@ -247,12 +120,8 @@
 		submitting = true;
 		try {
 			const formData = new FormData();
-			formData.set("name", name);
-			formData.set("theme", theme);
 			formData.set("price", price.toString());
-			formData.set("description", JSON.stringify(descriptionJson));
 			formData.set("previewCardIds", JSON.stringify(previewIds));
-			formData.set("image", await cropImage(), "thumbnail.jpg");
 
 			const response = await fetch("?/requestUpload", {
 				method: "POST",
@@ -300,74 +169,30 @@
 {#if step === 1}
 	<div class="details-panel">
 		<h1>Request upload to marketplace</h1>
-		<form onsubmit={e => { e.preventDefault(); goNext(); }}>
-			<label for="mp-name">Name</label>
-			<input id="mp-name" bind:value={name} required minlength="4" maxlength="100" autocomplete="off" />
-
-			<label for="mp-image">Thumbnail image</label>
-			<input
-				id="mp-image"
-				type="file"
-				accept="image/jpeg,image/png,image/webp"
-				onchange={handleFileChange}
-			/>
-			{#if imageElement}
-				<!-- svelte-ignore a11y_no_static_element_interactions -- pointer-only pan refinement; the crop works without it (centered by default) -->
-				<div
-					class="crop-preview"
-					style="width: {previewWidth}px; height: {previewHeight}px;"
-					onpointerdown={handlePointerDown}
-					onpointermove={handlePointerMove}
-					onpointerup={handlePointerUp}
-					onwheel={handleWheel}
-				>
-					<img
-						src={imageElement.src}
-						alt="Thumbnail preview"
-						draggable="false"
-						style="
-							width: {imageElement.naturalWidth * scale}px;
-							height: {imageElement.naturalHeight * scale}px;
-							transform: translate({offsetX}px, {offsetY}px);
-						"
-					/>
-				</div>
-				<div class="zoom-row">
-					<button
-						type="button"
-						class="zoom-btn"
-						aria-label="Zoom out"
-						disabled={zoom <= minZoom}
-						onclick={() => setZoom(zoom / 1.2)}
-					>
-						−
-					</button>
-					<button
-						type="button"
-						class="zoom-btn"
-						aria-label="Zoom in"
-						disabled={zoom >= maxZoom}
-						onclick={() => setZoom(zoom * 1.2)}
-					>
-						+
-					</button>
-				</div>
-				<p class="crop-hint">Drag the image to reposition, scroll or use − / + to zoom</p>
+		<p class="section-note">
+			The listing is the deck's own: change it in the <a href="/my-flashcards/{page.params.id}/deck">Deck tab</a>.
+		</p>
+		<div class="listing">
+			{#if listing.imageVersion}
+				<img
+					class="thumbnail"
+					src="/my-flashcards/{page.params.id}/thumbnail?v={listing.imageVersion}"
+					alt={listing.name}
+				/>
+			{:else}
+				<div class="thumbnail placeholder">No thumbnail</div>
 			{/if}
-
-			<p class="field-label">Description</p>
-			<div class="description-editor">
-				<TextEditor bind:this={descriptionEditor} content={descriptionJson ?? ""} />
+			<div>
+				<h2>{listing.name}</h2>
+				<p class="theme"><span>Theme:</span> {listing.theme ?? "none"}</p>
 			</div>
-
-			<label for="mp-theme">Theme</label>
-			<select id="mp-theme" class="natural-width" bind:value={theme} required>
-				<option value="" disabled>Choose a theme</option>
-				{#each data.themes as themeOption}
-					<option value={themeOption}>{themeOption}</option>
-				{/each}
-			</select>
-
+		</div>
+		{#if listing.description}
+			<div class="description">
+				{@html ttGenerateHTML(listing.description)}
+			</div>
+		{/if}
+		<form onsubmit={e => { e.preventDefault(); goNext(); }}>
 			<label for="mp-price">Price</label>
 			<input id="mp-price" class="natural-width" type="number" bind:value={price} min="0" max="999.99" step="0.01" required />
 
@@ -572,7 +397,7 @@
 		gap: 6px;
 		max-width: 720px;
 	}
-	label, .field-label {
+	label {
 		margin-top: 8px;
 		margin-bottom: 0;
 		font-weight: 500;
@@ -584,54 +409,45 @@
 	#mp-price {
 		width: 90px;
 	}
-	.crop-preview {
-		overflow: hidden;
-		position: relative;
-		border: 1px solid rgba(0, 0, 0, 0.2);
-		border-radius: 4px;
-		cursor: grab;
-		touch-action: none;
-		align-self: center;
-	}
-	.crop-preview:active {
-		cursor: grabbing;
-	}
-	.crop-preview img {
-		position: absolute;
-		max-width: none;
-		user-select: none;
-	}
-	.zoom-row {
-		display: flex;
-		justify-content: center;
-		gap: 8px;
-	}
-	.zoom-btn {
-		width: 32px;
-		height: 32px;
-		border: 1px solid rgba(0, 0, 0, 0.25);
-		border-radius: 4px;
-		background-color: white;
-		font-size: 1.2rem;
-		line-height: 1;
-		cursor: pointer;
-	}
-	.zoom-btn:hover:enabled {
-		background-color: gainsboro;
-	}
-	.zoom-btn:disabled {
-		color: rgba(0, 0, 0, 0.3);
-		cursor: default;
-	}
-	.crop-hint {
-		font-size: 0.85rem;
+	.section-note {
+		margin: 0 0 16px 0;
 		color: rgba(0, 0, 0, 0.6);
-		text-align: center;
-		margin: 0;
 	}
-	.description-editor {
-		border: 1px solid rgba(0, 0, 0, 0.2);
+	.listing {
+		display: flex;
+		gap: 30px;
+		align-items: start;
+	}
+	.thumbnail {
+		width: 300px;
+		aspect-ratio: 3 / 2;
+		object-fit: cover;
 		border-radius: 4px;
+	}
+	.placeholder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: #eff1f3;
+		color: rgba(0, 0, 0, 0.5);
+	}
+	.listing h2 {
+		font-size: 1.3rem;
+	}
+	.theme {
+		margin: 8px 0 0 0;
+		color: rgba(0, 0, 0, 0.6);
+		text-transform: capitalize;
+	}
+	.theme span {
+		font-weight: 600;
+	}
+	.description {
+		margin: 16px 0 0 0;
+		max-width: 70ch;
+	}
+	.description :global(p) {
+		margin: 0 0 12px 0;
 	}
 	.errors {
 		color: red;

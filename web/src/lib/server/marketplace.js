@@ -18,9 +18,10 @@ const getUploadRequestForDeck = async (userId, deckId) => {
 	return rows[0];
 }
 
-// Creates a pending upload request. Throws if the user doesn't own the deck,
-// the deck is empty, or a pending/approved request already exists.
-const createUploadRequest = async (userId, deckId, { name, description, theme, price, image, imageType, previewCardIds }) => {
+// Creates a pending upload request from the deck's own listing (its Deck
+// tab) as it stands now. Throws if the user doesn't own the deck, the deck is
+// empty, or a pending/approved request already exists.
+const createUploadRequest = async (userId, deckId, { price, previewCardIds }) => {
 	const { rows } = await pool.query(
 		`select (select count(*) from cards where deck_id = d.id) card_count
 		from decks d where d.id = $1 and d.user_id = $2`,
@@ -44,8 +45,10 @@ const createUploadRequest = async (userId, deckId, { name, description, theme, p
 
 	const { rows: inserted } = await pool.query(
 		`insert into marketplace_upload_requests(deck_id, user_id, name, description, theme, price, image, image_type, preview_card_ids)
-		values($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id, name, theme, status`,
-		[deckId, userId, name, description, theme, price, image, imageType, preview]
+		select d.id, d.user_id, d.name, d.description, d.theme, $3, d.image, d.image_type, $4
+		from decks d where d.id = $1 and d.user_id = $2
+		returning id, name, theme, status`,
+		[deckId, userId, price, preview]
 	);
 
 	return inserted[0];
@@ -298,6 +301,22 @@ const getInstanceById = async (userId, instanceId) => {
 	return rows[0];
 }
 
+// A marketplace deck instance's Deck tab: the listing as the marketplace
+// shows it, which is the author's and read-only here
+const getInstanceListing = async (userId, instanceId) => {
+	const { rows } = await pool.query(`
+		select i.id, md.id "marketplaceDeckId", md.name, md.description, md.theme, u.email author,
+			(select count(*) from marketplace_cards mc where mc.marketplace_deck_id = md.id)::int "cardCount"
+		from marketplace_deck_instances i
+		join marketplace_decks md on md.id = i.marketplace_deck_id
+		join "user" u on u.id = md.user_id
+		where i.user_id = $1 and i.id = $2`,
+		[userId, instanceId]
+	);
+
+	return rows[0];
+}
+
 // the studier's own progression switch; flipping it is the same kind of
 // per-deck exception a personal deck's toggle is
 const updateInstanceStageProgression = async (userId, instanceId, value) => {
@@ -359,4 +378,4 @@ const createInstanceReviewLog = async (userId, instanceCardId, log) => {
 	)
 }
 
-export { themes, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, getInstanceById, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }
+export { themes, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }

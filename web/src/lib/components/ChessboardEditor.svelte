@@ -963,12 +963,14 @@
 					disabled={Math.min(currentIndex, viewLimit) === viewLimit}
 					onclick={() => goToIndex(Math.min(currentIndex + 1, viewLimit))}
 				>&#9654;</button>
+			</div>
+			<div class="cut-row">
 				<button
 					class="std-btn cut-btn"
 					aria-label="Delete the moves from here on"
 					disabled={cutIndex >= moves.length}
 					onclick={truncateMoves}
-				><TrashIcon /></button>
+				><TrashIcon /> from current</button>
 			</div>
 		{/if}
 		<div class="actions">
@@ -1483,17 +1485,21 @@
 		font-size: 0.8rem;
 		line-height: 1.6;
 	}
-	/* at the far end of the row, away from the two steppers: it is the one
-	   button here that takes something away, and the pointer is on the
-	   steppers a lot */
+	/* Its own row under the steppers: it is the one button here that takes
+	   something away, and the pointer is on the steppers a lot. */
+	.cut-row {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 8px;
+	}
 	.cut-btn {
-		order: -1;
-		margin-right: auto;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 30px;
-		padding: 3px 0;
+		gap: 6px;
+		padding: 3px 10px;
+		font-size: 0.8rem;
+		line-height: 1.6;
 	}
 	.cut-btn :global(svg) {
 		width: 15px;

@@ -105,8 +105,16 @@
 	// on screen (see below), so a card that comes due mid-review can never
 	// replace the one being looked at.
 	let now = $state(Date.now());
-	const isDue = card =>
-		!card.finished_at && Date.parse(card.due) <= now && !gated(card);
+	// still owed, whenever it falls due
+	const isWaiting = card => !card.finished_at && !gated(card);
+	const isDue = card => isWaiting(card) && Date.parse(card.due) <= now;
+	// Anki's learn-ahead limit. Without it the tail of a session dead-ends: the
+	// last card is graded Again, comes back in a minute, and the page says
+	// "finished for now" for a card that could be answered right now. Only the
+	// short steps are ever within reach — everything on a real schedule is days
+	// away — so this needs no test for which queue a card is in.
+	const LEARN_AHEAD_MS = 20 * 60 * 1000;
+	const isDueSoon = card => isWaiting(card) && Date.parse(card.due) <= now + LEARN_AHEAD_MS;
 
 	// Anki's three counts, on the same split the deck list uses (decks.js):
 	// a card is new while it has never been graded, learning while it is
@@ -132,7 +140,14 @@
 		if (reviews.length) {
 			return reviews.reduce((min, card) => shuffleKey(card.id) < shuffleKey(min.id) ? card : min);
 		}
-		return due.sort(byDeckOrder)[0];
+		if (due.length) return due.sort(byDeckOrder)[0];
+		// Nothing owed: reach ahead for the card the session would have waited
+		// on, nearest first. Only ever from an empty queue, so a card fetched
+		// early can never displace one that is genuinely due.
+		const soon = deck.cards.filter(isDueSoon);
+		return soon.length
+			? soon.reduce((min, card) => Date.parse(card.due) < Date.parse(min.due) ? card : min)
+			: undefined;
 	});
 
 	// A revealed answer belongs to the deck layout, not to this page, so

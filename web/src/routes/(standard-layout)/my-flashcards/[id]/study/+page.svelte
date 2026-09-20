@@ -525,19 +525,15 @@
 		bind:this={cardElement}
 		data-boards={boardsAllAlone(currentCard) ? "solo" : null}
 	>
-		<!-- the sides share one scroller, so a long question and its answer
-		     scroll as one card rather than two independent panes -->
-		<div class="card-content">
-			<!-- turning reveals front boards' back layers (moves/annotations) in
-			     place, on top of showing the back side below -->
-			{@render side(currentCard.front, 0, isCardTurned, isCardTurned)}
-			{#if isCardTurned}
-				{#if sideHasContent(currentCard.back)}
-					<div class="side-gap"></div>
-				{/if}
-				{@render side(currentCard.back, frontBoardCount, true, false, true)}
+		<!-- turning reveals front boards' back layers (moves/annotations) in
+		     place, on top of showing the back side below -->
+		{@render side(currentCard.front, 0, isCardTurned, isCardTurned)}
+		{#if isCardTurned}
+			{#if sideHasContent(currentCard.back)}
+				<div class="side-gap"></div>
 			{/if}
-		</div>
+			{@render side(currentCard.back, frontBoardCount, true, false, true)}
+		{/if}
 		<div class="card-actions">
 		<!-- Anki's counts, in Anki's colours: what is still waiting in this
 		     deck, kept out of the centred button row's way -->
@@ -785,28 +781,13 @@
 		   opens at the size it will keep, and the reveal fills room the card
 		   was already holding instead of growing into the page. */
 		min-height: calc(var(--solo-board-size) + var(--card-stack));
-		/* ...and no taller than it either: content longer than the budget
-		   scrolls inside .card-content rather than growing the card, so a
-		   long prompt can no longer push a card down the window (zen places
-		   the card by this height) or its own grade row off the bottom. */
-		max-height: calc(var(--solo-board-size) + var(--card-stack));
+		/* No ceiling: a card with more in it than the budget holds grows
+		   downwards and the page scrolls, as the reveal does. The height
+		   above is a floor, so the cards that fit all stand alike. */
 		/* the top is the card's rim, wider than the divider's 18px between
 		   the sides; the row below closes the card at the 10px it has always
 		   kept from the bottom edge */
 		padding: 32px 37px 10px 37px;
-	}
-	/* The card's content, between the rim and the grade row. It takes the
-	   room the row does not, and min-height:0 is what lets it be smaller than
-	   its own content — without it a flex item refuses to shrink and the card
-	   grows past its budget again. */
-	.card-content {
-		align-self: stretch;
-		flex: 1;
-		min-height: 0;
-		overflow-y: auto;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
 	}
 	/* The controls close the card, one centred row on one 20px rhythm. The
 	   auto margin drops the row to the card's floor — on a card shorter than

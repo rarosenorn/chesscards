@@ -522,19 +522,22 @@
 	<div
 		class="flashcard card-surface"
 		class:zen={zenActive()}
-		class:no-boards={cardBoardCount === 0}
 		bind:this={cardElement}
 		data-boards={boardsAllAlone(currentCard) ? "solo" : null}
 	>
-		<!-- turning reveals front boards' back layers (moves/annotations) in
-		     place, on top of showing the back side below -->
-		{@render side(currentCard.front, 0, isCardTurned, isCardTurned)}
-		{#if isCardTurned}
-			{#if sideHasContent(currentCard.back)}
-				<div class="side-gap"></div>
+		<!-- the sides share one scroller, so a long question and its answer
+		     scroll as one card rather than two independent panes -->
+		<div class="card-content">
+			<!-- turning reveals front boards' back layers (moves/annotations) in
+			     place, on top of showing the back side below -->
+			{@render side(currentCard.front, 0, isCardTurned, isCardTurned)}
+			{#if isCardTurned}
+				{#if sideHasContent(currentCard.back)}
+					<div class="side-gap"></div>
+				{/if}
+				{@render side(currentCard.back, frontBoardCount, true, false, true)}
 			{/if}
-			{@render side(currentCard.back, frontBoardCount, true, false, true)}
-		{/if}
+		</div>
 		<div class="card-actions">
 		<!-- Anki's counts, in Anki's colours: what is still waiting in this
 		     deck, kept out of the centred button row's way -->
@@ -731,17 +734,11 @@
 			calc(var(--zen-air-top) + var(--card-answer) * 0.4),
 			calc(var(--zen-room) * 0.53)
 		);
-		/* A card with no board has no board's height to stand at, and in zen
-		   it is the only thing on the screen: held to the board's floor it
-		   was a mostly empty sheet with one line along its top. It takes the
-		   furniture's height instead, and the same lift then hangs it where
-		   every other card hangs — just off centre, a little high. The floor
-		   outside zen stays the window's, so the grade row keeps its place
-		   from card to card where there is a page around it. */
-		&.no-boards {
-			min-height: var(--card-stack);
-			--zen-room: calc(100dvh - var(--card-furniture));
-		}
+		/* A card with no board stands at the board's height all the same: one
+		   card's top edge is every card's top edge, so the lift is computed
+		   from the one budget, board or no board. A text card is a taller
+		   sheet than its text needs, and that is the price of the deck not
+		   moving under the reader between cards. */
 		/* The bias is a luxury: on a window that the card nearly fills, an
 		   uneven split is just a lopsided card, so it stays at zero until
 		   there is room to spare and then takes a fifth of it, up to 20px.
@@ -752,9 +749,13 @@
 	/* fullscreen: no window chrome either, so the card can afford more air
 	   still. The board gives the difference back, as it does for the rest of
 	   the frame. */
+	/* The top takes more of that than the bottom: on a whole screen the card
+	   reads too high sitting where a windowed one sits, so it hangs lower
+	   here. The board pays for the extra, as it pays for the rest of the
+	   frame, so what is under the card does not change. */
 	@media all and (display-mode: fullscreen) {
 		.flashcard.zen {
-			--zen-air-top: 60px;
+			--zen-air-top: 80px;
 			--zen-air-bottom: 55px;
 		}
 	}
@@ -784,10 +785,28 @@
 		   opens at the size it will keep, and the reveal fills room the card
 		   was already holding instead of growing into the page. */
 		min-height: calc(var(--solo-board-size) + var(--card-stack));
+		/* ...and no taller than it either: content longer than the budget
+		   scrolls inside .card-content rather than growing the card, so a
+		   long prompt can no longer push a card down the window (zen places
+		   the card by this height) or its own grade row off the bottom. */
+		max-height: calc(var(--solo-board-size) + var(--card-stack));
 		/* the top is the card's rim, wider than the divider's 18px between
 		   the sides; the row below closes the card at the 10px it has always
 		   kept from the bottom edge */
 		padding: 32px 37px 10px 37px;
+	}
+	/* The card's content, between the rim and the grade row. It takes the
+	   room the row does not, and min-height:0 is what lets it be smaller than
+	   its own content — without it a flex item refuses to shrink and the card
+	   grows past its budget again. */
+	.card-content {
+		align-self: stretch;
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 	/* The controls close the card, one centred row on one 20px rhythm. The
 	   auto margin drops the row to the card's floor — on a card shorter than

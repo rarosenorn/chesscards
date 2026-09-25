@@ -82,8 +82,8 @@ describe("a move written in a card's text", () => {
 		const { target, app } = mountCard(cardWith(content, ["e4", "e5", "Nf3"]));
 		await tick();
 
-		// the card opens on its own line, not on the aside
-		expect(pieces(target)).toBe(pieces_of(replayMoves({ fen: START, moves: ["e4", "e5", "Nf3"] }).fens.at(-1)));
+		// the card opens at the start of its own line, not on the aside
+		expect(pieces(target)).toBe(pieces_of(START));
 
 		const tokens = [...target.querySelectorAll("[data-move-ref]")];
 		expect(tokens.map(el => el.textContent)).toEqual(["2…Nc6", "3.Bb5"]);

@@ -57,16 +57,9 @@
 	// so back moves are inert while it is closed
 	let lineMoves = $derived(authorView ? replay.moveInfos : replay.moveInfos.slice(0, visiblePlies));
 
-	// A card opens at its question, not at the start of its line: the moves
-	// before solutionFrom are how the position came about, and replaying them
-	// on every review is reading rather than retrieval. They stay on the move
-	// line under the board, a step away.
-	// with nothing hidden, the whole line is context and its last move is the
-	// position the card is about
-	// ...but a board on the card's BACK is the answer itself: its moves are
-	// what was to be recalled, so it opens at the start of them and plays
-	// forward, rather than handing over the finished position.
-	let openAt = $derived(onBack ? 0 : (solutionFrom ?? replay.moveInfos.length));
+	// A board opens where its author set it to (openAt), else at the start of
+	// its line; never past what the reveal still hides.
+	let openAt = $derived(Math.min(normalized.openAt ?? 0, visiblePlies));
 	// svelte-ignore state_referenced_locally -- the effect below re-seeds it per card
 	let currentIndex = $state(openAt);
 	// Stepping is the only thing a board animates for, and goTo below is the

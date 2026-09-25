@@ -74,6 +74,8 @@
 	// (though actually recording into a hidden back opens it). Defaults on —
 	// authors see the whole card unless they peek at the student view.
 	let showBack = $state(resume ? resume.showBack : true);
+	// the position the shown board opens at; null = the start
+	let openAt = $state(resume ? resume.openAt : (initial.openAt ?? null));
 
 	let fenIsValid = $derived(isValidFen(currentFen));
 	// any valid FEN can record moves — free-form setups (two kings, missing
@@ -137,6 +139,7 @@
 		annotations = annotations[0] ? { 0: annotations[0] } : {};
 		solutionAnnotations = solutionAnnotations[0] ? { 0: solutionAnnotations[0] } : {};
 		solutionFrom = null;
+		openAt = null;
 		currentIndex = 0;
 	}
 
@@ -218,6 +221,7 @@
 			// changed question invalidates the recorded solution
 			solutionFrom = null;
 		}
+		if (openAt > currentIndex) openAt = currentIndex || null;
 		currentIndex += 1;
 		// render from chess.js so promotion/castling/en passant show correctly
 		board.setPosition(fen, false);
@@ -392,6 +396,7 @@
 		for (const key of Object.keys(solutionAnnotations)) {
 			if (Number(key) > cutIndex) delete solutionAnnotations[key];
 		}
+		if (openAt > cutIndex) openAt = cutIndex || null;
 		// a back layer starting past the new end has nothing left to hide
 		if (solutionFrom != null && solutionFrom >= moves.length) solutionFrom = null;
 		currentIndex = cutIndex;
@@ -627,6 +632,7 @@
 				annotations: $state.snapshot(annotations),
 				solutionFrom,
 				solutionAnnotations: $state.snapshot(solutionAnnotations),
+				openAt,
 				recordingAnswer,
 				showBack,
 				orientation,
@@ -647,6 +653,7 @@
 		annotations: $state.snapshot(annotations),
 		solutionFrom,
 		solutionAnnotations: $state.snapshot(solutionAnnotations),
+		openAt,
 		orientation
 	});
 
@@ -681,6 +688,12 @@
 	// A click in the move list jumps to that position rather than playing the
 	// way there: no sound, and the board snaps instead of animating (a click
 	// can cross a dozen moves, which the animation would race through).
+	let shownIndex = $derived(Math.min(currentIndex, viewLimit));
+	let opensHere = $derived((openAt ?? 0) === shownIndex);
+	const toggleOpenAt = () => {
+		openAt = opensHere ? null : shownIndex || null;
+	}
+
 	const jumpToIndex = index => {
 		snapNextPosition = true;
 		currentIndex = index;
@@ -923,6 +936,7 @@
 							<button
 								class="move-btn"
 								class:current={Math.min(currentIndex, viewLimit) === row.white.index + 1}
+								class:opens-here={openAt === row.white.index + 1}
 								disabled={!showBack && moveIsBack(row.white.index)}
 								onclick={() => jumpToIndex(row.white.index + 1)}
 							>
@@ -935,6 +949,7 @@
 							<button
 								class="move-btn"
 								class:current={Math.min(currentIndex, viewLimit) === row.black.index + 1}
+								class:opens-here={openAt === row.black.index + 1}
 								disabled={!showBack && moveIsBack(row.black.index)}
 								onclick={() => jumpToIndex(row.black.index + 1)}
 							>
@@ -952,6 +967,11 @@
 			     belong to the card's text while an editor is open -->
 			<div class="step-controls">
 			<div class="step-row">
+				<button
+					class="std-btn open-here-btn"
+					aria-pressed={opensHere}
+					onclick={toggleOpenAt}
+				>Open here</button>
 				<button
 					class="std-btn step-btn"
 					aria-label="Previous move"
@@ -1479,6 +1499,23 @@
 		display: flex;
 		justify-content: flex-end;
 		gap: 8px;
+	}
+	/* the opening position's own control, apart from the arrows at the right */
+	.open-here-btn {
+		margin-right: auto;
+		padding: 3px 10px;
+		font-size: 0.8rem;
+		line-height: 1.6;
+	}
+	.open-here-btn[aria-pressed="true"] {
+		background-color: var(--accent);
+		border-color: var(--accent);
+		color: white;
+	}
+	/* the move the shown board opens at: a bar at its left edge, which reads
+	   on the plain row and on the current (accent) one alike */
+	.move-btn.opens-here {
+		box-shadow: inset 3px 0 0 #e0a100;
 	}
 	.step-btn {
 		width: 64px;

@@ -2,7 +2,8 @@ import { ttGenerateText } from "./tiptap-utility.js"
 import { isValidFen } from "./isValidFen.js"
 
 // A board is { fen, moves: [san...], annotations: { [positionIndex]: { arrows, markers } },
-// solutionFrom, solutionAnnotations, orientation: "w" | "b" }.
+// solutionFrom, solutionAnnotations, openAt, orientation: "w" | "b" }.
+// openAt is the position a shown board opens at (null = the start).
 // The solution layer belongs to the back: moves[solutionFrom..] are hidden in
 // study until the card is turned (null = no hidden moves), and on turning
 // solutionAnnotations displaces annotations per position. Boards saved before
@@ -16,6 +17,7 @@ const newBoard = fen => ({
 	annotations: {},
 	solutionFrom: null,
 	solutionAnnotations: {},
+	openAt: null,
 	orientation: "w"
 });
 
@@ -29,13 +31,15 @@ const normalizeBoard = board =>
 			annotations: board.annotations ?? {},
 			solutionFrom: board.solutionFrom ?? null,
 			solutionAnnotations: board.solutionAnnotations ?? {},
+			openAt: board.openAt ?? null,
 			orientation: board.orientation ?? "w"
 		};
 
 // empty solution layers are omitted from the stored JSON
-const boardForJson = ({ fen, moves, annotations, solutionFrom, solutionAnnotations, orientation }) => ({
+const boardForJson = ({ fen, moves, annotations, solutionFrom, solutionAnnotations, openAt, orientation }) => ({
 	fen, moves, annotations, orientation,
 	...(solutionFrom != null && { solutionFrom }),
+	...(openAt != null && { openAt }),
 	...(Object.keys(solutionAnnotations ?? {}).length > 0 && { solutionAnnotations })
 });
 

@@ -94,6 +94,7 @@
 			next.annotations = board.annotations[0] ? { 0: board.annotations[0] } : {};
 			next.solutionAnnotations = board.solutionAnnotations?.[0] ? { 0: board.solutionAnnotations[0] } : {};
 			next.solutionFrom = null;
+			next.openAt = null;
 		}
 		if (isValidFen(value)) {
 			next.fen = value;

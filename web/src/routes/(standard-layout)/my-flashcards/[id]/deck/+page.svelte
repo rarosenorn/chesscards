@@ -81,7 +81,20 @@
 			errors = ["Could not reach the server. Check your connection and try again."];
 		}
 	}
+
+	// e opens the editor, as on Cards; Ctrl+Enter saving is the description
+	// editor's own, window-wide
+	const handleKeyDown = e => {
+		if (!editable || editing || view !== "description") return;
+		if (e.key !== "e" || e.ctrlKey || e.metaKey || e.altKey) return;
+		const target = e.target;
+		if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.tagName === "SELECT" || target?.isContentEditable) return;
+		e.preventDefault();
+		startEditing();
+	}
 </script>
+
+<svelte:window onkeydown={handleKeyDown} />
 
 <StandardLayout>
 	{#if editing}

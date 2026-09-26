@@ -331,11 +331,10 @@ body.piece-grabbing * {
 .flashcard .text-block {
 	/* Text carries its own measure, apart from the boards: the card is wide
 	   for their sake, and prose is held to a readable column while the boards
-	   break out wider than it. Short text still centers within the column
-	   (the block shrink-wraps), so only wrapped paragraphs feel the cap; the
-	   min keeps the column from outrunning a card narrowed by a small
-	   viewport. The editors stay uncapped, so a line there breaks wider than
-	   it will on the card. */
+	   break out wider than it. The min keeps the column from outrunning a
+	   card narrowed by a small viewport. The editors stay uncapped, so a line
+	   there breaks wider than it will on the card. */
+	width: calc(100% - 6px);
 	max-width: min(var(--card-text-measure), 100%);
 	margin-inline: 3px;
 	/* a long unbroken run (a URL, a pasted token) breaks rather than
@@ -344,15 +343,16 @@ body.piece-grabbing * {
 	font-size: var(--card-text-size);
 	line-height: var(--card-text-leading);
 }
-/* The column centers, whatever the boards below it do. Sharing the left
-   board's edge was tried: it reads well over a pair, but it makes a card with
-   one centered board sit differently from a card with two. At 75ch the column
-   is wide enough that its own margins read as a measure rather than as text
-   that failed to fill the card, so it can afford to centre. */
-/* Text needs no alignment rule of its own: the block is only as wide as its
-   text up to the measure, and the side centers it. Short text is therefore
-   centered, and wrapped text fills the measure and reads left-aligned from a
-   fixed edge — one declaration, no threshold. */
+/* The column is always its full measure and centered, so everything in it
+   reads from one left edge — except a paragraph that fits on one line, which
+   centers on its own. Each paragraph shrink-wraps to its text and centers in
+   the column: one that wraps fills the column and reads left-aligned, one
+   that does not is centered, per paragraph and with no threshold. Lists
+   never center; they hold the column's edge. */
+.flashcard .text-block > p {
+	width: fit-content;
+	margin-inline: auto;
+}
 /* boards are decided by the card's data: a lone board sits centered only
    while every board block on the side is a lone board */
 .flashcard .card-side[data-board-align="left"] .single-board-block {
@@ -371,7 +371,7 @@ body.piece-grabbing * {
 }
 /* paragraph rhythm inside card text, matching the editor's 0.6em */
 .flashcard .text-block p {
-	margin: 0.6em 0;
+	margin-block: 0.6em;
 }
 .flashcard .text-block p:first-child {
 	margin-top: 0;

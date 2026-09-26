@@ -82,6 +82,9 @@ create table decks (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid references "user" ("id") on delete cascade not null,
 	name text not null,
+	-- the deck's place in My flashcards, 1..n per user; the user drags to
+	-- reorder, and a new deck joins at the end
+	position integer not null default 0,
 	-- Whether the deck is organised into chapters at all. Off (the default) it
 	-- is one flat list: the chapter picker, the headers and the "2.17" order
 	-- numbering all go, and the deck's single stage is an implementation
@@ -181,6 +184,8 @@ create table marketplace_deck_instances (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid references "user" ("id") on delete cascade not null,
 	marketplace_deck_id uuid references marketplace_decks(id) not null,
+	-- its place among the user's marketplace decks, as decks.position
+	position integer not null default 0,
 	-- each studier follows (or ignores) the deck's stages for themselves
 	stage_progression boolean not null default true
 );

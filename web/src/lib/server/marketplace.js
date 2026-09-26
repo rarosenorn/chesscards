@@ -201,7 +201,9 @@ const createDeckInstance = async (userId, marketplaceDeckId) => {
 	try {
 		await client.query("begin");
 		const { rows: [instance] } = await client.query(
-			"insert into marketplace_deck_instances(user_id, marketplace_deck_id) values($1, $2) returning id",
+			`insert into marketplace_deck_instances(user_id, marketplace_deck_id, position)
+			values($1, $2, (select coalesce(max(position), 0) + 1 from marketplace_deck_instances where user_id = $1))
+			returning id`,
 			[userId, marketplaceDeckId]
 		);
 		const emptyCard = createEmptyCard();
@@ -264,11 +266,24 @@ const getInstancesWithoutCards = async (userId, { timeZone, rolloverHour }) => {
 		left join marketplace_card_instances ci on ci.marketplace_deck_instance_id = i.id
 		cross join bounds
 		where i.user_id = $1
-		group by i.id, md.name`,
+		group by i.id, md.name
+		order by i.position`,
 		[userId, timeZone, rolloverHour]
 	);
 
 	return rows;
+}
+
+// the user's marketplace decks in the order given (see decks.reorder)
+const reorderInstances = async (userId, ids) => {
+	const { rowCount } = await pool.query(`
+		update marketplace_deck_instances i set position = u.n
+		from unnest($2::uuid[]) with ordinality u(id, n)
+		where i.id = u.id and i.user_id = $1
+			and (select count(*) from marketplace_deck_instances where user_id = $1) = cardinality($2::uuid[])`,
+		[userId, ids]);
+
+	return rowCount === ids.length;
 }
 
 // An instance with its cards shaped like decks.getById's cards (content from
@@ -380,4 +395,4 @@ const createInstanceReviewLog = async (userId, instanceCardId, log) => {
 	)
 }
 
-export { themes, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }
+export { themes, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }

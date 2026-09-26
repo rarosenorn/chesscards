@@ -5,7 +5,9 @@ import { pool } from "./pool.js"
 // carries the name the user would have typed anyway.
 const create = async (userId, name) => {
 	const { rows } = await pool.query(`
-		with d as (insert into decks(user_id, name) values($1, $2) returning id, user_id, name),
+		with d as (insert into decks(user_id, name, position)
+			values($1, $2, (select coalesce(max(position), 0) + 1 from decks where user_id = $1))
+			returning id, user_id, name),
 		s as (insert into stages(deck_id, name, position) select id, 'Chapter 1', 1 from d)
 		select id, user_id "userId", name from d`, [userId, name]);
 
@@ -60,11 +62,24 @@ const getMineWithoutCards = async (userId, { timeZone, rolloverHour }) => {
 			count(c.id) filter (where ${DUE} and c.state in (1, 3)) learn_cards,
 			count(c.id) filter (where ${DUE} and (c.state = 2 or (c.state is null and coalesce(c.reps, 0) > 0))) review_cards
 			from decks d left join cards c on d.id = c.deck_id cross join bounds
-			where d.user_id = $1 group by d.id, d.name`,
+			where d.user_id = $1 group by d.id, d.name order by d.position`,
 			[userId, timeZone, rolloverHour]
 		);
 
 	return rows;
+}
+
+// The user's decks in the order given: ids must be exactly their decks, or
+// nothing moves (a stale list from another tab would drop some off the end)
+const reorder = async (userId, ids) => {
+	const { rowCount } = await pool.query(`
+		update decks d set position = u.n
+		from unnest($2::uuid[]) with ordinality u(id, n)
+		where d.id = u.id and d.user_id = $1
+			and (select count(*) from decks where user_id = $1) = cardinality($2::uuid[])`,
+		[userId, ids]);
+
+	return rowCount === ids.length;
 }
 
 const getMineWithCards = async userId => {
@@ -436,4 +451,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, create, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }
+export { BOUNDS, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }

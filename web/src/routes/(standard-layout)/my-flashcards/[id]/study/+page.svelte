@@ -239,11 +239,14 @@
 	// session — the timer below only runs while nothing is up.
 	const advanceQueueClock = () => { now = Date.now() };
 	const evaluateCard = async rating => {
+		// held before the clock moves: advancing it re-derives currentCard,
+		// which can already be the next card by the time it is written back
+		const card = currentCard;
 		const cardAndLog =
-			scheduler.next(currentCard, new Date(), rating);
+			scheduler.next(card, new Date(), rating);
 		isCardTurned = false;
 		advanceQueueClock();
-		deck.cards[deck.cards.indexOf(currentCard)] = cardAndLog.card;
+		deck.cards[deck.cards.indexOf(card)] = cardAndLog.card;
 		await updateCardStudyStateAndAddLog(cardAndLog);
 	}
 

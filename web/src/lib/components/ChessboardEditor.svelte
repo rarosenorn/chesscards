@@ -507,6 +507,11 @@
 			// recording for the back must show it — otherwise the drawing
 			// would vanish into the hidden layer the moment it is captured
 			if (target === solutionAnnotations) showBack = true;
+		} else if (target === solutionAnnotations && hasAnnotations(annotations[annotationIndex])) {
+			// an emptied back layer still displaces the front's marks: the
+			// turned card is to show none here. Deleting the entry would let
+			// the front's arrows show through, as if the erase were undone
+			target[annotationIndex] = { arrows: [], markers: [] };
 		} else {
 			delete target[annotationIndex];
 		}

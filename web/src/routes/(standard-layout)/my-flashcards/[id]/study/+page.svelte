@@ -1,4 +1,5 @@
 <script>
+	import { alignByWrap } from "$lib/text-block-wrap.js"
 	import { getContext, onMount } from "svelte"
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating, StrategyMode, GenSeedStrategyWithCardId } from "ts-fsrs"
@@ -459,7 +460,7 @@
 	{#each side as block, blockIndex}
 		{#if block.type === "text"}
 			<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- the moves inside are pointer targets; the board's own move line is the keyboard's way through a line -->
-			<div class="text-block" onclick={handleTextClick}>
+			<div class="text-block" onclick={handleTextClick} {@attach alignByWrap}>
 				{@html ttGenerateHTML(block.content)}
 			</div>
 		{:else if block.type === "chessboards"}

@@ -353,6 +353,13 @@ body.piece-grabbing * {
 	width: fit-content;
 	margin-inline: auto;
 }
+/* ...but only while the whole block, up to the next board, fits on a line
+   per paragraph: once any of it wraps, every line reads from the column's
+   edge (text-block-wrap.js) */
+.flashcard .text-block.wraps > p {
+	width: auto;
+	margin-inline: 0;
+}
 /* boards are decided by the card's data: a lone board sits centered only
    while every board block on the side is a lone board */
 .flashcard .card-side[data-board-align="left"] .single-board-block {

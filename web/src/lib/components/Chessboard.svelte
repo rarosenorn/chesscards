@@ -771,8 +771,8 @@
 		content: "";
 		position: absolute;
 		left: 0;
-		top: 15%;
-		bottom: 15%;
+		top: 8%;
+		bottom: 8%;
 		width: 3px;
 		background-color: #e0a100;
 	}

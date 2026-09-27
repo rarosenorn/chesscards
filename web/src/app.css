@@ -480,12 +480,12 @@ body.piece-grabbing * {
 	position: relative;
 }
 
-/* An arrow from the card's answer (the back layer) carries a dark dot at its
-   tail, so on a turned card it reads apart from the question's own arrows:
-   same colour, same head, marked where the move starts. The marker lives in
-   the root layout. */
-.back-arrows .arrow-line {
-	marker-start: url(#back-arrow-tail);
+/* An arrow from the card's answer (the back layer) is edged in dark, so on a
+   turned card it reads apart from the question's own arrows: same colour,
+   same head, and the edge shows over a piece as well as on a bare square.
+   The filter lives in the root layout. */
+.back-arrows .arrow {
+	filter: url(#back-arrow-outline);
 }
 .svg-defs {
 	position: absolute;

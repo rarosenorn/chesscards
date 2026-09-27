@@ -81,11 +81,14 @@
 	</main>
 </div>
 <ModalHost />
-<!-- the dot at the tail of a back-layer arrow (app.css), defined once for
-     every board on the page: markers are referenced by id -->
+<!-- the dot near the tail of a back-layer arrow (app.css), defined once for
+     every board on the page: markers are referenced by id. The line starts at
+     the square's centre, under the moving piece, so the dot is carried 2.8
+     shaft widths along it (refX, in the 0.75-width units of this viewBox),
+     just past the edge of the start square -->
 <svg class="svg-defs" aria-hidden="true">
 	<defs>
-		<marker id="back-arrow-tail" viewBox="0 0 2 2" refX="1" refY="1" markerWidth="1.5" markerHeight="1.5">
+		<marker id="back-arrow-tail" viewBox="0 0 2 2" refX="-2.73" refY="1" markerWidth="1.5" markerHeight="1.5" orient="auto">
 			<circle cx="1" cy="1" r="1" fill="#1a1a1a" />
 		</marker>
 	</defs>

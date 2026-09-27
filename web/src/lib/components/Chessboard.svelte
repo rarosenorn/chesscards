@@ -763,7 +763,18 @@
 	/* where the board opens, for the author writing it: the same bar the
 	   board's own editor marks that move with */
 	.move-btn.opens-here {
-		box-shadow: inset 3px 0 0 #e0a100;
+		position: relative;
+	}
+	/* square-ended and inside the text's height, not the pill's: the button's
+	   rounded corners would bend a full-height edge */
+	.move-btn.opens-here::before {
+		content: "";
+		position: absolute;
+		left: 0;
+		top: 15%;
+		bottom: 15%;
+		width: 3px;
+		background-color: #e0a100;
 	}
 	/* the front/back boundary in the author view's always-complete line;
 	   tucked toward what precedes it, spaced from what it introduces */

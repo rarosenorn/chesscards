@@ -479,3 +479,17 @@ body.piece-grabbing * {
 .flashcard .board-container {
 	position: relative;
 }
+
+/* An arrow from the card's answer (the back layer) carries a dark dot at its
+   tail, so on a turned card it reads apart from the question's own arrows:
+   same colour, same head, marked where the move starts. The marker lives in
+   the root layout. */
+.back-arrows .arrow-line {
+	marker-start: url(#back-arrow-tail);
+}
+.svg-defs {
+	position: absolute;
+	width: 0;
+	height: 0;
+	overflow: hidden;
+}

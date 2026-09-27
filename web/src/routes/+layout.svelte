@@ -81,6 +81,15 @@
 	</main>
 </div>
 <ModalHost />
+<!-- the dot at the tail of a back-layer arrow (app.css), defined once for
+     every board on the page: markers are referenced by id -->
+<svg class="svg-defs" aria-hidden="true">
+	<defs>
+		<marker id="back-arrow-tail" viewBox="0 0 2 2" refX="1" refY="1" markerWidth="1.5" markerHeight="1.5">
+			<circle cx="1" cy="1" r="1" fill="#1a1a1a" />
+		</marker>
+	</defs>
+</svg>
 <GlobalTooltip />
 
 <style>

@@ -167,6 +167,12 @@
 				: normalized.annotations[displayIndex]
 	);
 
+	// the answer's own marks, told apart from the question's (app.css); only a
+	// front board has a solution layer to show
+	let showsBackArrows = $derived(
+		asidePly == null && revealed && normalized.solutionAnnotations[displayIndex] != null
+	);
+
 	// Everything that is not a step arrives at once: the position is written
 	// into the board and drawn in the very frame the rest of the card changed
 	// in. setPosition() cannot do that — even a duration-0 change goes through
@@ -553,6 +559,7 @@
 		class="board"
 		class:black-border={hasBlackBorder(boardPrefs())}
 		class:flush-bottom={flushBottom}
+		class:back-arrows={showsBackArrows}
 		bind:this={chessboardElement}
 		onclick={hasMoves ? takeFocus : undefined}
 	></div>

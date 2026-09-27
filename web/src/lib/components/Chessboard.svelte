@@ -587,6 +587,7 @@
 						<button
 							class="move-btn"
 							class:current={asidePly == null && displayIndex === move.index + 1}
+							class:opens-here={inEditor && openAt === move.index + 1}
 							disabled={authorView && !revealed && solutionFrom != null && move.index >= solutionFrom}
 							onclick={() => jumpTo(move.index + 1)}
 						>
@@ -758,6 +759,11 @@
 	.move-btn.current {
 		background-color: var(--accent);
 		color: white;
+	}
+	/* where the board opens, for the author writing it: the same bar the
+	   board's own editor marks that move with */
+	.move-btn.opens-here {
+		box-shadow: inset 3px 0 0 #e0a100;
 	}
 	/* the front/back boundary in the author view's always-complete line;
 	   tucked toward what precedes it, spaced from what it introduces */

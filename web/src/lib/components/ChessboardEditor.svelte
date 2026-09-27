@@ -436,8 +436,6 @@
 	let displayedAnnotation = $derived(showBack && !boardOnBack
 		? solutionAnnotations[annotationIndex] ?? annotations[annotationIndex]
 		: annotations[annotationIndex]);
-	// the back layer's marks wear their tail dot here too (app.css)
-	let showsBackArrows = $derived(showBack && !boardOnBack && solutionAnnotations[annotationIndex] != null);
 	const annotationTarget = () =>
 		!boardOnBack && (recordingAnswerEffective || (showBack && solutionAnnotations[annotationIndex]))
 			? solutionAnnotations
@@ -781,7 +779,6 @@
 				class:pointer-squares={clickMoving}
 				class:grab-squares={hoverPiece && selectedTool === null && !clickMoving}
 				class:grabbing-squares={draggingPiece}
-				class:back-arrows={showsBackArrows}
 				tabindex="-1"
 				bind:this={boardElement}
 			></div>

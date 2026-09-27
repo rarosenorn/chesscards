@@ -81,28 +81,6 @@
 	</main>
 </div>
 <ModalHost />
-<!-- the dark edge around a back-layer arrow (app.css), defined once for every
-     board on the page: filters are referenced by id. The arrow's own alpha is
-     made solid before it is grown, so the edge is a ring round the outside
-     and never darkens the translucent arrow inside it. User-space units with
-     a generous region: a straight arrow's box has no height to size one by. -->
-<svg class="svg-defs" aria-hidden="true">
-	<defs>
-		<filter id="back-arrow-outline" filterUnits="userSpaceOnUse" x="-100" y="-100" width="3000" height="3000">
-			<feComponentTransfer in="SourceAlpha" result="solid">
-				<feFuncA type="discrete" tableValues="0 1" />
-			</feComponentTransfer>
-			<feMorphology in="solid" operator="dilate" radius="1.5" result="grown" />
-			<feComposite in="grown" in2="solid" operator="out" result="ring" />
-			<feFlood flood-color="#1a1a1a" />
-			<feComposite in2="ring" operator="in" result="edge" />
-			<feMerge>
-				<feMergeNode in="edge" />
-				<feMergeNode in="SourceGraphic" />
-			</feMerge>
-		</filter>
-	</defs>
-</svg>
 <GlobalTooltip />
 
 <style>

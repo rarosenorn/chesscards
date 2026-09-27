@@ -830,7 +830,7 @@
 	/* the hair space that widens the underline, shrunk a touch further: the
 	   space scales with its own font size, so this is the fine adjustment */
 	.deck-counts .hair {
-		font-size: 0.7em;
+		font-size: 0.4em;
 	}
 	.deck-counts .plus {
 		color: black;

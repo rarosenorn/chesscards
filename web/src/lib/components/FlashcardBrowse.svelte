@@ -64,6 +64,7 @@
 						board={chessboard}
 						{authorView}
 						{onBack}
+						analysis
 						minWidth="280px"
 						number={showBoardNumbers ? n : null}
 						autoFocus={n - 1 === focusBoardNumber}

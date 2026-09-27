@@ -486,6 +486,7 @@
 						board={chessboard}
 						{revealed}
 						{onBack}
+						analysis={revealed}
 						authorView={marksBack}
 						minWidth="280px"
 						number={showBoardNumbers ? n : null}

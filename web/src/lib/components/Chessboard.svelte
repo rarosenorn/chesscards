@@ -30,7 +30,7 @@
 	// The nonce is the click — clicking the same move twice is twice a request
 	// to go there. `onPosition` answers back with where the board now stands,
 	// in the same terms, so the text can mark the move it is showing.
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, onSolutionFromChange = null, aside = null, onPosition = null, children } = $props();
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, analysis = false, onSolutionFromChange = null, aside = null, onPosition = null, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -165,6 +165,13 @@
 			: revealed
 				? normalized.solutionAnnotations[displayIndex] ?? normalized.annotations[displayIndex]
 				: normalized.annotations[displayIndex]
+	);
+
+	// the position on screen, handed to Lichess's analysis board (engine and
+	// opening explorer) in a new tab, seen from the side this board is
+	let analysisUrl = $derived(
+		`https://lichess.org/analysis/${displayFen.replaceAll(" ", "_")}`
+			+ (normalized.orientation === "b" ? "?color=black" : "")
 	);
 
 	// the answer's own arrows, marked apart from the question's (LayeredArrows);
@@ -553,6 +560,9 @@
 				aria-label={blackToMove ? "Black to move" : "White to move"}
 			></span>
 		{/if}
+		{#if analysis}
+			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse on Lichess</a>
+		{/if}
 	</div>
 	<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- keyboard stepping lives on the focusable wrapper -->
 	<div
@@ -687,6 +697,18 @@
 	}
 	.side-to-move.black {
 		background: #262626;
+	}
+	/* out at the header's far end, quiet until pointed at: it leaves the card
+	   rather than acting on it */
+	.analysis-link {
+		margin-left: auto;
+		font-size: 0.8rem;
+		color: rgba(0, 0, 0, 0.5);
+		text-decoration: none;
+	}
+	.analysis-link:hover {
+		color: #262626;
+		text-decoration: underline;
 	}
 	.board-wrapper > :global(.button-row),
 	.board-wrapper > .move-line {

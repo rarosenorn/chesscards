@@ -4,7 +4,7 @@
 	import "cm-chessboard/assets/extensions/arrows/arrows.css"
 	import "cm-chessboard/assets/extensions/markers/markers.css"
 	import { Chessboard } from "cm-chessboard/src/Chessboard.js"
-	import { Arrows } from "cm-chessboard/src/extensions/arrows/Arrows.js"
+	import { LayeredArrows } from "$lib/layered-arrows.js"
 	import { Markers } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { normalizeBoard } from "$lib/card-utils.js"
 	import { replayMoves, showAnnotations, isPositionFinished } from "$lib/board-utils.js"
@@ -167,6 +167,12 @@
 				: normalized.annotations[displayIndex]
 	);
 
+	// the answer's own arrows, marked apart from the question's (LayeredArrows);
+	// only a front board has a solution layer to show
+	let showsBackArrows = $derived(
+		asidePly == null && revealed && normalized.solutionAnnotations[displayIndex] != null
+	);
+
 	// Everything that is not a step arrives at once: the position is written
 	// into the board and drawn in the very frame the rest of the card changed
 	// in. setPosition() cannot do that — even a duration-0 change goes through
@@ -209,7 +215,7 @@
 		else snapTo(fen);
 		stepping = false;
 		renderedBoard = normalized;
-		showAnnotations(cmBoard, annotation);
+		showAnnotations(cmBoard, annotation, showsBackArrows);
 	})
 
 	const boardPrefs = getContext("boardPrefs") ?? (() => DEFAULT_BOARD_PREFS);
@@ -220,7 +226,7 @@
 			orientation: normalized.orientation,
 			assetsUrl: "/chessboard-assets/", // wherever you copied the assets folder to, could also be in the node_modules folder
 			style: boardStyleProps(boardPrefs()),
-			extensions: [{ class: Arrows }, { class: Markers }]
+			extensions: [{ class: LayeredArrows }, { class: Markers }]
 		}))
 		// cm-chessboard sizes its inner box to whole pixels inside our
 		// fractional-width container; --board-px lets the bar below and the

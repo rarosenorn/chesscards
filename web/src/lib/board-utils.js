@@ -177,7 +177,10 @@ const hasAnnotations = annotation =>
 
 // Draws the stored annotation for one position on a board that has the
 // Arrows and Markers extensions, replacing whatever is currently drawn.
-const showAnnotations = (chessboard, annotation) => {
+// `back`: the annotation is the card's answer layer, which LayeredArrows
+// marks on every arrow it draws.
+const showAnnotations = (chessboard, annotation, back = false) => {
+	chessboard.backArrows = back;
 	chessboard.removeArrows();
 	// only the annotator's own marker types: a blanket removeMarkers() would
 	// also wipe unrelated markers (e.g. the editor's picked-up-piece highlight)

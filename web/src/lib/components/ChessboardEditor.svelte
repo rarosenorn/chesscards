@@ -9,7 +9,7 @@
 	import "cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css"
 	import { Chessboard, INPUT_EVENT_TYPE } from "cm-chessboard/src/Chessboard.js"
 	import { MOVE_CANCELED_REASON } from "cm-chessboard/src/view/VisualMoveInput.js"
-	import { Arrows } from "cm-chessboard/src/extensions/arrows/Arrows.js"
+	import { LayeredArrows } from "$lib/layered-arrows.js"
 	import { Markers, MARKER_TYPE } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { RightClickAnnotator } from "cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js"
 	import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
@@ -436,6 +436,8 @@
 	let displayedAnnotation = $derived(showBack && !boardOnBack
 		? solutionAnnotations[annotationIndex] ?? annotations[annotationIndex]
 		: annotations[annotationIndex]);
+	// the back layer's arrows wear their dot here too (LayeredArrows)
+	let showsBackArrows = $derived(showBack && !boardOnBack && solutionAnnotations[annotationIndex] != null);
 	const annotationTarget = () =>
 		!boardOnBack && (recordingAnswerEffective || (showBack && solutionAnnotations[annotationIndex]))
 			? solutionAnnotations
@@ -527,7 +529,7 @@
 			board.setPosition(positions[Math.min(currentIndex, viewLimit)], !snapNextPosition);
 		}
 		snapNextPosition = false;
-		showAnnotations(board, displayedAnnotation);
+		showAnnotations(board, displayedAnnotation, showsBackArrows);
 	})
 
 	// Pressing the board must move pieces, never start an item drag: the
@@ -594,7 +596,7 @@
 			style: boardStyleProps(boardPrefs()),
 			// autoMarkers off: no corner frames on origin/destination; the
 			// picked-up piece's square gets a background marker instead (below)
-			extensions: [{ class: Arrows }, { class: Markers, props: { autoMarkers: null } }, { class: RightClickAnnotator }, { class: PromotionDialog }]
+			extensions: [{ class: LayeredArrows }, { class: Markers, props: { autoMarkers: null } }, { class: RightClickAnnotator }, { class: PromotionDialog }]
 		}))
 		// in the setup stage every piece movement is instant; recorded-move
 		// playback in the moves stage keeps the configured animation

@@ -479,3 +479,9 @@ body.piece-grabbing * {
 .flashcard .board-container {
 	position: relative;
 }
+
+/* the dot that marks an arrow from the card's answer (layered-arrows.js) */
+.cm-chessboard .arrow-back-dot {
+	fill: #1a1a1a;
+	pointer-events: none;
+}

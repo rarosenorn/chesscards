@@ -706,7 +706,6 @@
 	.analysis-link {
 		margin-left: auto;
 		padding: 0 6px;
-		border: 1px solid rgba(0, 0, 0, 0.15);
 		border-radius: 3px;
 		font-size: 0.8rem;
 		line-height: 1.3;

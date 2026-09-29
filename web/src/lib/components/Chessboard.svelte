@@ -564,7 +564,7 @@
 			></span>
 		{/if}
 		{#if analysis}
-			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse on Lichess</a>
+			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse</a>
 		{/if}
 	</div>
 	<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- keyboard stepping lives on the focusable wrapper -->
@@ -705,13 +705,17 @@
 	   rather than acting on it */
 	.analysis-link {
 		margin-left: auto;
+		padding: 0 6px;
+		border: 1px solid rgba(0, 0, 0, 0.15);
+		border-radius: 3px;
 		font-size: 0.8rem;
-		color: rgba(0, 0, 0, 0.5);
+		line-height: 1.3;
+		color: rgba(0, 0, 0, 0.55);
 		text-decoration: none;
 	}
 	.analysis-link:hover {
-		color: #262626;
-		text-decoration: underline;
+		background-color: gainsboro;
+		color: black;
 	}
 	.board-wrapper > :global(.button-row),
 	.board-wrapper > .move-line {

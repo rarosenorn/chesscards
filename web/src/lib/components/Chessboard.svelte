@@ -248,7 +248,9 @@
 		// grid and the left/right edges rasterize thinner/blurrier than the
 		// top/bottom. Nudge the whole wrapper (board, bar and move line move
 		// together, keeping their alignment) so the box starts on a whole
-		// device pixel.
+		// device pixel. The body is observed too: content above growing or
+		// shrinking moves the board without resizing it, which would leave
+		// a stale nudge.
 		const snapToPixelGrid = () => {
 			wrapperElement.style.transform = "";
 			const rect = chessboardElement.firstElementChild.getBoundingClientRect();
@@ -267,6 +269,7 @@
 		const resizeObserver = new ResizeObserver(syncWidth);
 		resizeObserver.observe(chessboardElement.firstElementChild);
 		resizeObserver.observe(chessboardElement);
+		resizeObserver.observe(document.body);
 		chessboardElement.addEventListener("wheel", handleWheel, { passive: false });
 		return () => {
 			chessboardElement.removeEventListener("wheel", handleWheel);

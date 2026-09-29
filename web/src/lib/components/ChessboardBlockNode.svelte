@@ -420,8 +420,8 @@
 		width: calc((100% - var(--board-col-gap)) / 2);
 		min-width: min-content;
 	}
-	/* ...and only when NO block on the card holds a pair does the board take
-	   the solo share — the card asks this of both sides at once
+	/* ...and only when no block on its side holds a pair does the board take
+	   the solo share — the side asks this of all its blocks at once
 	   (side-alignment.js), so the flag comes down from the editor wrapper
 	   rather than from this block's own board count. */
 	:global(.boards-solo) .board-grid-block.single > .board-cell:not(.cell-editing) {

@@ -1,6 +1,6 @@
 <script>
 	import { alignByWrap } from "$lib/text-block-wrap.js"
-	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
+	import { boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "../tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "../card-utils.js"
 	import Chessboard from "./Chessboard.svelte"
@@ -81,7 +81,6 @@
 
 <div
 	class="flashcard card-surface"
-	data-boards={boardsAllAlone(card) ? "solo" : null}
 	bind:this={cardElement}
 >
 	{@render side(card.front, 0, true)}

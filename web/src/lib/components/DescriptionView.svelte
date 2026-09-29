@@ -31,7 +31,6 @@
 
 <div
 	class="flashcard description-view"
-	data-boards={boardAlignment(blocks) === "center" ? "solo" : null}
 	bind:this={element}
 >
 	<div class="card-side" data-board-align={boardAlignment(blocks)}>

@@ -453,10 +453,10 @@ body.piece-grabbing * {
 	   grow the centered cell, not spill out one-sided */
 	min-width: min-content;
 }
-/* Nothing on this card sits in a two-board row, so no board has a column to
+/* Nothing on this side sits in a two-board row, so no board has a column to
    line up with and the half-width cell is only a habit — the boards take
    the solo share of the card instead. */
-.flashcard[data-boards="solo"] .single-board-block > .board-container {
+.flashcard .card-side[data-board-align="center"] .single-board-block > .board-container {
 	/* the card's share, or what the window's height leaves — whichever is
 	   smaller. min-width above still holds the floor, so a very short window
 	   scrolls rather than crushing the board to nothing */

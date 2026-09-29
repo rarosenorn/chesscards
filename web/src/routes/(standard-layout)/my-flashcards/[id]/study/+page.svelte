@@ -3,7 +3,7 @@
 	import { getContext, onMount } from "svelte"
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating, StrategyMode, GenSeedStrategyWithCardId } from "ts-fsrs"
-	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
+	import { boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
@@ -528,7 +528,6 @@
 		class="flashcard card-surface"
 		class:zen={zenActive()}
 		bind:this={cardElement}
-		data-boards={boardsAllAlone(currentCard) ? "solo" : null}
 	>
 		<!-- turning reveals front boards' back layers (moves/annotations) in
 		     place, on top of showing the back side below -->

@@ -138,12 +138,11 @@
 	let frontBoards = $state(0);
 	let backBoards = $state(0);
 	// ...and which sides put two boards on a row, the card's two board-layout
-	// questions (side-alignment.js): a pair ANYWHERE on the card takes the solo
-	// size away from every lone board, and a pair on a SIDE pins that side's
-	// lone boards left, where they line up with the column above or below.
+	// questions (side-alignment.js): a pair on a side takes the solo size away
+	// from that side's lone boards and pins them left, where they line up
+	// with the column above or below.
 	let frontPair = $state(false);
 	let backPair = $state(false);
-	let boardsAllAlone = $derived(!frontPair && !backPair);
 	const recount = () => {
 		frontBoards = docCountBoardsBlocks(frontEditor?.getJson());
 		backBoards = docCountBoardsBlocks(backEditor?.getJson());
@@ -460,7 +459,7 @@
 	{#if formAttemptedAndInvalid}
 		<p style="color: red; margin-left: 16px; margin-top: 4px; margin-bottom: 4px;">The card must have atleast 1 non-empty text field or 1 chessboard</p>
 	{/if}
-	<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} class:boards-solo={boardsAllAlone} class:boards-left={frontPair} style="--board-offset: 0">
+	<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} class:boards-solo={!frontPair} class:boards-left={frontPair} style="--board-offset: 0">
 	<CardSideBlockEditor
 		bind:this={frontEditor}
 		{boardUi}
@@ -473,7 +472,7 @@
 	/>
 	</div>
 	{@render sideLabel("Back", "back", "margin-top: 12px;")}
-	<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} class:boards-solo={boardsAllAlone} class:boards-left={backPair} style="--board-offset: {frontBoards}">
+	<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} class:boards-solo={!backPair} class:boards-left={backPair} style="--board-offset: {frontBoards}">
 	<CardSideBlockEditor
 		bind:this={backEditor}
 		{boardUi}

@@ -711,10 +711,15 @@
 		line-height: 1.3;
 		color: rgba(0, 0, 0, 0.55);
 		text-decoration: none;
+		transition: transform 80ms ease-out;
 	}
 	.analysis-link:hover {
-		background-color: gainsboro;
+		background-color: #ebebeb;
 		color: black;
+		transform: translateY(-1px);
+	}
+	.analysis-link:active {
+		transform: none;
 	}
 	.board-wrapper > :global(.button-row),
 	.board-wrapper > .move-line {

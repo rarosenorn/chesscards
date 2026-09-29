@@ -30,7 +30,7 @@
 	// The nonce is the click — clicking the same move twice is twice a request
 	// to go there. `onPosition` answers back with where the board now stands,
 	// in the same terms, so the text can mark the move it is showing.
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, analysis = false, onSolutionFromChange = null, aside = null, onPosition = null, children } = $props();
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, analysis = false, backDots = true, onSolutionFromChange = null, aside = null, onPosition = null, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -177,7 +177,7 @@
 	// the answer's own arrows, marked apart from the question's (LayeredArrows);
 	// only a front board has a solution layer to show
 	let showsBackArrows = $derived(
-		asidePly == null && revealed && normalized.solutionAnnotations[displayIndex] != null
+		backDots && asidePly == null && revealed && normalized.solutionAnnotations[displayIndex] != null
 	);
 
 	// Everything that is not a step arrives at once: the position is written

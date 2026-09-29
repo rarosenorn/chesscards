@@ -501,6 +501,7 @@
 	{/each}
 </div>
 {/snippet}
+						backDots={false}
 
 {#if currentCard && editingCard && CardBlockEdit}
 	<!-- the add-cards type row, above the card and on the page's own ground -->

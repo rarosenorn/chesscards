@@ -71,6 +71,22 @@ export const markMoveRefs = (root, boards) => {
 	}
 }
 
+// The lines the text writes off a board's own line, once each and in reading
+// order — what Shift+arrows step between. A reference to a move of the line
+// itself is not one: the line is already stepped with the plain arrows.
+export const moveRefLines = (root, board) => {
+	const lines = [];
+	const seen = new Set();
+	for (const token of root?.querySelectorAll(`[data-move-ref="${board}"]`) ?? []) {
+		const moves = token.dataset.moves ?? "";
+		const key = `${token.dataset.from} ${moves}`;
+		if (!moves || seen.has(key)) continue;
+		seen.add(key);
+		lines.push({ from: Number(token.dataset.from) || 0, moves: moves.split(" ") });
+	}
+	return lines;
+}
+
 // what a click on a rendered token asks of its board
 export const parseMoveRef = el => {
 	const board = Number(el.dataset.moveRef);

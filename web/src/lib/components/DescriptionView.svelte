@@ -3,7 +3,7 @@
 	import { boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore } from "$lib/card-utils.js"
-	import { parseMoveRef, markMoveRefs } from "$lib/tiptap-move-ref.js"
+	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 	import Chessboard from "./Chessboard.svelte"
 
 	// A deck description (DescriptionEditor's blocks) shown the way a card
@@ -57,6 +57,7 @@
 								number={showBoardNumbers ? n : null}
 								aside={asides[n]}
 								onPosition={at => boardAt[n] = at}
+								lines={() => moveRefLines(element, n)}
 							/>
 						</div>
 					{/each}

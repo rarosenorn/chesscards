@@ -4,7 +4,7 @@
 	import { ttGenerateHTML } from "../tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "../card-utils.js"
 	import Chessboard from "./Chessboard.svelte"
-	import { parseMoveRef, markMoveRefs } from "$lib/tiptap-move-ref.js"
+	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 
 	let { card } = $props();
 
@@ -70,6 +70,7 @@
 						autoFocus={n - 1 === focusBoardNumber}
 						aside={asides[n]}
 						onPosition={at => boardAt[n] = at}
+						lines={() => moveRefLines(cardElement, n)}
 					/>
 					</div>
 				{/each}

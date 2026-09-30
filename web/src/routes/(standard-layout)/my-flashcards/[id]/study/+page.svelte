@@ -9,7 +9,7 @@
 	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
 	import { crossesDay, isDueAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
-	import { parseMoveRef, markMoveRefs } from "$lib/tiptap-move-ref.js"
+	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState } from "$lib/modals.svelte.js"
 	import { zen, zenActive, resetZen, setZen } from "$lib/zen-state.svelte.js"
@@ -508,6 +508,7 @@
 						autoFocus={n - 1 === focusBoardNumber}
 						aside={asides[n]}
 						onPosition={at => boardAt[n] = at}
+						lines={() => moveRefLines(cardElement, n)}
 					/>
 					</div>
 				{/each}

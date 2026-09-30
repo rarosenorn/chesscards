@@ -30,7 +30,9 @@
 	// The nonce is the click — clicking the same move twice is twice a request
 	// to go there. `onPosition` answers back with where the board now stands,
 	// in the same terms, so the text can mark the move it is showing.
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, analysis = false, backDots = true, onSolutionFromChange = null, aside = null, onPosition = null, children } = $props();
+	// `lines` returns the asides the card's text writes for this board, in
+	// reading order, for Shift+arrows to step between.
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, analysis = false, backDots = true, onSolutionFromChange = null, aside = null, onPosition = null, lines = null, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -488,10 +490,37 @@
 		commitGap(gapNearest(e.clientX, e.clientY));
 	}
 
+	// Shift+arrows walk the text's lines as one more line each: the next (or
+	// previous) one opens at its first move, and past either end the board is
+	// back on its own line, at the ply it stood on when it left. Jumps, like a
+	// click on the text, so unsounded.
+	let lineReturn = null;
+	const stepLine = dir => {
+		const all = (lines?.() ?? []).filter(({ from, moves }) =>
+			from <= visiblePlies
+			&& replayMoves({ fen: replay.fens[from], moves }).moveInfos.length === moves.length);
+		if (all.length === 0) return;
+		const current = asidePly != null && following
+			? all.findIndex(l => l.from === following.from && l.moves.join(" ") === following.moves.join(" "))
+			: -1;
+		if (current === -1) lineReturn = displayIndex;
+		const target = current === -1 ? (dir > 0 ? 0 : all.length - 1) : current + dir;
+		if (target < 0 || target >= all.length) {
+			following = null;
+			asidePly = null;
+			currentIndex = lineReturn ?? displayIndex;
+			return;
+		}
+		followAside({ ...all[target], at: 1 });
+	}
+
 	// only reached outside an editor (inEditor boards take no focus, so the
 	// arrows are the document's — the virtual board caret's — throughout)
 	const handleKeyDown = e => {
-		if (e.key === "ArrowLeft") {
+		if (e.shiftKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+			e.preventDefault();
+			stepLine(e.key === "ArrowRight" ? 1 : -1);
+		} else if (e.key === "ArrowLeft") {
 			e.preventDefault();
 			previous();
 		} else if (e.key === "ArrowRight") {

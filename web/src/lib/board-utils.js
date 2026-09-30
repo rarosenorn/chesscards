@@ -175,22 +175,30 @@ const serializeAnnotations = ({ arrows, markers }) => ({
 const hasAnnotations = annotation =>
 	annotation && (annotation.arrows?.length > 0 || annotation.markers?.length > 0);
 
-// Draws the stored annotation for one position on a board that has the
-// Arrows and Markers extensions, replacing whatever is currently drawn.
-// `back`: the annotation is the card's answer layer, which LayeredArrows
-// marks on every arrow it draws.
-const showAnnotations = (chessboard, annotation, back = false) => {
-	chessboard.backArrows = back;
+const arrowKey = ({ type, from, to }) => `${type}:${from}:${to}`;
+const markerKey = ({ type, square }) => `${type}:${square}`;
+
+// Draws one position's annotations on a board that has the Arrows and Markers
+// extensions, replacing whatever is currently drawn. The front's always show;
+// `back` (the answer layer, when the card is turned) adds to them, and
+// LayeredArrows dots the arrows only the back has. `dots` false leaves them
+// plain.
+const showAnnotations = (chessboard, front, back = null, dots = true) => {
+	const frontArrows = new Set((front?.arrows ?? []).map(arrowKey));
+	const frontMarkers = new Set((front?.markers ?? []).map(markerKey));
+	const backArrows = (back?.arrows ?? []).filter(arrow => !frontArrows.has(arrowKey(arrow)));
+	const backMarkers = (back?.markers ?? []).filter(marker => !frontMarkers.has(markerKey(marker)));
+	chessboard.backArrowKeys = new Set(dots ? backArrows.map(arrowKey) : []);
 	chessboard.removeArrows();
 	// only the annotator's own marker types: a blanket removeMarkers() would
 	// also wipe unrelated markers (e.g. the editor's picked-up-piece highlight)
 	for (const key of Object.keys(MARKER_TYPE)) {
 		chessboard.removeMarkers(MARKER_TYPE[key]);
 	}
-	for (const { type, from, to } of annotation?.arrows ?? []) {
+	for (const { type, from, to } of [...(front?.arrows ?? []), ...backArrows]) {
 		if (ARROW_TYPE[type]) chessboard.addArrow(ARROW_TYPE[type], from, to);
 	}
-	for (const { type, square } of annotation?.markers ?? []) {
+	for (const { type, square } of [...(front?.markers ?? []), ...backMarkers]) {
 		if (MARKER_TYPE[type]) chessboard.addMarker(MARKER_TYPE[type], square);
 	}
 }
@@ -217,4 +225,4 @@ const isFinishedFor = fen => {
 
 const isPositionFinished = fen => isFinishedFor(fen) || isFinishedFor(flipTurn(fen));
 
-export { isPositionFinished, FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, moveLabel, serializeAnnotations, hasAnnotations, showAnnotations }
+export { isPositionFinished, FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, moveLabel, serializeAnnotations, hasAnnotations, showAnnotations, arrowKey, arrowKeyFromType, markerKey }

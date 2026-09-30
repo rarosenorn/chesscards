@@ -14,7 +14,7 @@
 	import { RightClickAnnotator } from "cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js"
 	import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
 	import { isValidFen } from "$lib/isValidFen.js"
-	import { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations, isPositionFinished } from "$lib/board-utils.js"
+	import { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations, arrowKey, markerKey, isPositionFinished } from "$lib/board-utils.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
 	// inlined so the palette's <use href="#wk"> works in Firefox, which doesn't
 	// render <use> that references an external SVG file
@@ -383,23 +383,24 @@
 	// index of the position annotations are attached to right now
 	let annotationIndex = $derived(mode === "setup" ? 0 : Math.min(currentIndex, viewLimit));
 
-	// Cutting the line at the shown position — the same thing recording a move
-	// here does to what followed it (commitMove), minus the new move. Standing
-	// at the start it empties the line, which is how the whole recording goes.
-	let cutIndex = $derived(Math.min(currentIndex, viewLimit));
-	const truncateMoves = () => {
-		if (cutIndex >= moves.length) return;
-		moves = moves.slice(0, cutIndex);
+	// Cutting the line at a move — the same thing recording a move in its
+	// place does to what followed it (commitMove), minus the new move. The
+	// move itself goes too, so cutting the first one empties the line.
+	const truncateAt = index => {
+		moves = moves.slice(0, index);
 		for (const key of Object.keys(annotations)) {
-			if (Number(key) > cutIndex) delete annotations[key];
+			if (Number(key) > index) delete annotations[key];
 		}
 		for (const key of Object.keys(solutionAnnotations)) {
-			if (Number(key) > cutIndex) delete solutionAnnotations[key];
+			if (Number(key) > index) delete solutionAnnotations[key];
 		}
-		if (openAt > cutIndex) openAt = cutIndex || null;
 		// a back layer starting past the new end has nothing left to hide
 		if (solutionFrom != null && solutionFrom >= moves.length) solutionFrom = null;
-		currentIndex = cutIndex;
+		if (openAt > index) openAt = index || null;
+		// the board lands on the cut, like a click in the list: cutting high
+		// up the line can cross a dozen moves, which the animation races through
+		snapNextPosition = true;
+		currentIndex = index;
 	}
 
 	// Beyond the back's start every position is back territory: anything
@@ -427,21 +428,13 @@
 	export const toggleAnswer = () => {
 		if (!boardOnBack && !answerLocked) setRecording(!recordingAnswer);
 	}
-	// The eye governs what the board shows: back view = the turned card
-	// (back annotations displacing the front's per position), front view =
-	// front only. Drawn edits apply to the set being displayed — a position
-	// showing back annotations writes back to the back layer even while
-	// recording the front, so a capture can never copy back arrows into the
-	// front; fresh sets go to the recording toggle's layer.
-	let displayedAnnotation = $derived(showBack && !boardOnBack
-		? solutionAnnotations[annotationIndex] ?? annotations[annotationIndex]
-		: annotations[annotationIndex]);
-	// the back layer's arrows wear their dot here too (LayeredArrows)
-	let showsBackArrows = $derived(showBack && !boardOnBack && solutionAnnotations[annotationIndex] != null);
-	const annotationTarget = () =>
-		!boardOnBack && (recordingAnswerEffective || (showBack && solutionAnnotations[annotationIndex]))
-			? solutionAnnotations
-			: annotations;
+	// for its 1 / 2 shortcuts — the two tabs, by their step numbers
+	export const showStage = stage => switchMode(stage)
+	// The eye governs what the board shows: back view = the turned card (the
+	// front's annotations plus the back's, the back's arrows dotted), front
+	// view = front only. Erasing a drawn mark takes it out of whichever layer
+	// holds it; a fresh one goes to the recording toggle's layer.
+	let shownBack = $derived(showBack && !boardOnBack ? solutionAnnotations[annotationIndex] : null);
 
 	// Move-list rows, numbered sequentially (the FEN fullmove counter doesn't
 	// advance for flipped/manual moves): a black move joins the preceding row
@@ -499,24 +492,42 @@
 	// getAnnotations to the wrong object, making it throw
 	const captureAnnotations = () => setTimeout(() => {
 		if (!board?.getArrows || !board?.getMarkers) return;
-		const annotation = serializeAnnotations({
+		const drawn = serializeAnnotations({
 			arrows: board.getArrows(),
 			markers: board.getMarkers()
 		});
-		const target = annotationTarget();
-		if (hasAnnotations(annotation)) {
-			target[annotationIndex] = annotation;
-			// recording for the back must show it — otherwise the drawing
-			// would vanish into the hidden layer the moment it is captured
-			if (target === solutionAnnotations) showBack = true;
-		} else if (target === solutionAnnotations && hasAnnotations(annotations[annotationIndex])) {
-			// an emptied back layer still displaces the front's marks: the
-			// turned card is to show none here. Deleting the entry would let
-			// the front's arrows show through, as if the erase were undone
-			target[annotationIndex] = { arrows: [], markers: [] };
-		} else {
-			delete target[annotationIndex];
+		const drawnArrows = new Set(drawn.arrows.map(arrowKey));
+		const drawnMarkers = new Set(drawn.markers.map(markerKey));
+		const front = annotations[annotationIndex];
+		const back = shownBack;
+		const kept = layer => layer && {
+			arrows: (layer.arrows ?? []).filter(arrow => drawnArrows.has(arrowKey(arrow))),
+			markers: (layer.markers ?? []).filter(marker => drawnMarkers.has(markerKey(marker)))
+		};
+		const shownArrows = new Set([...(front?.arrows ?? []), ...(back?.arrows ?? [])].map(arrowKey));
+		const shownMarkers = new Set([...(front?.markers ?? []), ...(back?.markers ?? [])].map(markerKey));
+		const added = {
+			arrows: drawn.arrows.filter(arrow => !shownArrows.has(arrowKey(arrow))),
+			markers: drawn.markers.filter(marker => !shownMarkers.has(markerKey(marker)))
+		};
+		let nextFront = kept(front);
+		let nextBack = back ? kept(back) : solutionAnnotations[annotationIndex];
+		const toBack = recordingAnswerEffective;
+		const grown = layer => ({
+			arrows: [...(layer?.arrows ?? []), ...added.arrows],
+			markers: [...(layer?.markers ?? []), ...added.markers]
+		});
+		if (toBack) nextBack = grown(nextBack);
+		else nextFront = grown(nextFront);
+		const write = (target, value) => {
+			if (hasAnnotations(value)) target[annotationIndex] = value;
+			else delete target[annotationIndex];
 		}
+		write(annotations, nextFront);
+		if (!boardOnBack) write(solutionAnnotations, nextBack);
+		// recording for the back must show it — otherwise the drawing
+		// would vanish into the hidden layer the moment it is captured
+		if (toBack && hasAnnotations(added)) showBack = true;
 	})
 
 	// keep the board and drawn annotations in sync with the viewed position
@@ -529,7 +540,7 @@
 			board.setPosition(positions[Math.min(currentIndex, viewLimit)], !snapNextPosition);
 		}
 		snapNextPosition = false;
-		showAnnotations(board, displayedAnnotation, showsBackArrows);
+		showAnnotations(board, annotations[annotationIndex], shownBack);
 	})
 
 	// Pressing the board must move pieces, never start an item drag: the
@@ -679,7 +690,7 @@
 		untrack(() => onLiveChange?.(data));
 	})
 
-	const save = () => onSave(getBoardData())
+	export const save = () => onSave(getBoardData())
 
 	// stepping forward sounds the move being made, stepping back the move
 	// being unmade (both are the move crossed between the two positions)
@@ -735,6 +746,34 @@
 		}
 	}
 </script>
+
+<!-- a move in the list: the move itself, and a cross that cuts the line
+     here — hidden until the pointer is on the move -->
+{#snippet moveCell(move)}
+	{@const hidden = !showBack && moveIsBack(move.index)}
+	<span class="move-cell">
+		<button
+			class="move-btn"
+			class:current={Math.min(currentIndex, viewLimit) === move.index + 1}
+			class:opens-here={openAt === move.index + 1}
+			disabled={hidden}
+			onclick={() => jumpToIndex(move.index + 1)}
+		>
+			{move.san}
+		</button>
+		{#if !hidden}
+			<button
+				class="move-cut"
+				aria-label="Delete this move and the moves after it"
+				onclick={() => truncateAt(move.index)}
+			>
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<path d="M4 4 20 20 M20 4 4 20" />
+				</svg>
+			</button>
+		{/if}
+	</span>
+{/snippet}
 
 {#snippet backDivider(resting)}
 	<div class="back-divider" class:resting={resting}>
@@ -940,28 +979,12 @@
 					<div class="move-row">
 						<span class="move-number">{row.number}</span>
 						{#if row.white}
-							<button
-								class="move-btn"
-								class:current={Math.min(currentIndex, viewLimit) === row.white.index + 1}
-								class:opens-here={openAt === row.white.index + 1}
-								disabled={!showBack && moveIsBack(row.white.index)}
-								onclick={() => jumpToIndex(row.white.index + 1)}
-							>
-								{row.white.san}
-							</button>
+							{@render moveCell(row.white)}
 						{:else}
 							<span class="move-btn ellipsis">...</span>
 						{/if}
 						{#if row.black}
-							<button
-								class="move-btn"
-								class:current={Math.min(currentIndex, viewLimit) === row.black.index + 1}
-								class:opens-here={openAt === row.black.index + 1}
-								disabled={!showBack && moveIsBack(row.black.index)}
-								onclick={() => jumpToIndex(row.black.index + 1)}
-							>
-								{row.black.san}
-							</button>
+							{@render moveCell(row.black)}
 						{/if}
 					</div>
 				{/each}
@@ -972,7 +995,6 @@
 			</div>
 			<!-- stepping through the recording, for the pointer: the arrow keys
 			     belong to the card's text while an editor is open -->
-			<div class="step-controls">
 			<div class="step-row">
 				<button
 					class="std-btn open-here-btn"
@@ -991,15 +1013,6 @@
 					disabled={Math.min(currentIndex, viewLimit) === viewLimit}
 					onclick={() => goToIndex(Math.min(currentIndex + 1, viewLimit))}
 				>&#9654;</button>
-			</div>
-			<div class="cut-row">
-				<button
-					class="std-btn cut-btn"
-					aria-label="Delete the moves after this position"
-					disabled={cutIndex >= moves.length}
-					onclick={truncateMoves}
-				><TrashIcon /> after current</button>
-			</div>
 			</div>
 		{/if}
 		<div class="actions">
@@ -1341,7 +1354,9 @@
 	.side-panel {
 		--action-btn-width: 84px;
 		position: absolute;
-		top: 0;
+		/* below .board-header's strip (1.26rem + its 2px margin), so the panel
+		   spans the board itself and not the number / side-to-move row above it */
+		top: calc(1.26rem + 2px);
 		right: 5px;
 		bottom: 0;
 		width: 300px;
@@ -1426,6 +1441,60 @@
 		background-color: rgba(0, 0, 0, 0.04);
 		padding: 3px 0 3px 6px;
 	}
+	/* the move fills its column; the cross rides on top of its right end,
+	   so showing it never shifts the move text or the column widths */
+	.move-cell {
+		position: relative;
+		display: flex;
+		min-width: 0;
+	}
+	.move-cell > .move-btn {
+		flex: 1;
+		min-width: 0;
+	}
+	/* the cross owns the right end of the move: a patch that fills the move's
+	   height, a little narrower than tall, flush to its right edge */
+	.move-cut {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		right: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		aspect-ratio: 0.9;
+		padding: 0;
+		border: none;
+		background-color: transparent;
+		color: rgba(0, 0, 0, 0.55);
+		cursor: pointer;
+	}
+	/* hovering the cross itself lightens its patch, on grey and on blue alike */
+	.move-cut:hover {
+		background-color: rgba(255, 255, 255, 0.4);
+	}
+	/* bare cross, no chip — it takes the colour of the row it sits on, so it
+	   also reads on the current move, which is filled with the accent colour */
+	.move-cut svg {
+		width: 14px;
+		height: 14px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2.1;
+	}
+	.move-cell:has(.move-btn.current) .move-cut {
+		color: rgba(255, 255, 255, 0.85);
+	}
+	/* without a pointer there is no hover to reveal it, so it stays out */
+	@media (hover: hover) {
+		.move-cut {
+			opacity: 0;
+		}
+	}
+	.move-cell:hover .move-cut,
+	.move-cut:focus-visible {
+		opacity: 1;
+	}
 	.move-btn {
 		border: none;
 		background-color: transparent;
@@ -1437,7 +1506,7 @@
 		cursor: default;
 		color: rgba(0, 0, 0, 0.5);
 	}
-	button.move-btn:hover:enabled {
+	.move-cell:hover > button.move-btn:enabled {
 		background-color: gainsboro;
 	}
 	button.move-btn:disabled {
@@ -1492,6 +1561,11 @@
 		background-color: var(--accent);
 		color: white;
 	}
+	/* hover deepens whatever the row already is: grey for a plain move, a
+	   stronger blue for the current one (which the grey would swallow) */
+	.move-cell:hover > button.move-btn.current:enabled {
+		background-color: var(--accent-hover);
+	}
 	.position-buttons {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1535,31 +1609,6 @@
 	/* the three buttons are one control on two lines, so they keep the 8px
 	   the arrows keep from each other — the panel's own 10px gap sits above
 	   the group, not inside it */
-	.step-controls {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-	.cut-row {
-		display: flex;
-		justify-content: flex-end;
-	}
-	/* as wide as both steppers and the gap between them, so it closes the
-	   block off square; the same height and type as they have */
-	.cut-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		width: calc(64px * 2 + 8px);
-		padding: 3px 0;
-		font-size: 0.8rem;
-		line-height: 1.6;
-	}
-	.cut-btn :global(svg) {
-		width: 15px;
-		height: 15px;
-	}
 	.actions {
 		display: flex;
 		justify-content: flex-end;

@@ -6,7 +6,7 @@ import { isValidFen } from "./isValidFen.js"
 // openAt is the position a shown board opens at (null = the start).
 // The solution layer belongs to the back: moves[solutionFrom..] are hidden in
 // study until the card is turned (null = no hidden moves), and on turning
-// solutionAnnotations displaces annotations per position. Boards saved before
+// solutionAnnotations adds to annotations per position. Boards saved before
 // these fields existed are bare FEN strings or lack the newer fields.
 // In the editor a board also carries a client-only id (for keying, editing
 // state and drag and drop); getSideJson strips it before saving.

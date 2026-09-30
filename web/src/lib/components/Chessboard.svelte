@@ -17,7 +17,7 @@
 	// FEN/Duplicate/Edit row).
 	// `revealed` controls the solution layer: while false, moves from
 	// solutionFrom on stay hidden and only the question annotations show; when
-	// true the full line shows and solutionAnnotations displaces annotations
+	// true the full line shows and solutionAnnotations add to annotations
 	// per position. `authorView` (editors/browse) tints the answer segment of
 	// the move line so authors see what study hides; study turns it on with
 	// the reveal, where it marks the same boundary in a line already shown.
@@ -156,28 +156,17 @@
 		(asidePly != null ? asideReplay?.fens[asidePly] : null) ?? positions[displayIndex]
 	);
 
-	// on reveal the solution layer displaces the question annotations wherever
-	// it has an entry for the position; an aside's positions are the text's,
-	// and carry none of the line's own marks
-	let displayedAnnotation = $derived(
-		asidePly != null
-			? null
-			: revealed
-				? normalized.solutionAnnotations[displayIndex] ?? normalized.annotations[displayIndex]
-				: normalized.annotations[displayIndex]
-	);
+	// the question's annotations always show, and on reveal the solution
+	// layer's add to them; an aside's positions are the text's, and carry none
+	// of the line's own marks
+	let frontAnnotation = $derived(asidePly != null ? null : normalized.annotations[displayIndex]);
+	let backAnnotation = $derived(asidePly != null || !revealed ? null : normalized.solutionAnnotations[displayIndex]);
 
 	// the position on screen, handed to Lichess's analysis board (engine and
 	// opening explorer) in a new tab, seen from the side this board is
 	let analysisUrl = $derived(
 		`https://lichess.org/analysis/${displayFen.replaceAll(" ", "_")}`
 			+ (normalized.orientation === "b" ? "?color=black" : "")
-	);
-
-	// the answer's own arrows, marked apart from the question's (LayeredArrows);
-	// only a front board has a solution layer to show
-	let showsBackArrows = $derived(
-		backDots && asidePly == null && revealed && normalized.solutionAnnotations[displayIndex] != null
 	);
 
 	// Everything that is not a step arrives at once: the position is written
@@ -200,7 +189,8 @@
 
 	$effect(() => {
 		const fen = displayFen;
-		const annotation = displayedAnnotation;
+		const front = frontAnnotation;
+		const back = backAnnotation;
 		if (!cmBoard) return;
 		// Only a step animates, and only within the board it stepped on: study
 		// and browse reuse this component across cards, and tweening one
@@ -222,7 +212,7 @@
 		else snapTo(fen);
 		stepping = false;
 		renderedBoard = normalized;
-		showAnnotations(cmBoard, annotation, showsBackArrows);
+		showAnnotations(cmBoard, front, back, backDots);
 	})
 
 	const boardPrefs = getContext("boardPrefs") ?? (() => DEFAULT_BOARD_PREFS);

@@ -1,6 +1,14 @@
 # Currently working on
 - center Show duplicates text on input and increase font size slightly
 
+## others
+- interactive puzzle cards / boards
+- Since there are many settings, maybe once they become relevant show popup so user can read and make decision. e.g. for chapters first time they hit chapter limit explain why chapters and let them decide the config. Same with: study ahead 20 min incl. explanation,
+- ?allow images in flashcard for e.g. easily inserting image of your blunder instead of copying fen and creating board and inserting fen?
+
+## Personalized blunder and mistake cards
+- Would be cool to have a feature that imports mistakes and blunders from your own game and creates a flashcard from it into your blunder deck with explanation why your move was bad and what the best move is and why. make it automatic like lichess game analysis extension to analyze your game, find bad moves, make flashcard from it with explanation
+
 ## subdecks
 - Order could be subdeck.number? like if a card is the 3rd card in the 2nd subdeck its order is 2.3?
 - Subdecks are parts of a deck grouped together for some level of internalization before moving to next subdeck
@@ -8,8 +16,6 @@
 - Subdecks because sometimes its good to have some mastery of part of a deck, before moving to the next part. For example, in endgames its better to have seen cards from basic endgames like king and rook vs king multiple times and have some mastery of that part, before moving to include cards from the next subdeck, which could include more advanced endgames. Then you would progress when you hit target on some variable in the previous subdeck. Ofcourse it should have settings to bypass in whatever way.
 
 Subdecks is good because if you have a large deck on 1 opening for example, its better to gain some mastery of the most popular lines and not too deep (like quickstart in chessable), rather than getting cards for the basics and then more obscure before you even have a level of internalization of the basics. Same for endgames, want to master basics before knight and bishop mate.
-
-## Card position in the deck, default insertion order, but rearrangable
 
 # Study features:
 ## Setting on customizing fsrs (also somehow see personal optimization)

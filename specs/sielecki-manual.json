@@ -153,6 +153,127 @@
           "back": "- [4...Nxe5 5.d4] is the most common. We restore material equality and gain some advantage, but there are a few traps to avoid.\n- 4...Bxf2+?! is dubious but leads to fun complications. Black returns the piece and thus avoids the fork trick.\n- [4...Nf6 5.Nxc6 dxc6 6.h3]: White is much better, as Black has no compensation for the pawn.\n- [4...Qh4 5.g3] or [4...Qf6 5.Ng4] are easily defused attempts at a Scholar's Mate."
         },
         {
+          "id": "tk-qh4",
+          "front": {
+            "text": "What do you play after 4...Qh4? and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Qh4"
+                ],
+                "orientation": "w",
+                "openAt": 8,
+                "arrows": {
+                  "8": [
+                    [
+                      "success",
+                      "d8",
+                      "h4"
+                    ]
+                  ]
+                },
+                "solutionArrows": {
+                  "8": [
+                    [
+                      "success",
+                      "g2",
+                      "g3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "5.g3 Black is trying for a Scholar's Mate with ...Qxf2#. The pawn attacks the queen and shuts the h4-e1 diagonal, so the attempt is easily defused and we stay a pawn up."
+        },
+        {
+          "id": "tk-qf6",
+          "front": {
+            "text": "What do you play after 4...Qf6? and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Qf6"
+                ],
+                "orientation": "w",
+                "openAt": 8,
+                "arrows": {
+                  "8": [
+                    [
+                      "success",
+                      "d8",
+                      "f6"
+                    ]
+                  ]
+                },
+                "solutionArrows": {
+                  "8": [
+                    [
+                      "success",
+                      "e5",
+                      "g4"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "5.Ng4 Black is trying for a Scholar's Mate with ...Qxf2#. The knight retreats out of the queen's attack, hits the queen and covers f2, so the attempt is easily defused and we stay a pawn up."
+        },
+        {
+          "id": "tk-nf6-next3",
+          "front": {
+            "text": "What are the next 3 plies following 4...Nf6?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nf6",
+                  "Nxc6",
+                  "dxc6",
+                  "h3"
+                ],
+                "orientation": "w",
+                "openAt": 8,
+                "solutionFrom": 8,
+                "arrows": {
+                  "8": [
+                    [
+                      "success",
+                      "g8",
+                      "f6"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "- 5.Nxc6 We trade off the attacked knight.\n- 5...dxc6 Black recaptures.\n- 6.h3 White is much better, as Black has no compensation for the pawn. The same position arises via 1.e4 e5 2.Nf3 Nf6 3.Nc3 Bc5? 4.Nxe5 Nc6 5.Nxc6 dxc6 6.h3."
+        },
+        {
           "id": "tk-bxf2-next3",
           "front": {
             "text": "What are the next 3 plies following 4...Bxf2+?!",
@@ -187,7 +308,46 @@
               }
             ]
           },
-          "back": "- 5.Kxf2 We have to take the bishop, no choice.\n- 5...Nxe5 Black restores material equality. They can't play [5...Qh4+ 6.g3] or [5...Qf6+ 6.Nf3], when we keep the extra piece.\n- 6.d4 Completes our dream pawn center and hits Black's knight, winning time."
+          "back": "- 5.Kxf2 We have to take the bishop, no choice.\n- 5...Nxe5 Black restores material equality.\n- 6.d4 Completes our dream pawn center and hits Black's knight, winning time."
+        },
+        {
+          "id": "tk-kxf2-no-check",
+          "front": {
+            "text": "After 5.Kxf2, why can't Black give a queen check instead of recapturing with 5...Nxe5?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2"
+                ],
+                "orientation": "w",
+                "openAt": 9,
+                "solutionArrows": {
+                  "9": [
+                    [
+                      "success",
+                      "d8",
+                      "h4"
+                    ],
+                    [
+                      "success",
+                      "d8",
+                      "f6"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "- [5...Qh4+ 6.g3] the pawn blocks the check and hits the queen.\n- [5...Qf6+ 6.Nf3] the knight blocks the check and escapes.\n\nEither way we keep the extra piece."
         },
         {
           "id": "tk-d4-eval-replies",

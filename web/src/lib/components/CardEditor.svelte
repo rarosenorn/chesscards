@@ -134,16 +134,24 @@
 	}
 
 	// t toggles the focused thing's Q/A: an open board editor's recording
-	// layer, otherwise the containing block. Never while typing.
-	const handleQAShortcut = e => {
-		if ((e.key !== "t" && e.key !== "T") || e.ctrlKey || e.metaKey || e.altKey) return;
+	// layer, otherwise the containing block. 1 / 2 switch an open board
+	// editor's two stages. Never while typing.
+	const handleEditorShortcut = e => {
+		if (e.ctrlKey || e.metaKey || e.altKey) return;
+		const key = e.key.toLowerCase();
+		if (key !== "t" && key !== "1" && key !== "2") return;
 		if (e.target.closest?.("input, textarea, [contenteditable='true']")) return;
 		const boardEl = e.target.closest?.("[data-board-id]");
-		if (boardEl && isEditing(boardEl.dataset.boardId)) {
-			boardEditors[boardEl.dataset.boardId]?.toggleAnswer();
+		const editor = boardEl && isEditing(boardEl.dataset.boardId)
+			? boardEditors[boardEl.dataset.boardId]
+			: null;
+		if (editor) {
+			if (key === "t") editor.toggleAnswer();
+			else editor.showStage(key === "1" ? "setup" : "moves");
 			e.preventDefault();
 			return;
 		}
+		if (key !== "t") return;
 		const blockEl = e.target.closest?.("[data-block-id]");
 		const block = blockEl && blocks.find(b => b.id === blockEl.dataset.blockId);
 		if (block) {
@@ -302,7 +310,7 @@
 	}
 </script>
 
-<svelte:window onkeydown={handleQAShortcut} />
+<svelte:window onkeydown={handleEditorShortcut} />
 
 <div
 	class="blocks-zone"

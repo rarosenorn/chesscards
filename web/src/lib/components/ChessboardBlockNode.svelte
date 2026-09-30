@@ -81,8 +81,10 @@
 			e.stopImmediatePropagation();
 			// buttons still click with the default prevented, but no longer
 			// steal focus from the document (the menu-bar pattern); text
-			// fields must keep their native focusing
-			if (!e.target.closest("input, textarea, select, [contenteditable='true']")) e.preventDefault();
+			// fields must keep their native focusing. No contenteditable
+			// clause: the island sits inside the document's editable root, so
+			// it matched from anywhere and disarmed the guard for every press
+			if (!e.target.closest("input, textarea, select")) e.preventDefault();
 			return;
 		}
 		e.preventDefault();
@@ -99,6 +101,10 @@
 			fenInput: undefined
 		});
 		commit();
+		// the caret lands right of the copy, where clicking a board and
+		// dropping one leave it, so the keyboard carries straight on
+		setBoardCaret(blockId, i + 2, "up");
+		onCaretActivated?.();
 	}
 
 	// --- board editors ---

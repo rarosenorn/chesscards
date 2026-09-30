@@ -25,6 +25,8 @@
 	</nav>
 
 	<section>
+		<h2>usecases</h2>
+		<p>well curated premade decks on everything from checkmate patterns, how the knight moves, endgames as well as your own decks on for example your blunders (and why), missed wins etc.</p>
 		<h2 id="introduction">Introduction</h2>
 		<p>"What I hear i forget, what I see I remember, what I do I understand" - Xunzi Zi, philosopher (paraphrase). "Repetition is the mother of studies" - Latin proverb. "Due to the testing and spacing effects, studying with flashcards is so efficient that you will finally have time to call your mom" - me</p>
 		<p>In the context of chess, we can define learning as the process of creating a mental model accurately and exhaustively mirrors the subject of chess and that is easily accessible when playing. ...Something about understanding vs knowing and how understanding is superior, in chess because it causes you to be more aware of the thing when playing and being able to know how it affects play and how it relates to other parts of chess vs. knowing that its good but not understanding why its good.

@@ -3,8 +3,8 @@
 	import { getContext, onMount } from "svelte"
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating, StrategyMode, GenSeedStrategyWithCardId } from "ts-fsrs"
-	import { boardAlignment } from "$lib/side-alignment.js"
-	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
+	import { boardAlignment, boardsAllAlone } from "$lib/side-alignment.js"
+	import { ttGenerateHTML, ttGenerateText } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
 	import { crossesDay, isDueAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
@@ -13,7 +13,7 @@
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState } from "$lib/modals.svelte.js"
 	import { zen, zenActive, resetZen, setZen } from "$lib/zen-state.svelte.js"
-	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
+	import { updateCardStudyStateAndAddLog } from "../study/study.remote.js"
 	import { updateCardContent, updateCardType, deleteCards } from "../browse/browse.remote.js"
 
 	let deck = getContext("deck");
@@ -207,12 +207,32 @@
 	let focusBoardNumber = $derived(
 		currentCard ? firstBoardWithMoves(currentCard.front, currentCard.back) : null
 	);
+	// board numbers are only shown when the card has several boards to reference
 	// how many boards the whole card holds, front and back
 	let cardBoardCount = $derived(
 		currentCard ? frontBoardCount + countBoards(currentCard.back) : 0
 	);
 	// board numbers are only shown when the card has several boards to reference
 	let showBoardNumbers = $derived(cardBoardCount > 1);
+
+	// --- the split layout ---
+	// Text on the left, boards on the right, instead of one column of blocks.
+	// What it buys: the answer grows the TEXT column, so it no longer eats
+	// into the board's height budget — the board opens at the size it keeps,
+	// and the card barely grows on the reveal.
+	// It only reads as a card while the two columns each hold one thing, so
+	// three kinds of card stay stacked: one with two boards on a row (they
+	// want the card's full width), one with no board, and one with no text
+	// at all (an empty column beside a board is not a layout).
+	const sideHasText = side => (side ?? []).some(
+		block => block.type === "text" && ttGenerateText(block.content).trim().length > 0
+	);
+	let splitLayout = $derived(
+		currentCard != null
+			&& boardsAllAlone(currentCard)
+			&& frontBoardCount + countBoards(currentCard.back) > 0
+			&& (sideHasText(currentCard.front) || sideHasText(currentCard.back))
+	);
 
 	// A move written in the card's text drives the board it names (see
 	// tiptap-move-ref.js): the click is handed to that board by number, and
@@ -466,6 +486,49 @@
 </script>
 <svelte:window onkeydown={handleKeyDown} onmousemove={handleMouseMove} />
 
+<!-- One board block, numbered from `firstNumber`: the boards of a card are
+     numbered card-wide (front then back), and it is that number the text
+     calls a board by, whether or not the card is showing numbers. -->
+{#snippet boardBlock(block, firstNumber, revealed, marksBack, onBack)}
+	<div
+		class={{
+			"single-board-block": block.content.length < 2,
+				"board-grid-block": block.content.length > 1
+		}}
+	>
+		{#each block.content as chessboard, boardIndex}
+			{@const n = firstNumber + boardIndex}
+			<div class="board-container">
+				<!-- low floor: two squeezed boards must shrink, not overflow
+				     their cells and crush the gap between them -->
+				<!-- the "Back:" marker rides on the reveal: it names the moves
+				     the question was hiding, so before the reveal there is
+				     nothing to name (and it would spell out the answer);
+				     back-side boards hide nothing, so they never mark, as
+				     in browse -->
+				<Chessboard
+					board={chessboard}
+					{revealed}
+					{onBack}
+					authorView={marksBack}
+					minWidth="280px"
+					number={showBoardNumbers ? n : null}
+					autoFocus={n - 1 === focusBoardNumber}
+					aside={asides[n]}
+					onPosition={at => boardAt[n] = at}
+				/>
+			</div>
+		{/each}
+	</div>
+{/snippet}
+
+{#snippet textBlock(block)}
+	<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- the moves inside are pointer targets; the board's own move line is the keyboard's way through a line -->
+	<div class="text-block" onclick={handleTextClick} {@attach alignByWrap}>
+		{@html ttGenerateHTML(block.content)}
+	</div>
+{/snippet}
+
 {#snippet side(side, boardNumberOffset, revealed, marksBack = false, onBack = false)}
 <div
 	class="card-side"
@@ -473,48 +536,33 @@
 >
 	{#each side as block, blockIndex}
 		{#if block.type === "text"}
-			<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- the moves inside are pointer targets; the board's own move line is the keyboard's way through a line -->
-			<div class="text-block" onclick={handleTextClick} {@attach alignByWrap}>
-				{@html ttGenerateHTML(block.content)}
-			</div>
+			{@render textBlock(block)}
 		{:else if block.type === "chessboards"}
-			<div
-				class={{
-					"single-board-block": block.content.length < 2,
-						"board-grid-block": block.content.length > 1
-				}}
-			>
-				{#each block.content as chessboard, boardIndex}
-					<!-- the board's number is what the text calls it by, whether
-					     or not the card is showing numbers -->
-					{@const n = boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1}
-					<div class="board-container">
-						<!-- low floor: two squeezed boards must shrink, not overflow
-					     their cells and crush the gap between them -->
-					<!-- the "Back:" marker rides on the reveal: it names the moves
-					     the question was hiding, so before the reveal there is
-					     nothing to name (and it would spell out the answer);
-					     back-side boards hide nothing, so they never mark, as
-					     in browse -->
-					<Chessboard
-						board={chessboard}
-						{revealed}
-						{onBack}
-						analysis={revealed}
-						backDots={false}
-						authorView={marksBack}
-						minWidth="280px"
-						number={showBoardNumbers ? n : null}
-						autoFocus={n - 1 === focusBoardNumber}
-						aside={asides[n]}
-						onPosition={at => boardAt[n] = at}
-					/>
-					</div>
-				{/each}
-			</div>
+			{@render boardBlock(block, boardNumberOffset + boardsBefore(side, blockIndex) + 1, revealed, marksBack, onBack)}
 		{/if}
 	{/each}
 </div>
+{/snippet}
+
+<!-- The split layout takes one side apart: its text blocks go down the left
+     column, its board blocks down the right. A side whose blocks interleave
+     (text, board, text) loses that order — the board numbers are what still
+     ties the two columns together, which is why they are the reference the
+     text uses in the first place. -->
+{#snippet textSide(side)}
+	{#each side as block}
+		{#if block.type === "text"}
+			{@render textBlock(block)}
+		{/if}
+	{/each}
+{/snippet}
+
+{#snippet boardSide(side, boardNumberOffset, revealed, marksBack = false, onBack = false)}
+	{#each side as block, blockIndex}
+		{#if block.type === "chessboards"}
+			{@render boardBlock(block, boardNumberOffset + boardsBefore(side, blockIndex) + 1, revealed, marksBack, onBack)}
+		{/if}
+	{/each}
 {/snippet}
 
 {#if currentCard && editingCard && CardBlockEdit}
@@ -542,16 +590,41 @@
 	<div
 		class="flashcard card-surface"
 		class:zen={zenActive()}
+		class:no-boards={cardBoardCount === 0}
+		class:split={splitLayout}
 		bind:this={cardElement}
+		data-boards={boardsAllAlone(currentCard) ? "solo" : null}
 	>
-		<!-- turning reveals front boards' back layers (moves/annotations) in
-		     place, on top of showing the back side below -->
-		{@render side(currentCard.front, 0, isCardTurned, isCardTurned)}
-		{#if isCardTurned}
-			{#if sideHasContent(currentCard.back)}
-				<div class="side-gap"></div>
+		{#if splitLayout}
+			<!-- Front and back share the two columns rather than taking a half
+			     of the card each: the answer's text lands under the question's,
+			     beside the board it is about, and the board keeps the place it
+			     opened in. -->
+			<div class="split-body">
+				<div class="split-text">
+					{@render textSide(currentCard.front)}
+					{#if isCardTurned && sideHasText(currentCard.back)}
+						<div class="side-gap"></div>
+						{@render textSide(currentCard.back)}
+					{/if}
+				</div>
+				<div class="split-boards">
+					{@render boardSide(currentCard.front, 0, isCardTurned, isCardTurned)}
+					{#if isCardTurned}
+						{@render boardSide(currentCard.back, frontBoardCount, true, false, true)}
+					{/if}
+				</div>
+			</div>
+		{:else}
+			<!-- turning reveals front boards' back layers (moves/annotations) in
+			     place, on top of showing the back side below -->
+			{@render side(currentCard.front, 0, isCardTurned, isCardTurned)}
+			{#if isCardTurned}
+				{#if sideHasContent(currentCard.back)}
+					<div class="side-gap"></div>
+				{/if}
+				{@render side(currentCard.back, frontBoardCount, true, false, true)}
 			{/if}
-			{@render side(currentCard.back, frontBoardCount, true, false, true)}
 		{/if}
 		<div class="card-actions">
 		<!-- Anki's counts, in Anki's colours: what is still waiting in this
@@ -749,11 +822,17 @@
 			calc(var(--zen-air-top) + var(--card-answer) * 0.4),
 			calc(var(--zen-room) * 0.53)
 		);
-		/* A card with no board stands at the board's height all the same: one
-		   card's top edge is every card's top edge, so the lift is computed
-		   from the one budget, board or no board. A text card is a taller
-		   sheet than its text needs, and that is the price of the deck not
-		   moving under the reader between cards. */
+		/* A card with no board has no board's height to stand at, and in zen
+		   it is the only thing on the screen: held to the board's floor it
+		   was a mostly empty sheet with one line along its top. It takes the
+		   furniture's height instead, and the same lift then hangs it where
+		   every other card hangs — just off centre, a little high. The floor
+		   outside zen stays the window's, so the grade row keeps its place
+		   from card to card where there is a page around it. */
+		&.no-boards {
+			min-height: var(--card-stack);
+			--zen-room: calc(100dvh - var(--card-furniture));
+		}
 		/* The bias is a luxury: on a window that the card nearly fills, an
 		   uneven split is just a lopsided card, so it stays at zero until
 		   there is room to spare and then takes a fifth of it, up to 20px.
@@ -764,13 +843,9 @@
 	/* fullscreen: no window chrome either, so the card can afford more air
 	   still. The board gives the difference back, as it does for the rest of
 	   the frame. */
-	/* The top takes more of that than the bottom: on a whole screen the card
-	   reads too high sitting where a windowed one sits, so it hangs lower
-	   here. The board pays for the extra, as it pays for the rest of the
-	   frame, so what is under the card does not change. */
 	@media all and (display-mode: fullscreen) {
 		.flashcard.zen {
-			--zen-air-top: 80px;
+			--zen-air-top: 60px;
 			--zen-air-bottom: 55px;
 		}
 	}
@@ -800,13 +875,87 @@
 		   opens at the size it will keep, and the reveal fills room the card
 		   was already holding instead of growing into the page. */
 		min-height: calc(var(--solo-board-size) + var(--card-stack));
-		/* No ceiling: a card with more in it than the budget holds grows
-		   downwards and the page scrolls, as the reveal does. The height
-		   above is a floor, so the cards that fit all stand alike. */
 		/* the top is the card's rim, wider than the divider's 18px between
 		   the sides; the row below closes the card at the 10px it has always
 		   kept from the bottom edge */
 		padding: 32px 37px 10px 37px;
+	}
+	/* --- the split layout: text left, boards right ---
+	   The stacked card puts everything the answer will add on the same axis
+	   as the board, so the board is sized around text that is not on screen
+	   yet and shrinks again for every line the answer holds. Side by side the
+	   two stop competing: the answer grows the LEFT column, into room the
+	   board is not using, and the board opens at the size it will keep. */
+	.flashcard.split {
+		--split-gap: 34px;
+		/* The prose column, narrow on purpose: a card's text is a prompt and
+		   a line or two of answer, not a page, and every pixel it does not
+		   take is one the board does. ~44 characters at the card's size —
+		   short of a book's measure, which is what a column beside a figure
+		   is. */
+		--split-text-width: 360px;
+		/* The card is exactly as wide as what it holds, rather than a round
+		   number the two columns are fitted into: the board is sized first,
+		   from the window, and the card is the sum. So a taller window grows
+		   the board AND the card, and neither ever sits in dead space. */
+		--flashcard-width: calc(
+			74px + var(--split-text-width) + var(--split-gap) + var(--solo-board-size)
+		);
+		/* The stack a split card carries around its board: the stacked card's
+		   207px less the one-line prompt above the board, which is now beside
+		   it — and no answer at all, since the answer is what the left column
+		   is for. That second term is the whole point: one board size, both
+		   states of the card. */
+		--card-stack: 183px;
+		--card-answer: 0px;
+		/* recomposed here, or it would keep resolving at :root against the
+		   :root values of the two above (see app.css) */
+		--card-furniture: calc(var(--card-stack) + var(--card-answer));
+		/* What the window's height leaves, up to a cap. The height is what
+		   governs on any ordinary window — the cap only stops a very tall one
+		   from making a board nobody can take in at a glance. Nothing about
+		   the card's width is in here: the card is sized from the board now,
+		   not the board from the card. */
+		--solo-board-size: min(760px, 100dvh - var(--board-height-budget));
+	}
+	.split-body {
+		align-self: stretch;
+		display: grid;
+		/* the text column is the fixed one and the board takes the rest: on a
+		   window too narrow for the card's full width it is the board that
+		   gives way, down to its own 280px floor, and the measure holds */
+		grid-template-columns: minmax(0, var(--split-text-width)) minmax(0, 1fr);
+		gap: var(--split-gap);
+		/* each column stands at its own height: the text must not centre
+		   itself against the board, or every line of the answer would move
+		   the question's first line */
+		align-items: start;
+	}
+	.split-text {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		/* a board's number strip stands above its top rank, so the prose
+		   starts level with the BOARD rather than with the strip */
+		padding-top: 24px;
+	}
+	.split-boards {
+		display: flex;
+		flex-direction: column;
+	}
+	/* the board fills its column, rather than taking the width app.css sizes
+	   a lone board to and centring in what is left: here the column IS the
+	   board's size, and on a narrow window it is less than that */
+	.flashcard.split .split-boards .single-board-block > .board-container {
+		width: 100%;
+	}
+	/* the boards breathe against each other, not against the card's rim,
+	   which already holds them off it */
+	.split-boards > :first-child {
+		margin-top: 0;
+	}
+	.split-boards > :last-child {
+		margin-bottom: 0;
 	}
 	/* The controls close the card, one centred row on one 20px rhythm. The
 	   auto margin drops the row to the card's floor — on a card shorter than
@@ -845,7 +994,7 @@
 	/* the hair space that widens the underline, shrunk a touch further: the
 	   space scales with its own font size, so this is the fine adjustment */
 	.deck-counts .hair {
-		font-size: 0.4em;
+		font-size: 0.7em;
 	}
 	.deck-counts .plus {
 		color: black;

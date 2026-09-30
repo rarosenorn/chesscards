@@ -130,8 +130,9 @@
 	const canFreeze = $derived(!!ui.toggleFrozenBoard);
 	const frozen = $derived(!!ui.frozenBoards?.[board.id]);
 
-	// v1: t toggles an open board editor's front/back recording layer when
-	// the keyboard is in the board (never while typing). Two ways it can be:
+	// v1: t toggles an open board editor's front/back recording layer, and
+	// 1 / 2 switch its two stages, when the keyboard is in the board (never
+	// while typing). Two ways it can be:
 	// focus sits inside the board's own DOM (v1 focuses the board on open, and
 	// a click on it does the same), or — in the block editor, which keeps the
 	// document focused with its caret parked beside the board it just opened
@@ -139,24 +140,37 @@
 	//
 	// Capture phase on window: with the caret parked, the block editor's own
 	// keydown plugin would otherwise type the t into the document first.
-	const handleLayerShortcut = e => {
+	//
+	// Ctrl+Enter follows the same rule: with the keyboard in the board it
+	// saves this editor, and never reaches the host's submit-the-card. Fields
+	// inside the board count here — saving is what finishes typing in them.
+	const handleEditorShortcut = e => {
 		if (!isEditing) return;
-		if ((e.key !== "t" && e.key !== "T") || e.ctrlKey || e.metaKey || e.altKey) return;
 		const cell = e.target.closest?.(`[data-board-id="${board.id}"]`);
 		if (!cell && !caretParked) return;
+		if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === "Enter") {
+			e.preventDefault();
+			e.stopPropagation();
+			editorRef?.save();
+			return;
+		}
+		if (e.ctrlKey || e.metaKey || e.altKey) return;
+		const key = e.key.toLowerCase();
+		if (key !== "t" && key !== "1" && key !== "2") return;
 		// only fields inside the board count as typing: the block editor's
 		// island sits within the document's contenteditable, which a bare
 		// closest() matched from anywhere in the editor
 		const field = e.target.closest?.("input, textarea, [contenteditable='true']");
 		if (field && cell?.contains(field)) return;
-		editorRef?.toggleAnswer();
+		if (key === "t") editorRef?.toggleAnswer();
+		else editorRef?.showStage(key === "1" ? "setup" : "moves");
 		e.preventDefault();
 		e.stopPropagation();
 	}
 
 	$effect(() => {
-		window.addEventListener("keydown", handleLayerShortcut, true);
-		return () => window.removeEventListener("keydown", handleLayerShortcut, true);
+		window.addEventListener("keydown", handleEditorShortcut, true);
+		return () => window.removeEventListener("keydown", handleEditorShortcut, true);
 	});
 </script>
 

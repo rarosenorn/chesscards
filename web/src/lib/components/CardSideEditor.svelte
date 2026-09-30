@@ -131,14 +131,18 @@
 		focusNewBoardEditor(board.id);
 	}
 
-	// t toggles an open board editor's front/back recording layer when focus
-	// is inside it (never while typing)
-	const handleLayerShortcut = e => {
-		if ((e.key !== "t" && e.key !== "T") || e.ctrlKey || e.metaKey || e.altKey) return;
+	// t toggles an open board editor's front/back recording layer and 1 / 2
+	// switch its two stages, when focus is inside it (never while typing)
+	const handleEditorShortcut = e => {
+		if (e.ctrlKey || e.metaKey || e.altKey) return;
+		const key = e.key.toLowerCase();
+		if (key !== "t" && key !== "1" && key !== "2") return;
 		if (e.target.closest?.("input, textarea, [contenteditable='true']")) return;
 		const boardEl = e.target.closest?.("[data-board-id]");
 		if (boardEl && isEditing(boardEl.dataset.boardId)) {
-			boardEditors[boardEl.dataset.boardId]?.toggleAnswer();
+			const editor = boardEditors[boardEl.dataset.boardId];
+			if (key === "t") editor?.toggleAnswer();
+			else editor?.showStage(key === "1" ? "setup" : "moves");
 			e.preventDefault();
 		}
 	}
@@ -373,7 +377,7 @@
 	}
 </script>
 
-<svelte:window onkeydown={handleLayerShortcut} />
+<svelte:window onkeydown={handleEditorShortcut} />
 
 <div
 	class="blocks-zone"

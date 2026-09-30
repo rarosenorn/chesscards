@@ -84,6 +84,7 @@
 
 	let searchInput = $state("");
 	let searchFilter = $state("");
+	let searchInputElement = $state(null);
 	// the canonical front the duplicates filter matches on (add-cards' "Show
 	// duplicates" link) — exact equality, boards included, unlike the text
 	// search; running a search replaces it
@@ -237,6 +238,16 @@
 		searchFilter = searchInput.trim();
 		dupFilter = null;
 		resetSelection();
+	}
+
+	// the field's own clear, scoped to the field: it drops the typed text and
+	// the applied filter together (Enter-to-apply lets the two diverge) and
+	// hands focus back, so clearing is one gesture and typing can go on
+	const clearSearch = () => {
+		searchInput = "";
+		searchFilter = "";
+		resetSelection();
+		searchInputElement?.focus();
 	}
 
 	// filter to the cards whose front exactly equals this card's — the card a
@@ -865,12 +876,23 @@
 <div class="browse-container" class:reordering={!!reorderDrag?.started}>
 	<div class="left-pane">
 		<div class="search-row">
-			<input
-				class="search-input"
-				placeholder="Search cards"
-				bind:value={searchInput}
-				onkeydown={e => { if (e.key === "Enter") applySearch(); }}
-			/>
+			<div class="search-field">
+				<input
+					class="search-input"
+					placeholder="Search cards"
+					bind:this={searchInputElement}
+					bind:value={searchInput}
+					onkeydown={e => {
+						if (e.key === "Enter") applySearch();
+						else if (e.key === "Escape" && (searchInput || searchFilter)) clearSearch();
+					}}
+				/>
+				<!-- shown only when there is something to clear: typed text, or
+				     a search still filtering the table -->
+				{#if searchInput || searchFilter}
+					<button class="search-clear" onclick={clearSearch} aria-label="Clear the search">&times;</button>
+				{/if}
+			</div>
 			{#if dupFilter}
 				<button class="dup-chip" onclick={clearDupFilter} aria-label="Clear the exact-duplicates filter">
 					Exact duplicates <span class="dup-chip-x" aria-hidden="true">×</span>
@@ -1158,8 +1180,11 @@
 		padding: 8px;
 		border-bottom: 1px solid #dcdcdc;
 	}
-	.search-input {
+	.search-field {
 		flex: 1;
+		position: relative;
+		display: flex;
+		min-width: 0;
 	}
 	/* the active duplicates filter, worn as a pill the click removes */
 	.dup-chip {
@@ -1185,7 +1210,7 @@
 		width: 100%;
 		box-sizing: border-box;
 		margin: 0;
-		padding: 5px 8px 5px 29px;
+		padding: 5px 26px 5px 29px;
 		border: 1px solid #ccc;
 		border-radius: 0;
 		font-size: 0.9rem;
@@ -1200,6 +1225,26 @@
 	.search-input:focus {
 		outline: none;
 		border-color: var(--accent);
+	}
+	/* inside the field's right edge, over the text's own padding, so clearing
+	   belongs to the field rather than adding a control beside it */
+	.search-clear {
+		position: absolute;
+		top: 1px;
+		right: 1px;
+		bottom: 1px;
+		width: 24px;
+		margin: 0;
+		padding: 0;
+		border: none;
+		background: none;
+		color: rgba(0, 0, 0, 0.55);
+		font-size: 1.05rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+	.search-clear:hover {
+		color: #262626;
 	}
 	.table-container {
 		flex-grow: 1;

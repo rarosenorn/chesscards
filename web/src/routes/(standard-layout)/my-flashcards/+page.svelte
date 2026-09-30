@@ -96,7 +96,7 @@
 				<th>New</th>
 				<th>Learn</th>
 				<th>Due</th>
-				<th>Total</th>
+				<th>Cards</th>
 			</tr>
 		</thead>
 		<tbody>

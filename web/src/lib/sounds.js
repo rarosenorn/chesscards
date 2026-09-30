@@ -5,11 +5,20 @@
 
 let ctx;
 
-// created lazily so it's always after a user gesture (autoplay policy)
-const context = () => {
+// Browsers only let audio start from a real gesture (a click or key, not a
+// wheel scroll), so the context is opened on the first one — and the samples
+// decoded then too, so the first move doesn't wait on them. Until then moves
+// are silent: a sound started on a suspended context would be held and burst
+// out, piled up, the moment it resumed.
+const unlock = () => {
 	ctx ??= new AudioContext();
 	if (ctx.state === "suspended") ctx.resume();
-	return ctx;
+	for (const sample of Object.values(samples)) load(ctx, sample).catch(() => sample.promise = null);
+}
+if (typeof window !== "undefined") {
+	for (const type of ["pointerdown", "keydown"]) {
+		window.addEventListener(type, unlock, { capture: true, once: true });
+	}
 }
 
 const samples = {
@@ -24,7 +33,14 @@ const load = (c, sample) =>
 		.then(buffer => sample.buffer = buffer);
 
 const play = async name => {
-	const c = context();
+	const c = ctx;
+	if (!c) return;
+	// the gesture that opens the context may itself be the move (an arrow
+	// key), before resume() has landed
+	if (c.state !== "running") {
+		if (!navigator.userActivation?.isActive) return;
+		await c.resume();
+	}
 	const sample = samples[name];
 	let buffer = sample.buffer;
 	// the first play waits for fetch+decode (a moment late); afterwards the

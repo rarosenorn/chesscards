@@ -67,6 +67,11 @@ card per line until the next branch. Always context, and ask why.
   natural move": the position, both candidate arrows on reveal, the reason.
 - **Plan card** — "After 9...h6, what is your plan?", back = the author's plan.
 
+**The opponent's move is already played on the board** (openAt is the ply
+after it) and its green arrow runs from the square it came from to where the
+piece now stands — never a board that stops before the move with the arrow
+pointing ahead. The user prefers this over their own Philidor cards.
+
 Orientation: the deck's side (white for Sielecki 1.e4). Prompts are plain and
 short; no bold.
 

@@ -22,7 +22,7 @@ create table "user" (
 	"boardTheme" text default 'default' not null,
 	"borderType" text default 'black' not null,
 	"showCoordinates" boolean default true not null,
-	"animationDuration" integer default 300 not null,
+	"animationDuration" integer default 150 not null,
 	-- what the profile's stage-progression control shows: 'all'/'none' were
 	-- bulk-applied to every deck; touching one deck's own toggle puts this
 	-- back to 'per-deck' (decks keep their own flags either way)

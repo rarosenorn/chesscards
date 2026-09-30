@@ -14,7 +14,7 @@ const DEFAULT_BOARD_PREFS = {
 	boardTheme: "default",
 	borderType: "black",
 	showCoordinates: true,
-	animationDuration: 300
+	animationDuration: 150
 };
 
 // style fragment for the cm-chessboard constructor

@@ -46,7 +46,8 @@
 //
 // <side> = {
 //   "text": "paragraphs, blank-line separated. **bold** supported.
-//            lines starting with '1. ' become an ordered list.
+//            lines starting with '1. ' become an ordered list,
+//            lines starting with '- ' a bullet list.
 //            [moves] are wired to a board — see below.",
 //   "boards": [ <board>, ... ]           // optional
 // }
@@ -85,6 +86,8 @@
 //   "orientation": "w" | "b",            // optional, default "w"
 //   "solutionFrom": 1,                   // optional. moves[solutionFrom..] are
 //                                        // hidden until the card is turned.
+//   "openAt": 4,                         // optional ply the board opens at
+//                                        // (default: the start)
 //   "arrows":  { "0": [["info","c1","h6"]] },   // keyed by ply index
 //   "markers": { "0": [["success","e5"]] },
 //   "solutionArrows": { ... }, "solutionMarkers": { ... }   // shown on turn
@@ -188,12 +191,21 @@ const inline = (str, ctx) => {
 	return nodes.length > 0 ? nodes : [text("")]
 }
 
-// blank-line separated paragraphs; a run of "1. " lines becomes an orderedList
+// blank-line separated paragraphs; a run of "1. " lines becomes an
+// orderedList, a run of "- " lines a bulletList
 const textDoc = (str, ctx) => {
 	const content = []
 	for (const chunk of str.trim().split(/\n\s*\n/)) {
 		const lines = chunk.split("\n").map(l => l.trim()).filter(Boolean)
-		if (lines.length > 0 && lines.every(l => /^\d+\.\s+/.test(l))) {
+		if (lines.length > 0 && lines.every(l => /^-\s+/.test(l))) {
+			content.push({
+				type: "bulletList",
+				content: lines.map(l => ({
+					type: "listItem",
+					content: [paragraph(inline(l.replace(/^-\s+/, ""), ctx))]
+				}))
+			})
+		} else if (lines.length > 0 && lines.every(l => /^\d+\.\s+/.test(l))) {
 			content.push({
 				type: "orderedList",
 				content: lines.map(l => ({
@@ -240,7 +252,7 @@ const annotationLayer = (spec, board, label, kind) => {
 
 const buildBoard = (spec, label) => {
 	if (typeof spec === "string") spec = { fen: spec }
-	const { fen, moves = [], orientation = "w", solutionFrom = null } = spec
+	const { fen, moves = [], orientation = "w", solutionFrom = null, openAt = null } = spec
 
 	if (typeof fen !== "string" || !isValidFen(fen)) bad(`${label}: invalid FEN ${JSON.stringify(fen)}`)
 	if (!["w", "b"].includes(orientation)) bad(`${label}: orientation must be "w" or "b"`)
@@ -269,6 +281,9 @@ const buildBoard = (spec, label) => {
 			bad(`${label}: solutionFrom ${solutionFrom} hides nothing — the whole line is already visible`)
 	}
 
+	if (openAt != null && (!Number.isInteger(openAt) || openAt < 0 || openAt > moves.length))
+		bad(`${label}: openAt ${openAt} outside 0..${moves.length}`)
+
 	const built = { fen, moves, orientation }
 	const annotations = annotationLayer(spec, built, label, "annotation")
 	const solutionAnnotations = annotationLayer(
@@ -277,6 +292,7 @@ const buildBoard = (spec, label) => {
 	return {
 		fen, moves, annotations, orientation,
 		...(solutionFrom != null && { solutionFrom }),
+		...(openAt != null && { openAt }),
 		...(Object.keys(solutionAnnotations).length > 0 && { solutionAnnotations })
 	}
 }

@@ -1,0 +1,413 @@
+{
+  "deck": "My First Chess Opening Repetoire - Christof Sielecki",
+  "chapters": [
+    {
+      "name": "Three Knights 3...Bc5",
+      "cards": [
+        {
+          "id": "tk-first-moves",
+          "front": {
+            "text": "What are the first moves of the Three Knights Game?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0
+              }
+            ]
+          },
+          "back": "3.Nc3 develops the knight and defends e4. Black's best reply is 3...Nf6, entering the Four Knights Game."
+        },
+        {
+          "id": "tk-black-replies",
+          "front": {
+            "text": "What is Black's best reply to 3.Nc3, and which logical-looking alternative do we look at here?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3"
+                ],
+                "orientation": "w",
+                "openAt": 5,
+                "solutionArrows": {
+                  "5": [
+                    [
+                      "success",
+                      "g8",
+                      "f6"
+                    ],
+                    [
+                      "success",
+                      "f8",
+                      "c5"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "- 3...Nf6, entering the Four Knights Game. The most popular choice on all levels; masters play more or less only this, as they know the alternatives are inferior.\n- 3...Bc5?! develops the bishop and increases control over d4, so it looks logical, but it has a severe drawback. Your opponents will often choose it."
+        },
+        {
+          "id": "tk-bc5-nxe5",
+          "front": {
+            "text": "What is your move after 3...Bc5?! and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5"
+                ],
+                "orientation": "w",
+                "openAt": 6,
+                "arrows": {
+                  "6": [
+                    [
+                      "success",
+                      "f8",
+                      "c5"
+                    ]
+                  ]
+                },
+                "solutionArrows": {
+                  "6": [
+                    [
+                      "success",
+                      "f3",
+                      "e5"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "4.Nxe5! We can take the central pawn, based on the idea [4.Nxe5 Nxe5 5.d4], when the pawn forks bishop and knight and regains the piece. Our knight 'sacrifice' is not a real sacrifice but a trade based on a tactic."
+        },
+        {
+          "id": "tk-nxe5-replies",
+          "front": {
+            "text": "What are Black's options after 4.Nxe5! and how do they turn out?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5"
+                ],
+                "orientation": "w",
+                "openAt": 7,
+                "solutionArrows": {
+                  "7": [
+                    [
+                      "success",
+                      "c6",
+                      "e5"
+                    ],
+                    [
+                      "success",
+                      "c5",
+                      "f2"
+                    ],
+                    [
+                      "success",
+                      "g8",
+                      "f6"
+                    ],
+                    [
+                      "success",
+                      "d8",
+                      "h4"
+                    ],
+                    [
+                      "success",
+                      "d8",
+                      "f6"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "- [4...Nxe5 5.d4] is the most common. We restore material equality and gain some advantage, but there are a few traps to avoid.\n- 4...Bxf2+?! is dubious but leads to fun complications. Black returns the piece and thus avoids the fork trick.\n- [4...Nf6 5.Nxc6 dxc6 6.h3]: White is much better, as Black has no compensation for the pawn.\n- [4...Qh4 5.g3] or [4...Qf6 5.Ng4] are easily defused attempts at a Scholar's Mate."
+        },
+        {
+          "id": "tk-bxf2-next3",
+          "front": {
+            "text": "What are the next 3 plies following 4...Bxf2+?!",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4"
+                ],
+                "orientation": "w",
+                "openAt": 8,
+                "solutionFrom": 8,
+                "arrows": {
+                  "8": [
+                    [
+                      "success",
+                      "c5",
+                      "f2"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "- 5.Kxf2 We have to take the bishop, no choice.\n- 5...Nxe5 Black restores material equality. They can't play [5...Qh4+ 6.g3] or [5...Qf6+ 6.Nf3], when we keep the extra piece.\n- 6.d4 Completes our dream pawn center and hits Black's knight, winning time."
+        },
+        {
+          "id": "tk-d4-eval-replies",
+          "front": {
+            "text": "After 6.d4, what are White's pluses and problem, and what are Black's 2 most common responses?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4"
+                ],
+                "orientation": "w",
+                "openAt": 11,
+                "solutionArrows": {
+                  "11": [
+                    [
+                      "success",
+                      "d8",
+                      "f6"
+                    ],
+                    [
+                      "success",
+                      "e5",
+                      "g6"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "We have an excellent pawn center and the pair of bishops, two significant pluses. The problem: our king had to move and looks vulnerable on f2, so we must be careful until it is on a safer spot.\n\n- 6...Qf6+? is Black's most popular choice, but it is a mistake that only helps us.\n- 6...Ng6 is Black's relatively best choice."
+        },
+        {
+          "id": "tk-ng6-be2",
+          "front": {
+            "text": "What is your move after 6...Ng6 and why? Which bishop move is less precise?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Ng6"
+                ],
+                "orientation": "w",
+                "openAt": 12,
+                "arrows": {
+                  "12": [
+                    [
+                      "success",
+                      "e5",
+                      "g6"
+                    ]
+                  ]
+                },
+                "solutionArrows": {
+                  "12": [
+                    [
+                      "success",
+                      "f1",
+                      "e2"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "7.Be2 We must get our king to safety and develop the kingside, so we 'castle by hand': we can't play O-O anymore, but Be2, Rf1 and Kg1 reach the same setup. [7.Bc4] has a similar idea.\n\n[7.Bd3 Qf6+] is less precise, as our d-pawn is hanging."
+        },
+        {
+          "id": "tk-d6-next3",
+          "front": {
+            "text": "What are the next 3 plies following 7...d6?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Ng6",
+                  "Be2",
+                  "d6",
+                  "Rf1",
+                  "Nf6",
+                  "Kg1"
+                ],
+                "orientation": "w",
+                "openAt": 14,
+                "solutionFrom": 14,
+                "arrows": {
+                  "14": [
+                    [
+                      "success",
+                      "d7",
+                      "d6"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "- 8.Rf1 Continuing to castle by hand.\n- 8...Nf6 Black develops.\n- 9.Kg1 Our 'castling by hand' is complete and the king is safe."
+        },
+        {
+          "id": "tk-kg1-threat",
+          "front": {
+            "text": "After 9.Kg1, what do you threaten, and what happens if Black castles?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Ng6",
+                  "Be2",
+                  "d6",
+                  "Rf1",
+                  "Nf6",
+                  "Kg1",
+                  "O-O",
+                  "Bg5"
+                ],
+                "orientation": "w",
+                "openAt": 17,
+                "solutionFrom": 17,
+                "solutionArrows": {
+                  "17": [
+                    [
+                      "success",
+                      "c1",
+                      "g5"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "We threaten Bg5 with an annoying pin. After 9...O-O? 10.Bg5, we threaten to destroy Black's kingside by taking on f6, with Nd5 being an additional problem."
+        },
+        {
+          "id": "tk-h6-plan",
+          "front": {
+            "text": "After 9...h6, what is your plan?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Ng6",
+                  "Be2",
+                  "d6",
+                  "Rf1",
+                  "Nf6",
+                  "Kg1",
+                  "h6"
+                ],
+                "orientation": "w",
+                "openAt": 18,
+                "arrows": {
+                  "18": [
+                    [
+                      "success",
+                      "h7",
+                      "h6"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "Black probably needs 9...h6 to stop the pin, but we are in great shape. Bring the queen to the kingside with Qe1-g3, later play Be3, and increase the pressure on the f-file by doubling rooks."
+        }
+      ]
+    }
+  ]
+}

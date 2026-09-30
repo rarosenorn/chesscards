@@ -1,0 +1,15 @@
+{
+  "deck": "My First Chess Opening Repetoire - Christof Sielecki",
+  "cards": {
+    "tk-first-moves": "c11b48fa-4ef4-4845-b9aa-9523fa4a04f7",
+    "tk-black-replies": "250e5537-a851-4851-88dc-ea8ee7b5b566",
+    "tk-bc5-nxe5": "dddb1972-8697-455d-8535-d315ef87535e",
+    "tk-nxe5-replies": "e821e1cc-b01c-4e0b-a90d-2a8462ce9145",
+    "tk-bxf2-next3": "d6c067e5-53d7-43fe-9e00-3f3ce52c8d0d",
+    "tk-d4-eval-replies": "8839eac9-e5b7-4e88-b9c1-bf510a4fcd70",
+    "tk-ng6-be2": "9908ed07-a233-4b77-8dde-39017456f26a",
+    "tk-d6-next3": "01aafc6b-5330-4f5e-8a4c-323127094d2f",
+    "tk-kg1-threat": "a6563975-ef29-48a5-878a-8c1552f479bf",
+    "tk-h6-plan": "9c7d986f-6189-4166-a2a1-c3aa25b6759c"
+  }
+}

@@ -87,8 +87,12 @@ describe("moves that follow the board's own line", () => {
 		.filter(node => node.text.trim());
 
 	it("are written as prose: the board plays them, and its move line names them", () => {
-		expect(nodes.slice(0, 3).map(node => [node.text, !!node.marks]))
-			.toEqual([["1.e4", false], ["e5", false], ["2.Nf3", false]]);
+		expect(nodes.slice(0, 2).map(node => [node.text, !!node.marks]))
+			.toEqual([["1.e4", false], ["e5", false]]);
+	});
+
+	it("except the last, which reaches the branch: the aside's ply 0", () => {
+		expect(nodes[2].marks[0].attrs).toEqual({ board: 1, from: 3, moves: "Nc6 Bb5", at: 0 });
 	});
 
 	it("and only what leaves the line is a move you can play", () => {

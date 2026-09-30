@@ -58,7 +58,7 @@
               }
             ]
           },
-          "back": "- 3...Nf6, entering the Four Knights Game. The most popular choice on all levels; masters play more or less only this, as they know the alternatives are inferior.\n- 3...Bc5?! develops the bishop and increases control over d4, so it looks logical, but it has a severe drawback. Your opponents will often choose it."
+          "back": "- [3.Nc3 Nf6], entering the Four Knights Game. The most popular choice on all levels; masters play more or less only this, as they know the alternatives are inferior.\n- [3.Nc3 Bc5]?! develops the bishop and increases control over d4, so it looks logical, but it has a severe drawback. Your opponents will often choose it."
         },
         {
           "id": "tk-bc5-nxe5",
@@ -154,7 +154,7 @@
               }
             ]
           },
-          "back": "- [4...Nxe5 5.d4] is the most common. We restore material equality and gain some advantage, but there are a few traps to avoid.\n- 4...Bxf2+?! is dubious but leads to fun complications. Black returns the piece and thus avoids the fork trick.\n- [4...Nf6 5.Nxc6 dxc6 6.h3]: White is much better, as Black has no compensation for the pawn.\n- [4...Qh4 5.g3] or [4...Qf6 5.Ng4] are easily defused attempts at a Scholar's Mate."
+          "back": "- [4.Nxe5 Nxe5 5.d4] is the most common. We restore material equality and gain some advantage, but there are a few traps to avoid.\n- [4.Nxe5 Bxf2+]?! is dubious but leads to fun complications. Black returns the piece and thus avoids the fork trick.\n- [4.Nxe5 Nf6 5.Nxc6 dxc6 6.h3]: White is much better, as Black has no compensation for the pawn.\n- [4.Nxe5 Qh4 5.g3] or [4.Nxe5 Qf6 5.Ng4] are easily defused attempts at a Scholar's Mate."
         },
         {
           "id": "tk-qh4",
@@ -355,7 +355,7 @@
               }
             ]
           },
-          "back": "- [5...Qh4+ 6.g3] the pawn blocks the check and hits the queen.\n- [5...Qf6+ 6.Nf3] the knight blocks the check and escapes.\n\nEither way we keep the extra piece."
+          "back": "- [5.Kxf2 Qh4+ 6.g3] the pawn blocks the check and hits the queen.\n- [5.Kxf2 Qf6+ 6.Nf3] the knight blocks the check and escapes.\n\nEither way we keep the extra piece."
         },
         {
           "id": "tk-d4-eval-replies",
@@ -396,7 +396,7 @@
               }
             ]
           },
-          "back": "We have an excellent pawn center and the pair of bishops, two significant pluses. The problem: our king had to move and looks vulnerable on f2, so we must be careful until it is on a safer spot.\n\n- 6...Qf6+? is Black's most popular choice, but it is a mistake that only helps us.\n- 6...Ng6 is Black's relatively best choice."
+          "back": "We have an excellent pawn center and the pair of bishops, two significant pluses. The problem: our king had to move and looks vulnerable on f2, so we must be careful until it is on a safer spot.\n\n- [6.d4 Qf6+]? is Black's most popular choice, but it is a mistake that only helps us.\n- [6.d4 Ng6] is Black's relatively best choice."
         },
         {
           "id": "tk-ng6-be2",
@@ -444,7 +444,7 @@
               }
             ]
           },
-          "back": "7.Be2 We must get our king to safety and develop the kingside, so we 'castle by hand': we can't play O-O anymore, but Be2, Rf1 and Kg1 reach the same setup. [7.Bc4] has a similar idea.\n\n[7.Bd3 Qf6+] is less precise, as our d-pawn is hanging."
+          "back": "7.Be2 We must get our king to safety and develop the kingside, so we 'castle by hand': we can't play O-O anymore, but Be2, Rf1 and Kg1 reach the same setup. [6...Ng6 7.Bc4] has a similar idea.\n\n[6...Ng6 7.Bd3 Qf6+] is less precise, as our d-pawn is hanging."
         },
         {
           "id": "tk-d6-next3",

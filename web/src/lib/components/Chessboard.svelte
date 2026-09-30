@@ -104,8 +104,10 @@
 			asidePly = null;
 			return;
 		}
-		following = { from, moves };
-		asidePly = Math.min(Math.max(at, 1), moves.length);
+		const key = moves.join(" ");
+		const lead = at === 0 || !!lines?.().find(l => l.from === from && l.moves.join(" ") === key)?.lead;
+		following = { from, moves, lead };
+		asidePly = Math.min(Math.max(at, lead ? 0 : 1), moves.length);
 	}
 	// the click arrives as a prop, so only the click is a dependency: the
 	// request is answered once, not again when the board re-renders around it
@@ -287,22 +289,26 @@
 		currentIndex = index;
 	}
 	// the same two, inside an aside. Its ply 0 is the position it branched
-	// at, still inside it: the arrows keep to the line the text wrote, and
-	// Shift+arrows (stepLine) are what move between it and the board's own.
+	// at, still inside it — but only where the text writes the move reaching
+	// it (`following.lead`); otherwise the first move is as far back as it
+	// goes, so the board never stands where the text shows nothing. The
+	// arrows keep to the line the text wrote, and Shift+arrows (stepLine) are
+	// what move between it and the board's own.
+	let asideStart = $derived(following?.lead ? 0 : 1);
 	const stepAside = ply => {
 		playMoveSound(asideMoves[ply > asidePly ? ply - 1 : asidePly - 1]?.san);
 		stepping = true;
 		asidePly = ply;
 	}
 	// An aside is a dead end both ways: its last move is the last thing the
-	// text claimed, and its first stands on the position it was written from.
-	let atLineStart = $derived(asidePly != null ? asidePly === 0 : displayIndex === 0);
+	// text claimed, and its start is the first thing it shows.
+	let atLineStart = $derived(asidePly != null ? asidePly <= asideStart : displayIndex === 0);
 	let atLineEnd = $derived(
 		asidePly != null ? asidePly >= asideMoves.length : displayIndex === positions.length - 1
 	);
 	const previous = () => {
 		if (asidePly != null) {
-			if (asidePly > 0) stepAside(asidePly - 1);
+			if (asidePly > asideStart) stepAside(asidePly - 1);
 			return;
 		}
 		if (displayIndex > 0) goTo(displayIndex - 1);
@@ -316,7 +322,7 @@
 	}
 	// Up/Down: either end of whichever line the board is on
 	const jumpToEnd = end => {
-		if (asidePly != null) asidePly = end ? asideMoves.length : 0;
+		if (asidePly != null) asidePly = end ? asideMoves.length : asideStart;
 		else jumpTo(end ? positions.length - 1 : 0);
 	}
 

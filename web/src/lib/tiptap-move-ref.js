@@ -72,17 +72,24 @@ export const markMoveRefs = (root, boards) => {
 }
 
 // The lines the text writes off a board's own line, once each and in reading
-// order — what Shift+arrows step between. A reference to a move of the line
+// order — what Shift+arrows step between. `lead`: the text writes the move
+// before the branch too, so the line can be stepped back to its ply 0. A reference to a move of the line
 // itself is not one: the line is already stepped with the plain arrows.
 export const moveRefLines = (root, board) => {
 	const lines = [];
-	const seen = new Set();
+	const seen = new Map();
 	for (const token of root?.querySelectorAll(`[data-move-ref="${board}"]`) ?? []) {
 		const moves = token.dataset.moves ?? "";
+		if (!moves) continue;
 		const key = `${token.dataset.from} ${moves}`;
-		if (!moves || seen.has(key)) continue;
-		seen.add(key);
-		lines.push({ from: Number(token.dataset.from) || 0, moves: moves.split(" ") });
+		const lead = token.dataset.at === "0";
+		if (seen.has(key)) {
+			if (lead) seen.get(key).lead = true;
+			continue;
+		}
+		const entry = { from: Number(token.dataset.from) || 0, moves: moves.split(" "), lead };
+		seen.set(key, entry);
+		lines.push(entry);
 	}
 	return lines;
 }
@@ -138,7 +145,10 @@ export const parseAside = (fen, text) => {
 // follow it, they ARE it: the board already plays them and its move line
 // already names them, so they are written as ordinary prose — nothing to
 // click, nothing to go to. The aside starts where the two part company, and
-// only that part becomes moves you can play.
+// only that part becomes moves you can play — plus the last shared move, the
+// one reaching the position it branches at: that is the aside's ply 0, and
+// stepping back to it has to show where the board stands, as the move line
+// does for the board's own moves.
 //
 // `hidden` counts moves the aside must be played through but that the text
 // does not write out: prose says "after 7...b6 8.Nc3" about a position the
@@ -153,7 +163,7 @@ export const moveRefContent = ({ board, from, moves, infos, line = [], hidden = 
 		{
 			type: "text",
 			text: moveLabel(info, i - hidden),
-			...(i < shared ? {} : {
+			...(i < shared - 1 || (i === shared - 1 && !branch) ? {} : {
 				marks: [{
 					type: "moveRef",
 					attrs: { board, from: from + shared, moves: branch, at: i - shared + 1 }

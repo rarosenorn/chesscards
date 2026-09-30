@@ -286,30 +286,23 @@
 		asidePly = null;
 		currentIndex = index;
 	}
-	// the same two, inside an aside. Leaving it backwards is a step like any
-	// other — the move being unmade is the aside's first — and it lands on the
-	// ply the aside branched at, where the board's own line carries on.
+	// the same two, inside an aside. Its ply 0 is the position it branched
+	// at, still inside it: the arrows keep to the line the text wrote, and
+	// Shift+arrows (stepLine) are what move between it and the board's own.
 	const stepAside = ply => {
 		playMoveSound(asideMoves[ply > asidePly ? ply - 1 : asidePly - 1]?.san);
 		stepping = true;
 		asidePly = ply;
 	}
-	const leaveAside = () => {
-		playMoveSound(asideMoves[0]?.san);
-		stepping = true;
-		asidePly = null;
-	}
-	// An aside is a dead end forwards: its last move is the last thing the text
-	// claimed, and running on into the line's own continuation would be a
-	// different game. Backwards it rejoins the line it left.
-	let atLineStart = $derived(asidePly == null && displayIndex === 0);
+	// An aside is a dead end both ways: its last move is the last thing the
+	// text claimed, and its first stands on the position it was written from.
+	let atLineStart = $derived(asidePly != null ? asidePly === 0 : displayIndex === 0);
 	let atLineEnd = $derived(
 		asidePly != null ? asidePly >= asideMoves.length : displayIndex === positions.length - 1
 	);
 	const previous = () => {
 		if (asidePly != null) {
-			if (asidePly > 1) stepAside(asidePly - 1);
-			else leaveAside();
+			if (asidePly > 0) stepAside(asidePly - 1);
 			return;
 		}
 		if (displayIndex > 0) goTo(displayIndex - 1);
@@ -320,6 +313,11 @@
 			return;
 		}
 		if (displayIndex < positions.length - 1) goTo(displayIndex + 1);
+	}
+	// Up/Down: either end of whichever line the board is on
+	const jumpToEnd = end => {
+		if (asidePly != null) asidePly = end ? asideMoves.length : 0;
+		else jumpTo(end ? positions.length - 1 : 0);
 	}
 
 	let wrapperElement = $state();
@@ -530,10 +528,10 @@
 			// lichess's jump to either end of the line: both are jumps, not
 			// steps, so neither is sounded or animated
 			e.preventDefault();
-			jumpTo(0);
+			jumpToEnd(false);
 		} else if (e.key === "ArrowDown") {
 			e.preventDefault();
-			jumpTo(positions.length - 1);
+			jumpToEnd(true);
 		}
 	}
 </script>

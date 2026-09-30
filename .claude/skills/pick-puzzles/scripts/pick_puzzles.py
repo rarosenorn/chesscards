@@ -28,7 +28,7 @@ BRACKETS = [
     ("Hard", "Rating >= 1950 AND Rating < 2100", 2 + 2),
     ("Very hard", "Rating >= 2100 AND Rating < 2300", 2 + 2),
 ]
-CANDIDATES = 60        # rows pulled per bracket to have replacements for rejects
+CANDIDATES = 200       # rows pulled per bracket to have replacements for rejects
 MATE_NODES = 400_000   # search budget per puzzle; a mate in 4 needs ~250k
 
 
@@ -85,24 +85,72 @@ def _all_replies_mated(board, n, budget, memo):
     return True
 
 
+# --- the mating picture, per theme ----------------------------------------
+#
+# The Lichess tag says the mate LOOKS like the pattern; it does not say the
+# pattern is pure. A theme listed here is checked position by position, so a
+# card only teaches the constellation it is named after.
+
+def _hook_mate(board):
+    """Rook checking from beside the king, defended by a knight with a pawn
+    behind it, and the king shut in by exactly one of his own pawns."""
+    loser, winner = board.turn, not board.turn
+    king = board.king(loser)
+    checkers = list(board.checkers())
+    rook = next((s for s in checkers if board.piece_type_at(s) == chess.ROOK
+                 and chess.square_distance(s, king) == 1), None)
+    if len(checkers) != 1 or rook is None:
+        return "no lone rook checking from beside the king"
+    knights = [s for s in board.attackers(winner, rook)
+               if board.piece_type_at(s) == chess.KNIGHT]
+    if not knights:
+        return "the mating rook is not defended by a knight"
+    if not any(board.piece_type_at(d) == chess.PAWN
+               for n in knights for d in board.attackers(winner, n)):
+        return "the defending knight has no pawn behind it"
+    neighbours = [s for s in chess.SQUARES if chess.square_distance(s, king) == 1]
+    own = sorted(board.piece_type_at(s) for s in neighbours if board.color_at(s) == loser)
+    if own != [chess.PAWN]:
+        blocking = ", ".join(chess.piece_name(t) for t in own) or "nothing"
+        return f"the king is hemmed in by {blocking}, not by a single pawn"
+    # the king's remaining flights, seen through his own square — the rook
+    # covers the rank/file he would step along
+    bare = board.copy(stack=False)
+    bare.remove_piece_at(king)
+    guards = {bare.piece_type_at(a) for s in neighbours if bare.color_at(s) != loser
+              for a in bare.attackers(winner, s)}
+    extra = guards - {chess.ROOK, chess.KNIGHT, chess.PAWN}
+    if extra:
+        helpers = ", ".join(sorted(chess.piece_name(t) for t in extra))
+        return f"the net also needs {helpers}"
+    return None
+
+
+PURE = {"hookMate": _hook_mate}
+
+
 def _picture(board):
     """The mating picture: where the mated king stands, and what mates it."""
     return (chess.square_name(board.king(board.turn)),
             tuple(sorted(board.piece_type_at(s) for s in board.checkers())))
 
 
-def _pictures(board, n, budget, memo, out):
+def _pictures(board, n, budget, memo, out, impure, pure=None):
     """Every mating picture reachable in the forced-mate tree, over all defenses."""
     for mv in _mating_moves(board, n, budget, memo):
         board.push(mv)
         try:
             if board.is_checkmate():
                 out.add(_picture(board))
+                if pure:
+                    why = pure(board)
+                    if why:
+                        impure.add(why)
             else:
                 for defense in board.legal_moves:
                     board.push(defense)
                     try:
-                        _pictures(board, n - 1, budget, memo, out)
+                        _pictures(board, n - 1, budget, memo, out, impure, pure)
                     finally:
                         board.pop()
         finally:
@@ -128,14 +176,17 @@ def sole_solution(board, solution):
 
         # the defense is free to vary, but every defense must run into the same
         # mating picture — otherwise the card teaches a pattern it doesn't always reach
-        pictures = set()
-        _pictures(front, (len(solution) + 1) // 2, budget, memo, pictures)
+        pictures, impure = set(), set()
+        _pictures(front, (len(solution) + 1) // 2, budget, memo, pictures,
+                  impure, PURE.get(THEME))
     except OverBudget:
         return False, f"mate search too deep (over {MATE_NODES} nodes)"
     if len(pictures) > 1:
         shown = "; ".join(f"K{sq} by {'/'.join(chess.piece_name(t) for t in ts)}"
                           for sq, ts in sorted(pictures))
         return False, f"{len(pictures)} different mates depending on the defense ({shown})"
+    if impure:
+        return False, f"not a pure {THEME}: {'; '.join(sorted(impure))}"
     return True, ""
 
 
@@ -163,6 +214,17 @@ def render(row, bracket):
     board = chess.Board(row["FEN"])
     line = [chess.Move.from_uci(m) for m in row["Moves"].split()]
     board.push(line[0])                   # opponent's setup move
+    # the recorded mate is checked first: an impure one costs nothing to spot,
+    # and the exhaustive search below is what is expensive
+    pure = PURE.get(THEME)
+    if pure:
+        end = board.copy()
+        for mv in line[1:]:
+            end.push(mv)
+        why = pure(end)
+        if why:
+            print(f"reject {row['PuzzleId']}: not a pure {THEME}: {why}", file=sys.stderr)
+            return None
     ok, why = sole_solution(board, line[1:])
     if not ok:
         print(f"reject {row['PuzzleId']}: {why}", file=sys.stderr)

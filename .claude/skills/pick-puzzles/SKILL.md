@@ -37,7 +37,17 @@ teach the wrong thing — e.g. `Ne7+` where the king may go to h7 *or* h8 and bo
 by `Qh3#`: with the king on h8 the net is no longer Anastasia's. Two pictures, rejected.
 
 This checks that the mate is *consistent*, not that it is the named pattern; that part
-still rides on the Lichess theme tag.
+rides on the Lichess theme tag, except for the themes below.
+
+**The pure constellation, for the themes that have one.** A Lichess tag says the mate
+*looks* like the pattern, not that the pattern is pure — hook mates tagged `hookMate`
+routinely have the king walled in by two pawns and a rook, or a bishop helping cover the
+flights. `PURE` in the script holds a predicate per theme, checked at every leaf of the
+forced-mate tree. So far only `hookMate` has one: a lone rook checking from beside the
+king, defended by a knight with a pawn behind it, the king hemmed in by exactly one of his
+own pawns, and every remaining flight covered by nothing but that rook, knight and pawn.
+It is checked against the recorded mate first, which is cheap, before the exhaustive
+search runs.
 
 **Ten puzzles, four brackets — plus two spare each.** The counts below are what the deck
 needs; the script picks two extra per bracket (18 rows) so the spares can be thrown out by

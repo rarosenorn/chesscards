@@ -88,7 +88,8 @@ alternatives, refutations, "can't play X". Put those side lines in brackets so
 they play on the board: `[4...Nf6 5.Nxc6 dxc6 6.h3]`, `[7.Bd3 Qf6+]` (syntax
 in `web/scripts/import-deck.mjs`). Every bracketed line **starts with the board-line
 move it branches from** — `[4.Nxe5 Nf6 5.Nxc6 dxc6 6.h3]`, `[6...Ng6 7.Bc4]` —
-so stepping back through it ends on a move the text shows. On a branch card
+so a line opens (Shift+arrows) and ends stepping back on that move, shown and
+marked in the text, one before the line's first new move. On a branch card
 **every candidate is a bracketed line**, even a single move (`[4.Nxe5
 Bxf2+]?!`), so Shift+arrows step through them all. Annotation marks go after
 the bracket when they belong to its last move; inside a bracket they are

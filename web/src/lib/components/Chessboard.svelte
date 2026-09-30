@@ -495,7 +495,8 @@
 	}
 
 	// Shift+arrows walk the text's lines as one more line each: the next (or
-	// previous) one opens at its first move, and past either end the board is
+	// previous) one opens at its start — the lead-in move where the text writes one, so
+	// Right plays its first new move — and past either end the board is
 	// back on its own line, at the ply it stood on when it left. Jumps, like a
 	// click on the text, so unsounded.
 	let lineReturn = null;
@@ -515,7 +516,7 @@
 			currentIndex = lineReturn ?? displayIndex;
 			return;
 		}
-		followAside({ ...all[target], at: 1 });
+		followAside({ ...all[target], at: all[target].lead ? 0 : 1 });
 	}
 
 	// only reached outside an editor (inEditor boards take no focus, so the

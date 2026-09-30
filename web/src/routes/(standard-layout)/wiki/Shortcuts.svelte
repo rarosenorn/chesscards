@@ -4,6 +4,7 @@
 </p>
 
 <h3>Studying</h3>
+<p>The arrow keys work on the board you last clicked, or whose move you clicked in the text. They work the same in the Browse preview.</p>
 <table>
 	<tbody>
 		<tr><td><kbd>Space</kbd></td><td>Show the answer; once shown, grade Good (Correct on a tactic)</td></tr>
@@ -12,15 +13,8 @@
 		<tr><td><kbd>E</kbd></td><td>Edit the card</td></tr>
 		<tr><td><kbd>Delete</kbd></td><td>Delete the card</td></tr>
 		<tr><td><kbd>Z</kbd></td><td>Zen mode on and off (<kbd>Esc</kbd> also leaves it)</td></tr>
-	</tbody>
-</table>
-
-<h3>Boards</h3>
-<p>A board with moves takes these once it has focus — click it, or a move in the card's text.</p>
-<table>
-	<tbody>
-		<tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Step back and forward through the moves</td></tr>
-		<tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Jump to the start or the end of the line</td></tr>
+		<tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Step back and forward through a board's moves</td></tr>
+		<tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Jump to the start or the end of the board's line</td></tr>
 		<tr><td><kbd>Shift</kbd> + <kbd>←</kbd> <kbd>→</kbd></td><td>Previous or next line written in the card's text; past either end, back to the board's own line</td></tr>
 	</tbody>
 </table>

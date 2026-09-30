@@ -1,31 +1,32 @@
 # Chess education and improvement tools
 
-What exists, and the concept behind each. Compiled 2026-09-30 from web search
+What exists, and the concept behind each. Within each group, most popular
+first — estimated, not measured. Compiled 2026-09-30 from web search
 and general knowledge; descriptions are the tools' own pitch, not tested.
 
 ## Your own mistakes → training (closest to our idea)
 
-- **Blunder Tutor** (blundertutor.com) — imports your Lichess/Chess.com games,
-  finds your blunders with Stockfish, explains them, and drills each as a
-  puzzle until the right move is reflex. Free, open source, self-hosted.
-  *Closest to our game-mistakes idea.*
-- **chess_trainer** (github.com/fernandops21/chess_trainer) — local-first: your
-  games become spaced-repetition puzzles with the engine's refutation; can ask
-  an LLM to explain the mistake. Also studies with a book mode.
-- **PatternChess** (patternchess.com) — trains the blunders from your games on a
-  spaced-repetition ladder; each returns every 56 days once learned.
-- **CheckMyMate** — drills the moves you miss most often in your Lichess games,
-  as bite-sized puzzles.
+- **Chess.com Game Review** — move classifications plus a coach's plain-language
+  comments; "retry mistakes" once.
+- **Lichess "Learn from your mistakes"** — after computer analysis, replays
+  your mistakes for you to find the better move. One-off, no repetition.
+- **Aimchess** — analyses your games into skill ratings (tactics, endgames,
+  time management…) and serves training drawn from your own games.
 - **Chessy** (chessyapp.com) — AI coach connected to your Lichess/Chess.com
   account; puzzles from your own mistakes, coaching reports, skill breakdown.
 - **Chess DNA** (chessdna.app) — engine-analyses your games, classifies mistakes
   into patterns, builds a personalised practice plan.
-- **Aimchess** — analyses your games into skill ratings (tactics, endgames,
-  time management…) and serves training drawn from your own games.
-- **Lichess "Learn from your mistakes"** — after computer analysis, replays
-  your mistakes for you to find the better move. One-off, no repetition.
-- **Chess.com Game Review** — move classifications plus a coach's plain-language
-  comments; "retry mistakes" once.
+- **PatternChess** (patternchess.com) — trains the blunders from your games on a
+  spaced-repetition ladder; each returns every 56 days once learned.
+- **Blunder Tutor** (blundertutor.com) — imports your Lichess/Chess.com games,
+  finds your blunders with Stockfish, explains them, and drills each as a
+  puzzle until the right move is reflex. Free, open source, self-hosted.
+  *Closest to our game-mistakes idea.*
+- **CheckMyMate** — drills the moves you miss most often in your Lichess games,
+  as bite-sized puzzles.
+- **chess_trainer** (github.com/fernandops21/chess_trainer) — local-first: your
+  games become spaced-repetition puzzles with the engine's refutation; can ask
+  an LLM to explain the mistake. Also studies with a book mode.
 
 ## AI coaches and explainers
 
@@ -37,33 +38,33 @@ and general knowledge; descriptions are the tools' own pitch, not tested.
   with natural-language explanations, chat with the coach.
 - **Sensei Chess** — AI analysis of your Lichess/Chess.com games, patterns and
   personalised training.
+- **Chessigma** — AI coach that tracks your games and mistakes.
 - **Chessvia**, **ChessMind AI** — play against and talk to an AI coach that
   turns your recurring patterns into practice plans.
-- **Chessigma** — AI coach that tracks your games and mistakes.
 
 ## Opening repertoire (spaced repetition)
 
+- **Lichess opening explorer** — move statistics from master and online games,
+  by rating band.
 - **Chessable** — courses by titled authors; "MoveTrainer" drills every move of
   a line on spaced repetition. Book mode for the prose.
-- **Chessbook** — build your own repertoire, drill it with spaced repetition,
-  coverage tracking and gap detection from your games.
 - **ChessTempo opening trainer** — repertoire + spaced repetition, and shows
   where you left your repertoire in your own games.
+- **Chessbook** — build your own repertoire, drill it with spaced repetition,
+  coverage tracking and gap detection from your games.
 - **Listudy** — free spaced repetition for openings, endgames and tactics from
   studies/PGNs.
+- **ChessFlare** — repertoire training plus game review in one app.
 - **Chessdriller** — open-source Chessable-style repetition for your Lichess
   studies.
 - **Chessmate**, **Chessreps**, **Chess Position Trainer**, **Bookup**,
   **ChessHQ**, **Chessmadra** — further repertoire trainers in the same vein.
-- **ChessFlare** — repertoire training plus game review in one app.
-- **Lichess opening explorer** — move statistics from master and online games,
-  by rating band.
 
 ## Tactics and calculation
 
+- **Chess.com Puzzles / Puzzle Rush** — rated puzzles and timed runs.
 - **Lichess puzzles / Puzzle Storm / Streak** — millions of puzzles from real
   games, themed and rated. Free.
-- **Chess.com Puzzles / Puzzle Rush** — rated puzzles and timed runs.
 - **ChessTempo tactics** — large rated tactic database, with its own
   spaced-repetition mode for failed problems.
 - **Woodpecker Method** (book) — the same fixed set of tactics solved in
@@ -74,12 +75,12 @@ and general knowledge; descriptions are the tools' own pitch, not tested.
 
 - **Chess.com Lessons / Chessly (GothamChess) / ChessMood / Chessable** —
   video and interactive courses.
-- **Lichess Learn & Practice** — free basics and practice positions.
 - **Duolingo Chess** — gamified bite-size lessons for complete beginners.
-- **Magnus Trainer** — mini-lessons and games built around Carlsen's games.
-- **Chessiverse** — practice games against human-like bots.
+- **Lichess Learn & Practice** — free basics and practice positions.
 - **ChessBase / Lichess analysis board / Stockfish** — databases and engine
   analysis for self-study.
+- **Magnus Trainer** — mini-lessons and games built around Carlsen's games.
+- **Chessiverse** — practice games against human-like bots.
 
 ## Flashcards in general
 

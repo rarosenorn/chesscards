@@ -73,7 +73,10 @@
                   "Nf3",
                   "Nc6",
                   "Nc3",
-                  "Bc5"
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4"
                 ],
                 "orientation": "w",
                 "openAt": 6,
@@ -94,11 +97,12 @@
                       "e5"
                     ]
                   ]
-                }
+                },
+                "solutionFrom": 6
               }
             ]
           },
-          "back": "4.Nxe5! We can take the central pawn, based on the idea [4.Nxe5 Nxe5 5.d4], when the pawn forks bishop and knight and regains the piece. Our knight 'sacrifice' is not a real sacrifice but a trade based on a tactic."
+          "back": "4.Nxe5! We can take the central pawn, based on the idea 4...Nxe5 5.d4, when the pawn forks bishop and knight and regains the piece. Our knight 'sacrifice' is not a real sacrifice but a trade based on a tactic."
         },
         {
           "id": "tk-nxe5-replies",
@@ -167,7 +171,8 @@
                   "Nc3",
                   "Bc5",
                   "Nxe5",
-                  "Qh4"
+                  "Qh4",
+                  "g3"
                 ],
                 "orientation": "w",
                 "openAt": 8,
@@ -188,7 +193,8 @@
                       "g3"
                     ]
                   ]
-                }
+                },
+                "solutionFrom": 8
               }
             ]
           },
@@ -209,7 +215,8 @@
                   "Nc3",
                   "Bc5",
                   "Nxe5",
-                  "Qf6"
+                  "Qf6",
+                  "Ng4"
                 ],
                 "orientation": "w",
                 "openAt": 8,
@@ -230,7 +237,8 @@
                       "g4"
                     ]
                   ]
-                }
+                },
+                "solutionFrom": 8
               }
             ]
           },
@@ -409,7 +417,8 @@
                   "Kxf2",
                   "Nxe5",
                   "d4",
-                  "Ng6"
+                  "Ng6",
+                  "Be2"
                 ],
                 "orientation": "w",
                 "openAt": 12,
@@ -430,7 +439,8 @@
                       "e2"
                     ]
                   ]
-                }
+                },
+                "solutionFrom": 12
               }
             ]
           },

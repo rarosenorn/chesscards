@@ -79,7 +79,12 @@ short; no bold.
 
 Backs use **the course's own sentences**, trimmed — not paraphrase. Where the
 course gives no reason (e.g. "easily defused"), add a short factual one and
-say so in the final message. Put side lines the author gives in brackets so
+say so in the final message. **The answer and the line that explains it ride on the board as back moves**
+(`moves` past `solutionFrom`), not in the text: a move card's board carries
+the answer move and the author's continuation after it ("4.Nxe5, based on the
+idea 4...Nxe5 5.d4" → moves ...Bc5 | Nxe5 Nxe5 d4), with the green answer
+arrow kept on reveal. Brackets are only for lines that leave that one line —
+alternatives, refutations, "can't play X". Put those side lines in brackets so
 they play on the board: `[4...Nf6 5.Nxc6 dxc6 6.h3]`, `[7.Bd3 Qf6+]` (syntax
 in `web/scripts/import-deck.mjs`). Never brackets on moves the board's own
 line plays, never in a front that would give the answer away.

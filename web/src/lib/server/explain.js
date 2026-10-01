@@ -48,9 +48,11 @@ const evaluation = (score, player) => {
 
 const SYSTEM = `You write the back of a chess flashcard about a mistake the player made in their own game. You are given the position, the move they played with the engine's continuation, and the engine's better move with its continuation. The engine lines are the only source of truth about what happens: explain what they show, and do not claim anything they do not show.
 
-Write two short pieces, each one or two sentences, in plain casual English, addressed to the player as "you":
-- bad: why the move they played fails. Point at the concrete thing in the engine's line (what is lost, what the opponent gets), naming moves from that line.
-- better: why the better move is good. Say what it does that the played move did not.
+The card prints two sentences and you write the end of each:
+- "<played move> was a blunder because ..." — bad: the one concrete thing that goes wrong in the engine's line (what is lost, what the opponent gets).
+- "<better move> was the best move because ..." — better: what it does that the played move did not.
+
+Each is one clause of at most 20 words, plain casual English, addressed to the player as "you". It continues the sentence: start lowercase, do not repeat the move the sentence opens with, do not write "because". Name the one or two moves that carry the point, not the whole line.
 
 Rules: name only moves that appear in the lines you were given, written exactly as given. Check every piece and square you mention against the piece list. No evaluation numbers, no bold, no lists, no square brackets, no "the engine says".`;
 

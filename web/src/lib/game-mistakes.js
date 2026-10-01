@@ -96,14 +96,25 @@ const numbered = move => {
 // things
 const plain = text => String(text ?? "").replace(/[\[\]*]/g, "").replace(/\s+/g, " ").trim()
 
+// a reason as the rest of "... because": no "because" of its own, no capital
+// to start it (a move's own letter aside), one full stop to end it
+const reason = text => {
+	const said = plain(text).replace(/^because\s+/i, "").replace(/[.\s]+$/, "")
+	// "Black", "White" and a move's own letter keep theirs
+	const keeps = /^(Black|White)\b/.test(said) || /^([KQRBN][a-h]?[1-8]?x?[a-h][1-8]|O-O)/.test(said)
+	return said && `${keeps ? said : said[0].toLowerCase() + said.slice(1)}.`
+}
+
 // The card for one mistake, as a spec for card-spec.js. The board carries the
 // game up to and including the move and opens with it already played, an
 // orange arrow (a move that was there to choose, as the wiki has the colours) from the square it left to the one it reached; what follows the move
 // is the back of the line, shown when the card is turned, along with a green
 // arrow for the better move. That one is a line of the text, written from
 // the board move it branches at.
-// `why` is { bad, better } prose, or absent. A missed mate needs no prose:
-// that it was missed is the whole reason, and the mate itself the answer.
+// The back is two bullets, "X was a blunder because ..." and "Y was the best
+// move because ...", the second ending in Y's line. `why` is { bad, better },
+// the two reasons, or absent. A missed mate needs none: that it was missed is
+// the whole reason, and the mate itself the answer.
 export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
 	const { ply, kind, move, better, followUp, missedMate } = mistake
 	const label = numbered(move)
@@ -123,11 +134,9 @@ export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
 				solutionArrows: { [ply + 1]: [["success", better[0].from, better[0].to]] }
 			}]
 		},
-		back: missedMate
-			? `- ${label} is ${a} ${kind} because it misses mate in ${missedMate}.\n- [${betterLine}]`
-			: [
-				`- ${plain(why?.bad) || label}`,
-				`- ${[`[${betterLine}]`, plain(why?.better)].filter(Boolean).join(" ")}`
-			].join("\n")
+		back: [
+			`- ${label} was ${a} ${kind}${missedMate ? ` because it misses mate in ${missedMate}.` : reason(why?.bad) ? ` because ${reason(why.bad)}` : "."}`,
+			`- ${numbered(better[0])} was the best move${missedMate ? ` because it ${missedMate === 1 ? "is" : "starts the"} mate:` : reason(why?.better) ? ` because ${reason(why.better)}` : ":"} [${betterLine}]`
+		].join("\n")
 	}
 }

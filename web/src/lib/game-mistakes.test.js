@@ -65,7 +65,10 @@ describe("a mistake's card", () => {
 		expect([board.openAt, board.solutionFrom, board.orientation]).toEqual([7, 7, "w"])
 		expect(board.arrows).toEqual({ 7: [["warning", "f3", "e5"]] })
 		expect(board.solutionArrows).toEqual({ 7: [["success", "f3", "d4"]] })
-		expect(spec.back).toBe("- It drops a piece.\n- [3...Nd4 Nxd4 exd4 c3] Take the knight.")
+		expect(spec.back).toBe("- 4.Nxe5 was a blunder because it drops a piece.\n- 4.Nxd4 was the best move because take the knight. [3...Nd4 Nxd4 exd4 c3]")
+
+		expect(mistakeCardSpec(game, mistake, { bad: "Black wins a piece", better: "Because Nxd4 is safe.." }).back)
+			.toBe("- 4.Nxe5 was a blunder because Black wins a piece.\n- 4.Nxd4 was the best move because Nxd4 is safe. [3...Nd4 Nxd4 exd4 c3]")
 
 		const problems = []
 		const card = cardBuilder(msg => problems.push(msg)).buildCard(spec, "card")
@@ -90,7 +93,7 @@ describe("the edges of a game", () => {
 		const [mistake] = findMistakes(game, evals, "w")
 		const spec = mistakeCardSpec(game, mistake)
 		expect(spec.front.boards[0].arrows).toEqual({ 1: [["warning", "f2", "f3"]] })
-		expect(spec.back).toBe("- 1.f3\n- [1.e4 e5]")
+		expect(spec.back).toBe("- 1.f3 was a blunder.\n- 1.e4 was the best move: [1.e4 e5]")
 		expect(built(spec)).toEqual([])
 	})
 
@@ -112,7 +115,7 @@ describe("the edges of a game", () => {
 		const [mistake] = findMistakes(game, evals, "b")
 		const spec = mistakeCardSpec(game, mistake)
 		expect(spec.front.text).toBe("Why was 30...Qb5 a blunder, and what is a better move?")
-		expect(spec.back).toBe("- 30...Qb5\n- [30...Qa6 Kd2]")
+		expect(spec.back).toBe("- 30...Qb5 was a blunder.\n- 30...Qa6 was the best move: [30...Qa6 Kd2]")
 		expect(built(spec)).toEqual([])
 	})
 
@@ -134,7 +137,7 @@ describe("the edges of a game", () => {
 		const [mistake] = findMistakes(game, evals, "b")
 		expect([mistake.kind, mistake.missedMate, mistake.better.map(m => m.san)]).toEqual(["blunder", 1, ["Qh4#"]])
 		const spec = mistakeCardSpec(game, mistake, { bad: "ignored", better: "ignored" })
-		expect(spec.back).toBe("- 2...Nc6 is a blunder because it misses mate in 1.\n- [2.g4 Qh4#]")
+		expect(spec.back).toBe("- 2...Nc6 was a blunder because it misses mate in 1.\n- 2...Qh4# was the best move because it is mate: [2.g4 Qh4#]")
 		expect(built(spec)).toEqual([])
 	})
 

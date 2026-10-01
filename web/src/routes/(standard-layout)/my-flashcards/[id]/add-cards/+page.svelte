@@ -433,7 +433,7 @@
 	</div>
 	{/if}
 	<!-- the other way to add cards: a game's mistakes, made into cards -->
-	<a class="std-btn from-game" href="/my-flashcards/{page.params.id}/add-cards/from-game">Import from a game</a>
+	<a class="std-btn from-game" href="/my-flashcards/{page.params.id}/add-cards/from-game">Import from game</a>
 </div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div

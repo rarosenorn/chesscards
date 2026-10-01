@@ -74,3 +74,57 @@ describe("a mistake's card", () => {
 		expect(marks.length).toBe(4)
 	})
 })
+
+describe("the edges of a game", () => {
+	const built = spec => {
+		const problems = []
+		cardBuilder(msg => problems.push(msg)).buildCard(spec, "card")
+		return problems
+	}
+
+	it("makes a card of the very first move, which has no move before it", () => {
+		const game = readGame("1. f3 e5 2. g4 Qh4#")
+		const evals = game.fens.map(() => ({ cp: 0, pv: [] }))
+		evals[0] = { cp: 30, pv: ["e2e4", "e7e5"] }
+		evals[1] = { cp: -150, pv: ["e7e5", "g2g4"] }
+		const [mistake] = findMistakes(game, evals, "w")
+		const spec = mistakeCardSpec(game, mistake)
+		expect(spec.front.boards[0].arrows).toBeUndefined()
+		expect(spec.back).toBe("- 1.f3\n- [1.e4 e5]")
+		expect(built(spec)).toEqual([])
+	})
+
+	it("does not judge the mating move, and judges the move that let mate in", () => {
+		const game = readGame("1. f3 e5 2. g4 Qh4#")
+		expect(game.finished).toBe(true)
+		const evals = [{ cp: 30, pv: ["e2e4"] }, { cp: -150, pv: ["e7e5"] }, { cp: -150, pv: ["d2d4", "e5d4"] }, { mate: -1, pv: ["d8h4"] }, null]
+		expect(findMistakes(game, evals, "b")).toEqual([])
+		const [mate] = findMistakes(game, evals, "w").filter(m => m.move.san === "g4")
+		expect(mate.kind).toBe("blunder")
+		const spec = mistakeCardSpec(game, mate)
+		expect(spec.front.boards[0].moves).toEqual(["f3", "e5", "g4", "Qh4#"])
+		expect(built(spec)).toEqual([])
+	})
+
+	it("takes a game that starts from a set-up position, Black to move", () => {
+		const game = readGame('[SetUp "1"]\n[FEN "4k3/8/8/8/8/8/4q3/R3K3 b Q - 0 30"]\n\n30... Qb5 31. Kd2 Qd5+')
+		const evals = [{ cp: -900, pv: ["e2a6", "e1d2"] }, { cp: 0, pv: ["e1d2"] }, { cp: 0, pv: ["b5d5"] }, { cp: 0, pv: [] }]
+		const [mistake] = findMistakes(game, evals, "b")
+		const spec = mistakeCardSpec(game, mistake)
+		expect(spec.front.text).toBe("Why was 30...Qb5 a blunder, and what is a better move?")
+		expect(spec.back).toBe("- 30...Qb5\n- [30...Qa6 Kd2]")
+		expect(built(spec)).toEqual([])
+	})
+
+	it("knows a promotion and a castle as the engine writes them", () => {
+		const game = readGame('[SetUp "1"]\n[FEN "8/4P1k1/8/8/8/8/8/4K2R w K - 0 1"]\n\n1. e8=Q Kf6 2. O-O+')
+		const evals = [{ cp: 900, pv: ["e7e8q"] }, { cp: 100, pv: ["g7f6"] }, { cp: 900, pv: ["e1g1"] }, { cp: 100, pv: [] }]
+		expect(findMistakes(game, evals, "w")).toEqual([])
+	})
+
+	it("leaves a move alone when the engine had nothing to say about it", () => {
+		const game = readGame("1. e4 e5 2. Nf3")
+		expect(findMistakes(game, [{ cp: 0, pv: ["d2d4"] }, null, { cp: -900, pv: [] }, null], "w")).toEqual([])
+	})
+})
+

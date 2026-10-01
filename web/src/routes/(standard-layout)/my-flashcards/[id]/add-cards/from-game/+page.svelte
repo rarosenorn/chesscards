@@ -1,9 +1,10 @@
 <script>
-	import { getContext, onMount, onDestroy } from "svelte"
+	import { getContext, onMount } from "svelte"
 	import { page } from "$app/state"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import { stageName } from "$lib/stages.js"
-	import { startImport, importStatus, saveChesscomUsername } from "./import.remote.js"
+	import { startImport, saveChesscomUsername } from "./import.remote.js"
+	import { current, follow, resume } from "./import-state.svelte.js"
 	import { deleteCards } from "../../browse/browse.remote.js"
 
 	let { data } = $props();
@@ -75,7 +76,10 @@
 		finally { loading = false; }
 	}
 
-	onMount(() => { if (username) loadGames(); });
+	onMount(() => {
+		resume(deck);
+		if (username) loadGames();
+	});
 
 	const DRAWS = ["agreed", "repetition", "stalemate", "insufficient", "50move", "timevsinsufficient"];
 	const rowOf = game => {
@@ -89,31 +93,15 @@
 		};
 	}
 
-	// The import under way, or the last one: { url, phase, done, total, ahead,
-	// result, error, undone }. It runs on the server whether or not this page
-	// stays to watch.
-	let job = $state(null);
-	let timer = null;
-	onDestroy(() => clearTimeout(timer));
+	// the import under way or the last one, when it is this deck's
+	let job = $derived(current.job?.deckId === deck.id ? current.job : null);
+	// a game that could not be started; the one already running is untouched
+	let startError = $state(null);
 
 	const messageOf = err => err?.body?.message ?? err?.message ?? "Something went wrong";
 
-	const follow = async (jobId, url) => {
-		try {
-			const status = await importStatus({ jobId, deckId: deck.id });
-			if (job?.url !== url) return;
-			const { deck: fresh, ...rest } = status;
-			job = { url, ...rest };
-			if (fresh) Object.assign(deck, fresh);
-			if (status.phase !== "done" && status.phase !== "failed") timer = setTimeout(() => follow(jobId, url), 1000);
-		} catch (err) {
-			if (job?.url === url) job = { url, phase: "failed", error: messageOf(err) };
-		}
-	}
-
 	const importGame = async game => {
-		clearTimeout(timer);
-		job = { url: game.url, phase: "queued", done: 0, total: 0, ahead: 0 };
+		startError = null;
 		try {
 			const { jobId } = await startImport({
 				deckId: deck.id,
@@ -122,17 +110,18 @@
 				color: rowOf(game).color,
 				kinds: KINDS.map(([kind]) => kind).filter(kind => kinds[kind])
 			});
-			follow(jobId, game.url);
+			follow(deck, jobId, game.url);
 		} catch (err) {
-			job = { url: game.url, phase: "failed", error: messageOf(err) };
+			startError = messageOf(err);
 		}
 	}
 
 	const undo = async () => {
 		const ids = job.result.cardIds;
-		await deleteCards({ cardIds: ids });
+		// cards already deleted by hand leave nothing to refuse
+		try { await deleteCards({ cardIds: ids }); } catch { /* none of them were left */ }
 		deck.cards = deck.cards.filter(card => !ids.includes(card.id));
-		job = { ...job, undone: true };
+		current.job = { ...current.job, undone: true };
 	}
 
 	const plural = (n, word, many = word + "s") => `${n} ${n === 1 ? word : many}`;
@@ -191,6 +180,12 @@
 			{/if}
 		</div>
 	</section>
+
+	{#if startError}
+	<section>
+		<p class="status status-failed">{startError}</p>
+	</section>
+	{/if}
 
 	{#if job}
 	<section>

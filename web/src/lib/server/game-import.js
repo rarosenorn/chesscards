@@ -87,9 +87,11 @@ const isActive = job => !["done", "failed"].includes(job.phase);
 // Returns the job's id. Throws an Error whose message is for the user.
 const start = async (userId, { deckId, stageId, pgn, color, kinds }) => {
 	if (!isInstalled()) throw new Error(`Stockfish is not installed on the server (${BINARY})`);
-	if (!await decks.userIdOwnsDeckId(userId, deckId)) throw new Error("Unauthorized");
+	const UUID = /^[0-9a-f-]{36}$/i;
+	if (!UUID.test(deckId ?? "") || !await decks.userIdOwnsDeckId(userId, deckId)) throw new Error("Unauthorized");
+	if (stageId && !UUID.test(stageId)) throw new Error("Unauthorized");
 	if (!["w", "b"].includes(color)) throw new Error("Which side did you play?");
-	const wanted = KINDS.filter(kind => kinds?.includes(kind));
+	const wanted = KINDS.filter(kind => Array.isArray(kinds) && kinds.includes(kind));
 	if (wanted.length === 0) throw new Error("Nothing to look for: pick blunders, mistakes or inaccuracies");
 	if (typeof pgn !== "string" || pgn.length > MAX_PGN) throw new Error("That is not a game");
 	let game;

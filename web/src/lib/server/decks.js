@@ -210,7 +210,8 @@ const addCard = async (userId, deckId, front, back, cardType, FSRSValues, stageI
 }
 
 // Several basic cards at once, in the order given, at the end of the named
-// stage (or of the deck's last one) — all of them or none.
+// stage — or of the deck's last one, when none is named or the named one has
+// gone since. All of them or none.
 const addCards = async (userId, deckId, stageId, cards, FSRSValues) => {
 	const client = await pool.connect();
 	try {
@@ -218,8 +219,8 @@ const addCards = async (userId, deckId, stageId, cards, FSRSValues) => {
 		const { rows: [stage] } = await client.query(`
 			select s.id, coalesce((select max(position) from cards where stage_id = s.id), 0) last
 			from stages s join decks d on d.id = s.deck_id
-			where d.user_id = $1 and s.deck_id = $2 and ($3::uuid is null or s.id = $3)
-			order by s.position desc limit 1
+			where d.user_id = $1 and s.deck_id = $2
+			order by (s.id = $3::uuid) desc nulls last, s.position desc limit 1
 			for update of s`, [userId, deckId, stageId]);
 		if (!stage) throw new Error("Unauthorized");
 		const ids = [];

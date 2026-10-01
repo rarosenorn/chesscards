@@ -5,9 +5,9 @@ import { readGame, findMistakes, mistakeCardSpec } from "$lib/game-mistakes.js"
 import { cardBuilder } from "$lib/card-spec.js"
 import { reactiveCard } from "./move-ref-click.svelte.js"
 
-// A card made from a game's mistake, as the app shows it: the board opens on
-// the position the mistake was played in, and the better move written in the
-// back plays from there.
+// A card made from a game's mistake, as the app shows it: the board opens
+// with the mistake played, and the better move written in the back plays from
+// the position before it.
 
 // what the board is showing, as "piece+square" pairs
 const pieces = root => [...root.querySelectorAll("[data-square]")]
@@ -56,7 +56,7 @@ describe("a mistake's card on the board", () => {
 		}
 	});
 
-	it("opens before the mistake and plays the better line from the text", async () => {
+	it("opens on the mistake and plays the better line from the text", async () => {
 		const game = readGame("1. e4 e5 2. Nf3 Nc6 3. Bc4 Nd4 4. Nxe5 Qg5 5. Nxf7 Qxg2");
 		const evals = game.fens.map((_, i) => ({ cp: i <= 6 ? 30 : -400, pv: [] }));
 		evals[6] = { cp: 30, pv: ["f3d4", "e5d4", "c2c3"] };
@@ -70,8 +70,8 @@ describe("a mistake's card on the board", () => {
 		const app = mount(FlashcardBrowse, { target, props: reactiveCard({ id: "card", ...built }) });
 		await tick();
 
-		// one move before the mistake: 3...Nd4 is played, 4.Nxe5 is not
-		expect(pieces(target)).toBe(piecesOf(game.fens[6]));
+		// the mistake, 4.Nxe5, is on the board
+		expect(pieces(target)).toBe(piecesOf(game.fens[7]));
 
 		const tokens = [...target.querySelectorAll("[data-move-ref]")];
 		expect(tokens.map(el => el.textContent)).toEqual(["3…Nd4", "4.Nxd4", "exd4", "5.c3"]);

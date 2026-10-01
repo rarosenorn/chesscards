@@ -93,9 +93,11 @@ const numbered = move => {
 const plain = text => String(text ?? "").replace(/[\[\]*]/g, "").replace(/\s+/g, " ").trim()
 
 // The card for one mistake, as a spec for card-spec.js. The board carries the
-// game up to and including the move, opened one move before it; what follows
-// the move is the back of the line, shown when the card is turned. The better
-// move is a line of the text, written from the board move it branches at.
+// game up to and including the move and opens with it already played, a red
+// arrow from the square it left to the one it reached; what follows the move
+// is the back of the line, shown when the card is turned, along with a green
+// arrow for the better move. That one is a line of the text, written from
+// the board move it branches at.
 // `why` is { bad, better } prose, or absent.
 export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
 	const { ply, kind, move, better, followUp } = mistake
@@ -109,10 +111,10 @@ export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
 				fen: fens[0],
 				moves: [...moves.slice(0, ply + 1).map(m => m.san), ...followUp.map(m => m.san)],
 				orientation: move.color,
-				openAt: ply,
+				openAt: ply + 1,
 				...(followUp.length > 0 && { solutionFrom: ply + 1 }),
-				...(before && { arrows: { [ply]: [["success", before.from, before.to]] } }),
-				solutionArrows: { [ply]: [["success", better[0].from, better[0].to]] }
+				arrows: { [ply + 1]: [["danger", move.from, move.to]] },
+				solutionArrows: { [ply + 1]: [["success", better[0].from, better[0].to]] }
 			}]
 		},
 		back: [

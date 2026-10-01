@@ -19,7 +19,7 @@
 	import { canonicalSideJson } from "$lib/card-utils.js"
 	import { unlockedStageIds, stageName } from "$lib/stages.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
-	import { updateCardContent, updateCardType, deleteCards, createStage, renameStage, deleteStage, moveCards } from "./browse.remote.js"
+	import { updateCardContent, updateCardType, deleteCards, createStage, renameStage, deleteStage, moveCards, listDecks, moveCardsToDeck, copyCards } from "./browse.remote.js"
 
 	let deck = getContext("deck");
 	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
@@ -627,10 +627,28 @@
 	const removeStage = async stageId =>
 		applyFresh(await deleteStage({ deckId: deck.id, stageId }));
 
+	const selectedIds = () => filteredCards.filter(c => multiSelected.has(c.id)).map(c => c.id);
+
 	const moveSelectedToStage = async stageId => {
-		const cardIds = filteredCards.filter(c => multiSelected.has(c.id)).map(c => c.id);
+		const cardIds = selectedIds();
 		if (cardIds.length === 0) return;
 		applyFresh(await moveCards({ deckId: deck.id, cardIds, stageId, index: null }));
+	}
+
+	// to another deck: the cards themselves go, progress and history with them
+	const moveSelectedToDeck = async targetDeckId => {
+		const cardIds = selectedIds();
+		if (cardIds.length === 0) return;
+		stopEditing();
+		applyFresh(await moveCardsToDeck({ deckId: deck.id, cardIds, targetDeckId }));
+	}
+
+	// copies are new cards; `stageId` names a chapter of this deck, and is
+	// left out when the copies go to a deck as a whole
+	const copySelected = async (targetDeckId, stageId = null) => {
+		const cardIds = selectedIds();
+		if (cardIds.length === 0) return;
+		applyFresh(await copyCards({ deckId: deck.id, cardIds, targetDeckId, stageId }));
 	}
 
 	let cardPane = $state(null);
@@ -651,10 +669,15 @@
 		});
 	});
 
-	// { x, y } where the context menu is open, or null; the chapter list
-	// inside it opens folded, and folds again with the menu
+	// { x, y } where the context menu is open, or null. Its lists — the
+	// chapters and decks to move or copy to — open folded, one at a time, and
+	// fold again with the menu: `openList` names the one showing.
 	let contextMenu = $state(null);
-	let moveMenuOpen = $state(false);
+	let openList = $state(null);
+	// the user's decks, asked for when the menu opens
+	let deckNames = $state([]);
+	let otherDecks = $derived(deckNames.filter(d => d.id !== deck.id));
+	let cardsNoun = $derived(multiSelected.size > 1 ? `${multiSelected.size} cards` : "card");
 
 	const handleRowContextMenu = (e, card, index) => {
 		if (readonly) return;
@@ -665,8 +688,9 @@
 			multiSelected = new SvelteSet([card.id]);
 			anchorIndex = index;
 		}
-		moveMenuOpen = false;
+		openList = null;
 		contextMenu = { x: e.clientX, y: e.clientY };
+		listDecks().then(names => deckNames = names).catch(() => {});
 	}
 
 	const deleteCardsByIds = async ids => {
@@ -793,32 +817,45 @@
 				Edit card
 			</button>
 		{/if}
-		{#if deck.chapters && stagesSorted.length > 1}
-			<!-- the chapters stay folded away until asked for: a deck with many
-			     of them used to bury Delete under the whole list. A deck with
-			     chapters off has nowhere to move a card to that it can name -->
+		<!-- the lists stay folded away until asked for: a deck with many
+		     chapters used to bury Delete under the whole list. A deck with
+		     chapters off has no chapter to move a card to that it can name -->
+		{#snippet list(key, label, items, pick)}
 			<button
 				class="submenu-toggle"
-				class:open={moveMenuOpen}
-				aria-expanded={moveMenuOpen}
-				onclick={() => moveMenuOpen = !moveMenuOpen}
+				class:open={openList === key}
+				aria-expanded={openList === key}
+				onclick={() => openList = openList === key ? null : key}
 			>
-				{multiSelected.size > 1 ? `Move ${multiSelected.size} cards` : "Move card"}
-				<span class="submenu-arrow" class:open={moveMenuOpen}></span>
+				{label}
+				<span class="submenu-arrow" class:open={openList === key}></span>
 			</button>
-			{#if moveMenuOpen}
-				{#each stagesSorted as stage (stage.id)}
+			{#if openList === key}
+				{#each items as item (item.id)}
 					<button
 						class="submenu-item"
 						onclick={() => {
 							contextMenu = null;
-							moveSelectedToStage(stage.id);
+							pick(item.id);
 						}}
 					>
-						{stageName(stage)}
+						{item.name}
 					</button>
 				{/each}
 			{/if}
+		{/snippet}
+		{#if deck.chapters && stagesSorted.length > 1}
+			{@render list("move-chapter", `Move ${cardsNoun} to chapter`, stagesSorted, moveSelectedToStage)}
+		{/if}
+		{#if otherDecks.length > 0}
+			{@render list("move-deck", `Move ${cardsNoun} to deck`, otherDecks, moveSelectedToDeck)}
+		{/if}
+		{#if deck.chapters}
+			{@render list("copy-chapter", `Copy ${cardsNoun} to chapter`, stagesSorted, stageId => copySelected(deck.id, stageId))}
+		{/if}
+		<!-- this deck is among them: a copy into it is a duplicate -->
+		{#if deckNames.length > 0}
+			{@render list("copy-deck", `Copy ${cardsNoun} to deck`, deckNames, copySelected)}
 		{/if}
 		<button
 			class="danger"

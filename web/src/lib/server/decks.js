@@ -216,13 +216,7 @@ const addCards = async (userId, deckId, stageId, cards, FSRSValues) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
-		const { rows: [stage] } = await client.query(`
-			select s.id, coalesce((select max(position) from cards where stage_id = s.id), 0) last
-			from stages s join decks d on d.id = s.deck_id
-			where d.user_id = $1 and s.deck_id = $2
-			order by (s.id = $3::uuid) desc nulls last, s.position desc limit 1
-			for update of s`, [userId, deckId, stageId]);
-		if (!stage) throw new Error("Unauthorized");
+		const stage = await landingStage(client, userId, deckId, stageId);
 		const ids = [];
 		for (const [index, card] of cards.entries()) {
 			const { rows } = await client.query(`insert into cards(
@@ -435,6 +429,97 @@ const moveCards = async (userId, deckId, cardIds, targetStageId, targetIndex) =>
 	}
 }
 
+// the user's decks by name, for the pickers that send cards to another one
+const getNames = async userId => {
+	const { rows } = await pool.query(
+		"select id, name from decks where user_id = $1 order by position, name", [userId]);
+	return rows;
+}
+
+// the stage cards sent to a deck land in: the one named, when it is that
+// deck's, else its last. Locked, so two arrivals cannot take the same places.
+const landingStage = async (client, userId, deckId, stageId) => {
+	const { rows: [stage] } = await client.query(`
+		select s.id, coalesce((select max(position) from cards where stage_id = s.id), 0) last
+		from stages s join decks d on d.id = s.deck_id
+		where d.user_id = $1 and s.deck_id = $2
+		order by (s.id = $3::uuid) desc nulls last, s.position desc limit 1
+		for update of s`, [userId, deckId, stageId]);
+	if (!stage) throw new Error("Unauthorized");
+	return stage;
+}
+
+// the cards among `cardIds` that are in this deck of the user's, in deck order
+const cardsOfDeck = async (client, userId, deckId, cardIds) => {
+	const { rows } = await client.query(`
+		select c.id, c.front, c.back, c.card_type
+		from cards c join decks d on d.id = c.deck_id join stages s on s.id = c.stage_id
+		where d.user_id = $1 and c.deck_id = $2 and c.id = any($3::uuid[])
+		order by s.position, c.position`, [userId, deckId, cardIds]);
+	if (rows.length !== new Set(cardIds).size) throw new Error("Unauthorized");
+	return rows;
+}
+
+// Cards leave one deck for another, to the end of its last chapter, in the
+// order they stood in. They are the same cards — schedule and review history
+// go with them — so the deck they left closes ranks behind them, and stops
+// listing any of them among its sample cards.
+const moveCardsToDeck = async (userId, deckId, cardIds, targetDeckId) => {
+	if (deckId === targetDeckId) return;
+	const client = await pool.connect();
+	try {
+		await client.query("begin");
+		const cards = await cardsOfDeck(client, userId, deckId, cardIds);
+		const stage = await landingStage(client, userId, targetDeckId, null);
+		const ids = cards.map(card => card.id);
+		await client.query(`
+			update cards c set deck_id = $1, stage_id = $2, position = $3 + u.n
+			from unnest($4::uuid[]) with ordinality u(id, n)
+			where c.id = u.id`, [targetDeckId, stage.id, stage.last, ids]);
+		await client.query(`
+			update cards c set position = r.position
+			from (select id, row_number() over (partition by stage_id order by position) position
+				from cards where deck_id = $1) r
+			where c.id = r.id and c.position <> r.position`, [deckId]);
+		await client.query(`
+			update decks set preview_card_ids = array(
+				select id from unnest(preview_card_ids) with ordinality p(id, n)
+				where id <> all($2::uuid[]) order by n)
+			where id = $1`, [deckId, ids]);
+		await client.query("commit");
+	} catch (err) {
+		await client.query("rollback");
+		throw err;
+	} finally {
+		client.release();
+	}
+}
+
+// Copies of cards, as new cards: the content and the type, none of the
+// progress. They go to the end of the named chapter of the target deck, or
+// of its last one, in the order the originals stand in.
+const copyCards = async (userId, deckId, cardIds, targetDeckId, targetStageId, FSRSValues) => {
+	const client = await pool.connect();
+	try {
+		await client.query("begin");
+		const cards = await cardsOfDeck(client, userId, deckId, cardIds);
+		const stage = await landingStage(client, userId, targetDeckId, targetStageId);
+		for (const [index, card] of cards.entries()) {
+			await client.query(`insert into cards(
+					deck_id, stage_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
+				) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+				[targetDeckId, stage.id, stage.last + index + 1, JSON.stringify(card.front), card.back == null ? null : JSON.stringify(card.back),
+					card.card_type, ...scheduleValues(card.card_type, FSRSValues)]);
+		}
+		await client.query("commit");
+	} catch (err) {
+		await client.query("rollback");
+		throw err;
+	} finally {
+		client.release();
+	}
+}
+
 // Chapters on or off for one deck. Nothing moves: the deck's stages stay as
 // they are, so switching back on finds the grouping where it was left. A deck
 // switched on that has only ever had its birth stage simply shows that one
@@ -484,4 +569,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }
+export { BOUNDS, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, getNames, moveCardsToDeck, copyCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }

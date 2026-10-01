@@ -76,3 +76,36 @@ export const moveCards =
 		await decks.moveCards(locals.userId, deckId, cardIds, stageId, index ?? null);
 		return freshDeck(locals, deckId);
 	})
+
+// the decks a card can be sent to
+export const listDecks =
+	command("unchecked", async () => {
+		const { locals } = getRequestEvent();
+		return decks.getNames(locals.userId);
+	})
+
+const UUID = /^[0-9a-f-]{36}$/i;
+const checkIds = (...ids) => {
+	if (!ids.flat().every(id => typeof id === "string" && UUID.test(id))) error(400, "Bad request");
+}
+
+// both answer with this deck afresh: a move empties it of the cards, and a
+// copy into the deck itself adds to it
+export const moveCardsToDeck =
+	command("unchecked", async ({ deckId, cardIds, targetDeckId }) => {
+		const { locals } = getRequestEvent();
+		checkIds(deckId, cardIds, targetDeckId);
+		try { await decks.moveCardsToDeck(locals.userId, deckId, cardIds, targetDeckId); }
+		catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
+		return freshDeck(locals, deckId);
+	})
+
+export const copyCards =
+	command("unchecked", async ({ deckId, cardIds, targetDeckId, stageId }) => {
+		const { locals } = getRequestEvent();
+		checkIds(deckId, cardIds, targetDeckId, stageId ?? []);
+		try {
+			await decks.copyCards(locals.userId, deckId, cardIds, targetDeckId, stageId ?? null, Object.values(createEmptyCard()));
+		} catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
+		return freshDeck(locals, deckId);
+	})

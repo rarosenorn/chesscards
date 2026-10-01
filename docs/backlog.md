@@ -11,6 +11,7 @@
 - Worth it as a feature for existing users: mistakes land in a dedicated "My blunders and mistakes" deck, in the same app and review queue as their openings. Not a differentiator on its own — Blunder Tutor, PatternChess and chess_trainer already do mistakes + spaced repetition + explanation (see chess-tools.md).
 - Engine finds the mistakes and best line; AI only explains from the engine output. Filter to mistakes findable at the user's level, 2-3 per game, user picks which to keep.
 - Later: also card your good finds (chess.com's great / brilliant). Great = you played the only move that holds the eval (needs the engine's top two moves); brilliant = that plus a material sacrifice. Front "find the move you played here", back explains why it works; same deck, tagged as a good find.
+- Later, business model: one-time credit packs, not a subscription (see FAQ). Importing a game with engine lines only stays free and unlimited; the AI explanation is the paid part, since it is the only thing with a real cost per use (roughly 9¢ a game on Opus 5.5). E.g. $5 for 25 games, first few free.
 
 ## subdecks
 - Order could be subdeck.number? like if a card is the 3rd card in the 2nd subdeck its order is 2.3?

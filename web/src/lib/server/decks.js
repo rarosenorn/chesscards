@@ -209,6 +209,38 @@ const addCard = async (userId, deckId, front, back, cardType, FSRSValues, stageI
 	return normalizeCard(rows[0]);
 }
 
+// Several basic cards at once, in the order given, at the end of the named
+// stage (or of the deck's last one) — all of them or none.
+const addCards = async (userId, deckId, stageId, cards, FSRSValues) => {
+	const client = await pool.connect();
+	try {
+		await client.query("begin");
+		const { rows: [stage] } = await client.query(`
+			select s.id, coalesce((select max(position) from cards where stage_id = s.id), 0) last
+			from stages s join decks d on d.id = s.deck_id
+			where d.user_id = $1 and s.deck_id = $2 and ($3::uuid is null or s.id = $3)
+			order by s.position desc limit 1
+			for update of s`, [userId, deckId, stageId]);
+		if (!stage) throw new Error("Unauthorized");
+		const ids = [];
+		for (const [index, card] of cards.entries()) {
+			const { rows } = await client.query(`insert into cards(
+					deck_id, stage_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
+				) values ($1, $2, $3, $4, $5, 'basic', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+				returning id`,
+				[deckId, stage.id, stage.last + index + 1, JSON.stringify(card.front), JSON.stringify(card.back), ...FSRSValues]);
+			ids.push(rows[0].id);
+		}
+		await client.query("commit");
+		return ids;
+	} catch (error) {
+		await client.query("rollback");
+		throw error;
+	} finally {
+		client.release();
+	}
+}
+
 // Switching type restarts the card: the two types keep incompatible
 // scheduling (a tactic card has no FSRS state at all), so there is nothing to
 // carry across — the review history in review_logs stays, the card's own
@@ -451,4 +483,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }
+export { BOUNDS, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }

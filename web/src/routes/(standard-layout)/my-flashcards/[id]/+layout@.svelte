@@ -156,7 +156,8 @@
 		{#each paths as path, i}
 			<a
 				href="/my-flashcards/{page.params.id}/{path}"
-				aria-current={page.url.pathname === `/my-flashcards/${page.params.id}/${path}`}
+				aria-current={page.url.pathname === `/my-flashcards/${page.params.id}/${path}`
+					|| page.url.pathname.startsWith(`/my-flashcards/${page.params.id}/${path}/`)}
 			>
 				{names[i]}
 				<!-- the app's own tooltip, not a title: the browser places

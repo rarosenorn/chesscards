@@ -94,7 +94,8 @@ export const auth = betterAuth({
 			borderType: { type: "string", defaultValue: "black", input: false },
 			showCoordinates: { type: "boolean", defaultValue: true, input: false },
 			animationDuration: { type: "number", defaultValue: 150, input: false },
-			rolloverHour: { type: "number", defaultValue: 4, input: false }
+			rolloverHour: { type: "number", defaultValue: 4, input: false },
+			chesscomUsername: { type: "string", required: false, input: false }
 		},
 		deleteUser: {
 			enabled: true,

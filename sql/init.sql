@@ -31,7 +31,9 @@ create table "user" (
 	-- card scheduled a day or more out waits for this boundary rather than
 	-- for the clock time it was graded at, so studying past midnight is still
 	-- the same day's session. The zone it is read in comes from the browser.
-	"rolloverHour" smallint default 4 not null check ("rolloverHour" between 0 and 23)
+	"rolloverHour" smallint default 4 not null check ("rolloverHour" between 0 and 23),
+	-- whose games "Import from a game" lists; asked for once, on that page
+	"chesscomUsername" text
 );
 
 create table "session" (

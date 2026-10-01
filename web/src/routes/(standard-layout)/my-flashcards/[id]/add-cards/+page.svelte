@@ -432,6 +432,8 @@
 		</div>
 	</div>
 	{/if}
+	<!-- the other way to add cards: a game's mistakes, made into cards -->
+	<a class="std-btn from-game" href="/my-flashcards/{page.params.id}/add-cards/from-game">Import from a game</a>
 </div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
@@ -594,6 +596,13 @@
 		gap: 8px;
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
+	}
+	.from-game {
+		margin-left: auto;
+		padding: 4px 10px;
+		border-radius: 4px;
+		color: inherit;
+		text-decoration: none;
 	}
 	/* the chapter the cards file into, trailing the type it pairs with */
 	.stage-picker {

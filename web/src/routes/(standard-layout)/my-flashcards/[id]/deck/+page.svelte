@@ -199,7 +199,7 @@
 			<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
 			<button type="button" class="std-btn" onclick={save}>Save</button>
 		{:else if view === "description"}
-			<button type="button" class="std-btn" onclick={startEditing}>Edit description</button>
+			<button type="button" class="std-btn" onclick={startEditing}>Edit</button>
 		{:else}
 			<a class="std-btn" href="/my-flashcards/{data.listing.id}/sample-cards">Edit sample cards</a>
 		{/if}

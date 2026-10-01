@@ -109,34 +109,67 @@ describe("a mistake's card on the board", () => {
 		return { target, app };
 	};
 
-	it("folds the moves that led up to where the board opens", async () => {
-		const { target, app } = await show(longCard(16));
-		// 8...Ba7 is on the board; the line starts two moves before it
-		expect(target.querySelector(".fold-btn")).not.toBe(null);
-		expect(lineOf(target)).not.toContain("Nf3");
-		expect(lineOf(target)).toContain("6 O-O O-O");
-		expect(lineOf(target)).toContain("Re8");
-		expect(target.querySelector(".move-btn.current").textContent.trim()).toBe("Ba7");
+	// jsdom lays nothing out, so the rows are given: four pairs to a row, 24px each
+	const ROW = 24;
+	const layOut = () => {
+		const top = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetTop");
+		const height = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
+		Object.defineProperty(HTMLElement.prototype, "offsetTop", { configurable: true, get() {
+			if (!this.classList.contains("move-pair")) return 0;
+			return Math.floor([...this.parentNode.querySelectorAll(".move-pair")].indexOf(this) / 4) * ROW;
+		} });
+		Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get() {
+			return this.classList.contains("rows") ? Math.ceil(this.querySelectorAll(".move-pair").length / 4) * ROW : 0;
+		} });
+		return () => {
+			Object.defineProperty(HTMLElement.prototype, "offsetTop", top);
+			Object.defineProperty(HTMLElement.prototype, "offsetHeight", height);
+		};
+	};
+	// what of the line is in view: the top it is pulled up by, and how much shows
+	const rows = target => ({
+		from: (-parseFloat(target.querySelector(".rows").style.marginTop || "0") / ROW) || 0,
+		count: parseFloat(target.querySelector(".rows-clip").style.height) / ROW,
+		dots: [...target.querySelectorAll(".fold-btn")].map(btn => !btn.classList.contains("idle"))
+	});
 
+	it("shows the one row its move is on, with a … for the rows above and below", async () => {
+		const restore = layOut();
+		// ten pairs, three rows; 8...Ba7 is in the second
+		const { target, app } = await show(longCard(16));
+		await tick();
+		expect(target.querySelector(".move-btn.current").textContent.trim()).toBe("Ba7");
+		expect(rows(target)).toEqual({ from: 1, count: 1, dots: [true, true] });
+
+		// the … below shows the rest below, and has nothing more to offer
+		target.querySelector(".fold-btn.below").click();
+		await tick();
+		expect(rows(target)).toEqual({ from: 1, count: 2, dots: [true, false] });
 		target.querySelector(".fold-btn").click();
 		await tick();
-		expect(target.querySelector(".fold-btn")).toBe(null);
-		expect(lineOf(target)).toContain("1 e4 e5");
+		expect(rows(target)).toEqual({ from: 0, count: 3, dots: [false, false] });
 		unmount(app);
+		restore();
 	});
 
-	it("unfolds when the board is stepped back into them", async () => {
+	it("adds the row above when the board is stepped back onto it, and keeps the one it left", async () => {
+		const restore = layOut();
 		const { target, app } = await show(longCard(16));
+		await tick();
 		const back = target.querySelector('.step-btn[aria-label="Previous move"]');
-		for (let i = 0; i < 10 && target.querySelector(".fold-btn"); i++) { back.click(); await tick(); }
-		expect(target.querySelector(".fold-btn")).toBe(null);
-		expect(lineOf(target)).toContain("1 e4 e5");
+		// 8...Ba7 back to 4...Nf6, the last move of the first row
+		for (let i = 0; i < 8; i++) { back.click(); await tick(); }
+		expect(target.querySelector(".move-btn.current").textContent.trim()).toBe("Nf6");
+		expect(rows(target)).toEqual({ from: 0, count: 2, dots: [false, true] });
 		unmount(app);
+		restore();
 	});
 
-	it("leaves a line alone that opens near its start", async () => {
+	it("is a plain line when it fits one row", async () => {
 		const { target, app } = await show(longCard(6));
+		await tick();
 		expect(target.querySelector(".fold-btn")).toBe(null);
+		expect(target.querySelector(".rows-clip").style.height).toBe("");
 		expect(lineOf(target)).toContain("1 e4 e5");
 		unmount(app);
 	});

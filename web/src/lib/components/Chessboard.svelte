@@ -72,7 +72,7 @@
 	let stepping = false;
 	// a different board (e.g. next flashcard) starts back at its own question,
 	// with nothing followed off it
-	$effect(() => { void board; currentIndex = openAt; following = null; asidePly = null; unfolded = false; });
+	$effect(() => { void board; currentIndex = openAt; following = null; asidePly = null; shownRows = null; });
 	let displayIndex = $derived(Math.min(currentIndex, positions.length - 1));
 
 	// An aside: moves the card's text writes off this board's line, at a ply of
@@ -151,23 +151,63 @@
 		return pairs;
 	});
 
-	// A board that opens deep into its line — a whole game, opened on one
-	// move of it — shows the line from a little before that move, the moves
-	// ahead of it folded behind a "…": they led here, and are not what the
-	// card is about. Asking for them (the "…", or stepping back into them)
-	// unfolds the line until the next card. The editors always show it whole.
-	const FOLD_KEEP = 2;
-	const FOLD_MIN = 3;
-	let unfolded = $state(false);
-	let foldedPairs = $derived.by(() => {
-		if (inEditor || onSolutionFromChange || unfolded) return 0;
-		const at = moveLine.findIndex(pair => pair.moves.some(move => move.index >= openAt - 1));
-		const first = (at < 0 ? moveLine.length : at) - FOLD_KEEP;
-		return first >= FOLD_MIN ? first : 0;
+	// The line takes one row under the board: the row its current move is on.
+	// The line is laid out whole and the other rows are clipped away, so a row
+	// that comes into view — the board stepped onto a move of it, or the "…"
+	// at that end asked for the rest — is added above or below without the
+	// rows already showing re-wrapping. A row once shown stays until the next
+	// card. The editors show the line whole: it is what they are editing.
+	const rowed = $derived(!inEditor && !onSolutionFromChange);
+	let rowsEl = $state();
+	// where each row of the wrapped line starts, and where the last one ends
+	let rowTops = $state([]);
+	let rowsHeight = $state(0);
+	// { from, to }, the rows showing; null until this card's row is known
+	let shownRows = $state(null);
+	const pairTop = el => {
+		// pairs of one row can sit a pixel or two apart on their baseline
+		const top = el?.offsetTop ?? 0;
+		return rowTops.find(t => Math.abs(t - top) < 5) ?? top;
+	}
+	const measureRows = () => {
+		if (!rowsEl) return;
+		const tops = [];
+		for (const el of rowsEl.querySelectorAll(".move-pair")) {
+			if (!tops.some(t => Math.abs(t - el.offsetTop) < 5)) tops.push(el.offsetTop);
+		}
+		tops.sort((x, y) => x - y);
+		// a different wrap is a different set of rows: start over from the
+		// one the board is on
+		if (tops.length !== rowTops.length) shownRows = null;
+		rowTops = tops;
+		rowsHeight = rowsEl.offsetHeight;
+	}
+	$effect(() => {
+		void moveLine;
+		if (!rowsEl) return;
+		untrack(measureRows);
+		const observer = new ResizeObserver(() => measureRows());
+		observer.observe(rowsEl);
+		return () => observer.disconnect();
 	});
 	$effect(() => {
-		const first = moveLine[foldedPairs]?.moves[0]?.index;
-		if (foldedPairs > 0 && asidePly == null && first != null && displayIndex < first) unfolded = true;
+		if (!rowsEl || rowTops.length === 0 || asidePly != null) return;
+		const pair = moveLine.findIndex(p => p.moves.some(move => move.index === displayIndex - 1));
+		const row = Math.max(0, rowTops.indexOf(pairTop(rowsEl.querySelectorAll(".move-pair")[Math.max(pair, 0)])));
+		if (!shownRows) shownRows = { from: row, to: row };
+		else if (row < shownRows.from || row > shownRows.to)
+			shownRows = { from: Math.min(shownRows.from, row), to: Math.max(shownRows.to, row) };
+	});
+	let rowClip = $derived.by(() => {
+		if (!rowed || !shownRows || rowTops.length < 2) return null;
+		const last = rowTops.length - 1;
+		const from = Math.min(shownRows.from, last), to = Math.min(shownRows.to, last);
+		return {
+			top: rowTops[from],
+			height: (to < last ? rowTops[to + 1] : rowsHeight) - rowTops[from],
+			above: from > 0,
+			below: to < last
+		};
 	});
 
 	let chessboardElement = $state();
@@ -579,6 +619,30 @@
 	}
 </script>
 
+{#snippet pairs()}
+	{#each moveLine as pair}
+		<span class="move-pair">
+			<!-- the boundary marker precedes the pair number when the
+			     back starts the pair ("Back: 2 e4"), and sits between
+			     the moves when it starts mid-pair ("2 e4 Back: e5") -->
+			{#if markerAt(pair.moves[0]?.index)}{@render backMarker()}{/if}
+			<span class="move-number">{pair.number}</span>
+			{#each pair.moves as move, moveIndex}
+				{#if moveIndex > 0 && markerAt(move.index)}{@render backMarker()}{/if}
+				<button
+					class="move-btn"
+					class:current={asidePly == null && displayIndex === move.index + 1}
+					class:opens-here={inEditor && openAt === move.index + 1}
+					disabled={authorView && !revealed && solutionFrom != null && move.index >= solutionFrom}
+					onclick={() => jumpTo(move.index + 1)}
+				>
+					{pair.ellipsis && moveIndex === 0 ? "…" + move.san : move.san}
+				</button>
+			{/each}
+		</span>
+	{/each}
+{/snippet}
+
 {#snippet backMarker()}
 	<!-- svelte-ignore a11y_no_static_element_interactions -- pointer-only drag; the divider is a label, not a control, wherever it cannot move -->
 	<span
@@ -641,7 +705,7 @@
 	     still renders while one is being followed, for its step buttons. -->
 	{#if lineMoves.length > 0 || following}
 		<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- pointer-only boundary placing; the editor's own controls set it by keyboard -->
-		<div class="move-line" bind:this={moveLineEl} use:lineHandle>
+		<div class="move-line" class:rowed bind:this={moveLineEl} use:lineHandle>
 			<button
 				class="step-btn"
 				aria-label="Previous move"
@@ -654,30 +718,33 @@
 				disabled={atLineEnd}
 				onclick={next}
 			>›</button>
-			{#if foldedPairs > 0}
-				<button class="move-btn fold-btn" aria-label="Show the earlier moves" onclick={() => unfolded = true}>…</button>
+			{#if rowed}
+				<!-- the "…"s keep their room while they have nothing to offer, so
+				     the rows between them never change width -->
+				{#if rowTops.length > 1}
+					<button
+						class="fold-btn"
+						class:idle={!rowClip?.above}
+						aria-label="Show the earlier moves"
+						onclick={() => shownRows = { from: 0, to: shownRows?.to ?? 0 }}
+					>…</button>
+				{/if}
+				<div class="rows-clip" style:height={rowClip ? `${rowClip.height}px` : null}>
+					<div class="rows" bind:this={rowsEl} style:margin-top={rowClip ? `${-rowClip.top}px` : null}>
+						{@render pairs()}
+					</div>
+				</div>
+				{#if rowTops.length > 1}
+					<button
+						class="fold-btn below"
+						class:idle={!rowClip?.below}
+						aria-label="Show the later moves"
+						onclick={() => shownRows = { from: shownRows?.from ?? 0, to: rowTops.length - 1 }}
+					>…</button>
+				{/if}
+			{:else}
+				{@render pairs()}
 			{/if}
-			{#each moveLine.slice(foldedPairs) as pair}
-				<span class="move-pair">
-					<!-- the boundary marker precedes the pair number when the
-					     back starts the pair ("Back: 2 e4"), and sits between
-					     the moves when it starts mid-pair ("2 e4 Back: e5") -->
-					{#if markerAt(pair.moves[0]?.index)}{@render backMarker()}{/if}
-					<span class="move-number">{pair.number}</span>
-					{#each pair.moves as move, moveIndex}
-						{#if moveIndex > 0 && markerAt(move.index)}{@render backMarker()}{/if}
-						<button
-							class="move-btn"
-							class:current={asidePly == null && displayIndex === move.index + 1}
-							class:opens-here={inEditor && openAt === move.index + 1}
-							disabled={authorView && !revealed && solutionFrom != null && move.index >= solutionFrom}
-							onclick={() => jumpTo(move.index + 1)}
-						>
-							{pair.ellipsis && moveIndex === 0 ? "…" + move.san : move.san}
-						</button>
-					{/each}
-				</span>
-			{/each}
 			<!-- The end spot: a line that is all front. Only while the marker is
 			     being dragged there — a board with no boundary says so by
 			     showing nothing, and the board's own editor is where one is
@@ -851,8 +918,41 @@
 		padding: 1px 4px;
 		cursor: pointer;
 	}
+	/* one row of the line: the step buttons and the "…"s stand still at its
+	   ends, the rows between them are clipped to the ones showing */
+	.move-line.rowed {
+		flex-wrap: nowrap;
+		align-items: flex-start;
+	}
+	.rows-clip {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+	}
+	.rows {
+		position: relative;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		column-gap: 6px;
+	}
 	.fold-btn {
+		flex: none;
+		border: none;
+		background-color: transparent;
+		border-radius: 3px;
+		padding: 1px 4px;
 		color: rgba(0, 0, 0, 0.5);
+		cursor: pointer;
+	}
+	.fold-btn:hover {
+		background-color: gainsboro;
+	}
+	.fold-btn.below {
+		align-self: flex-end;
+	}
+	.fold-btn.idle {
+		visibility: hidden;
 	}
 	.move-btn:hover:enabled {
 		background-color: gainsboro;

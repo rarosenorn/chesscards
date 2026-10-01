@@ -89,4 +89,55 @@ describe("a mistake's card on the board", () => {
 
 		unmount(app);
 	});
+
+	// a whole game under the board, when the card is about one move of it
+	const longCard = openAt => ({
+		id: "long",
+		front: [{ type: "chessboards", content: [{
+			fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+			moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "c3", "Nf6", "d3", "d6", "O-O", "O-O", "Re1", "a6", "Bb3", "Ba7", "h3", "h6", "Nbd2", "Re8"],
+			annotations: {}, solutionAnnotations: {}, solutionFrom: null, openAt, orientation: "w"
+		}] }],
+		back: []
+	});
+	const lineOf = target => target.querySelector(".move-line").textContent.replace(/\s+/g, " ");
+	const show = async card => {
+		const target = document.createElement("div");
+		document.body.appendChild(target);
+		const app = mount(FlashcardBrowse, { target, props: reactiveCard(card) });
+		await tick();
+		return { target, app };
+	};
+
+	it("folds the moves that led up to where the board opens", async () => {
+		const { target, app } = await show(longCard(16));
+		// 8...Ba7 is on the board; the line starts two moves before it
+		expect(target.querySelector(".fold-btn")).not.toBe(null);
+		expect(lineOf(target)).not.toContain("Nf3");
+		expect(lineOf(target)).toContain("6 O-O O-O");
+		expect(lineOf(target)).toContain("Re8");
+		expect(target.querySelector(".move-btn.current").textContent.trim()).toBe("Ba7");
+
+		target.querySelector(".fold-btn").click();
+		await tick();
+		expect(target.querySelector(".fold-btn")).toBe(null);
+		expect(lineOf(target)).toContain("1 e4 e5");
+		unmount(app);
+	});
+
+	it("unfolds when the board is stepped back into them", async () => {
+		const { target, app } = await show(longCard(16));
+		const back = target.querySelector('.step-btn[aria-label="Previous move"]');
+		for (let i = 0; i < 10 && target.querySelector(".fold-btn"); i++) { back.click(); await tick(); }
+		expect(target.querySelector(".fold-btn")).toBe(null);
+		expect(lineOf(target)).toContain("1 e4 e5");
+		unmount(app);
+	});
+
+	it("leaves a line alone that opens near its start", async () => {
+		const { target, app } = await show(longCard(6));
+		expect(target.querySelector(".fold-btn")).toBe(null);
+		expect(lineOf(target)).toContain("1 e4 e5");
+		unmount(app);
+	});
 });

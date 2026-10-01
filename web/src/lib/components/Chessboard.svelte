@@ -72,7 +72,7 @@
 	let stepping = false;
 	// a different board (e.g. next flashcard) starts back at its own question,
 	// with nothing followed off it
-	$effect(() => { void board; currentIndex = openAt; following = null; asidePly = null; });
+	$effect(() => { void board; currentIndex = openAt; following = null; asidePly = null; unfolded = false; });
 	let displayIndex = $derived(Math.min(currentIndex, positions.length - 1));
 
 	// An aside: moves the card's text writes off this board's line, at a ply of
@@ -149,6 +149,25 @@
 			pairOpen = color === "w";
 		});
 		return pairs;
+	});
+
+	// A board that opens deep into its line — a whole game, opened on one
+	// move of it — shows the line from a little before that move, the moves
+	// ahead of it folded behind a "…": they led here, and are not what the
+	// card is about. Asking for them (the "…", or stepping back into them)
+	// unfolds the line until the next card. The editors always show it whole.
+	const FOLD_KEEP = 2;
+	const FOLD_MIN = 3;
+	let unfolded = $state(false);
+	let foldedPairs = $derived.by(() => {
+		if (inEditor || onSolutionFromChange || unfolded) return 0;
+		const at = moveLine.findIndex(pair => pair.moves.some(move => move.index >= openAt - 1));
+		const first = (at < 0 ? moveLine.length : at) - FOLD_KEEP;
+		return first >= FOLD_MIN ? first : 0;
+	});
+	$effect(() => {
+		const first = moveLine[foldedPairs]?.moves[0]?.index;
+		if (foldedPairs > 0 && asidePly == null && first != null && displayIndex < first) unfolded = true;
 	});
 
 	let chessboardElement = $state();
@@ -635,7 +654,10 @@
 				disabled={atLineEnd}
 				onclick={next}
 			>›</button>
-			{#each moveLine as pair}
+			{#if foldedPairs > 0}
+				<button class="move-btn fold-btn" aria-label="Show the earlier moves" onclick={() => unfolded = true}>…</button>
+			{/if}
+			{#each moveLine.slice(foldedPairs) as pair}
 				<span class="move-pair">
 					<!-- the boundary marker precedes the pair number when the
 					     back starts the pair ("Back: 2 e4"), and sits between
@@ -828,6 +850,9 @@
 		border-radius: 3px;
 		padding: 1px 4px;
 		cursor: pointer;
+	}
+	.fold-btn {
+		color: rgba(0, 0, 0, 0.5);
 	}
 	.move-btn:hover:enabled {
 		background-color: gainsboro;

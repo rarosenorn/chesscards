@@ -26,6 +26,10 @@
 	let games = $state([]);
 	// month archives not loaded yet, newest last
 	let earlier = $state([]);
+	// a busy month is hundreds of games: the list shows the newest, and
+	// "Earlier games" walks back through the rest, into the months before
+	const PAGE = 30;
+	let shown = $state(PAGE);
 	let loading = $state(false);
 	let loadError = $state(null);
 
@@ -66,6 +70,7 @@
 			if (load !== latestLoad) return;
 			earlier = archives;
 			games = [];
+			shown = PAGE;
 			player = name.toLowerCase();
 			// a month that has only just begun may hold nothing yet
 			while (games.length === 0 && earlier.length > 0 && load === latestLoad) await loadMonth();
@@ -81,7 +86,9 @@
 		}
 	}
 
-	const loadEarlier = async () => {
+	const showEarlier = async () => {
+		shown += PAGE;
+		if (shown <= games.length || earlier.length === 0) return;
 		loading = true;
 		try { await loadMonth(); }
 		catch (err) { loadError = err.message; }
@@ -228,7 +235,7 @@
 			<p class="section-note">No games yet.</p>
 		{/if}
 		<ul class="games">
-			{#each games as game (game.url)}
+			{#each games.slice(0, shown) as game (game.url)}
 				{@const row = rowOf(game)}
 				<li>
 					<button class="game" class:current={job?.url === game.url} onclick={() => importGame(game)}>
@@ -241,8 +248,8 @@
 				</li>
 			{/each}
 		</ul>
-		{#if earlier.length > 0}
-			<button class="std-btn" onclick={loadEarlier}>{loading ? "Loading" : "Earlier games"}</button>
+		{#if shown < games.length || earlier.length > 0}
+			<button class="std-btn" onclick={showEarlier}>{loading ? "Loading" : "Earlier games"}</button>
 		{/if}
 	</section>
 	{/if}

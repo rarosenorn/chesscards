@@ -69,10 +69,14 @@ export const findMistakes = ({ moves, fens }, evals, color, kinds = KINDS) => {
 		if (!prev || !cur || !prev.pv?.length || prev.pv[0] === uciOf(move)) return
 		const kind = judge(prev, cur, color)
 		if (!kind || !kinds.includes(kind)) return
-		const better = lineSan(fens[ply], prev.pv, LINE_PLIES)
+		// a mate the mover had and let go: the better line is then the whole
+		// mate, however long, since the mate is the point
+		const mate = prev.mate != null ? (color === "w" ? 1 : -1) * prev.mate : 0
+		const missedMate = mate > 0 ? mate : null
+		const better = lineSan(fens[ply], prev.pv, missedMate ? 2 * missedMate - 1 : LINE_PLIES)
 		if (better.length === 0) return
 		found.push({
-			ply, kind, move,
+			ply, kind, move, missedMate,
 			better,
 			followUp: lineSan(fens[ply + 1], cur.pv ?? [], LINE_PLIES),
 			evalBefore: prev.mate != null ? { mate: prev.mate } : { cp: prev.cp },
@@ -93,33 +97,37 @@ const numbered = move => {
 const plain = text => String(text ?? "").replace(/[\[\]*]/g, "").replace(/\s+/g, " ").trim()
 
 // The card for one mistake, as a spec for card-spec.js. The board carries the
-// game up to and including the move and opens with it already played, a red
-// arrow from the square it left to the one it reached; what follows the move
+// game up to and including the move and opens with it already played, an
+// orange arrow (a move that was there to choose, as the wiki has the colours) from the square it left to the one it reached; what follows the move
 // is the back of the line, shown when the card is turned, along with a green
 // arrow for the better move. That one is a line of the text, written from
 // the board move it branches at.
-// `why` is { bad, better } prose, or absent.
+// `why` is { bad, better } prose, or absent. A missed mate needs no prose:
+// that it was missed is the whole reason, and the mate itself the answer.
 export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
-	const { ply, kind, move, better, followUp } = mistake
+	const { ply, kind, move, better, followUp, missedMate } = mistake
 	const label = numbered(move)
+	const a = kind === "inaccuracy" ? "an" : "a"
 	const before = ply > 0 ? moves[ply - 1] : null
 	const betterLine = [...(before ? [numbered(before)] : []), ...better.map((m, i) => i === 0 && !before ? numbered(m) : m.san)].join(" ")
 	return {
 		front: {
-			text: `Why was ${label} ${kind === "inaccuracy" ? "an" : "a"} ${kind}, and what is a better move?`,
+			text: `Why was ${label} ${a} ${kind}, and what is a better move?`,
 			boards: [{
 				fen: fens[0],
 				moves: [...moves.slice(0, ply + 1).map(m => m.san), ...followUp.map(m => m.san)],
 				orientation: move.color,
 				openAt: ply + 1,
 				...(followUp.length > 0 && { solutionFrom: ply + 1 }),
-				arrows: { [ply + 1]: [["danger", move.from, move.to]] },
+				arrows: { [ply + 1]: [["warning", move.from, move.to]] },
 				solutionArrows: { [ply + 1]: [["success", better[0].from, better[0].to]] }
 			}]
 		},
-		back: [
-			`- ${plain(why?.bad) || label}`,
-			`- ${[`[${betterLine}]`, plain(why?.better)].filter(Boolean).join(" ")}`
-		].join("\n")
+		back: missedMate
+			? `- ${label} is ${a} ${kind} because it misses mate in ${missedMate}.\n- [${betterLine}]`
+			: [
+				`- ${plain(why?.bad) || label}`,
+				`- ${[`[${betterLine}]`, plain(why?.better)].filter(Boolean).join(" ")}`
+			].join("\n")
 	}
 }

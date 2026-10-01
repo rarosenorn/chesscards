@@ -63,7 +63,7 @@ describe("a mistake's card", () => {
 		expect(spec.front.text).toBe("Why was 4.Nxe5 a blunder, and what is a better move?")
 		expect(board.moves).toEqual(["e4", "e5", "Nf3", "Nc6", "Bc4", "Nd4", "Nxe5", "Qg5", "Nxf7", "Qxg2"])
 		expect([board.openAt, board.solutionFrom, board.orientation]).toEqual([7, 7, "w"])
-		expect(board.arrows).toEqual({ 7: [["danger", "f3", "e5"]] })
+		expect(board.arrows).toEqual({ 7: [["warning", "f3", "e5"]] })
 		expect(board.solutionArrows).toEqual({ 7: [["success", "f3", "d4"]] })
 		expect(spec.back).toBe("- It drops a piece.\n- [3...Nd4 Nxd4 exd4 c3] Take the knight.")
 
@@ -89,7 +89,7 @@ describe("the edges of a game", () => {
 		evals[1] = { cp: -150, pv: ["e7e5", "g2g4"] }
 		const [mistake] = findMistakes(game, evals, "w")
 		const spec = mistakeCardSpec(game, mistake)
-		expect(spec.front.boards[0].arrows).toEqual({ 1: [["danger", "f2", "f3"]] })
+		expect(spec.front.boards[0].arrows).toEqual({ 1: [["warning", "f2", "f3"]] })
 		expect(spec.back).toBe("- 1.f3\n- [1.e4 e5]")
 		expect(built(spec)).toEqual([])
 	})
@@ -126,5 +126,24 @@ describe("the edges of a game", () => {
 		const game = readGame("1. e4 e5 2. Nf3")
 		expect(findMistakes(game, [{ cp: 0, pv: ["d2d4"] }, null, { cp: -900, pv: [] }, null], "w")).toEqual([])
 	})
-})
 
+	it("says a missed mate was missed, and writes the whole mate out", () => {
+		// Black to move has mate in 2 (1...Qh4+ 2.g3 ... is not it; the fool's mate one move deep is)
+		const game = readGame("1. f3 e5 2. g4 Nc6")
+		const evals = [{ cp: 30, pv: ["e2e4"] }, { cp: -150, pv: ["e7e5"] }, { cp: -150, pv: ["d2d4"] }, { mate: -1, pv: ["d8h4"] }, { cp: -300, pv: ["d2d4", "d7d5"] }]
+		const [mistake] = findMistakes(game, evals, "b")
+		expect([mistake.kind, mistake.missedMate, mistake.better.map(m => m.san)]).toEqual(["blunder", 1, ["Qh4#"]])
+		const spec = mistakeCardSpec(game, mistake, { bad: "ignored", better: "ignored" })
+		expect(spec.back).toBe("- 2...Nc6 is a blunder because it misses mate in 1.\n- [2.g4 Qh4#]")
+		expect(built(spec)).toEqual([])
+	})
+
+	it("writes a long mate in full, and no further", () => {
+		// the lines only need to be legal here: a "mate in 3" is five plies
+		const game = readGame("1. a3 a6")
+		const evals = [{ mate: 3, pv: ["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "g8f6"] }, { cp: 500, pv: ["a7a6"] }, { cp: 500, pv: [] }]
+		const [mistake] = findMistakes(game, evals, "w")
+		expect(mistake.missedMate).toBe(3)
+		expect(mistake.better.map(m => m.san)).toEqual(["e4", "e5", "Nf3", "Nc6", "Bc4"])
+	})
+})

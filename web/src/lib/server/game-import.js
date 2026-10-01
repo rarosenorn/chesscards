@@ -42,7 +42,8 @@ const run = async job => {
 	await Promise.all(Array.from({ length: Math.min(EXPLAIN_AT_ONCE, mistakes.length) }, async () => {
 		while (next < mistakes.length) {
 			const index = next++;
-			reasons[index] = await explainMistake(job.game, mistakes[index]);
+			// a missed mate is its own reason; the card writes it out itself
+			reasons[index] = mistakes[index].missedMate ? null : await explainMistake(job.game, mistakes[index]);
 			job.done += 1;
 		}
 	}));
@@ -58,7 +59,7 @@ const run = async job => {
 	job.result = {
 		cardIds,
 		counts: Object.fromEntries(KINDS.map(kind => [kind, mistakes.filter(m => m.kind === kind).length])),
-		unexplained: reasons.filter(why => !why).length
+		unexplained: reasons.filter((why, i) => !why && !mistakes[i].missedMate).length
 	};
 }
 

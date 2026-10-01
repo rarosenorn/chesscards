@@ -166,12 +166,29 @@
 	let frontAnnotation = $derived(asidePly != null ? null : normalized.annotations[displayIndex]);
 	let backAnnotation = $derived(asidePly != null || !revealed ? null : normalized.solutionAnnotations[displayIndex]);
 
-	// the position on screen, handed to Lichess's analysis board (engine and
-	// opening explorer) in a new tab, seen from the side this board is
-	let analysisUrl = $derived(
-		`https://lichess.org/analysis/${displayFen.replaceAll(" ", "_")}`
-			+ (normalized.orientation === "b" ? "?color=black" : "")
-	);
+	// Lichess's analysis board (engine and opening explorer) in a new tab, seen
+	// from the side this board is. It is handed the moves, not just the
+	// position — the line as far as the card shows it, or the aside being
+	// followed — and opened on the move the board stands on, so the game can
+	// be stepped through there too. Lichess reads the moves as PGN from the
+	// address, where a "+" is a space: the check marks go, and nothing is lost.
+	// A line with a move PGN cannot write (one recorded off-turn or by
+	// coordinates) is handed over as the position alone, as is anything too
+	// long for the address.
+	const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	let analysisUrl = $derived.by(() => {
+		const color = normalized.orientation === "b" ? "?color=black" : "";
+		const position = `https://lichess.org/analysis/${displayFen.replaceAll(" ", "_")}${color}`;
+		const line = following && asidePly != null
+			? [...normalized.moves.slice(0, following.from), ...following.moves]
+			: normalized.moves.slice(0, visiblePlies);
+		const ply = following && asidePly != null ? following.from + asidePly : displayIndex;
+		if (line.length === 0 || replay.moveInfos.length < normalized.moves.length
+			|| line.some(san => !/^[KQRBNa-hO][\w=+#-]*$/.test(san) || /^[a-h][1-8]-/.test(san))) return position;
+		const start = normalized.fen === START_FEN ? "" : `[FEN "${normalized.fen}"] `;
+		const pgn = encodeURIComponent(start + line.map(san => san.replace(/[+#]/g, "")).join(" ")).replaceAll("%20", "_");
+		return pgn.length > 4500 ? position : `https://lichess.org/analysis/pgn/${pgn}${color}#${ply}`;
+	});
 
 	// Everything that is not a step arrives at once: the position is written
 	// into the board and drawn in the very frame the rest of the card changed

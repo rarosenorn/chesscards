@@ -33,14 +33,20 @@
 	// it puts a bot check in the way, so the games are fetched from here
 	const API = "https://api.chess.com/pub/player";
 
+	// each "Show games" is a load of its own; one that a later one overtook
+	// leaves the lists alone
+	let latestLoad = 0;
+
 	const loadMonth = async () => {
 		const url = earlier.at(-1);
 		if (!url) return;
+		const load = latestLoad;
 		const response = await fetch(url);
 		if (!response.ok) throw new Error("Chess.com did not answer");
 		const month = (await response.json()).games
 			.filter(game => game.rules === "chess" && game.pgn)
 			.sort((a, b) => b.end_time - a.end_time);
+		if (load !== latestLoad) return;
 		earlier = earlier.slice(0, -1);
 		games = [...games, ...month];
 	}
@@ -48,24 +54,30 @@
 	const loadGames = async () => {
 		const name = username.trim();
 		if (!name) return;
+		const load = ++latestLoad;
 		loading = true;
 		loadError = null;
 		try {
 			const response = await fetch(`${API}/${encodeURIComponent(name.toLowerCase())}/games/archives`);
+			if (load !== latestLoad) return;
 			if (response.status === 404) throw new Error(`No Chess.com player called "${name}"`);
 			if (!response.ok) throw new Error("Chess.com did not answer");
-			earlier = (await response.json()).archives;
+			const archives = (await response.json()).archives;
+			if (load !== latestLoad) return;
+			earlier = archives;
 			games = [];
 			player = name.toLowerCase();
 			// a month that has only just begun may hold nothing yet
-			while (games.length === 0 && earlier.length > 0) await loadMonth();
-			if (name !== data.chesscomUsername) saveChesscomUsername({ username: name });
+			while (games.length === 0 && earlier.length > 0 && load === latestLoad) await loadMonth();
+			// remembering the name is a convenience; the games are already here
+			if (name !== data.chesscomUsername) saveChesscomUsername({ username: name }).catch(() => {});
 		} catch (err) {
+			if (load !== latestLoad) return;
 			player = null;
 			games = [];
 			loadError = err.message;
 		} finally {
-			loading = false;
+			if (load === latestLoad) loading = false;
 		}
 	}
 
@@ -118,8 +130,10 @@
 
 	const undo = async () => {
 		const ids = job.result.cardIds;
-		// cards already deleted by hand leave nothing to refuse
-		try { await deleteCards({ cardIds: ids }); } catch { /* none of them were left */ }
+		// the server refuses only when not one of them is left: cards already
+		// deleted by hand, which is the same end
+		try { await deleteCards({ cardIds: ids }); }
+		catch (err) { if (err?.status !== 403) throw err; }
 		deck.cards = deck.cards.filter(card => !ids.includes(card.id));
 		current.job = { ...current.job, undone: true };
 	}
@@ -140,7 +154,7 @@
 	let progress = $derived.by(() => {
 		if (!job) return null;
 		if (job.phase === "queued") return job.ahead > 0 ? `Waiting for ${plural(job.ahead, "game")} ahead of yours` : "Starting";
-		if (job.phase === "analysing") return `Analysing the game: position ${job.done} of ${job.total}`;
+		if (job.phase === "analysing") return job.total > 0 ? `Analysing the game: position ${job.done} of ${job.total}` : "Starting";
 		if (job.phase === "explaining") return `Writing the explanations: ${job.done} of ${job.total}`;
 		if (job.phase === "saving") return "Adding the cards";
 		return null;

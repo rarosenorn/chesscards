@@ -30,7 +30,7 @@ const startEngine = async () => {
 	const fail = error => { failed ??= error; onFail(failed); };
 	proc.on("error", fail);
 	proc.on("exit", code => fail(new Error(`Stockfish exited (${code})`)));
-	proc.stdin.on("error", fail);
+	proc.stdin.on("error", () => fail(new Error("Stockfish stopped")));
 	createInterface({ input: proc.stdout }).on("line", line => onLine(line));
 
 	const send = command => proc.stdin.write(command + "\n");

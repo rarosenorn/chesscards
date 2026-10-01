@@ -32,16 +32,19 @@ const ask = async deck => {
 		if (fresh && deck.id === job.deckId) Object.assign(deck, fresh);
 	} catch (err) {
 		if (current.job !== job) return;
-		// gone for good; anything else is the network, and worth asking again
-		if (err?.status === 404) current.job = { ...job, phase: "failed", error: err.body?.message ?? "The import is gone" };
+		// Gone for good; anything else is the network, and worth asking again.
+		// One picked up after a reload and already forgotten by the server
+		// most likely finished long ago — its cards came with the reload —
+		// so it is dropped without a word.
+		if (err?.status === 404) current.job = job.resumed ? null : { ...job, phase: "failed", error: err.body?.message ?? "The import is gone" };
 	}
 	remember();
 	if (isActive(current.job)) timer = setTimeout(() => ask(deck), 1000);
 }
 
-export const follow = (deck, jobId, url) => {
+export const follow = (deck, jobId, url, resumed = false) => {
 	clearTimeout(timer);
-	current.job = { jobId, url, deckId: deck.id, phase: "queued", done: 0, total: 0, ahead: 0, result: null, error: null };
+	current.job = { jobId, url, deckId: deck.id, resumed, phase: "queued", done: 0, total: 0, ahead: 0, result: null, error: null };
 	remember();
 	ask(deck);
 }
@@ -50,7 +53,7 @@ export const resume = deck => {
 	if (isActive(current.job)) return;
 	try {
 		const stored = JSON.parse(sessionStorage.getItem(KEY));
-		if (stored?.deckId === deck.id) follow(deck, stored.jobId, stored.url);
+		if (stored?.deckId === deck.id) follow(deck, stored.jobId, stored.url, true);
 	} catch { /* nothing to pick up */ }
 }
 

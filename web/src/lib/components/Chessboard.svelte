@@ -283,6 +283,11 @@
 		}
 		wasRevealed = now;
 	});
+	// How a move of the line shows: as the player found it — and, once the
+	// card is turned, the player's moves that were never played show as found
+	// too, so the answer reads the same whether it was played or shown.
+	const foundAs = index => finds[index]
+		?? (normalized.puzzle && onSolved && revealed && solutionFrom != null && index >= solutionFrom && (index - solutionFrom) % 2 === 0 ? "clean" : null);
 	let puzzling = $derived(
 		!!normalized.puzzle && !!onSolved && !revealed && !authorView && !inEditor
 			&& solutionFrom != null && solutionFrom < replay.moveInfos.length
@@ -771,8 +776,8 @@
 				<button
 					class="move-btn"
 					class:current={live && asidePly == null && displayIndex === move.index + 1}
-					class:found={finds[move.index] === "clean"}
-					class:found-late={finds[move.index] === "late"}
+					class:found={live && foundAs(move.index) === "clean"}
+					class:found-late={live && foundAs(move.index) === "late"}
 					class:opens-here={inEditor && openAt === move.index + 1}
 					disabled={authorView && !revealed && solutionFrom != null && move.index >= solutionFrom}
 					onclick={() => jumpTo(move.index + 1)}

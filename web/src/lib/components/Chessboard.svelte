@@ -448,6 +448,16 @@
 		}
 	});
 
+	// where the "#" sits: the top right corner of the mated king's square,
+	// measured off the drawn board (and again whenever the board resizes)
+	let mateBadge = $state(null);
+	const placeMateBadge = () => {
+		const square = matedKing && chessboardElement?.querySelector(`[data-square="${matedKing}"]`);
+		if (!square || !wrapperElement) { mateBadge = null; return; }
+		const box = square.getBoundingClientRect(), frame = wrapperElement.getBoundingClientRect();
+		mateBadge = { left: box.right - frame.left, top: box.top - frame.top, size: box.width };
+	}
+
 	let chessboardElement = $state();
 	let cmBoard = $state();
 	let renderedBoard = null;
@@ -465,10 +475,9 @@
 	// profile's choice ("Highlight last move"). A line's first position has
 	// no move behind it, and no tint.
 	const LAST_MOVE = { class: "marker-last-move", slice: "markerSquare" };
-	// The king that is mated in the position on screen, by its square: the
-	// board marks it and the strip above says Checkmate. null for any other
-	// position, and for one chess.js cannot judge (a free-form setup).
-	const MATED = { class: "marker-mated", slice: "markerSquare" };
+	// The king that is mated in the position on screen, by its square: it
+	// wears a "#" in the corner of that square. null for any other position,
+	// and for one chess.js cannot judge (a free-form setup).
 	let matedKing = $derived.by(() => {
 		try {
 			const chess = new Chess(displayFen);
@@ -566,8 +575,7 @@
 		stepping = false;
 		renderedBoard = normalized;
 		showAnnotations(cmBoard, front, back, backDots);
-		cmBoard.removeMarkers(MATED);
-		if (matedKing) cmBoard.addMarker(MATED, matedKing);
+		placeMateBadge();
 		cmBoard.removeMarkers(LAST_MOVE);
 		if (lastMove) {
 			cmBoard.addMarker(LAST_MOVE, lastMove.from);
@@ -614,6 +622,7 @@
 				"--board-px", chessboardElement.firstElementChild.offsetWidth + "px"
 			);
 			snapToPixelGrid();
+			placeMateBadge();
 		};
 		syncWidth();
 		const resizeObserver = new ResizeObserver(syncWidth);
@@ -984,9 +993,6 @@
 				{#if puzzleDone}✓ {/if}Puzzle
 			</span>
 		{/if}
-		{#if matedKing}
-			<span class="mate-tag">Checkmate</span>
-		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyze</a>
 		{/if}
@@ -999,6 +1005,13 @@
 		bind:this={chessboardElement}
 		onclick={hasMoves ? takeFocus : undefined}
 	></div>
+	{#if mateBadge}
+		<span
+			class="mate-badge"
+			aria-label="Checkmate"
+			style="left: {mateBadge.left}px; top: {mateBadge.top}px; font-size: {mateBadge.size * 0.34}px"
+		>#</span>
+	{/if}
 	{@render children?.()}
 	<!-- an aside is not listed here: the text it was written in is where it
 	     reads, and the highlight moves with the board over there. The line
@@ -1135,12 +1148,9 @@
 	}
 	/* played through: the tag fills, green — or orange if a move was missed */
 	.puzzle-tag.done,
-	.puzzle-tag.done-late,
-	.mate-tag {
+	.puzzle-tag.done-late {
 		padding: 0 6px;
 		border-radius: 3px;
-		font-size: 0.8rem;
-		line-height: 1.3;
 		color: white;
 	}
 	.puzzle-tag.done {
@@ -1149,13 +1159,17 @@
 	.puzzle-tag.done-late {
 		background-color: #d98a1f;
 	}
-	/* the position on the board is mate: said in the strip, and on the king */
-	.mate-tag {
-		background-color: #b3261e;
-	}
-	.board :global(.cm-chessboard .markers .marker.marker-mated) {
-		fill: #d9362b;
-		opacity: 0.6;
+	/* the mated king's "#": in the corner of its square, a white rim so it
+	   reads on either colour of square and over the piece */
+	.mate-badge {
+		position: absolute;
+		transform: translate(-105%, 2%);
+		font-weight: 700;
+		line-height: 1;
+		color: #262626;
+		text-shadow: 0 0 2px white, 0 0 2px white, 0 0 3px white;
+		pointer-events: none;
+		user-select: none;
 	}
 	.analysis-link {
 		margin-left: auto;

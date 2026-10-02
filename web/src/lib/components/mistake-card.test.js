@@ -242,14 +242,14 @@ describe("a mistake's card on the board", () => {
 		unmount(app);
 		restore();
 	});
-	it("says Checkmate on a mated position, and only there", async () => {
+	it("marks the mated king with a #, on a mated position and only there", async () => {
 		const card = longCard(0);
 		Object.assign(card.front[0].content[0], { moves: ["f3", "e5", "g4", "Qh4#"], openAt: 4 });
 		const { target, app } = await show(card);
-		expect(target.querySelector(".mate-tag")?.textContent).toBe("Checkmate");
+		expect(target.querySelector(".mate-badge")?.textContent).toBe("#");
 		target.querySelector('.move-line .step-btn[aria-label="Previous move"]').click();
 		await tick();
-		expect(target.querySelector(".mate-tag")).toBe(null);
+		expect(target.querySelector(".mate-badge")).toBe(null);
 		unmount(app);
 	});
 });

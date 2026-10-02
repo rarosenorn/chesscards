@@ -162,7 +162,9 @@
 	const PANEL_ROOM = 206;
 	let beside = $state(false);
 	// a centered board moves over by half the panel's width, so that board
-	// and panel sit centered together
+	// and panel sit centered together — a board with a line, that is: one
+	// with no moves has no panel, and stays in the middle. (One whose moves
+	// are all still hidden moves over already, rather than jump on the turn.)
 	let shifted = $state(false);
 	let panelList = $state();
 	// the pairs as panel rows; one the answer starts in the middle of is two
@@ -656,7 +658,7 @@
 <div
 	style="min-width: {minWidth}"
 	class="board-wrapper"
-	class:shifted
+	class:shifted={shifted && normalized.moves.length > 0}
 	class:pointer-focus={pointerFocus}
 	onblur={() => {
 		// a window switch blurs the focused element too, and the return

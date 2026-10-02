@@ -332,6 +332,7 @@
 	const afterFind = () => {
 		if (solutionFrom + solved >= replay.moveInfos.length) return finishPuzzle();
 		puzzleTimer = setTimeout(() => {
+			dropFrameIfTaken(solutionFrom + solved);
 			solved += 1;
 			goTo(solutionFrom + solved);
 			if (solutionFrom + solved >= replay.moveInfos.length) finishPuzzle();
@@ -343,10 +344,20 @@
 	// stepped anywhere else, the board drops it.
 	const FRAME_RIGHT = { class: "marker-frame-right", slice: "markerFrame" };
 	let rightAt = $state(null);
+	let rightSquare = null;
 	const markRight = (square, index) => {
 		cmBoard.removeMarkers(FRAME_RIGHT);
 		cmBoard.addMarker(FRAME_RIGHT, square);
 		rightAt = index;
+		rightSquare = square;
+	}
+	// the frame is the player's piece's: a reply that takes the piece takes
+	// the frame with it, rather than leave it around the capturer
+	const dropFrameIfTaken = replyIndex => {
+		if (rightAt != null && moveSquares(replay.fens[replyIndex], normalized.moves[replyIndex])?.to === rightSquare) {
+			cmBoard.removeMarkers(FRAME_RIGHT);
+			rightAt = null;
+		}
 	}
 	$effect(() => {
 		if (rightAt == null || !cmBoard) return;

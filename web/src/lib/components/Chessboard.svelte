@@ -989,7 +989,7 @@
 			></span>
 		{/if}
 		{#if normalized.puzzle}
-			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone}<svg class="done-check" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="white" /><path d="M5.2 8.1 L7.2 10.7 L10.9 5.9" stroke="var(--tag-colour)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none" /></svg>{/if}Puzzle</span>
+			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone}<svg class="done-check" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="white" /><path d="M5.2 8.1 L7.2 10.7 L10.9 5.9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none" /></svg>{/if}Puzzle</span>
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyze</a>
@@ -1163,6 +1163,9 @@
 		width: 0.95em;
 		height: 0.95em;
 		flex: none;
+	}
+	.done-check path {
+		stroke: var(--tag-colour);
 	}
 	.puzzle-tag.done {
 		--tag-colour: #2e9e5b;

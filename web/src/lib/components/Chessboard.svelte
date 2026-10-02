@@ -160,6 +160,9 @@
 	// same measurement that tells the board's real width.
 	const PANEL_ROOM = 166;
 	let beside = $state(false);
+	// a centered board moves over by half the panel's width, so that board
+	// and panel sit centered together
+	let shifted = $state(false);
 	let panelList = $state();
 	// the pairs as panel rows; one the answer starts in the middle of is two
 	// rows, so the "Back" divider can stand exactly where the answer begins
@@ -306,14 +309,20 @@
 				"--board-px", chessboardElement.firstElementChild.offsetWidth + "px"
 			);
 			snapToPixelGrid();
-			// room for the move panel: from the board's right edge to the edge
-			// of the card side it sits in — and none in a row of two boards,
-			// where what is to the right is the other board
+			// Room for the move panel, and none in a row of two boards, where
+			// what is to the right is the other board. A centered board has
+			// the room on both sides to spend: it moves left by half the
+			// panel, so only the widths matter. A board at the left edge has
+			// what lies to its right.
 			const side = wrapperElement.closest(".card-side");
-			const room = side && !wrapperElement.closest(".board-grid-block")
-				? side.getBoundingClientRect().right - chessboardElement.firstElementChild.getBoundingClientRect().right
-				: 0;
-			beside = !inEditor && !onSolutionFromChange && room >= PANEL_ROOM;
+			const boardBox = chessboardElement.firstElementChild;
+			const wanted = !inEditor && !onSolutionFromChange && side && !wrapperElement.closest(".board-grid-block");
+			const centered = side?.dataset.boardAlign === "center";
+			const room = !wanted ? 0 : centered
+				? side.getBoundingClientRect().width - boardBox.offsetWidth
+				: side.getBoundingClientRect().right - boardBox.getBoundingClientRect().right;
+			beside = room >= PANEL_ROOM;
+			shifted = beside && centered;
 		};
 		syncWidth();
 		const resizeObserver = new ResizeObserver(syncWidth);
@@ -638,6 +647,7 @@
 <div
 	style="min-width: {minWidth}"
 	class="board-wrapper"
+	class:shifted
 	class:pointer-focus={pointerFocus}
 	onblur={() => {
 		// a window switch blurs the focused element too, and the return
@@ -767,6 +777,9 @@
 	   the ring rule below) keeps those arrivals quiet. */
 	.board-wrapper.pointer-focus:focus-visible {
 		outline: none;
+	}
+	.board-wrapper.shifted {
+		left: -80px;
 	}
 	.board-wrapper {
 		/* the move panel hangs off it */

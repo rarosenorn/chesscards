@@ -176,10 +176,18 @@
 		];
 		return [{ number: pair.number, cells: pair.ellipsis ? [null, first] : second ? [first, second] : [first], marker: markerAt(first.index) }];
 	}));
-	// the move the board stands on stays in view, by the list's own scroll
+	// A card's list opens scrolled to its end, the latest moves in view. From
+	// there the move the board stands on is kept in view by the list's own
+	// scroll — which, on opening, only moves it if that move is out of sight.
+	let scrolledFor = null;
 	$effect(() => {
 		void displayIndex; void panelRows;
-		const current = panelList?.querySelector(".move-btn.current");
+		if (!panelList) return;
+		if (scrolledFor !== board) {
+			scrolledFor = board;
+			panelList.scrollTop = panelList.scrollHeight;
+		}
+		const current = panelList.querySelector(".move-btn.current");
 		if (!current) return;
 		const top = current.offsetTop, bottom = top + current.offsetHeight;
 		if (top < panelList.scrollTop) panelList.scrollTop = top;

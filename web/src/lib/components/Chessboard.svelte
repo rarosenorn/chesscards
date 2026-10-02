@@ -1082,15 +1082,20 @@
 		flex-wrap: nowrap;
 		width: max-content;
 	}
-	/* a puzzle's moves as the player found them: at once, or after a miss.
-	   The move the board stands on keeps its own colour over these. */
+	/* a puzzle's moves as the player found them, a check mark before each:
+	   green found at once, orange after a miss. On the move the board stands
+	   on, the mark and the text take that move's own colour. */
+	.move-btn.found::before,
+	.move-btn.found-late::before {
+		content: "✓";
+		margin-right: 2px;
+		font-size: 0.8em;
+	}
 	.move-btn.found:not(.current) {
-		background-color: #2e9e5b;
-		color: white;
+		color: #1b7a3d;
 	}
 	.move-btn.found-late:not(.current) {
-		background-color: #d98a1f;
-		color: white;
+		color: #c26a00;
 	}
 	.move-btn:hover:enabled {
 		background-color: gainsboro;

@@ -169,12 +169,12 @@
 					<p class="hint">With the frame border, coordinates sit in the border instead of on the squares.</p>
 				</fieldset>
 				<fieldset>
-					<legend>Last move</legend>
+					<legend>Highlight last move</legend>
 					<div class="pills">
-						{#each [true, false] as show}
-							<label class="pill" class:selected={prefs.highlightLastMove === show}>
-								<input type="radio" name="highlight-last-move" value={show} bind:group={prefs.highlightLastMove} />
-								{show ? "Highlight" : "Don't highlight"}
+						{#each [false, true] as every}
+							<label class="pill" class:selected={prefs.highlightEveryMove === every}>
+								<input type="radio" name="highlight-every-move" value={every} bind:group={prefs.highlightEveryMove} />
+								{every ? "On every move" : "Where the board opens"}
 							</label>
 						{/each}
 					</div>

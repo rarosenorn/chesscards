@@ -22,8 +22,9 @@ create table "user" (
 	"boardTheme" text default 'default' not null,
 	"borderType" text default 'black' not null,
 	"showCoordinates" boolean default true not null,
-	-- tint the two squares of the move the board stands on
-	"highlightLastMove" boolean default true not null,
+	-- The board always tints the two squares of the move that led to the
+	-- position it opens on; with this, of every move it is stepped to as well.
+	"highlightEveryMove" boolean default false not null,
 	"animationDuration" integer default 150 not null,
 	-- what the profile's stage-progression control shows: 'all'/'none' were
 	-- bulk-applied to every deck; touching one deck's own toggle puts this

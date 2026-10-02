@@ -162,10 +162,10 @@
 		return pairs;
 	});
 
-	// The line under the board is two rows to begin with, when it is longer
-	// than that. They are its last two rows, if the move the board opens on
-	// is among them; if not, they start at the move pair holding the move
-	// before that one, so it is the second or third move showing. What is left out stands behind a "…" at
+	// The line under the board is one row to begin with (FOLD_ROWS), when it
+	// is longer than that. It is the line's last row, if the move the board
+	// opens on is in it; if not, the row starts at the move pair holding the
+	// move before that one, so it is the second or third move showing. What is left out stands behind a "…" at
 	// that end. Asking for it — the "…", or the board stepped into it by any
 	// means — shows everything on that side, until the next card. A "…" that
 	// has nothing behind it is not there at all, and takes no room. The
@@ -180,6 +180,7 @@
 	// a copy of the whole line, out of sight, that the widths are read from
 	let measureEl = $state();
 	const ROW_GAP = 6;
+	const FOLD_ROWS = 1;
 	// the board the cuts were last worked out for: until they are this
 	// board's, they say nothing about where its moves are
 	let placedFor = null;
@@ -207,22 +208,22 @@
 			}
 			return rows;
 		};
-		// the last two rows: the earliest pair the rest of the line fits from
+		// the last rows: the earliest pair the rest of the line fits from
 		let tail = 0;
-		while (tail < widths.length - 1 && fill(tail).length > 2) tail += 1;
+		while (tail < widths.length - 1 && fill(tail).length > FOLD_ROWS) tail += 1;
 		const first = moveLine[tail].moves[0].index;
 		const opening = openAt - 1;
 		if (tail === 0 || opening >= first) { foldStart = first; foldEnd = null; return; }
 		// not among them: from the move before the one the board opens on —
 		// the whole pair that move is in, never half of one — two rows'
-		// worth, the second ending early enough for its "…"
+		// worth, the last of them ending early enough for its "…"
 		const from = moveLine.findIndex(pair => pair.moves.some(move => move.index >= Math.max(0, opening - 1)));
 		const start = moveLine[from].moves[0].index;
 		const rows = fill(from);
-		const second = rows[1];
-		while (rows.length > 2 && second.pairs.length > 1 && second.used + dots > width) second.used -= widths[second.pairs.pop()] + ROW_GAP;
+		const last = rows[Math.min(FOLD_ROWS, rows.length) - 1];
+		while (rows.length > FOLD_ROWS && last.pairs.length > 1 && last.used + dots > width) last.used -= widths[last.pairs.pop()] + ROW_GAP;
 		foldStart = start;
-		foldEnd = rows.length > 2 ? moveLine[second.pairs.at(-1)].moves.at(-1).index : null;
+		foldEnd = rows.length > FOLD_ROWS ? moveLine[last.pairs.at(-1)].moves.at(-1).index : null;
 	};
 	$effect(() => {
 		void moveLine; void openAt;

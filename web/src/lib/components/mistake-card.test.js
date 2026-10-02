@@ -111,7 +111,7 @@ describe("a mistake's card on the board", () => {
 
 	// jsdom lays nothing out, so the widths are given: a line 466 wide (460 to lay out in), pairs
 	// of 100, the step arrows and the "…" 20 each. Three pairs fit beside the
-	// arrows on the first row and four on the second.
+	// arrows on the first row.
 	const layOut = () => {
 		const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
 		const client = Object.getOwnPropertyDescriptor(Element.prototype, "clientWidth");
@@ -133,12 +133,12 @@ describe("a mistake's card on the board", () => {
 		for (let i = 0; i < times; i++) { button.click(); await tick(); }
 	};
 
-	it("shows its last two rows when the move the board opens on is in them", async () => {
+	it("shows its last row when the move the board opens on is in it", async () => {
 		const restore = layOut();
-		// ten pairs; the last seven make two rows, and 8...Ba7 is among them
+		// ten pairs; the last three make a row, and 8...Ba7 is among them
 		const { target, app } = await show(longCard(16));
 		await tick();
-		expect(lineOf(target)).toBe("‹ › … 4 c3 Nf6 5 d3 d6 6 O-O O-O 7 Re1 a6 8 Bb3 Ba7 9 h3 h6 10 Nbd2 Re8");
+		expect(lineOf(target)).toBe("‹ › … 8 Bb3 Ba7 9 h3 h6 10 Nbd2 Re8");
 		expect(dots(target)).toEqual(["Show the earlier moves"]);
 		expect(current(target)).toBe("Ba7");
 
@@ -156,7 +156,7 @@ describe("a mistake's card on the board", () => {
 		target.querySelector(".move-line .fold-btn").click();
 		await tick();
 		await tick();
-		expect(lineOf(target)).toBe("‹ › … 4 c3 Nf6 5 d3 d6 6 O-O O-O 7 Re1 a6 8 Bb3 Ba7 9 h3 h6 10 Nbd2 Re8");
+		expect(lineOf(target)).toBe("‹ › … 8 Bb3 Ba7 9 h3 h6 10 Nbd2 Re8");
 		expect(current(target)).toBe("Ba7");
 		unmount(app);
 		restore();
@@ -167,7 +167,7 @@ describe("a mistake's card on the board", () => {
 		// opens on 2...Nc6: 2.Nf3 leads, Nc6 is the second move showing
 		const { target, app } = await show(longCard(4));
 		await tick();
-		expect(lineOf(target)).toBe("‹ › … 2 Nf3 Nc6 3 Bc4 Bc5 4 c3 Nf6 5 d3 d6 6 O-O O-O 7 Re1 a6 8 Bb3 Ba7 …");
+		expect(lineOf(target)).toBe("‹ › … 2 Nf3 Nc6 3 Bc4 Bc5 4 c3 Nf6 …");
 		expect(dots(target)).toEqual(["Show the earlier moves", "Show the later moves"]);
 		expect(current(target)).toBe("Nc6");
 		unmount(app);
@@ -179,7 +179,7 @@ describe("a mistake's card on the board", () => {
 		// opens on 3.Bc4: 2...Nc6 leads, and brings 2.Nf3 with it
 		const { target, app } = await show(longCard(5));
 		await tick();
-		expect(lineOf(target)).toBe("‹ › … 2 Nf3 Nc6 3 Bc4 Bc5 4 c3 Nf6 5 d3 d6 6 O-O O-O 7 Re1 a6 8 Bb3 Ba7 …");
+		expect(lineOf(target)).toBe("‹ › … 2 Nf3 Nc6 3 Bc4 Bc5 4 c3 Nf6 …");
 		expect(current(target)).toBe("Bc4");
 		unmount(app);
 		restore();
@@ -189,7 +189,7 @@ describe("a mistake's card on the board", () => {
 		const restore = layOut();
 		const { target, app } = await show(longCard(4));
 		await tick();
-		// forward off the end of the second row
+		// forward off the end of the row
 		await step(target, "Next move", 13);
 		expect(current(target)).toBe("h3");
 		expect(dots(target)).toEqual(["Show the earlier moves"]);
@@ -202,15 +202,15 @@ describe("a mistake's card on the board", () => {
 		restore();
 	});
 
-	it("is the whole line, with no …, when it fits two rows", async () => {
+	it("is the whole line, with no …, when it fits the row", async () => {
 		const restore = layOut();
 		const card = longCard(4);
-		card.front[0].content[0].moves.length = 12;
+		card.front[0].content[0].moves.length = 6;
 		const { target, app } = await show(card);
 		await tick();
 		expect(dots(target)).toEqual([]);
 		expect(lineOf(target)).toContain("‹ › 1 e4 e5");
-		expect(lineOf(target)).toContain("6 O-O O-O");
+		expect(lineOf(target)).toContain("3 Bc4 Bc5");
 		unmount(app);
 		restore();
 	});
@@ -231,7 +231,7 @@ describe("a mistake's card on the board", () => {
 		await tick();
 		expect(current(target)).toBe("Ba7");
 		expect(dots(target)).toEqual(["Show the earlier moves"]);
-		expect(lineOf(target)).toBe("‹ › … 4 c3 Nf6 5 d3 d6 6 O-O O-O 7 Re1 a6 8 Bb3 Ba7 9 h3 h6 10 Nbd2 Re8");
+		expect(lineOf(target)).toBe("‹ › … 8 Bb3 Ba7 9 h3 h6 10 Nbd2 Re8");
 
 		// and one that opens early, after one opened late
 		props.card = { ...longCard(4), id: "third" };

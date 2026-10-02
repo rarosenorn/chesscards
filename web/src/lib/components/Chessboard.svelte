@@ -3,6 +3,7 @@
 	import "cm-chessboard/assets/chessboard.css"
 	import "cm-chessboard/assets/extensions/arrows/arrows.css"
 	import "cm-chessboard/assets/extensions/markers/markers.css"
+	import { Chess } from "chess.js"
 	import { Chessboard, INPUT_EVENT_TYPE } from "cm-chessboard/src/Chessboard.js"
 	import { LayeredArrows } from "$lib/layered-arrows.js"
 	import { Markers, MARKER_TYPE as PIECE_MARKER } from "cm-chessboard/src/extensions/markers/Markers.js"
@@ -289,6 +290,9 @@
 	// Once the line is through the host is told, and turns the card.
 	let finds = $state({});
 	let missed = false;
+	// played through to the end: "clean", or "late" if any move took a
+	// second try. Not set by Show — that is the answer given, not found.
+	let puzzleDone = $state(null);
 	let puzzleTimer = null;
 	const resetPuzzle = () => {
 		clearTimeout(puzzleTimer);
@@ -299,6 +303,7 @@
 		solved = 0;
 		finds = {};
 		missed = false;
+		puzzleDone = null;
 	}
 	// A card turned back over (study's Hide) is the question again, and its
 	// puzzle starts over from the first move.
@@ -330,7 +335,11 @@
 	);
 	// at once — but not inside the board's own handling of the move that
 	// finished it, which has still to put the piece down
+	const markDone = () => {
+		puzzleDone = Object.values(finds).includes("late") ? "late" : "clean";
+	}
 	const finishPuzzle = () => {
+		markDone();
 		puzzleTimer = setTimeout(() => onSolved?.(), 0);
 	}
 	// the other side's reply, a beat after the player's move; if the line
@@ -416,6 +425,7 @@
 		if (!made.theMove) {
 			// a mate the line does not have: won all the same. The board is put
 			// back on the line's own position as the card turns.
+			markDone();
 			puzzleTimer = setTimeout(() => { snapTo(displayFen); onSolved?.(); }, 0);
 			return true;
 		}
@@ -455,6 +465,20 @@
 	// profile's choice ("Highlight last move"). A line's first position has
 	// no move behind it, and no tint.
 	const LAST_MOVE = { class: "marker-last-move", slice: "markerSquare" };
+	// The king that is mated in the position on screen, by its square: the
+	// board marks it and the strip above says Checkmate. null for any other
+	// position, and for one chess.js cannot judge (a free-form setup).
+	const MATED = { class: "marker-mated", slice: "markerSquare" };
+	let matedKing = $derived.by(() => {
+		try {
+			const chess = new Chess(displayFen);
+			if (!chess.isCheckmate()) return null;
+			for (const rank of chess.board())
+				for (const piece of rank)
+					if (piece?.type === "k" && piece.color === chess.turn()) return piece.square;
+		} catch { /* not a position chess.js holds */ }
+		return null;
+	});
 	let everyMove = $derived(!!boardPrefs().highlightEveryMove);
 	let lastMove = $derived.by(() => {
 		if (asidePly != null) {
@@ -519,7 +543,7 @@
 		const fen = displayFen;
 		const front = frontAnnotation;
 		const back = backAnnotation;
-		void lastMove;
+		void lastMove; void matedKing;
 		if (!cmBoard) return;
 		// Only a step animates, and only within the board it stepped on: study
 		// and browse reuse this component across cards, and tweening one
@@ -542,6 +566,8 @@
 		stepping = false;
 		renderedBoard = normalized;
 		showAnnotations(cmBoard, front, back, backDots);
+		cmBoard.removeMarkers(MATED);
+		if (matedKing) cmBoard.addMarker(MATED, matedKing);
 		cmBoard.removeMarkers(LAST_MOVE);
 		if (lastMove) {
 			cmBoard.addMarker(LAST_MOVE, lastMove.from);
@@ -954,7 +980,12 @@
 			></span>
 		{/if}
 		{#if normalized.puzzle}
-			<span class="puzzle-tag">Puzzle</span>
+			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>
+				{#if puzzleDone}✓ {/if}Puzzle
+			</span>
+		{/if}
+		{#if matedKing}
+			<span class="mate-tag">Checkmate</span>
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyze</a>
@@ -1101,6 +1132,30 @@
 		font-size: 0.8rem;
 		line-height: 1.3;
 		color: rgba(0, 0, 0, 0.55);
+	}
+	/* played through: the tag fills, green — or orange if a move was missed */
+	.puzzle-tag.done,
+	.puzzle-tag.done-late,
+	.mate-tag {
+		padding: 0 6px;
+		border-radius: 3px;
+		font-size: 0.8rem;
+		line-height: 1.3;
+		color: white;
+	}
+	.puzzle-tag.done {
+		background-color: #2e9e5b;
+	}
+	.puzzle-tag.done-late {
+		background-color: #d98a1f;
+	}
+	/* the position on the board is mate: said in the strip, and on the king */
+	.mate-tag {
+		background-color: #b3261e;
+	}
+	.board :global(.cm-chessboard .markers .marker.marker-mated) {
+		fill: #d9362b;
+		opacity: 0.6;
 	}
 	.analysis-link {
 		margin-left: auto;

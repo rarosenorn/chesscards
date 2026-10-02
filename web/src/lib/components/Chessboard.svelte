@@ -300,8 +300,10 @@
 			&& visiblePlies < replay.moveInfos.length
 			&& positions[displayIndex]?.split(" ")[1] === solver
 	);
+	// at once — but not inside the board's own handling of the move that
+	// finished it, which has still to put the piece down
 	const finishPuzzle = () => {
-		puzzleTimer = setTimeout(() => onSolved?.(), 450);
+		puzzleTimer = setTimeout(() => onSolved?.(), 0);
 	}
 	// the other side's reply, a beat after the player's move; if the line
 	// ends on the player's move, or on this reply, the puzzle is done
@@ -333,7 +335,7 @@
 		if (!made.theMove) {
 			// a mate the line does not have: won all the same. The board is put
 			// back on the line's own position as the card turns.
-			puzzleTimer = setTimeout(() => { snapTo(displayFen); onSolved?.(); }, 450);
+			puzzleTimer = setTimeout(() => { snapTo(displayFen); onSolved?.(); }, 0);
 			return true;
 		}
 		solved += 1;

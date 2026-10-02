@@ -252,7 +252,7 @@
 	let cutAfter = $derived(folds && !openedAfter && foldEnd != null);
 
 	// An opened side can be folded away again: where its "…" stood there is
-	// a "÷" for as long as it is open. If the board stands on a move that
+	// a fold mark for as long as it is open. If the board stands on a move that
 	// goes with it, the board returns to where it opened — a move left
 	// standing in the hidden part would only open it again.
 	let openBefore = $derived(folds && openedBefore && foldStart > 0);
@@ -893,6 +893,16 @@
 	{/each}
 {/snippet}
 
+<!-- the fold mark: a bar with a dot above and below, drawn rather than typed,
+     so its width and weight are the app's and not the font's -->
+{#snippet foldIcon()}
+	<svg class="fold-icon" viewBox="0 0 16 16" aria-hidden="true">
+		<path d="M3.5 8 H12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" />
+		<circle cx="8" cy="3.8" r="1.1" fill="currentColor" />
+		<circle cx="8" cy="12.2" r="1.1" fill="currentColor" />
+	</svg>
+{/snippet}
+
 {#snippet backMarker()}
 	<!-- svelte-ignore a11y_no_static_element_interactions -- pointer-only drag; the divider is a label, not a control, wherever it cannot move -->
 	<span
@@ -974,13 +984,13 @@
 			{#if cutBefore}
 				<button class="fold-btn" aria-label="Show the earlier moves" onclick={() => openedBefore = true}>…</button>
 			{:else if openBefore}
-				<button class="fold-btn fold-close" aria-label="Hide the earlier moves" onclick={foldBefore}><span>÷</span></button>
+				<button class="fold-btn fold-close" aria-label="Hide the earlier moves" onclick={foldBefore}>{@render foldIcon()}</button>
 			{/if}
 			{@render pairs(shownLine, true)}
 			{#if cutAfter}
 				<button class="fold-btn" aria-label="Show the later moves" onclick={() => openedAfter = true}>…</button>
 			{:else if openAfter}
-				<button class="fold-btn fold-close" aria-label="Hide the later moves" onclick={foldAfter}><span>÷</span></button>
+				<button class="fold-btn fold-close" aria-label="Hide the later moves" onclick={foldAfter}>{@render foldIcon()}</button>
 			{/if}
 			<!-- The end spot: a line that is all front. Only while the marker is
 			     being dragged there — a board with no boundary says so by
@@ -1182,13 +1192,14 @@
 		color: rgba(0, 0, 0, 0.5);
 		cursor: pointer;
 	}
-	/* the ÷ drawn half as wide again as the font has it, to read as a bar */
 	.fold-close {
-		padding: 1px 7px;
+		padding: 1px 4px;
+		align-self: center;
+		display: inline-flex;
 	}
-	.fold-close span {
-		display: inline-block;
-		transform: scaleX(1.5);
+	.fold-icon {
+		width: 14px;
+		height: 14px;
 	}
 	button.fold-btn:hover {
 		background-color: gainsboro;

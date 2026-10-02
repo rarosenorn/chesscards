@@ -989,9 +989,7 @@
 			></span>
 		{/if}
 		{#if normalized.puzzle}
-			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>
-				{#if puzzleDone}✓ {/if}Puzzle
-			</span>
+			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone}<svg class="done-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.6 L6.4 12 L13 4.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none" /></svg>{/if}Puzzle</span>
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyze</a>
@@ -1149,9 +1147,18 @@
 	/* played through: the tag fills, green — or orange if a move was missed */
 	.puzzle-tag.done,
 	.puzzle-tag.done-late {
-		padding: 0 6px;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		/* the same room either side of what it holds */
+		padding: 0 7px;
 		border-radius: 3px;
 		color: white;
+	}
+	.done-check {
+		width: 0.85em;
+		height: 0.85em;
+		flex: none;
 	}
 	.puzzle-tag.done {
 		background-color: #2e9e5b;

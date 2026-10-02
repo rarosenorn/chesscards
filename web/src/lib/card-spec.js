@@ -156,7 +156,7 @@ export const cardBuilder = bad => {
 
 	const buildBoard = (spec, label) => {
 		if (typeof spec === "string") spec = { fen: spec }
-		const { fen, moves = [], orientation = "w", solutionFrom = null, openAt = null } = spec
+		const { fen, moves = [], orientation = "w", solutionFrom = null, openAt = null, puzzle = false } = spec
 
 		if (typeof fen !== "string" || !isValidFen(fen)) bad(`${label}: invalid FEN ${JSON.stringify(fen)}`)
 		if (!["w", "b"].includes(orientation)) bad(`${label}: orientation must be "w" or "b"`)
@@ -196,6 +196,7 @@ export const cardBuilder = bad => {
 		return {
 			fen, moves, annotations, orientation,
 			...(solutionFrom != null && { solutionFrom }),
+			...(puzzle && solutionFrom != null && { puzzle: true }),
 			...(openAt != null && { openAt }),
 			...(Object.keys(solutionAnnotations).length > 0 && { solutionAnnotations })
 		}

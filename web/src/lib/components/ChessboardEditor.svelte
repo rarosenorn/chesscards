@@ -76,6 +76,8 @@
 	let showBack = $state(resume ? resume.showBack : true);
 	// the position the shown board opens at; null = the start
 	let openAt = $state(resume ? resume.openAt : (initial.openAt ?? null));
+	// the back moves are to be played in study, not just revealed
+	let puzzle = $state(resume ? resume.puzzle ?? false : (initial.puzzle ?? false));
 
 	let fenIsValid = $derived(isValidFen(currentFen));
 	// any valid FEN can record moves — free-form setups (two kings, missing
@@ -651,6 +653,7 @@
 				solutionFrom,
 				solutionAnnotations: $state.snapshot(solutionAnnotations),
 				openAt,
+				puzzle,
 				recordingAnswer,
 				showBack,
 				orientation,
@@ -672,6 +675,7 @@
 		solutionFrom,
 		solutionAnnotations: $state.snapshot(solutionAnnotations),
 		openAt,
+		puzzle,
 		orientation
 	});
 
@@ -1001,6 +1005,14 @@
 					aria-pressed={opensHere}
 					onclick={toggleOpenAt}
 				>Open here</button>
+				<!-- only a line with a back has moves to be played -->
+				{#if solutionFrom != null}
+					<button
+						class="std-btn open-here-btn puzzle-btn"
+						aria-pressed={puzzle}
+						onclick={() => puzzle = !puzzle}
+					>Play as puzzle</button>
+				{/if}
 				<button
 					class="std-btn step-btn"
 					aria-label="Previous move"
@@ -1587,6 +1599,10 @@
 		padding: 3px 10px;
 		font-size: 0.8rem;
 		line-height: 1.6;
+	}
+	/* beside Open here, taking over its job of holding the arrows right */
+	.open-here-btn:has(+ .puzzle-btn) {
+		margin-right: 0;
 	}
 	.open-here-btn[aria-pressed="true"] {
 		background-color: var(--accent);

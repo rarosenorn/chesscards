@@ -88,6 +88,8 @@
 //                                        // hidden until the card is turned.
 //   "openAt": 4,                         // optional ply the board opens at
 //                                        // (default: the start)
+//   "puzzle": true,                      // optional. in study the hidden moves
+//                                        // are played on the board, not revealed
 //   "arrows":  { "0": [["info","c1","h6"]] },   // keyed by ply index
 //   "markers": { "0": [["success","e5"]] },
 //   "solutionArrows": { ... }, "solutionMarkers": { ... }   // shown on turn

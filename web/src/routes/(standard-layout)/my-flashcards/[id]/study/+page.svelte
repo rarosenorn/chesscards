@@ -200,6 +200,19 @@
 		isCardTurned = true;
 	}
 
+	// Boards marked as puzzles are played on the front; the card turns by
+	// itself once every one of them has been played through.
+	const isPuzzle = board => !!board?.puzzle && board.solutionFrom != null;
+	let frontPuzzles = $derived(
+		(currentCard?.front ?? []).filter(block => block.type === "chessboards").flatMap(block => block.content).filter(isPuzzle).length
+	);
+	let solvedBoards = new Set();
+	$effect(() => { void currentCard?.id; solvedBoards = new Set(); });
+	const boardSolved = n => {
+		solvedBoards.add(n);
+		if (!isCardTurned && solvedBoards.size >= frontPuzzles) showAnswer();
+	}
+
 	let preview = $derived(isTactic ? null : scheduler.repeat(currentCard, new Date(previewAt)));
 
 	let frontBoardCount = $derived(currentCard ? countBoards(currentCard.front) : 0);
@@ -509,6 +522,7 @@
 						aside={asides[n]}
 						onPosition={at => boardAt[n] = at}
 						lines={() => moveRefLines(cardElement, n)}
+						onSolved={() => boardSolved(n)}
 					/>
 					</div>
 				{/each}

@@ -3,12 +3,13 @@
 	import "cm-chessboard/assets/chessboard.css"
 	import "cm-chessboard/assets/extensions/arrows/arrows.css"
 	import "cm-chessboard/assets/extensions/markers/markers.css"
-	import { Chessboard } from "cm-chessboard/src/Chessboard.js"
+	import { Chessboard, INPUT_EVENT_TYPE } from "cm-chessboard/src/Chessboard.js"
 	import { LayeredArrows } from "$lib/layered-arrows.js"
-	import { Markers } from "cm-chessboard/src/extensions/markers/Markers.js"
+	import { Markers, MARKER_TYPE as PIECE_MARKER } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { normalizeBoard } from "$lib/card-utils.js"
 	import { replayMoves, showAnnotations, isPositionFinished } from "$lib/board-utils.js"
 	import { playMoveSound } from "$lib/sounds.js"
+	import { tryMove } from "$lib/puzzle.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
 
 	// `board` is a board object ({ fen, moves, annotations, solutionFrom,
@@ -32,7 +33,12 @@
 	// in the same terms, so the text can mark the move it is showing.
 	// `lines` returns the asides the card's text writes for this board, in
 	// reading order, for Shift+arrows to step between.
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, analysis = false, backDots = true, onSolutionFromChange = null, aside = null, onPosition = null, lines = null, children } = $props();
+	// `onSolved` makes a board marked `puzzle` one to be played: until the
+	// reveal, the back moves of the side to move are made on the board, the
+	// other side's replies play themselves, and onSolved is called when the
+	// line is through. Without it (browse, the editors) such a board is an
+	// ordinary one.
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, analysis = false, backDots = true, onSolutionFromChange = null, aside = null, onPosition = null, lines = null, onSolved = null, children } = $props();
 
 	let normalized = $derived(normalizeBoard(board));
 	let replay = $derived(replayMoves(normalized));
@@ -42,8 +48,11 @@
 			? null
 			: Math.min(normalized.solutionFrom, replay.moveInfos.length)
 	);
+	// how many of the back moves a puzzle has had played so far: they join
+	// the line as they are found (never moves on while the board is no puzzle)
+	let solved = $state(0);
 	let visiblePlies = $derived(
-		revealed || solutionFrom == null ? replay.moveInfos.length : solutionFrom
+		revealed || solutionFrom == null ? replay.moveInfos.length : Math.min(solutionFrom + solved, replay.moveInfos.length)
 	);
 	let positions = $derived(replay.fens.slice(0, visiblePlies + 1));
 	// the aside being followed off this board's line, if any, and how far into
@@ -72,7 +81,7 @@
 	let stepping = false;
 	// a different board (e.g. next flashcard) starts back at its own question,
 	// with nothing followed off it
-	$effect(() => { void board; currentIndex = openAt; following = null; asidePly = null; openedBefore = false; openedAfter = false; });
+	$effect(() => { void board; currentIndex = openAt; following = null; asidePly = null; openedBefore = false; openedAfter = false; resetPuzzle(); });
 	let displayIndex = $derived(Math.min(currentIndex, positions.length - 1));
 
 	// An aside: moves the card's text writes off this board's line, at a ply of
@@ -246,6 +255,87 @@
 		const at = displayIndex - 1;
 		if (cutBefore && at < foldStart) openedBefore = true;
 		if (cutAfter && at > foldEnd) openedAfter = true;
+	});
+
+	// A puzzle board, played. The move asked for is the next back move; the
+	// player makes it on the board. Lichess's rule for what counts: the move
+	// the line has, or any move that mates. A right move joins the line —
+	// green if it was found at once, orange after a wrong try — and the other
+	// side's reply plays itself; a wrong one goes back where it came from.
+	// Once the line is through the host is told, and turns the card.
+	let finds = $state({});
+	let missed = false;
+	let puzzleTimer = null;
+	const resetPuzzle = () => {
+		clearTimeout(puzzleTimer);
+		solved = 0;
+		finds = {};
+		missed = false;
+	}
+	let puzzling = $derived(
+		!!normalized.puzzle && !!onSolved && !revealed && !authorView && !inEditor
+			&& solutionFrom != null && solutionFrom < replay.moveInfos.length
+	);
+	let solver = $derived(solutionFrom != null ? replay.fens[solutionFrom]?.split(" ")[1] : null);
+	// the board is waiting for the player's move: at the end of what the line
+	// shows, with more to come, and theirs to make
+	let awaiting = $derived(
+		puzzling && asidePly == null && displayIndex === visiblePlies
+			&& visiblePlies < replay.moveInfos.length
+			&& positions[displayIndex]?.split(" ")[1] === solver
+	);
+	const finishPuzzle = () => {
+		puzzleTimer = setTimeout(() => onSolved?.(), 450);
+	}
+	// the other side's reply, a beat after the player's move; if the line
+	// ends on the player's move, or on this reply, the puzzle is done
+	const afterFind = () => {
+		if (solutionFrom + solved >= replay.moveInfos.length) return finishPuzzle();
+		puzzleTimer = setTimeout(() => {
+			solved += 1;
+			goTo(solutionFrom + solved);
+			if (solutionFrom + solved >= replay.moveInfos.length) finishPuzzle();
+		}, 450);
+	}
+	const flashWrong = square => {
+		cmBoard.addMarker(PIECE_MARKER.frameDanger, square);
+		setTimeout(() => cmBoard?.removeMarkers(PIECE_MARKER.frameDanger), 600);
+	}
+	const handlePuzzleInput = event => {
+		if (event.type === INPUT_EVENT_TYPE.moveInputStarted) return true;
+		if (event.type !== INPUT_EVENT_TYPE.validateMoveInput) return;
+		const at = solutionFrom + solved;
+		const made = tryMove(replay.fens[at], replay.moveInfos[at].san, event.squareFrom, event.squareTo);
+		if (!made) {
+			missed = true;
+			flashWrong(event.squareFrom);
+			return false;
+		}
+		finds = { ...finds, [at]: missed ? "late" : "clean" };
+		missed = false;
+		playMoveSound(made.san);
+		if (!made.theMove) {
+			// a mate the line does not have: won all the same. The board is put
+			// back on the line's own position as the card turns.
+			puzzleTimer = setTimeout(() => { snapTo(displayFen); onSolved?.(); }, 450);
+			return true;
+		}
+		solved += 1;
+		currentIndex = at + 1;
+		afterFind();
+		return true;
+	}
+	// the pieces can be moved exactly while a move is awaited
+	let inputOn = false;
+	$effect(() => {
+		if (!cmBoard) return;
+		if (awaiting && !inputOn) {
+			cmBoard.enableMoveInput(handlePuzzleInput, solver);
+			inputOn = true;
+		} else if (!awaiting && inputOn) {
+			cmBoard.disableMoveInput();
+			inputOn = false;
+		}
 	});
 
 	let chessboardElement = $state();
@@ -670,6 +760,8 @@
 				<button
 					class="move-btn"
 					class:current={live && asidePly == null && displayIndex === move.index + 1}
+					class:found={finds[move.index] === "clean"}
+					class:found-late={finds[move.index] === "late"}
 					class:opens-here={inEditor && openAt === move.index + 1}
 					disabled={authorView && !revealed && solutionFrom != null && move.index >= solutionFrom}
 					onclick={() => jumpTo(move.index + 1)}
@@ -969,6 +1061,15 @@
 		display: flex;
 		flex-wrap: nowrap;
 		width: max-content;
+	}
+	/* a puzzle's moves as the player found them: at once, or after a miss */
+	.move-btn.found {
+		color: #1b7a3d;
+		font-weight: 600;
+	}
+	.move-btn.found-late {
+		color: #c26a00;
+		font-weight: 600;
 	}
 	.move-btn:hover:enabled {
 		background-color: gainsboro;

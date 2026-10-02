@@ -8,6 +8,8 @@ import { isValidFen } from "./isValidFen.js"
 // study until the card is turned (null = no hidden moves), and on turning
 // solutionAnnotations adds to annotations per position. Boards saved before
 // these fields existed are bare FEN strings or lack the newer fields.
+// puzzle: in study the back moves are played on the board, one by one,
+// instead of being thought of and revealed; it means nothing without them.
 // In the editor a board also carries a client-only id (for keying, editing
 // state and drag and drop); getSideJson strips it before saving.
 const newBoard = fen => ({
@@ -18,6 +20,7 @@ const newBoard = fen => ({
 	solutionFrom: null,
 	solutionAnnotations: {},
 	openAt: null,
+	puzzle: false,
 	orientation: "w"
 });
 
@@ -32,13 +35,15 @@ const normalizeBoard = board =>
 			solutionFrom: board.solutionFrom ?? null,
 			solutionAnnotations: board.solutionAnnotations ?? {},
 			openAt: board.openAt ?? null,
+			puzzle: board.puzzle ?? false,
 			orientation: board.orientation ?? "w"
 		};
 
 // empty solution layers are omitted from the stored JSON
-const boardForJson = ({ fen, moves, annotations, solutionFrom, solutionAnnotations, openAt, orientation }) => ({
+const boardForJson = ({ fen, moves, annotations, solutionFrom, solutionAnnotations, openAt, puzzle, orientation }) => ({
 	fen, moves, annotations, orientation,
 	...(solutionFrom != null && { solutionFrom }),
+	...(puzzle && solutionFrom != null && { puzzle: true }),
 	...(openAt != null && { openAt }),
 	...(Object.keys(solutionAnnotations ?? {}).length > 0 && { solutionAnnotations })
 });

@@ -145,7 +145,7 @@ describe("a mistake's card on the board", () => {
 		// the … shows everything before, and is gone
 		target.querySelector(".move-line .fold-btn").click();
 		await tick();
-		expect(lineOf(target)).toContain("‹ › 1 e4 e5 2 Nf3");
+		expect(lineOf(target)).toContain("‹ › − 1 e4 e5 2 Nf3");
 		expect(dots(target)).toEqual([]);
 
 		// and the − now standing there puts it back as it was; from a move

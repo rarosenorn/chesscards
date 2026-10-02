@@ -169,6 +169,17 @@
 					<p class="hint">With the frame border, coordinates sit in the border instead of on the squares.</p>
 				</fieldset>
 				<fieldset>
+					<legend>Last move</legend>
+					<div class="pills">
+						{#each [true, false] as show}
+							<label class="pill" class:selected={prefs.highlightLastMove === show}>
+								<input type="radio" name="highlight-last-move" value={show} bind:group={prefs.highlightLastMove} />
+								{show ? "Highlight" : "Don't highlight"}
+							</label>
+						{/each}
+					</div>
+				</fieldset>
+				<fieldset>
 					<legend>Piece animation</legend>
 					<div class="pills">
 						{#each ANIMATION_DURATIONS as duration}

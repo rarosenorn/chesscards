@@ -25,6 +25,7 @@ export const actions = {
 		const boardTheme = data.get("board-theme");
 		const borderType = data.get("border-type");
 		const showCoordinates = data.get("show-coordinates") === "true";
+		const highlightLastMove = data.get("highlight-last-move") === "true";
 		const animationDuration = Number(data.get("animation-duration"));
 
 		if (
@@ -39,9 +40,9 @@ export const actions = {
 		await pool.query(
 			`update "user"
 			 set "pieceSet" = $1, "boardTheme" = $2, "borderType" = $3,
-			     "showCoordinates" = $4, "animationDuration" = $5
+			     "showCoordinates" = $4, "animationDuration" = $5, "highlightLastMove" = $7
 			 where id = $6`,
-			[pieceSet, boardTheme, borderType, showCoordinates, animationDuration, locals.userId]
+			[pieceSet, boardTheme, borderType, showCoordinates, animationDuration, locals.userId, highlightLastMove]
 		);
 
 		return { saved: "board" };

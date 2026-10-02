@@ -14,6 +14,7 @@ const DEFAULT_BOARD_PREFS = {
 	boardTheme: "default",
 	borderType: "black",
 	showCoordinates: true,
+	highlightLastMove: true,
 	animationDuration: 150
 };
 

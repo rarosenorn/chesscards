@@ -15,6 +15,7 @@ const load = async ({ locals }) => {
 			boardTheme: user.boardTheme,
 			borderType: user.borderType,
 			showCoordinates: user.showCoordinates,
+			highlightLastMove: user.highlightLastMove,
 			animationDuration: user.animationDuration
 		},
 		// the hour a study day begins; the zone it is read in is the browser's

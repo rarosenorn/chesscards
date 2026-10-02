@@ -416,19 +416,18 @@
 		(asidePly != null ? asideReplay?.fens[asidePly] : null) ?? positions[displayIndex]
 	);
 
-	// The move that led to the position on screen — the line's, or the
-	// aside's while one is followed — shown as Lichess shows it: its two
-	// squares under one translucent tint, which reads lighter on a light
-	// square and darker on a dark one. A line's first position has none.
+	// The move that led to the position the board opens on, shown as Lichess
+	// shows a last move: its two squares under one translucent tint, which
+	// reads lighter on a light square and darker on a dark one. It says what
+	// was just played in the position the card asks about — so only there,
+	// not on every move stepped to, and not at all for a board that opens at
+	// the start of its line.
 	const LAST_MOVE = { class: "marker-last-move", slice: "markerSquare" };
-	let lastMove = $derived.by(() => {
-		if (asidePly != null) {
-			if (asidePly > 0) return asideReplay ? moveSquares(asideReplay.fens[asidePly - 1], following.moves[asidePly - 1]) : null;
-			// its ply 0 is the line's own position it branches at
-			return following.from > 0 ? moveSquares(replay.fens[following.from - 1], normalized.moves[following.from - 1]) : null;
-		}
-		return displayIndex > 0 ? moveSquares(replay.fens[displayIndex - 1], normalized.moves[displayIndex - 1]) : null;
-	});
+	let lastMove = $derived(
+		asidePly == null && displayIndex > 0 && displayIndex === openAt
+			? moveSquares(replay.fens[displayIndex - 1], normalized.moves[displayIndex - 1])
+			: null
+	);
 
 	// the question's annotations always show, and on reveal the solution
 	// layer's add to them; an aside's positions are the text's, and carry none
@@ -483,6 +482,8 @@
 		const front = frontAnnotation;
 		const back = backAnnotation;
 		void lastMove;
+		// the profile's "Last move" setting; on unless switched off
+		const highlight = boardPrefs().highlightLastMove !== false;
 		if (!cmBoard) return;
 		// Only a step animates, and only within the board it stepped on: study
 		// and browse reuse this component across cards, and tweening one
@@ -506,7 +507,7 @@
 		renderedBoard = normalized;
 		showAnnotations(cmBoard, front, back, backDots);
 		cmBoard.removeMarkers(LAST_MOVE);
-		if (lastMove) {
+		if (lastMove && highlight) {
 			cmBoard.addMarker(LAST_MOVE, lastMove.from);
 			cmBoard.addMarker(LAST_MOVE, lastMove.to);
 		}

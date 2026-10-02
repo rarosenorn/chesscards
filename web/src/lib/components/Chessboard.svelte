@@ -1144,18 +1144,25 @@
 	}
 	/* a puzzle's moves as the player found them, a check mark before each:
 	   green found at once, orange after a miss. On the move the board stands
-	   on, the mark and the text take that move's own colour. */
+	   on they keep those colours, in the lighter shades that read on its
+	   blue. */
 	.move-btn.found::before,
 	.move-btn.found-late::before {
 		content: "✓";
 		margin-right: 2px;
 		font-size: 0.8em;
 	}
-	.move-btn.found:not(.current) {
+	.move-btn.found {
 		color: #1b7a3d;
 	}
-	.move-btn.found-late:not(.current) {
+	.move-btn.found-late {
 		color: #c26a00;
+	}
+	.move-btn.found.current {
+		color: #a9f5c4;
+	}
+	.move-btn.found-late.current {
+		color: #ffd08a;
 	}
 	/* the frame a right move wears: the red frame's shape, in green */
 	.board :global(.cm-chessboard .markers .marker.marker-frame-right) {

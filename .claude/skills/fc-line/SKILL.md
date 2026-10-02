@@ -52,13 +52,13 @@ card per line until the next branch. Always context, and ask why.
   green `solutionArrows` arrow per candidate; back = a bullet per candidate
   with the author's verdict.
 - **Move card** — "What is your move after 3...Bc5?! and why?". Board opens at
-  the position, the opponent's last move as a green `arrows` arrow there, the
-  answer as a green `solutionArrows` arrow; back = the move and the author's
+  the position (the board itself tints the squares of the opponent's last
+  move — no arrow for it), the answer as a green `solutionArrows` arrow; back = the move and the author's
   reason. Add a second ask where the course has one ("Which bishop move is less
   precise?").
 - **Line card** — "What are the next 3 plies following 4...Bxf2+?!". The board
   carries the whole line including the answer; `openAt` and `solutionFrom` at
-  the question; opponent's last move as a green `arrows` arrow at openAt; back
+  the question; back
   = one "- " bullet per ply: "- 5.Kxf2 We have to take the bishop, no choice."
   Chunk longer lines into 3-ply cards.
 - **Refutation card** — one per bad opponent move the course refutes
@@ -68,9 +68,9 @@ card per line until the next branch. Always context, and ask why.
 - **Plan card** — "After 9...h6, what is your plan?", back = the author's plan.
 
 **The opponent's move is already played on the board** (openAt is the ply
-after it) and its green arrow runs from the square it came from to where the
-piece now stands — never a board that stops before the move with the arrow
-pointing ahead. The user prefers this over their own Philidor cards.
+after it) — never a board that stops before the move with an arrow pointing
+ahead. No arrow marks it: the app tints the from and to squares of the move
+the board stands on (since 2026-10-02), so a last-move arrow is redundant.
 
 Orientation: the deck's side (white for Sielecki 1.e4). Prompts are plain and
 short; no bold.

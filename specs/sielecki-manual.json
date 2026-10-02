@@ -80,15 +80,6 @@
                 ],
                 "orientation": "w",
                 "openAt": 6,
-                "arrows": {
-                  "6": [
-                    [
-                      "success",
-                      "f8",
-                      "c5"
-                    ]
-                  ]
-                },
                 "solutionArrows": {
                   "6": [
                     [
@@ -176,15 +167,6 @@
                 ],
                 "orientation": "w",
                 "openAt": 8,
-                "arrows": {
-                  "8": [
-                    [
-                      "success",
-                      "d8",
-                      "h4"
-                    ]
-                  ]
-                },
                 "solutionArrows": {
                   "8": [
                     [
@@ -220,15 +202,6 @@
                 ],
                 "orientation": "w",
                 "openAt": 8,
-                "arrows": {
-                  "8": [
-                    [
-                      "success",
-                      "d8",
-                      "f6"
-                    ]
-                  ]
-                },
                 "solutionArrows": {
                   "8": [
                     [
@@ -266,16 +239,7 @@
                 ],
                 "orientation": "w",
                 "openAt": 8,
-                "solutionFrom": 8,
-                "arrows": {
-                  "8": [
-                    [
-                      "success",
-                      "g8",
-                      "f6"
-                    ]
-                  ]
-                }
+                "solutionFrom": 8
               }
             ]
           },
@@ -303,16 +267,7 @@
                 ],
                 "orientation": "w",
                 "openAt": 8,
-                "solutionFrom": 8,
-                "arrows": {
-                  "8": [
-                    [
-                      "success",
-                      "c5",
-                      "f2"
-                    ]
-                  ]
-                }
+                "solutionFrom": 8
               }
             ]
           },
@@ -422,15 +377,6 @@
                 ],
                 "orientation": "w",
                 "openAt": 12,
-                "arrows": {
-                  "12": [
-                    [
-                      "success",
-                      "e5",
-                      "g6"
-                    ]
-                  ]
-                },
                 "solutionArrows": {
                   "12": [
                     [
@@ -474,16 +420,7 @@
                 ],
                 "orientation": "w",
                 "openAt": 14,
-                "solutionFrom": 14,
-                "arrows": {
-                  "14": [
-                    [
-                      "success",
-                      "d7",
-                      "d6"
-                    ]
-                  ]
-                }
+                "solutionFrom": 14
               }
             ]
           },
@@ -562,16 +499,7 @@
                   "h6"
                 ],
                 "orientation": "w",
-                "openAt": 18,
-                "arrows": {
-                  "18": [
-                    [
-                      "success",
-                      "h7",
-                      "h6"
-                    ]
-                  ]
-                }
+                "openAt": 18
               }
             ]
           },

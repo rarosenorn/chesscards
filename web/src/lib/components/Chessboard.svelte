@@ -989,7 +989,7 @@
 			></span>
 		{/if}
 		{#if normalized.puzzle}
-			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone}<svg class="done-check" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="white" /><path d="M5.2 8.1 L7.2 10.7 L10.9 5.9" stroke={puzzleDone === "late" ? "#d98a1f" : "#2e9e5b"} stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none" /></svg>{/if}Puzzle</span>
+			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone}<svg class="done-check" viewBox="1.8 3.3 12.3 9.4" aria-hidden="true"><path d="M2.05 8 C1.9 7.1 2.5 6.75 3 6.75 C3.6 6.75 4 7.15 4.2 7.75 L4.85 9.7 C8 7 11.6 4.3 13.95 3.5 L5.9 11.7 C5.3 12.3 4.6 12.55 4 12.5 C3.6 12.5 3.4 12.3 3.3 12 Z" fill="currentColor" /></svg>{/if}Puzzle</span>
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyze</a>
@@ -1151,17 +1151,18 @@
 		align-items: center;
 		gap: 5px;
 		/* the same room either side of what it holds */
-		padding: 0 7px 0 5px;
+		padding: 0 7px 0 6px;
 		border-radius: 3px;
 		background-color: var(--tag-colour);
 		color: white;
 	}
 	/* drawn to its own edges: the box around it is the mark and nothing
 	   more, so the tag's padding is what stands either side of it */
-	/* a white disc with the tick cut in the tag's own colour */
+	/* a brush-stroke tick: a short rounded stem, a long rising tail to a
+	   point; drawn to its own edges, in the tag's white */
 	.done-check {
-		width: 0.95em;
-		height: 0.95em;
+		width: 1.05em;
+		height: 0.8em;
 		flex: none;
 	}
 	.puzzle-tag.done {

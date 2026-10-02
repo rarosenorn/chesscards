@@ -269,7 +269,7 @@
 	const resetPuzzle = () => {
 		clearTimeout(puzzleTimer);
 		clearTimeout(takeBackTimer);
-		clearTimeout(rightTimer);
+		rightAt = null;
 		cmBoard?.removeMarkers?.(PIECE_MARKER.frameDanger);
 		cmBoard?.removeMarkers?.(FRAME_RIGHT);
 		solved = 0;
@@ -319,16 +319,24 @@
 			if (solutionFrom + solved >= replay.moveInfos.length) finishPuzzle();
 		}, 450);
 	}
-	// A right move wears a green frame on the square it landed on for a
-	// moment: the wrong move's red one, answered.
+	// A right move wears a green frame on the square it landed on — the wrong
+	// move's red one, answered — until the next right move takes it over. It
+	// belongs to the position it was earned in (and the reply that follows):
+	// stepped anywhere else, the board drops it.
 	const FRAME_RIGHT = { class: "marker-frame-right", slice: "markerFrame" };
-	let rightTimer = null;
-	const markRight = square => {
+	let rightAt = $state(null);
+	const markRight = (square, index) => {
 		cmBoard.removeMarkers(FRAME_RIGHT);
 		cmBoard.addMarker(FRAME_RIGHT, square);
-		clearTimeout(rightTimer);
-		rightTimer = setTimeout(() => cmBoard?.removeMarkers?.(FRAME_RIGHT), 450);
+		rightAt = index;
 	}
+	$effect(() => {
+		if (rightAt == null || !cmBoard) return;
+		if (asidePly != null || (displayIndex !== rightAt && displayIndex !== rightAt + 1)) {
+			cmBoard.removeMarkers(FRAME_RIGHT);
+			rightAt = null;
+		}
+	});
 	// A wrong move is made all the same, stands for a moment with a red frame
 	// on the square it went to, and is then taken back — as Lichess does it.
 	let takeBackTimer = null;
@@ -371,7 +379,7 @@
 		finds = { ...finds, [at]: missed ? "late" : "clean" };
 		missed = false;
 		playMoveSound(made.san);
-		markRight(event.squareTo);
+		markRight(event.squareTo, at + 1);
 		if (!made.theMove) {
 			// a mate the line does not have: won all the same. The board is put
 			// back on the line's own position as the card turns.

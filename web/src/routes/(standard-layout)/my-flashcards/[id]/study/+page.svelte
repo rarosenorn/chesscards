@@ -226,7 +226,10 @@
 		currentCard ? frontBoardCount + countBoards(currentCard.back) : 0
 	);
 	// board numbers are only shown when the card has several boards to reference
-	let showBoardNumbers = $derived(cardBoardCount > 1);
+	// numbered once more than one board is on show: the back's boards count
+	// only when the card is turned, so a lone front board is not "1" to
+	// boards nobody can see yet
+	let showBoardNumbers = $derived((isCardTurned ? cardBoardCount : frontBoardCount) > 1);
 
 	// A move written in the card's text drives the board it names (see
 	// tiptap-move-ref.js): the click is handed to that board by number, and

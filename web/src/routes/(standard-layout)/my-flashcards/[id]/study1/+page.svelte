@@ -213,7 +213,10 @@
 		currentCard ? frontBoardCount + countBoards(currentCard.back) : 0
 	);
 	// board numbers are only shown when the card has several boards to reference
-	let showBoardNumbers = $derived(cardBoardCount > 1);
+	// numbered once more than one board is on show: the back's boards count
+	// only when the card is turned, so a lone front board is not "1" to
+	// boards nobody can see yet
+	let showBoardNumbers = $derived((isCardTurned ? cardBoardCount : frontBoardCount) > 1);
 
 	// --- the split layout ---
 	// Text on the left, boards on the right, instead of one column of blocks.

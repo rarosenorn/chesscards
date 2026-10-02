@@ -184,11 +184,17 @@
 	// the board the cuts were last worked out for: until they are this
 	// board's, they say nothing about where its moves are
 	let placedFor = null;
+	// Whether the cuts have been worked out at all yet. Not on the server,
+	// which cannot measure, nor in the browser before this has run: until
+	// then the line is held to one unseen row, so a page load does not show
+	// the whole line for a moment and then fold it.
+	let placed = $state(false);
 
 	// Lays the line out by the widths measured, as the browser will wrap it,
 	// to find what two rows hold.
 	const placeFold = () => {
 		if (!folds || !measureEl || !moveLineEl) return;
+		placed = true;
 		// less the line's own padding, and a little more: the widths read
 		// are whole pixels and the real ones are not, and over a row of
 		// moves the difference can be the one pixel that wraps a pair
@@ -968,7 +974,7 @@
 	     still renders while one is being followed, for its step buttons. -->
 	{#if lineMoves.length > 0 || following}
 		<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- pointer-only boundary placing; the editor's own controls set it by keyboard -->
-		<div class="move-line" bind:this={moveLineEl} use:lineHandle>
+		<div class="move-line" class:unplaced={folds && !placed} bind:this={moveLineEl} use:lineHandle>
 			<button
 				class="step-btn"
 				aria-label="Previous move"
@@ -1158,6 +1164,11 @@
 		align-items: baseline;
 		column-gap: 6px;
 		padding: 4px 2px;
+	}
+	.move-line.unplaced {
+		visibility: hidden;
+		max-height: 2rem;
+		overflow: hidden;
 	}
 	/* a pair (number + its moves) never breaks across lines */
 	.move-pair {

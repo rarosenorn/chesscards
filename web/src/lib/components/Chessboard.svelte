@@ -268,6 +268,8 @@
 	let puzzleTimer = null;
 	const resetPuzzle = () => {
 		clearTimeout(puzzleTimer);
+		clearTimeout(takeBackTimer);
+		cmBoard?.removeMarkers?.(PIECE_MARKER.frameDanger);
 		solved = 0;
 		finds = {};
 		missed = false;
@@ -315,9 +317,19 @@
 			if (solutionFrom + solved >= replay.moveInfos.length) finishPuzzle();
 		}, 450);
 	}
-	const flashWrong = square => {
+	// A wrong move is made all the same, stands for a moment with a red frame
+	// on the square it went to, and is then taken back — as Lichess does it.
+	let takeBackTimer = null;
+	const takeBack = square => {
+		const asked = board;
 		cmBoard.addMarker(PIECE_MARKER.frameDanger, square);
-		setTimeout(() => cmBoard?.removeMarkers(PIECE_MARKER.frameDanger), 600);
+		clearTimeout(takeBackTimer);
+		takeBackTimer = setTimeout(() => {
+			if (!cmBoard) return;
+			cmBoard.removeMarkers(PIECE_MARKER.frameDanger);
+			// only if it is still the same card's board being looked at
+			if (asked === board) cmBoard.setPosition(displayFen, true);
+		}, 350);
 	}
 	const handlePuzzleInput = event => {
 		// the square a piece is lifted from is tinted while it is in the hand,
@@ -341,8 +353,8 @@
 		if (!made) return false;
 		if (!made.right) {
 			missed = true;
-			flashWrong(event.squareFrom);
-			return false;
+			takeBack(event.squareTo);
+			return true;
 		}
 		finds = { ...finds, [at]: missed ? "late" : "clean" };
 		missed = false;

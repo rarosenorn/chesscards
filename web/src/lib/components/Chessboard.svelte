@@ -373,6 +373,8 @@
 		if (!made) return false;
 		if (!made.right) {
 			missed = true;
+			// it is a move made, and sounds like one
+			playMoveSound(made.san);
 			takeBack(event.squareTo);
 			return true;
 		}

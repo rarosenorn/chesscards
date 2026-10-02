@@ -1613,12 +1613,16 @@
 		padding: 3px 10px;
 		font-size: 0.8rem;
 		line-height: 1.6;
+		/* never onto two lines: a taller button stretches the whole row */
+		white-space: nowrap;
+		flex: none;
 	}
 	/* beside Open here, taking over its job of holding the arrows right */
 	.open-here-btn:has(+ .puzzle-switch) {
 		margin-right: 0;
 	}
 	.puzzle-switch {
+		flex: none;
 		margin-right: auto;
 		display: flex;
 		align-items: center;
@@ -1674,6 +1678,10 @@
 		padding: 3px 0;
 		font-size: 0.8rem;
 		line-height: 1.6;
+	}
+	/* the Puzzle switch shares their row, which is only so wide */
+	.step-row:has(.puzzle-switch) .step-btn {
+		width: 52px;
 	}
 	/* Its own row under the steppers: it is the one button here that takes
 	   something away, and the pointer is on the steppers a lot. */

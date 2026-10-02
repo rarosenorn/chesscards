@@ -301,9 +301,7 @@
 	const resetPuzzle = () => {
 		clearTimeout(puzzleTimer);
 		clearTimeout(takeBackTimer);
-		rightAt = null;
 		cmBoard?.removeMarkers?.(PIECE_MARKER.frameDanger);
-		cmBoard?.removeMarkers?.(FRAME_RIGHT);
 		solved = 0;
 		finds = {};
 		missed = false;
@@ -351,36 +349,22 @@
 	const afterFind = () => {
 		if (solutionFrom + solved >= replay.moveInfos.length) return finishPuzzle();
 		puzzleTimer = setTimeout(() => {
-			dropFrame();
 			solved += 1;
 			goTo(solutionFrom + solved);
 			if (solutionFrom + solved >= replay.moveInfos.length) finishPuzzle();
 		}, 450);
 	}
 	// A right move wears a green frame on the square it landed on — the wrong
-	// move's red one, answered — until the reply to it is played (the last
-	// move of a puzzle has no reply, and keeps it). It belongs to the
-	// position it was earned in: stepped anywhere else, the board drops it.
+	// move's red one, answered. It is the position's, not the moment's: the
+	// board shows it whenever it stands on a move the player found (or, once
+	// the card is turned, one of the player's moves shown), stepped to as
+	// much as just played, and on no other position.
 	const FRAME_RIGHT = { class: "marker-frame-right", slice: "markerFrame" };
-	let rightAt = $state(null);
-	const markRight = (square, index) => {
-		cmBoard.removeMarkers(FRAME_RIGHT);
-		cmBoard.addMarker(FRAME_RIGHT, square);
-		rightAt = index;
-	}
-	// the frame confirms the move just made, and has said so once the reply
-	// is played: it goes with the reply, as Lichess's mark does
-	const dropFrame = () => {
-		cmBoard.removeMarkers(FRAME_RIGHT);
-		rightAt = null;
-	}
-	$effect(() => {
-		if (rightAt == null || !cmBoard) return;
-		if (asidePly != null || displayIndex !== rightAt) {
-			cmBoard.removeMarkers(FRAME_RIGHT);
-			rightAt = null;
-		}
-	});
+	let rightSquare = $derived(
+		asidePly == null && displayIndex > 0 && foundAs(displayIndex - 1)
+			? moveSquares(replay.fens[displayIndex - 1], normalized.moves[displayIndex - 1])?.to ?? null
+			: null
+	);
 	// A wrong move is made all the same, stands for a moment with a red frame
 	// on the square it went to, and is then taken back — as Lichess does it.
 	let takeBackTimer = null;
@@ -425,7 +409,6 @@
 		finds = { ...finds, [at]: missed ? "late" : "clean" };
 		missed = false;
 		playMoveSound(made.san);
-		markRight(event.squareTo, at + 1);
 		if (!made.theMove) {
 			// a mate the line does not have: won all the same. The board is put
 			// back on the line's own position as the card turns.
@@ -556,7 +539,7 @@
 		const fen = displayFen;
 		const front = frontAnnotation;
 		const back = backAnnotation;
-		void lastMove; void matedKing;
+		void lastMove; void matedKing; void rightSquare;
 		if (!cmBoard) return;
 		// Only a step animates, and only within the board it stepped on: study
 		// and browse reuse this component across cards, and tweening one
@@ -580,6 +563,8 @@
 		renderedBoard = normalized;
 		showAnnotations(cmBoard, front, back, backDots);
 		placeMateBadge();
+		cmBoard.removeMarkers(FRAME_RIGHT);
+		if (rightSquare) cmBoard.addMarker(FRAME_RIGHT, rightSquare);
 		cmBoard.removeMarkers(LAST_MOVE);
 		if (lastMove) {
 			cmBoard.addMarker(LAST_MOVE, lastMove.from);

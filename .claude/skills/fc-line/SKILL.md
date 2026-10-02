@@ -78,8 +78,9 @@ short; no bold.
 ## 4. Wording
 
 Backs use **the course's own sentences**, trimmed — not paraphrase. Where the
-course gives no reason (e.g. "easily defused"), add a short factual one and
-say so in the final message. **The answer and the line that explains it ride on the board as back moves**
+course gives no reason (e.g. "easily defused"), add a short factual one, prefixed
+"claude:" on the card ("- 5...dxc6 claude: Black recaptures."), and say so in
+the final message. **The answer and the line that explains it ride on the board as back moves**
 (`moves` past `solutionFrom`), not in the text: a move card's board carries
 the answer move and the author's continuation after it ("4.Nxe5, based on the
 idea 4...Nxe5 5.d4" → moves ...Bc5 | Nxe5 Nxe5 d4), with the green answer

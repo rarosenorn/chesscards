@@ -1010,11 +1010,16 @@
 				>Open here</button>
 				<!-- only a line with a back has moves to be played -->
 				{#if solutionFrom != null}
-					<button
-						class="std-btn open-here-btn puzzle-btn"
-						aria-pressed={puzzle}
-						onclick={() => puzzle = !puzzle}
-					>Play as puzzle</button>
+					<label class="puzzle-switch">
+						Puzzle
+						<button
+							class="switch"
+							role="switch"
+							aria-checked={puzzle}
+							aria-label="Puzzle"
+							onclick={() => puzzle = !puzzle}
+						></button>
+					</label>
 				{/if}
 				<button
 					class="std-btn step-btn"
@@ -1610,8 +1615,49 @@
 		line-height: 1.6;
 	}
 	/* beside Open here, taking over its job of holding the arrows right */
-	.open-here-btn:has(+ .puzzle-btn) {
+	.open-here-btn:has(+ .puzzle-switch) {
 		margin-right: 0;
+	}
+	.puzzle-switch {
+		margin-right: auto;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 0.8rem;
+		cursor: pointer;
+	}
+	/* an on/off switch: a track, and a knob that crosses it */
+	.switch {
+		position: relative;
+		width: 30px;
+		height: 17px;
+		padding: 0;
+		border: none;
+		border-radius: 999px;
+		background-color: rgba(0, 0, 0, 0.25);
+		cursor: pointer;
+		transition: background-color 110ms ease;
+	}
+	.switch::after {
+		content: "";
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 13px;
+		height: 13px;
+		border-radius: 50%;
+		background-color: white;
+		transition: transform 110ms ease;
+	}
+	.switch[aria-checked="true"] {
+		background-color: var(--accent);
+	}
+	.switch[aria-checked="true"]::after {
+		transform: translateX(13px);
+	}
+	.switch:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
 	}
 	.open-here-btn[aria-pressed="true"] {
 		background-color: var(--accent);

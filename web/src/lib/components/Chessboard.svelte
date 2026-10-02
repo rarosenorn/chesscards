@@ -72,7 +72,7 @@
 	let stepping = false;
 	// a different board (e.g. next flashcard) starts back at its own question,
 	// with nothing followed off it
-	$effect(() => { void board; currentIndex = openAt; following = null; asidePly = null; shownRows = null; });
+	$effect(() => { void board; currentIndex = openAt; following = null; asidePly = null; });
 	let displayIndex = $derived(Math.min(currentIndex, positions.length - 1));
 
 	// An aside: moves the card's text writes off this board's line, at a ply of
@@ -151,63 +151,35 @@
 		return pairs;
 	});
 
-	// The line takes one row under the board: the row its current move is on.
-	// The line is laid out whole and the other rows are clipped away, so a row
-	// that comes into view — the board stepped onto a move of it, or the "…"
-	// at that end asked for the rest — is added above or below without the
-	// rows already showing re-wrapping. A row once shown stays until the next
-	// card. The editors show the line whole: it is what they are editing.
-	const rowed = $derived(!inEditor && !onSolutionFromChange);
-	let rowsEl = $state();
-	// where each row of the wrapped line starts, and where the last one ends
-	let rowTops = $state([]);
-	let rowsHeight = $state(0);
-	// { from, to }, the rows showing; null until this card's row is known
-	let shownRows = $state(null);
-	const pairTop = el => {
-		// pairs of one row can sit a pixel or two apart on their baseline
-		const top = el?.offsetTop ?? 0;
-		return rowTops.find(t => Math.abs(t - top) < 5) ?? top;
-	}
-	const measureRows = () => {
-		if (!rowsEl) return;
-		const tops = [];
-		for (const el of rowsEl.querySelectorAll(".move-pair")) {
-			if (!tops.some(t => Math.abs(t - el.offsetTop) < 5)) tops.push(el.offsetTop);
-		}
-		tops.sort((x, y) => x - y);
-		// a different wrap is a different set of rows: start over from the
-		// one the board is on
-		if (tops.length !== rowTops.length) shownRows = null;
-		rowTops = tops;
-		rowsHeight = rowsEl.offsetHeight;
-	}
+	// Where the moves are listed. Beside the board, as Lichess has them — a
+	// panel the board's height, a row per move pair, scrolling inside itself
+	// when the line outruns it — wherever the card has that much room to the
+	// board's right; under the board, as one wrapping line, where it has not
+	// (two boards side by side, a narrow pane) and in the editors, whose line
+	// is the thing being edited. syncWidth below decides, since it is the
+	// same measurement that tells the board's real width.
+	const PANEL_ROOM = 166;
+	let beside = $state(false);
+	let panelList = $state();
+	// the pairs as panel rows; one the answer starts in the middle of is two
+	// rows, so the "Back" divider can stand exactly where the answer begins
+	// (a null cell is the "…" a row opens with when Black's move starts it)
+	let panelRows = $derived(moveLine.flatMap(pair => {
+		const [first, second] = pair.moves;
+		if (second && markerAt(second.index)) return [
+			{ number: pair.number, cells: [first], marker: markerAt(first.index) },
+			{ number: pair.number, cells: [null, second], marker: true }
+		];
+		return [{ number: pair.number, cells: pair.ellipsis ? [null, first] : second ? [first, second] : [first], marker: markerAt(first.index) }];
+	}));
+	// the move the board stands on stays in view, by the list's own scroll
 	$effect(() => {
-		void moveLine;
-		if (!rowsEl) return;
-		untrack(measureRows);
-		const observer = new ResizeObserver(() => measureRows());
-		observer.observe(rowsEl);
-		return () => observer.disconnect();
-	});
-	$effect(() => {
-		if (!rowsEl || rowTops.length === 0 || asidePly != null) return;
-		const pair = moveLine.findIndex(p => p.moves.some(move => move.index === displayIndex - 1));
-		const row = Math.max(0, rowTops.indexOf(pairTop(rowsEl.querySelectorAll(".move-pair")[Math.max(pair, 0)])));
-		if (!shownRows) shownRows = { from: row, to: row };
-		else if (row < shownRows.from || row > shownRows.to)
-			shownRows = { from: Math.min(shownRows.from, row), to: Math.max(shownRows.to, row) };
-	});
-	let rowClip = $derived.by(() => {
-		if (!rowed || !shownRows || rowTops.length < 2) return null;
-		const last = rowTops.length - 1;
-		const from = Math.min(shownRows.from, last), to = Math.min(shownRows.to, last);
-		return {
-			top: rowTops[from],
-			height: (to < last ? rowTops[to + 1] : rowsHeight) - rowTops[from],
-			above: from > 0,
-			below: to < last
-		};
+		void displayIndex; void panelRows;
+		const current = panelList?.querySelector(".move-btn.current");
+		if (!current) return;
+		const top = current.offsetTop, bottom = top + current.offsetHeight;
+		if (top < panelList.scrollTop) panelList.scrollTop = top;
+		else if (bottom > panelList.scrollTop + panelList.clientHeight) panelList.scrollTop = bottom - panelList.clientHeight;
 	});
 
 	let chessboardElement = $state();
@@ -334,6 +306,14 @@
 				"--board-px", chessboardElement.firstElementChild.offsetWidth + "px"
 			);
 			snapToPixelGrid();
+			// room for the move panel: from the board's right edge to the edge
+			// of the card side it sits in — and none in a row of two boards,
+			// where what is to the right is the other board
+			const side = wrapperElement.closest(".card-side");
+			const room = side && !wrapperElement.closest(".board-grid-block")
+				? side.getBoundingClientRect().right - chessboardElement.firstElementChild.getBoundingClientRect().right
+				: 0;
+			beside = !inEditor && !onSolutionFromChange && room >= PANEL_ROOM;
 		};
 		syncWidth();
 		const resizeObserver = new ResizeObserver(syncWidth);
@@ -703,9 +683,36 @@
 	<!-- an aside is not listed here: the text it was written in is where it
 	     reads, and the highlight moves with the board over there. The line
 	     still renders while one is being followed, for its step buttons. -->
-	{#if lineMoves.length > 0 || following}
+	{#if beside && (lineMoves.length > 0 || following)}
+		<div class="move-panel">
+			<div class="panel-list" bind:this={panelList}>
+				{#each panelRows as row}
+					{#if row.marker}<div class="panel-back">Back</div>{/if}
+					<div class="panel-row">
+						<span class="move-number">{row.number}</span>
+						{#each row.cells as move}
+							{#if move}
+								<button
+									class="move-btn"
+									class:current={asidePly == null && displayIndex === move.index + 1}
+									disabled={authorView && !revealed && solutionFrom != null && move.index >= solutionFrom}
+									onclick={() => jumpTo(move.index + 1)}
+								>{move.san}</button>
+							{:else}
+								<span class="move-gap">…</span>
+							{/if}
+						{/each}
+					</div>
+				{/each}
+			</div>
+			<div class="panel-steps">
+				<button class="step-btn" aria-label="Previous move" disabled={atLineStart} onclick={previous}>‹</button>
+				<button class="step-btn" aria-label="Next move" disabled={atLineEnd} onclick={next}>›</button>
+			</div>
+		</div>
+	{:else if lineMoves.length > 0 || following}
 		<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- pointer-only boundary placing; the editor's own controls set it by keyboard -->
-		<div class="move-line" class:rowed bind:this={moveLineEl} use:lineHandle>
+		<div class="move-line" bind:this={moveLineEl} use:lineHandle>
 			<button
 				class="step-btn"
 				aria-label="Previous move"
@@ -718,33 +725,7 @@
 				disabled={atLineEnd}
 				onclick={next}
 			>›</button>
-			{#if rowed}
-				<!-- the "…"s keep their room while they have nothing to offer, so
-				     the rows between them never change width -->
-				{#if rowTops.length > 1}
-					<button
-						class="fold-btn"
-						class:idle={!rowClip?.above}
-						aria-label="Show the earlier moves"
-						onclick={() => shownRows = { from: 0, to: shownRows?.to ?? 0 }}
-					>…</button>
-				{/if}
-				<div class="rows-clip" style:height={rowClip ? `${rowClip.height}px` : null}>
-					<div class="rows" bind:this={rowsEl} style:margin-top={rowClip ? `${-rowClip.top}px` : null}>
-						{@render pairs()}
-					</div>
-				</div>
-				{#if rowTops.length > 1}
-					<button
-						class="fold-btn below"
-						class:idle={!rowClip?.below}
-						aria-label="Show the later moves"
-						onclick={() => shownRows = { from: shownRows?.from ?? 0, to: rowTops.length - 1 }}
-					>…</button>
-				{/if}
-			{:else}
-				{@render pairs()}
-			{/if}
+			{@render pairs()}
 			<!-- The end spot: a line that is all front. Only while the marker is
 			     being dragged there — a board with no boundary says so by
 			     showing nothing, and the board's own editor is where one is
@@ -788,6 +769,8 @@
 		outline: none;
 	}
 	.board-wrapper {
+		/* the move panel hangs off it */
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		contain: inline-size;
@@ -918,41 +901,58 @@
 		padding: 1px 4px;
 		cursor: pointer;
 	}
-	/* one row of the line: the step buttons and the "…"s stand still at its
-	   ends, the rows between them are clipped to the ones showing */
-	.move-line.rowed {
-		flex-wrap: nowrap;
-		align-items: flex-start;
-	}
-	.rows-clip {
-		flex: 1;
-		min-width: 0;
-		overflow: hidden;
-	}
-	.rows {
-		position: relative;
+	/* the moves beside the board: as tall as the board and level with it,
+	   hung off the board's right edge so the board itself stays where the
+	   card put it. The list scrolls inside the panel, as Lichess's does. */
+	.move-panel {
+		position: absolute;
+		top: calc(1.26rem + 2px);
+		left: calc(50% + var(--board-px, 100%) / 2 + 10px);
+		width: 150px;
+		height: var(--board-px, 100%);
 		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		column-gap: 6px;
+		flex-direction: column;
 	}
-	.fold-btn {
-		flex: none;
-		border: none;
-		background-color: transparent;
-		border-radius: 3px;
-		padding: 1px 4px;
-		color: rgba(0, 0, 0, 0.5);
-		cursor: pointer;
+	.panel-list {
+		position: relative;
+		flex: 0 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		font-size: 0.9rem;
 	}
-	.fold-btn:hover {
-		background-color: gainsboro;
+	.panel-row {
+		display: grid;
+		grid-template-columns: 2.1em minmax(0, 1fr) minmax(0, 1fr);
+		align-items: stretch;
 	}
-	.fold-btn.below {
-		align-self: flex-end;
+	.panel-row .move-number {
+		color: rgba(0, 0, 0, 0.6);
+		background-color: rgba(0, 0, 0, 0.04);
+		padding: 3px 0 3px 5px;
 	}
-	.fold-btn.idle {
-		visibility: hidden;
+	.panel-row .move-btn {
+		min-width: 0;
+		padding: 3px 5px;
+		border-radius: 0;
+		text-align: left;
+		font-size: inherit;
+		white-space: nowrap;
+	}
+	.move-gap {
+		padding: 3px 5px;
+		color: rgba(0, 0, 0, 0.4);
+	}
+	.panel-back {
+		padding: 2px 5px;
+		font-size: 0.75rem;
+		color: rgba(0, 0, 0, 0.55);
+		border-top: 1px solid rgba(0, 0, 0, 0.2);
+	}
+	.panel-steps {
+		display: flex;
+		justify-content: center;
+		gap: 4px;
+		padding-top: 4px;
 	}
 	.move-btn:hover:enabled {
 		background-color: gainsboro;

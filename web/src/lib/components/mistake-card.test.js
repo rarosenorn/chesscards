@@ -109,68 +109,59 @@ describe("a mistake's card on the board", () => {
 		return { target, app };
 	};
 
-	// jsdom lays nothing out, so the rows are given: four pairs to a row, 24px each
-	const ROW = 24;
-	const layOut = () => {
-		const top = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetTop");
-		const height = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
-		Object.defineProperty(HTMLElement.prototype, "offsetTop", { configurable: true, get() {
-			if (!this.classList.contains("move-pair")) return 0;
-			return Math.floor([...this.parentNode.querySelectorAll(".move-pair")].indexOf(this) / 4) * ROW;
-		} });
-		Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get() {
-			return this.classList.contains("rows") ? Math.ceil(this.querySelectorAll(".move-pair").length / 4) * ROW : 0;
-		} });
-		return () => {
-			Object.defineProperty(HTMLElement.prototype, "offsetTop", top);
-			Object.defineProperty(HTMLElement.prototype, "offsetHeight", height);
+	// jsdom lays nothing out; a card side this much wider than its board is
+	// what gives the moves room beside it
+	const roomBeside = () => {
+		const real = Element.prototype.getBoundingClientRect;
+		Element.prototype.getBoundingClientRect = function () {
+			const rect = real.call(this);
+			return this.classList?.contains("card-side") ? { ...rect, left: 0, right: 900, top: 0, bottom: 0, width: 900, height: 0 } : rect;
 		};
+		return () => { Element.prototype.getBoundingClientRect = real; };
 	};
-	// what of the line is in view: the top it is pulled up by, and how much shows
-	const rows = target => ({
-		from: (-parseFloat(target.querySelector(".rows").style.marginTop || "0") / ROW) || 0,
-		count: parseFloat(target.querySelector(".rows-clip").style.height) / ROW,
-		dots: [...target.querySelectorAll(".fold-btn")].map(btn => !btn.classList.contains("idle"))
-	});
 
-	it("shows the one row its move is on, with a … for the rows above and below", async () => {
-		const restore = layOut();
-		// ten pairs, three rows; 8...Ba7 is in the second
+	// a row of the panel as it reads: its cells, a space apart
+	const cells = row => row.children.length > 0 ? [...row.children].map(cell => cell.textContent.trim()).join(" ") : row.textContent.trim();
+
+	it("lists the moves under the board when there is no room beside it", async () => {
 		const { target, app } = await show(longCard(16));
-		await tick();
-		expect(target.querySelector(".move-btn.current").textContent.trim()).toBe("Ba7");
-		expect(rows(target)).toEqual({ from: 1, count: 1, dots: [true, true] });
-
-		// the … below shows the rest below, and has nothing more to offer
-		target.querySelector(".fold-btn.below").click();
-		await tick();
-		expect(rows(target)).toEqual({ from: 1, count: 2, dots: [true, false] });
-		target.querySelector(".fold-btn").click();
-		await tick();
-		expect(rows(target)).toEqual({ from: 0, count: 3, dots: [false, false] });
-		unmount(app);
-		restore();
-	});
-
-	it("adds the row above when the board is stepped back onto it, and keeps the one it left", async () => {
-		const restore = layOut();
-		const { target, app } = await show(longCard(16));
-		await tick();
-		const back = target.querySelector('.step-btn[aria-label="Previous move"]');
-		// 8...Ba7 back to 4...Nf6, the last move of the first row
-		for (let i = 0; i < 8; i++) { back.click(); await tick(); }
-		expect(target.querySelector(".move-btn.current").textContent.trim()).toBe("Nf6");
-		expect(rows(target)).toEqual({ from: 0, count: 2, dots: [false, true] });
-		unmount(app);
-		restore();
-	});
-
-	it("is a plain line when it fits one row", async () => {
-		const { target, app } = await show(longCard(6));
-		await tick();
-		expect(target.querySelector(".fold-btn")).toBe(null);
-		expect(target.querySelector(".rows-clip").style.height).toBe("");
+		expect(target.querySelector(".move-panel")).toBe(null);
 		expect(lineOf(target)).toContain("1 e4 e5");
+		expect(target.querySelector(".move-btn.current").textContent.trim()).toBe("Ba7");
 		unmount(app);
+	});
+
+	it("lists them beside the board when there is, a row a move pair", async () => {
+		const restore = roomBeside();
+		const { target, app } = await show(longCard(16));
+		await tick();
+		expect(target.querySelector(".move-line")).toBe(null);
+		const rowsText = [...target.querySelectorAll(".panel-row")].map(cells);
+		expect(rowsText.length).toBe(10);
+		expect(rowsText[0]).toBe("1 e4 e5");
+		expect(rowsText[7]).toBe("8 Bb3 Ba7");
+		expect(target.querySelector(".move-panel .move-btn.current").textContent.trim()).toBe("Ba7");
+
+		// a click on a move goes there, and the arrows under the list step
+		[...target.querySelectorAll(".move-panel .move-btn")].find(btn => btn.textContent.trim() === "Bc4").click();
+		await tick();
+		expect(target.querySelector(".move-panel .move-btn.current").textContent.trim()).toBe("Bc4");
+		target.querySelector('.panel-steps [aria-label="Next move"]').click();
+		await tick();
+		expect(target.querySelector(".move-panel .move-btn.current").textContent.trim()).toBe("Bc5");
+		unmount(app);
+		restore();
+	});
+
+	it("marks where the answer starts, even in the middle of a pair", async () => {
+		const restore = roomBeside();
+		const card = longCard(3);
+		card.front[0].content[0].solutionFrom = 3;
+		const { target, app } = await show(card);
+		await tick();
+		const list = [...target.querySelector(".panel-list").children].slice(0, 4).map(cells);
+		expect(list).toEqual(["1 e4 e5", "2 Nf3", "Back", "2 … Nc6"]);
+		unmount(app);
+		restore();
 	});
 });

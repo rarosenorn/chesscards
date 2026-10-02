@@ -163,12 +163,12 @@ describe("a mistake's card on the board", () => {
 		restore();
 	});
 
-	it("starts in the middle of a pair when the move before is Black's", async () => {
+	it("starts on a whole pair when the move before is Black's", async () => {
 		const restore = layOut();
-		// opens on 3.Bc4: 2...Nc6 leads
+		// opens on 3.Bc4: 2...Nc6 leads, and brings 2.Nf3 with it
 		const { target, app } = await show(longCard(5));
 		await tick();
-		expect(lineOf(target)).toContain("‹ › … 2 …Nc6 3 Bc4 Bc5");
+		expect(lineOf(target)).toBe("‹ › … 2 Nf3 Nc6 3 Bc4 Bc5 4 c3 Nf6 5 d3 d6 6 O-O O-O 7 Re1 a6 8 Bb3 Ba7 …");
 		expect(current(target)).toBe("Bc4");
 		unmount(app);
 		restore();

@@ -153,8 +153,8 @@
 
 	// The line under the board is two rows to begin with, when it is longer
 	// than that. They are its last two rows, if the move the board opens on
-	// is among them; if not, they start one move before that move, which is
-	// then the second move showing. What is left out stands behind a "…" at
+	// is among them; if not, they start at the move pair holding the move
+	// before that one, so it is the second or third move showing. What is left out stands behind a "…" at
 	// that end. Asking for it — the "…", or the board stepped into it by any
 	// means — shows everything on that side, until the next card. A "…" that
 	// has nothing behind it is not there at all, and takes no room. The
@@ -202,10 +202,12 @@
 		const first = moveLine[tail].moves[0].index;
 		const opening = openAt - 1;
 		if (tail === 0 || opening >= first) { foldStart = first; foldEnd = null; return; }
-		// not among them: from the move before the one the board opens on,
-		// two rows' worth, the second ending early enough for its "…"
-		const start = Math.max(0, opening - 1);
-		const rows = fill(moveLine.findIndex(pair => pair.moves.some(move => move.index >= start)));
+		// not among them: from the move before the one the board opens on —
+		// the whole pair that move is in, never half of one — two rows'
+		// worth, the second ending early enough for its "…"
+		const from = moveLine.findIndex(pair => pair.moves.some(move => move.index >= Math.max(0, opening - 1)));
+		const start = moveLine[from].moves[0].index;
+		const rows = fill(from);
 		const second = rows[1];
 		while (rows.length > 2 && second.pairs.length > 1 && second.used + dots > width) second.used -= widths[second.pairs.pop()] + ROW_GAP;
 		foldStart = start;

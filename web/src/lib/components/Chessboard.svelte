@@ -269,7 +269,9 @@
 	const resetPuzzle = () => {
 		clearTimeout(puzzleTimer);
 		clearTimeout(takeBackTimer);
+		clearTimeout(rightTimer);
 		cmBoard?.removeMarkers?.(PIECE_MARKER.frameDanger);
+		cmBoard?.removeMarkers?.(FRAME_RIGHT);
 		solved = 0;
 		finds = {};
 		missed = false;
@@ -317,6 +319,16 @@
 			if (solutionFrom + solved >= replay.moveInfos.length) finishPuzzle();
 		}, 450);
 	}
+	// A right move wears a green frame on the square it landed on for a
+	// moment: the wrong move's red one, answered.
+	const FRAME_RIGHT = { class: "marker-frame-right", slice: "markerFrame" };
+	let rightTimer = null;
+	const markRight = square => {
+		cmBoard.removeMarkers(FRAME_RIGHT);
+		cmBoard.addMarker(FRAME_RIGHT, square);
+		clearTimeout(rightTimer);
+		rightTimer = setTimeout(() => cmBoard?.removeMarkers?.(FRAME_RIGHT), 450);
+	}
 	// A wrong move is made all the same, stands for a moment with a red frame
 	// on the square it went to, and is then taken back — as Lichess does it.
 	let takeBackTimer = null;
@@ -359,6 +371,7 @@
 		finds = { ...finds, [at]: missed ? "late" : "clean" };
 		missed = false;
 		playMoveSound(made.san);
+		markRight(event.squareTo);
 		if (!made.theMove) {
 			// a mate the line does not have: won all the same. The board is put
 			// back on the line's own position as the card turns.
@@ -1133,6 +1146,12 @@
 	}
 	.move-btn.found-late:not(.current) {
 		color: #c26a00;
+	}
+	/* the frame a right move wears: the red frame's shape, in green */
+	.board :global(.cm-chessboard .markers .marker.marker-frame-right) {
+		stroke: #1b9e4b;
+		stroke-width: 1.8px;
+		opacity: 0.9;
 	}
 	/* Lichess's green for the square a piece has been picked up from */
 	.board :global(.cm-chessboard .markers .marker.marker-square) {

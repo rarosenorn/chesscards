@@ -207,7 +207,8 @@
 		(currentCard?.front ?? []).filter(block => block.type === "chessboards").flatMap(block => block.content).filter(isPuzzle).length
 	);
 	let solvedBoards = new Set();
-	$effect(() => { void currentCard?.id; solvedBoards = new Set(); });
+	// a new card, or this one turned back over, starts its puzzles afresh
+	$effect(() => { void currentCard?.id; if (!isCardTurned) solvedBoards = new Set(); });
 	const boardSolved = n => {
 		solvedBoards.add(n);
 		if (!isCardTurned && solvedBoards.size >= frontPuzzles) showAnswer();

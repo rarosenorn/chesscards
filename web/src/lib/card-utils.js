@@ -9,7 +9,8 @@ import { isValidFen } from "./isValidFen.js"
 // solutionAnnotations adds to annotations per position. Boards saved before
 // these fields existed are bare FEN strings or lack the newer fields.
 // puzzle: in study the back moves are played on the board, one by one,
-// instead of being thought of and revealed; it means nothing without them.
+// instead of being thought of and revealed. Without back moves there is
+// nothing to play: such a card is not saved (docPuzzlesWithoutBackBlocks).
 // In the editor a board also carries a client-only id (for keying, editing
 // state and drag and drop); getSideJson strips it before saving.
 const newBoard = fen => ({
@@ -43,7 +44,7 @@ const normalizeBoard = board =>
 const boardForJson = ({ fen, moves, annotations, solutionFrom, solutionAnnotations, openAt, puzzle, orientation }) => ({
 	fen, moves, annotations, orientation,
 	...(solutionFrom != null && { solutionFrom }),
-	...(puzzle && solutionFrom != null && { puzzle: true }),
+	...(puzzle && { puzzle: true }),
 	...(openAt != null && { openAt }),
 	...(Object.keys(solutionAnnotations ?? {}).length > 0 && { solutionAnnotations })
 });
@@ -288,6 +289,24 @@ const invalidBoardNumbers = (side, offset, cardDnd) => {
 	return numbers;
 }
 
+// Display numbers of the puzzle boards that have nothing to play — no back
+// moves — which a card cannot be saved with: the mistake would otherwise
+// only show in study. Counted as docInvalidBoardNumbersBlocks counts.
+const docPuzzlesWithoutBackBlocks = (doc, offset) => {
+	const numbers = [];
+	let n = offset;
+	for (const board of docBoardsBlocks(doc)) {
+		n += 1;
+		if (board.puzzle && (board.solutionFrom == null || board.solutionFrom >= (board.moves?.length ?? 0))) numbers.push(n);
+	}
+	return numbers;
+}
+
+const puzzleWithoutBackMessage = numbers =>
+	numbers.length > 1
+		? `Boards ${numbers.join(", ")} are puzzles but have no back moves`
+		: `Board ${numbers[0]} is a puzzle but has no back moves`;
+
 const invalidFenMessage = numbers =>
 	numbers.length > 1
 		? `Boards ${numbers.join(", ")} have invalid FENs`
@@ -316,4 +335,4 @@ const firstBoardWithMoves = (front, back) => {
 	return null;
 }
 
-export { newBoard, normalizeBoard, boardForJson, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docBoardsBlocks, docHasBoardPairBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage }
+export { newBoard, normalizeBoard, boardForJson, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docBoardsBlocks, docHasBoardPairBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage, docPuzzlesWithoutBackBlocks, puzzleWithoutBackMessage }

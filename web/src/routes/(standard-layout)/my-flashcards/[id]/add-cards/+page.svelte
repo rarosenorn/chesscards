@@ -20,7 +20,7 @@
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
 	import { createTabTrap } from "$lib/tab-trap.js"
 	import { createStage } from "../browse/browse.remote.js"
-	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docHasBoardPairBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
+	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docHasBoardPairBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage, docPuzzlesWithoutBackBlocks, puzzleWithoutBackMessage } from "$lib/card-utils.js"
 
 	// the shared deck context (layout); new cards are pushed into it so
 	// browse/study see them without a reload
@@ -174,6 +174,7 @@
 	const handleDocChanged = () => {
 		formAttemptedAndInvalid = false;
 		invalidFenNumbers = [];
+		emptyPuzzleNumbers = [];
 		clearTimeout(saveTimer);
 		saveTimer = setTimeout(persistDraft, 250);
 	}
@@ -278,6 +279,7 @@
 	// v1's invalid-FEN gating: shown after a blocked submit, cleared as the
 	// docs change
 	let invalidFenNumbers = $state([]);
+	let emptyPuzzleNumbers = $state([]);
 
 	// --- tab trap ---
 	// Tab cycles the three card-editing stops only — front text, back text,
@@ -489,6 +491,9 @@
 	{#if invalidFenNumbers.length > 0}
 		<p style="color: red; align-self: end; margin: 4px 16px 0 0;">{invalidFenMessage(invalidFenNumbers)}</p>
 	{/if}
+	{#if emptyPuzzleNumbers.length > 0}
+		<p style="color: red; align-self: end; margin: 4px 16px 0 0;">{puzzleWithoutBackMessage(emptyPuzzleNumbers)}</p>
+	{/if}
 	<form
 		bind:this={addCardForm}
 		class="add-form"
@@ -506,7 +511,11 @@
 				...docInvalidBoardNumbersBlocks(front, 0, boardUi),
 				...docInvalidBoardNumbersBlocks(back, frontCount, boardUi)
 			];
-			if (invalidFenNumbers.length > 0) {
+			emptyPuzzleNumbers = [
+				...docPuzzlesWithoutBackBlocks(front, 0),
+				...docPuzzlesWithoutBackBlocks(back, frontCount)
+			];
+			if (invalidFenNumbers.length > 0 || emptyPuzzleNumbers.length > 0) {
 				cancel();
 				return;
 			}

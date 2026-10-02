@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { firstBoardWithMoves } from "./card-utils.js"
+import { firstBoardWithMoves, docPuzzlesWithoutBackBlocks, puzzleWithoutBackMessage, boardForJson } from "./card-utils.js"
 
 // Where the arrow keys land on an active card: the first board, counted
 // across front then back, that has moves to step through.
@@ -30,5 +30,28 @@ describe("firstBoardWithMoves", () => {
 
 	it("handles a card with no boards at all", () => {
 		expect(firstBoardWithMoves([{ type: "text", content: {} }], null)).toBe(null);
+	});
+});
+
+// A puzzle with no back moves has nothing to play; the card is not saved.
+describe("docPuzzlesWithoutBackBlocks", () => {
+	const doc = (...boards) => ({ content: [{ type: "paragraph" }, { type: "chessboardBlock", attrs: { boards } }] });
+	const board = extra => ({ fen: "8/8/8/8/8/8/8/8 w - - 0 1", moves: ["e4", "e5"], ...extra });
+
+	it("names the puzzle boards with no back, by the numbers the card shows", () => {
+		const numbers = docPuzzlesWithoutBackBlocks(doc(
+			board({ puzzle: true, solutionFrom: 1 }),
+			board({ puzzle: true }),
+			board({}),
+			board({ puzzle: true, solutionFrom: 2 })
+		), 2);
+		expect(numbers).toEqual([4, 6]);
+		expect(puzzleWithoutBackMessage(numbers)).toBe("Boards 4, 6 are puzzles but have no back moves");
+		expect(puzzleWithoutBackMessage([1])).toBe("Board 1 is a puzzle but has no back moves");
+	});
+
+	it("keeps the puzzle mark on a board saved without back moves", () => {
+		expect(boardForJson({ ...board({ puzzle: true }), annotations: {}, orientation: "w" }).puzzle).toBe(true);
+		expect("puzzle" in boardForJson({ ...board({}), annotations: {}, orientation: "w" })).toBe(false);
 	});
 });

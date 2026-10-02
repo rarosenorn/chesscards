@@ -272,6 +272,17 @@
 		finds = {};
 		missed = false;
 	}
+	// A card turned back over (study's Hide) is the question again, and its
+	// puzzle starts over from the first move.
+	let wasRevealed = false;
+	$effect(() => {
+		const now = revealed;
+		if (wasRevealed && !now && normalized.puzzle) {
+			resetPuzzle();
+			currentIndex = untrack(() => openAt);
+		}
+		wasRevealed = now;
+	});
 	let puzzling = $derived(
 		!!normalized.puzzle && !!onSolved && !revealed && !authorView && !inEditor
 			&& solutionFrom != null && solutionFrom < replay.moveInfos.length
@@ -817,7 +828,7 @@
 				aria-label={blackToMove ? "Black to move" : "White to move"}
 			></span>
 		{/if}
-		{#if normalized.puzzle && solutionFrom != null}
+		{#if normalized.puzzle}
 			<span class="puzzle-tag">Puzzle</span>
 		{/if}
 		{#if analysis}
@@ -1071,14 +1082,15 @@
 		flex-wrap: nowrap;
 		width: max-content;
 	}
-	/* a puzzle's moves as the player found them: at once, or after a miss */
-	.move-btn.found {
-		color: #1b7a3d;
-		font-weight: 600;
+	/* a puzzle's moves as the player found them: at once, or after a miss.
+	   The move the board stands on keeps its own colour over these. */
+	.move-btn.found:not(.current) {
+		background-color: #2e9e5b;
+		color: white;
 	}
-	.move-btn.found-late {
-		color: #c26a00;
-		font-weight: 600;
+	.move-btn.found-late:not(.current) {
+		background-color: #d98a1f;
+		color: white;
 	}
 	.move-btn:hover:enabled {
 		background-color: gainsboro;

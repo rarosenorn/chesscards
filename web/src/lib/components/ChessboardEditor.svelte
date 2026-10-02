@@ -818,9 +818,18 @@
 					aria-label={blackToMove ? "Black to move" : "White to move"}
 				></span>
 			{/if}
-			{#if puzzle && solutionFrom != null}
-				<span class="puzzle-tag">Puzzle</span>
-			{/if}
+			<!-- the board's Puzzle mark, here with the switch that sets it: on,
+			     the back moves are played in study rather than revealed -->
+			<label class="puzzle-switch">
+				Puzzle
+				<button
+					class="switch"
+					role="switch"
+					aria-checked={puzzle}
+					aria-label="Puzzle"
+					onclick={() => puzzle = !puzzle}
+				></button>
+			</label>
 		</div>
 		<div class="ghost-host">
 			<!-- focusable (tabindex -1) so a freshly opened editor can receive
@@ -1008,19 +1017,6 @@
 					aria-pressed={opensHere}
 					onclick={toggleOpenAt}
 				>Open here</button>
-				<!-- only a line with a back has moves to be played -->
-				{#if solutionFrom != null}
-					<label class="puzzle-switch">
-						Puzzle
-						<button
-							class="switch"
-							role="switch"
-							aria-checked={puzzle}
-							aria-label="Puzzle"
-							onclick={() => puzzle = !puzzle}
-						></button>
-					</label>
-				{/if}
 				<button
 					class="std-btn step-btn"
 					aria-label="Previous move"
@@ -1088,12 +1084,6 @@
 		background: white;
 		border: 1px solid #262626;
 		box-sizing: border-box;
-	}
-	/* as on the closed board */
-	.puzzle-tag {
-		font-size: 0.8rem;
-		line-height: 1.3;
-		color: rgba(0, 0, 0, 0.55);
 	}
 	.side-to-move.black {
 		background: #262626;
@@ -1617,17 +1607,14 @@
 		white-space: nowrap;
 		flex: none;
 	}
-	/* beside Open here, taking over its job of holding the arrows right */
-	.open-here-btn:has(+ .puzzle-switch) {
-		margin-right: 0;
-	}
+	/* in the strip above the board, where the closed board says Puzzle */
 	.puzzle-switch {
-		flex: none;
-		margin-right: auto;
 		display: flex;
 		align-items: center;
 		gap: 6px;
 		font-size: 0.8rem;
+		line-height: 1.3;
+		color: rgba(0, 0, 0, 0.55);
 		cursor: pointer;
 	}
 	/* an on/off switch: a track, and a knob that crosses it */
@@ -1678,10 +1665,6 @@
 		padding: 3px 0;
 		font-size: 0.8rem;
 		line-height: 1.6;
-	}
-	/* the Puzzle switch shares their row, which is only so wide */
-	.step-row:has(.puzzle-switch) .step-btn {
-		width: 52px;
 	}
 	/* Its own row under the steppers: it is the one button here that takes
 	   something away, and the pointer is on the steppers a lot. */

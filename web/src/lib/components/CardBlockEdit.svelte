@@ -5,7 +5,7 @@
 	import MoveRefDialog from "$lib/components/MoveRefDialog.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
 	import { createTabTrap } from "$lib/tab-trap.js"
-	import { sideToDoc, docSideJsonBlocks, docHasContentBlocks, docCountBoardsBlocks, docHasBoardPairBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage } from "$lib/card-utils.js"
+	import { sideToDoc, docSideJsonBlocks, docHasContentBlocks, docCountBoardsBlocks, docHasBoardPairBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage, docPuzzlesWithoutBackBlocks, puzzleWithoutBackMessage } from "$lib/card-utils.js"
 
 	// The add-cards editing surface for an EXISTING card: both sides as
 	// block-editor documents initialized from the stored card, sharing one
@@ -98,8 +98,10 @@
 
 	let invalidFenNumbers = $state([]);
 	let noContentAttempted = $state(false);
+	let emptyPuzzleNumbers = $state([]);
 	const clearErrors = () => {
 		invalidFenNumbers = [];
+		emptyPuzzleNumbers = [];
 		noContentAttempted = false;
 	}
 
@@ -114,7 +116,11 @@
 			...docInvalidBoardNumbersBlocks(front, 0, boardUi),
 			...docInvalidBoardNumbersBlocks(back, frontCount, boardUi)
 		];
-		if (invalidFenNumbers.length > 0) return;
+		emptyPuzzleNumbers = [
+			...docPuzzlesWithoutBackBlocks(front, 0),
+			...docPuzzlesWithoutBackBlocks(back, frontCount)
+		];
+		if (invalidFenNumbers.length > 0 || emptyPuzzleNumbers.length > 0) return;
 		if (!docHasContentBlocks(front) && !docHasContentBlocks(back)) {
 			noContentAttempted = true;
 			return;
@@ -190,6 +196,9 @@
 <p class="side-indicator">Front</p>
 {#if invalidFenNumbers.length > 0}
 	<p class="edit-error">{invalidFenMessage(invalidFenNumbers)}</p>
+{/if}
+{#if emptyPuzzleNumbers.length > 0}
+	<p class="edit-error">{puzzleWithoutBackMessage(emptyPuzzleNumbers)}</p>
 {/if}
 {#if noContentAttempted}
 	<p class="edit-error">The card must have atleast 1 non-empty text field or 1 chessboard</p>

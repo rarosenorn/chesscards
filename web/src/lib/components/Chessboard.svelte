@@ -332,36 +332,32 @@
 	const afterFind = () => {
 		if (solutionFrom + solved >= replay.moveInfos.length) return finishPuzzle();
 		puzzleTimer = setTimeout(() => {
-			dropFrameIfTaken(solutionFrom + solved);
+			dropFrame();
 			solved += 1;
 			goTo(solutionFrom + solved);
 			if (solutionFrom + solved >= replay.moveInfos.length) finishPuzzle();
 		}, 450);
 	}
 	// A right move wears a green frame on the square it landed on — the wrong
-	// move's red one, answered — until the next right move takes it over. It
-	// belongs to the position it was earned in (and the reply that follows):
-	// stepped anywhere else, the board drops it.
+	// move's red one, answered — until the reply to it is played (the last
+	// move of a puzzle has no reply, and keeps it). It belongs to the
+	// position it was earned in: stepped anywhere else, the board drops it.
 	const FRAME_RIGHT = { class: "marker-frame-right", slice: "markerFrame" };
 	let rightAt = $state(null);
-	let rightSquare = null;
 	const markRight = (square, index) => {
 		cmBoard.removeMarkers(FRAME_RIGHT);
 		cmBoard.addMarker(FRAME_RIGHT, square);
 		rightAt = index;
-		rightSquare = square;
 	}
-	// the frame is the player's piece's: a reply that takes the piece takes
-	// the frame with it, rather than leave it around the capturer
-	const dropFrameIfTaken = replyIndex => {
-		if (rightAt != null && moveSquares(replay.fens[replyIndex], normalized.moves[replyIndex])?.to === rightSquare) {
-			cmBoard.removeMarkers(FRAME_RIGHT);
-			rightAt = null;
-		}
+	// the frame confirms the move just made, and has said so once the reply
+	// is played: it goes with the reply, as Lichess's mark does
+	const dropFrame = () => {
+		cmBoard.removeMarkers(FRAME_RIGHT);
+		rightAt = null;
 	}
 	$effect(() => {
 		if (rightAt == null || !cmBoard) return;
-		if (asidePly != null || (displayIndex !== rightAt && displayIndex !== rightAt + 1)) {
+		if (asidePly != null || displayIndex !== rightAt) {
 			cmBoard.removeMarkers(FRAME_RIGHT);
 			rightAt = null;
 		}

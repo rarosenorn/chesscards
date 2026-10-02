@@ -842,7 +842,7 @@
 			<span class="puzzle-tag">Puzzle</span>
 		{/if}
 		{#if analysis}
-			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse</a>
+			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyze</a>
 		{/if}
 	</div>
 	<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- keyboard stepping lives on the focusable wrapper -->

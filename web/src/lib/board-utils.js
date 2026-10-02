@@ -149,6 +149,21 @@ const replayMoves = board => {
 	return { fens, moveInfos };
 }
 
+// The squares a stored move leaves and reaches, played from `fen`: what the
+// board tints to show the move just made. null where it cannot be told.
+const moveSquares = (fen, stored) => {
+	const coordinate = stored.match(MANUAL_MOVE_PATTERN);
+	if (coordinate) return { from: coordinate[1], to: coordinate[2] };
+	try {
+		const flipped = stored.startsWith(FLIPPED_MOVE_PREFIX);
+		const chess = looseChess(flipped ? flipTurn(fen) : fen);
+		const move = chess.move(flipped ? stored.slice(FLIPPED_MOVE_PREFIX.length) : stored);
+		return { from: move.from, to: move.to };
+	} catch {
+		return null;
+	}
+}
+
 // How a move reads in a line: white carries its number, black carries one only
 // where it opens the line (nothing precedes it to hang from) — "5.Bd3",
 // "5…Nf6", and a bare "Nf6" after its white move.
@@ -225,4 +240,4 @@ const isFinishedFor = fen => {
 
 const isPositionFinished = fen => isFinishedFor(fen) || isFinishedFor(flipTurn(fen));
 
-export { isPositionFinished, FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, moveLabel, serializeAnnotations, hasAnnotations, showAnnotations, arrowKey, arrowKeyFromType, markerKey }
+export { moveSquares, isPositionFinished, FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, moveLabel, serializeAnnotations, hasAnnotations, showAnnotations, arrowKey, arrowKeyFromType, markerKey }

@@ -7,7 +7,7 @@
 	import { LayeredArrows } from "$lib/layered-arrows.js"
 	import { Markers, MARKER_TYPE as PIECE_MARKER } from "cm-chessboard/src/extensions/markers/Markers.js"
 	import { normalizeBoard } from "$lib/card-utils.js"
-	import { replayMoves, showAnnotations, isPositionFinished } from "$lib/board-utils.js"
+	import { replayMoves, showAnnotations, isPositionFinished, moveSquares } from "$lib/board-utils.js"
 	import { playMoveSound } from "$lib/sounds.js"
 	import { tryMove } from "$lib/puzzle.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
@@ -416,6 +416,20 @@
 		(asidePly != null ? asideReplay?.fens[asidePly] : null) ?? positions[displayIndex]
 	);
 
+	// The move that led to the position on screen — the line's, or the
+	// aside's while one is followed — shown as Lichess shows it: its two
+	// squares under one translucent tint, which reads lighter on a light
+	// square and darker on a dark one. A line's first position has none.
+	const LAST_MOVE = { class: "marker-last-move", slice: "markerSquare" };
+	let lastMove = $derived.by(() => {
+		if (asidePly != null) {
+			if (asidePly > 0) return asideReplay ? moveSquares(asideReplay.fens[asidePly - 1], following.moves[asidePly - 1]) : null;
+			// its ply 0 is the line's own position it branches at
+			return following.from > 0 ? moveSquares(replay.fens[following.from - 1], normalized.moves[following.from - 1]) : null;
+		}
+		return displayIndex > 0 ? moveSquares(replay.fens[displayIndex - 1], normalized.moves[displayIndex - 1]) : null;
+	});
+
 	// the question's annotations always show, and on reveal the solution
 	// layer's add to them; an aside's positions are the text's, and carry none
 	// of the line's own marks
@@ -468,6 +482,7 @@
 		const fen = displayFen;
 		const front = frontAnnotation;
 		const back = backAnnotation;
+		void lastMove;
 		if (!cmBoard) return;
 		// Only a step animates, and only within the board it stepped on: study
 		// and browse reuse this component across cards, and tweening one
@@ -490,6 +505,11 @@
 		stepping = false;
 		renderedBoard = normalized;
 		showAnnotations(cmBoard, front, back, backDots);
+		cmBoard.removeMarkers(LAST_MOVE);
+		if (lastMove) {
+			cmBoard.addMarker(LAST_MOVE, lastMove.from);
+			cmBoard.addMarker(LAST_MOVE, lastMove.to);
+		}
 	})
 
 	const boardPrefs = getContext("boardPrefs") ?? (() => DEFAULT_BOARD_PREFS);
@@ -1163,6 +1183,11 @@
 	}
 	.move-btn.found-late.current {
 		color: #ffd08a;
+	}
+	/* the last move's two squares: Lichess's own tint */
+	.board :global(.cm-chessboard .markers .marker.marker-last-move) {
+		fill: rgb(155, 199, 0);
+		opacity: 0.41;
 	}
 	/* the frame a right move wears: the red frame's shape, in green */
 	.board :global(.cm-chessboard .markers .marker.marker-frame-right) {

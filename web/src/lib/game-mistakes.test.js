@@ -56,14 +56,14 @@ describe("a mistake's card", () => {
 		expect(findMistakes(game, evals, "w", ["inaccuracy"])).toEqual([])
 	})
 
-	it("opens with it played and arrowed, plays what follows on the back, and writes the better move as a line", () => {
+	it("opens with it played, plays what follows on the back, and writes the better move as a line", () => {
 		const [mistake] = findMistakes(game, evals, "w")
 		const spec = mistakeCardSpec(game, mistake, { bad: "It drops [a] piece.", better: "Take the *knight*." })
 		const board = spec.front.boards[0]
 		expect(spec.front.text).toBe("Why was 4.Nxe5 a blunder, and what is a better move?")
 		expect(board.moves).toEqual(["e4", "e5", "Nf3", "Nc6", "Bc4", "Nd4", "Nxe5", "Qg5", "Nxf7", "Qxg2"])
 		expect([board.openAt, board.solutionFrom, board.orientation]).toEqual([7, 7, "w"])
-		expect(board.arrows).toEqual({ 7: [["warning", "f3", "e5"]] })
+		expect(board.arrows).toBeUndefined()
 		expect(board.solutionArrows).toEqual({ 7: [["success", "f3", "d4"]] })
 		expect(spec.back).toBe("- 4.Nxe5 was a blunder because it drops a piece.\n- 4.Nxd4 was the best move because take the knight. [3...Nd4 Nxd4 exd4 c3]")
 
@@ -92,7 +92,7 @@ describe("the edges of a game", () => {
 		evals[1] = { cp: -150, pv: ["e7e5", "g2g4"] }
 		const [mistake] = findMistakes(game, evals, "w")
 		const spec = mistakeCardSpec(game, mistake)
-		expect(spec.front.boards[0].arrows).toEqual({ 1: [["warning", "f2", "f3"]] })
+		expect(spec.front.boards[0].arrows).toBeUndefined()
 		expect(spec.back).toBe("- 1.f3 was a blunder.\n- 1.e4 was the best move: [1.e4 e5]")
 		expect(built(spec)).toEqual([])
 	})

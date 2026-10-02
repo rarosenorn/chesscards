@@ -106,8 +106,8 @@ const reason = text => {
 }
 
 // The card for one mistake, as a spec for card-spec.js. The board carries the
-// game up to and including the move and opens with it already played, an
-// orange arrow (a move that was there to choose, as the wiki has the colours) from the square it left to the one it reached; what follows the move
+// game up to and including the move and opens with it already played (the
+// board tints the squares of the move it stands on, so it needs no arrow); what follows the move
 // is the back of the line, shown when the card is turned, along with a green
 // arrow for the better move. That one is a line of the text, written from
 // the board move it branches at.
@@ -130,7 +130,6 @@ export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
 				orientation: move.color,
 				openAt: ply + 1,
 				...(followUp.length > 0 && { solutionFrom: ply + 1 }),
-				arrows: { [ply + 1]: [["warning", move.from, move.to]] },
 				solutionArrows: { [ply + 1]: [["success", better[0].from, better[0].to]] }
 			}]
 		},

@@ -974,13 +974,13 @@
 			{#if cutBefore}
 				<button class="fold-btn" aria-label="Show the earlier moves" onclick={() => openedBefore = true}>…</button>
 			{:else if openBefore}
-				<button class="fold-btn" aria-label="Hide the earlier moves" onclick={foldBefore}>÷</button>
+				<button class="fold-btn fold-close" aria-label="Hide the earlier moves" onclick={foldBefore}><span>÷</span></button>
 			{/if}
 			{@render pairs(shownLine, true)}
 			{#if cutAfter}
 				<button class="fold-btn" aria-label="Show the later moves" onclick={() => openedAfter = true}>…</button>
 			{:else if openAfter}
-				<button class="fold-btn" aria-label="Hide the later moves" onclick={foldAfter}>÷</button>
+				<button class="fold-btn fold-close" aria-label="Hide the later moves" onclick={foldAfter}><span>÷</span></button>
 			{/if}
 			<!-- The end spot: a line that is all front. Only while the marker is
 			     being dragged there — a board with no boundary says so by
@@ -1181,6 +1181,14 @@
 		padding: 1px 4px;
 		color: rgba(0, 0, 0, 0.5);
 		cursor: pointer;
+	}
+	/* the ÷ drawn half as wide again as the font has it, to read as a bar */
+	.fold-close {
+		padding: 1px 7px;
+	}
+	.fold-close span {
+		display: inline-block;
+		transform: scaleX(1.5);
 	}
 	button.fold-btn:hover {
 		background-color: gainsboro;

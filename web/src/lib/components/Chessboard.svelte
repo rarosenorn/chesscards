@@ -476,7 +476,7 @@
 	// no move behind it, and no tint.
 	const LAST_MOVE = { class: "marker-last-move", slice: "markerSquare" };
 	// The king that is mated in the position on screen, by its square: it
-	// wears a "#" in the corner of that square. null for any other position,
+	// wears a red "#" disc on the corner of that square. null for any other position,
 	// and for one chess.js cannot judge (a free-form setup).
 	let matedKing = $derived.by(() => {
 		try {
@@ -1009,7 +1009,7 @@
 		<span
 			class="mate-badge"
 			aria-label="Checkmate"
-			style="left: {mateBadge.left}px; top: {mateBadge.top}px; font-size: {mateBadge.size * 0.34}px"
+			style="left: {mateBadge.left}px; top: {mateBadge.top}px; --size: {mateBadge.size * 0.4}px"
 		>#</span>
 	{/if}
 	{@render children?.()}
@@ -1159,15 +1159,24 @@
 	.puzzle-tag.done-late {
 		background-color: #d98a1f;
 	}
-	/* the mated king's "#": in the corner of its square, a white rim so it
-	   reads on either colour of square and over the piece */
+	/* the mated king's mark, as Lichess has it: a red disc with a white "#",
+	   sitting on the top right corner of its square */
 	.mate-badge {
 		position: absolute;
-		transform: translate(-105%, 2%);
+		z-index: 1;
+		width: var(--size);
+		height: var(--size);
+		transform: translate(-62%, -38%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		background-color: #e0453a;
+		box-shadow: rgba(0, 0, 0, 0.3) 0 1px 3px;
+		color: white;
+		font-size: calc(var(--size) * 0.72);
 		font-weight: 700;
 		line-height: 1;
-		color: #262626;
-		text-shadow: 0 0 2px white, 0 0 2px white, 0 0 3px white;
 		pointer-events: none;
 		user-select: none;
 	}

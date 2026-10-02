@@ -320,7 +320,16 @@
 		setTimeout(() => cmBoard?.removeMarkers(PIECE_MARKER.frameDanger), 600);
 	}
 	const handlePuzzleInput = event => {
-		if (event.type === INPUT_EVENT_TYPE.moveInputStarted) return true;
+		// the square a piece is lifted from is tinted while it is in the hand,
+		// as on Lichess
+		if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
+			cmBoard.addMarker(PIECE_MARKER.square, event.squareFrom);
+			return true;
+		}
+		if (event.type === INPUT_EVENT_TYPE.moveInputFinished || event.type === INPUT_EVENT_TYPE.moveInputCanceled) {
+			cmBoard.removeMarkers(PIECE_MARKER.square);
+			return;
+		}
 		if (event.type !== INPUT_EVENT_TYPE.validateMoveInput) return;
 		const at = solutionFrom + solved;
 		const made = tryMove(replay.fens[at], replay.moveInfos[at].san, event.squareFrom, event.squareTo);
@@ -452,7 +461,9 @@
 			orientation: normalized.orientation,
 			assetsUrl: "/chessboard-assets/", // wherever you copied the assets folder to, could also be in the node_modules folder
 			style: boardStyleProps(boardPrefs()),
-			extensions: [{ class: LayeredArrows }, { class: Markers }]
+			// autoMarkers off: no corner frames on the squares of a move being
+			// made; the square the piece is lifted from is tinted instead
+			extensions: [{ class: LayeredArrows }, { class: Markers, props: { autoMarkers: null } }]
 		}))
 		// cm-chessboard sizes its inner box to whole pixels inside our
 		// fractional-width container; --board-px lets the bar below and the
@@ -1106,6 +1117,11 @@
 	}
 	.move-btn.found-late:not(.current) {
 		color: #c26a00;
+	}
+	/* Lichess's green for the square a piece has been picked up from */
+	.board :global(.cm-chessboard .markers .marker.marker-square) {
+		fill: rgb(20, 85, 30);
+		opacity: 0.5;
 	}
 	.move-btn:hover:enabled {
 		background-color: gainsboro;

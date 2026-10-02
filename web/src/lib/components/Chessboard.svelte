@@ -1009,7 +1009,7 @@
 		<span
 			class="mate-badge"
 			aria-label="Checkmate"
-			style="left: {mateBadge.left}px; top: {mateBadge.top}px; --size: {mateBadge.size * 0.4}px"
+			style="left: {mateBadge.left}px; top: {mateBadge.top}px; --size: {mateBadge.size * 0.48}px"
 		>#</span>
 	{/if}
 	{@render children?.()}
@@ -1171,7 +1171,7 @@
 		align-items: center;
 		justify-content: center;
 		border-radius: 50%;
-		background-color: #e0453a;
+		background-color: #e22b2b;
 		box-shadow: rgba(0, 0, 0, 0.3) 0 1px 3px;
 		color: white;
 		font-size: calc(var(--size) * 0.72);

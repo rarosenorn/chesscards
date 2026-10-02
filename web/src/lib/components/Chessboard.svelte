@@ -250,15 +250,18 @@
 	let cutBefore = $derived(folds && !openedBefore && foldStart > 0);
 	let cutAfter = $derived(folds && !openedAfter && foldEnd != null);
 
-	// An opened line can be closed again, back to its two rows. If the board
-	// stands on a move those rows do not hold, it goes back to where it
-	// opened — a move left standing in the hidden part would only open the
-	// line again.
-	let canClose = $derived(folds && (openedBefore || openedAfter) && (foldStart > 0 || foldEnd != null));
-	const closeLine = () => {
-		const at = displayIndex - 1;
-		if (asidePly != null || at < foldStart || (foldEnd != null && at > foldEnd)) jumpTo(openAt);
+	// An opened side can be folded away again: where its "…" stood there is
+	// a "−" for as long as it is open. If the board stands on a move that
+	// goes with it, the board returns to where it opened — a move left
+	// standing in the hidden part would only open it again.
+	let openBefore = $derived(folds && openedBefore && foldStart > 0);
+	let openAfter = $derived(folds && openedAfter && foldEnd != null);
+	const foldBefore = () => {
+		if (asidePly != null || displayIndex - 1 < foldStart) jumpTo(openAt);
 		openedBefore = false;
+	}
+	const foldAfter = () => {
+		if (asidePly != null || displayIndex - 1 > foldEnd) jumpTo(openAt);
 		openedAfter = false;
 	}
 
@@ -962,13 +965,14 @@
 			>›</button>
 			{#if cutBefore}
 				<button class="fold-btn" aria-label="Show the earlier moves" onclick={() => openedBefore = true}>…</button>
+			{:else if openBefore}
+				<button class="fold-btn" aria-label="Hide the earlier moves" onclick={foldBefore}>−</button>
 			{/if}
 			{@render pairs(shownLine, true)}
 			{#if cutAfter}
 				<button class="fold-btn" aria-label="Show the later moves" onclick={() => openedAfter = true}>…</button>
-			{/if}
-			{#if canClose}
-				<button class="fold-btn close-btn" onclick={closeLine}>Show less</button>
+			{:else if openAfter}
+				<button class="fold-btn" aria-label="Hide the later moves" onclick={foldAfter}>−</button>
 			{/if}
 			<!-- The end spot: a line that is all front. Only while the marker is
 			     being dragged there — a board with no boundary says so by
@@ -1169,9 +1173,6 @@
 		padding: 1px 4px;
 		color: rgba(0, 0, 0, 0.5);
 		cursor: pointer;
-	}
-	.close-btn {
-		font-size: 0.8rem;
 	}
 	button.fold-btn:hover {
 		background-color: gainsboro;

@@ -109,7 +109,7 @@ describe("a mistake's card on the board", () => {
 		return { target, app };
 	};
 
-	// jsdom lays nothing out, so the widths are given: a line 460 wide, pairs
+	// jsdom lays nothing out, so the widths are given: a line 466 wide (460 to lay out in), pairs
 	// of 100, the step arrows and the "…" 20 each. Three pairs fit beside the
 	// arrows on the first row and four on the second.
 	const layOut = () => {
@@ -119,7 +119,7 @@ describe("a mistake's card on the board", () => {
 			return this.classList.contains("move-pair") ? 100 : this.matches(".step-btn, .fold-btn") ? 20 : 0;
 		} });
 		Object.defineProperty(Element.prototype, "clientWidth", { configurable: true, get() {
-			return this.classList.contains("move-line") ? 460 : 0;
+			return this.classList.contains("move-line") ? 466 : 0;
 		} });
 		return () => {
 			Object.defineProperty(HTMLElement.prototype, "offsetWidth", width);
@@ -200,6 +200,34 @@ describe("a mistake's card on the board", () => {
 		expect(dots(target)).toEqual([]);
 		expect(lineOf(target)).toContain("‹ › 1 e4 e5");
 		expect(lineOf(target)).toContain("6 O-O O-O");
+		unmount(app);
+		restore();
+	});
+	it("starts the next card folded again, whatever was opened on the last", async () => {
+		const restore = layOut();
+		const target = document.createElement("div");
+		document.body.appendChild(target);
+		const props = reactiveCard(longCard(4));
+		const app = mount(FlashcardBrowse, { target, props });
+		await tick();
+		await step(target, "Next move", 13);
+		await step(target, "Previous move", 16);
+		expect(dots(target)).toEqual([]);
+
+		// a card that opens late, after one left standing on its first move
+		props.card = { ...longCard(16), id: "next" };
+		await tick();
+		await tick();
+		expect(current(target)).toBe("Ba7");
+		expect(dots(target)).toEqual(["Show the earlier moves"]);
+		expect(lineOf(target)).toBe("‹ › … 4 c3 Nf6 5 d3 d6 6 O-O O-O 7 Re1 a6 8 Bb3 Ba7 9 h3 h6 10 Nbd2 Re8");
+
+		// and one that opens early, after one opened late
+		props.card = { ...longCard(4), id: "third" };
+		await tick();
+		await tick();
+		expect(current(target)).toBe("Nc6");
+		expect(dots(target)).toEqual(["Show the earlier moves", "Show the later moves"]);
 		unmount(app);
 		restore();
 	});

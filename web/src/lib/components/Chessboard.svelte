@@ -169,12 +169,19 @@
 	// a copy of the whole line, out of sight, that the widths are read from
 	let measureEl = $state();
 	const ROW_GAP = 6;
+	// the board the cuts were last worked out for: until they are this
+	// board's, they say nothing about where its moves are
+	let placedFor = null;
 
 	// Lays the line out by the widths measured, as the browser will wrap it,
 	// to find what two rows hold.
 	const placeFold = () => {
 		if (!folds || !measureEl || !moveLineEl) return;
-		const width = moveLineEl.clientWidth - 4;
+		// less the line's own padding, and a little more: the widths read
+		// are whole pixels and the real ones are not, and over a row of
+		// moves the difference can be the one pixel that wraps a pair
+		const width = moveLineEl.clientWidth - 4 - 6;
+		placedFor = board;
 		const widths = [...measureEl.querySelectorAll(".move-pair")].map(el => el.offsetWidth);
 		if (width <= 0 || widths.length === 0 || widths.length !== moveLine.length) { foldStart = 0; foldEnd = null; return; }
 		const steps = [...moveLineEl.querySelectorAll(".step-btn")].reduce((sum, el) => sum + el.offsetWidth + ROW_GAP, 4);
@@ -232,7 +239,8 @@
 
 	// the board stepped into what a "…" holds opens that side
 	$effect(() => {
-		if (!folds || asidePly != null) return;
+		void foldStart; void foldEnd;
+		if (!folds || asidePly != null || placedFor !== board) return;
 		const at = displayIndex - 1;
 		if (cutBefore && at < foldStart) openedBefore = true;
 		if (cutAfter && at > foldEnd) openedAfter = true;

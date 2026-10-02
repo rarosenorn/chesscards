@@ -513,6 +513,380 @@
             ]
           },
           "back": "Black probably needs 9...h6 to stop the pin, but we are in great shape. Bring the queen to the kingside with Qe1-g3, later play Be3, and increase the pressure on the f-file by doubling rooks."
+        },
+        {
+          "id": "tk-6qf6-kg1",
+          "front": {
+            "text": "What is your move after 6...Qf6+? and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Qf6+",
+                  "Kg1"
+                ],
+                "orientation": "w",
+                "openAt": 12,
+                "solutionFrom": 12,
+                "puzzle": true,
+                "solutionArrows": {
+                  "12": [
+                    [
+                      "success",
+                      "f2",
+                      "g1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "7.Kg1 The safest spot for our king in the long run. 6...Qf6+? is a very tempting move, getting the queen into the game with a check, but it only helps us.\n\nWe have established a perfect pawn center and have the pair of bishops, which is a long-term asset, but our king's safety remains a problem. There are various traps that we need to be aware of. If we navigate these traps, our position will be fantastic: we need to solve the short-term problems to preserve our strategic advantages. Don't be afraid of ghosts!"
+        },
+        {
+          "id": "tk-kg1-knight-moves",
+          "front": {
+            "text": "What knight moves do we look at for Black after 7.Kg1?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Qf6+",
+                  "Kg1"
+                ],
+                "orientation": "w",
+                "openAt": 13,
+                "solutionArrows": {
+                  "13": [
+                    [
+                      "success",
+                      "g8",
+                      "e7"
+                    ],
+                    [
+                      "success",
+                      "e5",
+                      "c6"
+                    ],
+                    [
+                      "success",
+                      "e5",
+                      "g4"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "- [7.Kg1 Ne7] sets a trap, but it is not a great move: if we avoid the trap, Black is stuck with their problems.\n- [7.Kg1 Nc6] is met in a similar way.\n- [7.Kg1 Ng4] is the most dangerous trick that Black has. A rare move, but it can be extremely irritating to face."
+        },
+        {
+          "id": "tk-ne7-be3",
+          "front": {
+            "text": "What is your move after 7...Ne7 and why? Why not take the knight?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Qf6+",
+                  "Kg1",
+                  "Ne7",
+                  "Be3"
+                ],
+                "orientation": "w",
+                "openAt": 14,
+                "solutionFrom": 14,
+                "puzzle": true,
+                "solutionArrows": {
+                  "14": [
+                    [
+                      "success",
+                      "c1",
+                      "e3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "8.Be3 secures the sensitive a7-g1 diagonal. Finally, we threaten to capture the knight.\n\nWe are NOT immediately threatening to capture Black's knight after 7.Kg1! [7...Ne7 8.dxe5 Qb6+ 9.Be3 Qxe3#] — a disaster!"
+        },
+        {
+          "id": "tk-ne7-plan",
+          "front": {
+            "text": "After 7...Ne7 8.Be3, what is your plan?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Qf6+",
+                  "Kg1",
+                  "Ne7",
+                  "Be3"
+                ],
+                "orientation": "w",
+                "openAt": 15
+              }
+            ]
+          },
+          "back": "Black has to retreat the knight, when we continue with the plan of Qd2, Bc4 and Rf1. You can also consider playing h2-h4 at some point, getting the h1-rook into action this way."
+        },
+        {
+          "id": "tk-7nc6-be3",
+          "front": {
+            "text": "What is your move after 7...Nc6 and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Qf6+",
+                  "Kg1",
+                  "Nc6",
+                  "Be3"
+                ],
+                "orientation": "w",
+                "openAt": 14,
+                "solutionFrom": 14,
+                "puzzle": true,
+                "solutionArrows": {
+                  "14": [
+                    [
+                      "success",
+                      "c1",
+                      "e3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "8.Be3 A good reply, similar to the one against 7...Ne7: it secures our strong center."
+        },
+        {
+          "id": "tk-ng4-threat",
+          "front": {
+            "text": "After 7...Ng4, what does Black threaten, and why can't you take the knight?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Qf6+",
+                  "Kg1",
+                  "Ng4"
+                ],
+                "orientation": "w",
+                "openAt": 14,
+                "solutionArrows": {
+                  "14": [
+                    [
+                      "success",
+                      "f6",
+                      "f2"
+                    ],
+                    [
+                      "success",
+                      "d1",
+                      "g4"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "Black threatens ...Qf2#.\n\nIt looks like a blunder, but [7...Ng4 8.Qxg4 Qxd4+ 9.Be3 Qxe3#] is a familiar pattern by now. We can't take the knight."
+        },
+        {
+          "id": "tk-ng4-qd2",
+          "front": {
+            "text": "What is your move after 7...Ng4 and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Qf6+",
+                  "Kg1",
+                  "Ng4",
+                  "Qd2"
+                ],
+                "orientation": "w",
+                "openAt": 14,
+                "solutionFrom": 14,
+                "puzzle": true,
+                "solutionArrows": {
+                  "14": [
+                    [
+                      "success",
+                      "d1",
+                      "d2"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "8.Qd2! The only move that works! There is just one move that covers the mate and keeps the d4-pawn protected. The queen must cover f2, and [7...Ng4 8.Qf3 Qxd4+] shows the issue with other squares.\n\nThe queen is on an odd square and our bishop on c1 is unhappy about the situation, but this is a minor problem. More importantly, we'll send Black's knight back home with h3 next, while Nd5 is looming too."
+        },
+        {
+          "id": "tk-ng4-d6-next3",
+          "front": {
+            "text": "What are the next 3 plies following 8...d6?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Qf6+",
+                  "Kg1",
+                  "Ng4",
+                  "Qd2",
+                  "d6",
+                  "h3",
+                  "N4h6",
+                  "Nd5"
+                ],
+                "orientation": "w",
+                "openAt": 16,
+                "solutionFrom": 16,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 9.h3 We send Black's knight back home.\n- 9...N4h6 The knight has to retreat.\n- 10.Nd5 The knight jumps in with an attack on the queen."
+        },
+        {
+          "id": "tk-ng4-qd8-bd3",
+          "front": {
+            "text": "What is your move after 10...Qd8, and how do you continue?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Qf6+",
+                  "Kg1",
+                  "Ng4",
+                  "Qd2",
+                  "d6",
+                  "h3",
+                  "N4h6",
+                  "Nd5",
+                  "Qd8",
+                  "Bd3"
+                ],
+                "orientation": "w",
+                "openAt": 20,
+                "solutionFrom": 20,
+                "puzzle": true,
+                "solutionArrows": {
+                  "20": [
+                    [
+                      "success",
+                      "f1",
+                      "d3"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "11.Bd3 We have a great position. A way to continue is Qf2, followed by Be3 and Rf1. Black has a misplaced knight on h6, while our knight will find a good route to the kingside via f4."
         }
       ]
     }

@@ -158,7 +158,8 @@
 	// (two boards side by side, a narrow pane) and in the editors, whose line
 	// is the thing being edited. syncWidth below decides, since it is the
 	// same measurement that tells the board's real width.
-	const PANEL_ROOM = 166;
+	// the panel's 190px, its 10px gap from the board, and a little air
+	const PANEL_ROOM = 206;
 	let beside = $state(false);
 	// a centered board moves over by half the panel's width, so that board
 	// and panel sit centered together
@@ -779,7 +780,7 @@
 		outline: none;
 	}
 	.board-wrapper.shifted {
-		left: -80px;
+		left: -100px;
 	}
 	.board-wrapper {
 		/* the move panel hangs off it */
@@ -921,7 +922,7 @@
 		position: absolute;
 		top: calc(1.26rem + 2px);
 		left: calc(50% + var(--board-px, 100%) / 2 + 10px);
-		width: 150px;
+		width: 190px;
 		height: var(--board-px, 100%);
 		display: flex;
 		flex-direction: column;

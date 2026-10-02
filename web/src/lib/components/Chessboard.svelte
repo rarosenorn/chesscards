@@ -989,7 +989,7 @@
 			></span>
 		{/if}
 		{#if normalized.puzzle}
-			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone}<svg class="done-check" viewBox="4.8 5.25 6.4 5.6" aria-hidden="true"><path d="M5.56 7.81 L7.25 10.06 L10.4 6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" fill="none" /></svg>{/if}Puzzle</span>
+			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone}<svg class="done-check" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="white" /><path d="M5.2 8.1 L7.2 10.7 L10.9 5.9" stroke="var(--tag-colour)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none" /></svg>{/if}Puzzle</span>
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyze</a>
@@ -1151,22 +1151,24 @@
 		align-items: center;
 		gap: 5px;
 		/* the same room either side of what it holds */
-		padding: 0 7px;
+		padding: 0 7px 0 5px;
 		border-radius: 3px;
+		background-color: var(--tag-colour);
 		color: white;
 	}
 	/* drawn to its own edges: the box around it is the mark and nothing
 	   more, so the tag's padding is what stands either side of it */
+	/* a white disc with the tick cut in the tag's own colour */
 	.done-check {
-		width: 0.85em;
-		height: 0.74em;
+		width: 0.95em;
+		height: 0.95em;
 		flex: none;
 	}
 	.puzzle-tag.done {
-		background-color: #2e9e5b;
+		--tag-colour: #2e9e5b;
 	}
 	.puzzle-tag.done-late {
-		background-color: #d98a1f;
+		--tag-colour: #d98a1f;
 	}
 	/* the mated king's mark, as Lichess has it: a red disc with a white "#",
 	   in the top right corner of its square */

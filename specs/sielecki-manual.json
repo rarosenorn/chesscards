@@ -19,7 +19,8 @@
                   "Nc3"
                 ],
                 "orientation": "w",
-                "solutionFrom": 0
+                "solutionFrom": 0,
+                "puzzle": true
               }
             ]
           },
@@ -89,7 +90,8 @@
                     ]
                   ]
                 },
-                "solutionFrom": 6
+                "solutionFrom": 6,
+                "puzzle": true
               }
             ]
           },
@@ -176,7 +178,8 @@
                     ]
                   ]
                 },
-                "solutionFrom": 8
+                "solutionFrom": 8,
+                "puzzle": true
               }
             ]
           },
@@ -211,7 +214,8 @@
                     ]
                   ]
                 },
-                "solutionFrom": 8
+                "solutionFrom": 8,
+                "puzzle": true
               }
             ]
           },
@@ -239,7 +243,8 @@
                 ],
                 "orientation": "w",
                 "openAt": 8,
-                "solutionFrom": 8
+                "solutionFrom": 8,
+                "puzzle": true
               }
             ]
           },
@@ -267,7 +272,8 @@
                 ],
                 "orientation": "w",
                 "openAt": 8,
-                "solutionFrom": 8
+                "solutionFrom": 8,
+                "puzzle": true
               }
             ]
           },
@@ -386,7 +392,8 @@
                     ]
                   ]
                 },
-                "solutionFrom": 12
+                "solutionFrom": 12,
+                "puzzle": true
               }
             ]
           },
@@ -420,7 +427,8 @@
                 ],
                 "orientation": "w",
                 "openAt": 14,
-                "solutionFrom": 14
+                "solutionFrom": 14,
+                "puzzle": true
               }
             ]
           },
@@ -465,7 +473,8 @@
                       "g5"
                     ]
                   ]
-                }
+                },
+                "puzzle": true
               }
             ]
           },

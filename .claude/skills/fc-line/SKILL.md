@@ -103,7 +103,9 @@ Append a chapter (named after the course variation group, e.g. "Three Knights
 stable, never-reused `id`. Boards: start FEN
 `rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`, the full SAN line,
 `openAt`, `solutionFrom`, `arrows`/`solutionArrows` keyed by ply index as
-strings, arrows `["success", from, to]`.
+strings, arrows `["success", from, to]`. Every board with a `solutionFrom`
+gets `"puzzle": true` — in study the answer is played on the board, not
+revealed.
 
 ```bash
 cd web && node scripts/import-deck.mjs ../specs/sielecki-manual.json          # dry run, must pass

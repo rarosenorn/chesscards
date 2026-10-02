@@ -331,6 +331,9 @@
 			return;
 		}
 		if (event.type !== INPUT_EVENT_TYPE.validateMoveInput) return;
+		// the drop itself clears it: a right move ends the board's turn to
+		// take input, and the "finished" that would clear it never arrives
+		cmBoard.removeMarkers(PIECE_MARKER.square);
 		const at = solutionFrom + solved;
 		const made = tryMove(replay.fens[at], replay.moveInfos[at].san, event.squareFrom, event.squareTo);
 		// a drop that is no legal move goes back without a word: only a
@@ -363,6 +366,7 @@
 			cmBoard.enableMoveInput(handlePuzzleInput, solver);
 			inputOn = true;
 		} else if (!awaiting && inputOn) {
+			cmBoard.removeMarkers(PIECE_MARKER.square);
 			cmBoard.disableMoveInput();
 			inputOn = false;
 		}

@@ -126,7 +126,7 @@ describe("a mistake's card on the board", () => {
 			Object.defineProperty(Element.prototype, "clientWidth", client);
 		};
 	};
-	const dots = target => [...target.querySelectorAll(".move-line .fold-btn")].map(btn => btn.getAttribute("aria-label"));
+	const dots = target => [...target.querySelectorAll(".move-line .fold-btn:not(.close-btn)")].map(btn => btn.getAttribute("aria-label"));
 	const current = target => target.querySelector(".move-line .move-btn.current").textContent.trim();
 	const step = async (target, label, times) => {
 		const button = target.querySelector(`.move-line .step-btn[aria-label="${label}"]`);
@@ -147,6 +147,16 @@ describe("a mistake's card on the board", () => {
 		await tick();
 		expect(lineOf(target)).toContain("‹ › 1 e4 e5 2 Nf3");
 		expect(dots(target)).toEqual([]);
+
+		// and Show less puts it back as it was; from a move in the part that
+		// goes, the board returns to where it opened
+		await step(target, "Previous move", 12);
+		expect(current(target)).toBe("Nc6");
+		target.querySelector(".move-line .close-btn").click();
+		await tick();
+		await tick();
+		expect(lineOf(target)).toBe("‹ › … 4 c3 Nf6 5 d3 d6 6 O-O O-O 7 Re1 a6 8 Bb3 Ba7 9 h3 h6 10 Nbd2 Re8");
+		expect(current(target)).toBe("Ba7");
 		unmount(app);
 		restore();
 	});

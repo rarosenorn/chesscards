@@ -324,7 +324,10 @@
 		if (event.type !== INPUT_EVENT_TYPE.validateMoveInput) return;
 		const at = solutionFrom + solved;
 		const made = tryMove(replay.fens[at], replay.moveInfos[at].san, event.squareFrom, event.squareTo);
-		if (!made) {
+		// a drop that is no legal move goes back without a word: only a
+		// real move that is not the answer is a miss
+		if (!made) return false;
+		if (!made.right) {
 			missed = true;
 			flashWrong(event.squareFrom);
 			return false;

@@ -818,6 +818,9 @@
 					aria-label={blackToMove ? "Black to move" : "White to move"}
 				></span>
 			{/if}
+			{#if puzzle && solutionFrom != null}
+				<span class="puzzle-tag">Puzzle</span>
+			{/if}
 		</div>
 		<div class="ghost-host">
 			<!-- focusable (tabindex -1) so a freshly opened editor can receive
@@ -1080,6 +1083,12 @@
 		background: white;
 		border: 1px solid #262626;
 		box-sizing: border-box;
+	}
+	/* as on the closed board */
+	.puzzle-tag {
+		font-size: 0.8rem;
+		line-height: 1.3;
+		color: rgba(0, 0, 0, 0.55);
 	}
 	.side-to-move.black {
 		background: #262626;

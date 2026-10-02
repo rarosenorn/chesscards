@@ -817,6 +817,9 @@
 				aria-label={blackToMove ? "Black to move" : "White to move"}
 			></span>
 		{/if}
+		{#if normalized.puzzle && solutionFrom != null}
+			<span class="puzzle-tag">Puzzle</span>
+		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse</a>
 		{/if}
@@ -953,6 +956,12 @@
 	}
 	/* out at the header's far end, quiet until pointed at: it leaves the card
 	   rather than acting on it */
+	/* says the board is one to be played, wherever the board is shown */
+	.puzzle-tag {
+		font-size: 0.8rem;
+		line-height: 1.3;
+		color: rgba(0, 0, 0, 0.55);
+	}
 	.analysis-link {
 		margin-left: auto;
 		padding: 0 6px;

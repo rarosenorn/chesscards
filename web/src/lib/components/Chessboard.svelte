@@ -264,13 +264,17 @@
 	// standing in the hidden part would only open it again.
 	let openBefore = $derived(folds && openedBefore && foldStart > 0);
 	let openAfter = $derived(folds && openedAfter && foldEnd != null);
+	// (the button clicked goes with the click, and would take the keyboard
+	// with it: the board takes it back, so the arrows still step)
 	const foldBefore = () => {
 		if (asidePly != null || displayIndex - 1 < foldStart) jumpTo(openAt);
 		openedBefore = false;
+		takeFocus();
 	}
 	const foldAfter = () => {
 		if (asidePly != null || displayIndex - 1 > foldEnd) jumpTo(openAt);
 		openedAfter = false;
+		takeFocus();
 	}
 
 	// the board stepped into what a "…" holds opens that side
@@ -1030,13 +1034,13 @@
 				onclick={next}
 			>›</button>
 			{#if cutBefore}
-				<button class="fold-btn" aria-label="Show the earlier moves" onclick={() => openedBefore = true}>…</button>
+				<button class="fold-btn" aria-label="Show the earlier moves" onclick={() => { openedBefore = true; takeFocus(); }}>…</button>
 			{:else if openBefore}
 				<button class="fold-btn fold-close" aria-label="Hide the earlier moves" onclick={foldBefore}>{@render foldIcon()}</button>
 			{/if}
 			{@render pairs(shownLine, true)}
 			{#if cutAfter}
-				<button class="fold-btn" aria-label="Show the later moves" onclick={() => openedAfter = true}>…</button>
+				<button class="fold-btn" aria-label="Show the later moves" onclick={() => { openedAfter = true; takeFocus(); }}>…</button>
 			{:else if openAfter}
 				<button class="fold-btn fold-close" aria-label="Hide the later moves" onclick={foldAfter}>{@render foldIcon()}</button>
 			{/if}

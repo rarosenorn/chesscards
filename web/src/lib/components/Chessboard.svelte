@@ -318,11 +318,9 @@
 		}
 		wasRevealed = now;
 	});
-	// How a move of the line shows: as the player found it — and, once the
-	// card is turned, the player's moves that were never played show as found
-	// too, so the answer reads the same whether it was played or shown.
-	const foundAs = index => finds[index]
-		?? (normalized.puzzle && onSolved && revealed && solutionFrom != null && index >= solutionFrom && (index - solutionFrom) % 2 === 0 ? "clean" : null);
+	// How a move of the line shows: as the player found it. A move only shown
+	// (the card turned before it was played) is a plain move.
+	const foundAs = index => finds[index] ?? null;
 	let puzzling = $derived(
 		!!normalized.puzzle && !!onSolved && !revealed && !authorView && !inEditor
 			&& solutionFrom != null && solutionFrom < replay.moveInfos.length
@@ -356,9 +354,8 @@
 	}
 	// A right move wears a green frame on the square it landed on — the wrong
 	// move's red one, answered. It is the position's, not the moment's: the
-	// board shows it whenever it stands on a move the player found (or, once
-	// the card is turned, one of the player's moves shown), stepped to as
-	// much as just played, and on no other position.
+	// board shows it whenever it stands on a move the player found, stepped
+	// to as much as just played, and on no other position.
 	const FRAME_RIGHT = { class: "marker-frame-right", slice: "markerFrame" };
 	let rightSquare = $derived(
 		asidePly == null && displayIndex > 0 && foundAs(displayIndex - 1)

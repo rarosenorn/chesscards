@@ -100,13 +100,22 @@
 		if (username) loadGames();
 	});
 
+	const plural = (n, word, many = word + "s") => `${n} ${n === 1 ? word : many}`;
 	const DRAWS = ["agreed", "repetition", "stalemate", "insufficient", "50move", "timevsinsufficient"];
+	// "900+10" is "15 + 10", "600" is "10 min", "1/259200" (daily) is "3 days"
+	const timeControl = raw => {
+		const daily = /^1\/(\d+)$/.exec(raw);
+		if (daily) return plural(Math.round(daily[1] / 86400), "day");
+		const [base, increment] = raw.split("+").map(Number);
+		const clock = base >= 60 ? String(+(base / 60).toFixed(1)) : `${base} sec`;
+		return increment ? `${clock} + ${increment}` : base >= 60 ? `${clock} min` : clock;
+	}
 	const rowOf = game => {
 		const color = game.white.username.toLowerCase() === player ? "w" : "b";
 		const me = color === "w" ? game.white : game.black;
-		const opponent = color === "w" ? game.black : game.white;
 		return {
-			color, me, opponent,
+			color,
+			time: timeControl(game.time_control),
 			result: me.result === "win" ? "Won" : DRAWS.includes(me.result) ? "Draw" : "Lost",
 			date: new Date(game.end_time * 1000).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
 		};
@@ -145,7 +154,6 @@
 		current.job = { ...current.job, undone: true };
 	}
 
-	const plural = (n, word, many = word + "s") => `${n} ${n === 1 ? word : many}`;
 	let summary = $derived.by(() => {
 		if (job?.phase !== "done") return null;
 		const { cardIds, counts, unexplained } = job.result;
@@ -167,6 +175,26 @@
 		return null;
 	});
 </script>
+
+{#snippet speed(timeClass)}
+	{#if timeClass === "rapid"}
+		<svg class="speed speed-rapid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-label="Rapid">
+			<circle cx="12" cy="14" r="7.5" /><path d="M9.5 2.5h5M12 2.5v4M12 14l3-3.5" />
+		</svg>
+	{:else if timeClass === "blitz"}
+		<svg class="speed speed-blitz" viewBox="0 0 24 24" fill="currentColor" aria-label="Blitz">
+			<path d="M14 1.5 4.5 13.5h6L9 22.5l10.5-13h-6.5z" />
+		</svg>
+	{:else if timeClass === "bullet"}
+		<svg class="speed speed-bullet" viewBox="0 0 24 24" fill="currentColor" aria-label="Bullet">
+			<path d="M2.5 8h10.5c4.5 0 7.5 2 8.5 4-1 2-4 4-8.5 4H2.5z" />
+		</svg>
+	{:else}
+		<svg class="speed speed-daily" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-label="Daily">
+			<circle cx="12" cy="12" r="4.5" stroke="none" /><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" />
+		</svg>
+	{/if}
+{/snippet}
 
 <StandardLayout>
 	<section>
@@ -239,11 +267,17 @@
 				{@const row = rowOf(game)}
 				<li>
 					<button class="game" class:current={job?.url === game.url} onclick={() => importGame(game)}>
-						<span class="date">{row.date}</span>
-						<span class="side side-{row.color}" aria-label={row.color === "w" ? "You were White" : "You were Black"}></span>
-						<span class="players">{row.me.username} <span class="rating">({row.me.rating})</span> vs {row.opponent.username} <span class="rating">({row.opponent.rating})</span></span>
-						<span class="time-class">{game.time_class}</span>
+						<span class="time">
+							{@render speed(game.time_class)}
+							<span class="time-control">{row.time}</span>
+						</span>
+						<span class="players">
+							{#each [["w", game.white], ["b", game.black]] as [side, who]}
+								<span class="player"><span class="side side-{side}"></span><span class="name">{who.username}</span> <span class="rating">({who.rating})</span></span>
+							{/each}
+						</span>
 						<span class="result result-{row.result.toLowerCase()}">{row.result}</span>
+						<span class="date">{row.date}</span>
 					</button>
 				</li>
 			{/each}
@@ -339,7 +373,7 @@
 	.game {
 		width: 100%;
 		display: grid;
-		grid-template-columns: 110px 14px 1fr 80px 50px;
+		grid-template-columns: 64px 1fr 50px 100px;
 		align-items: center;
 		gap: 12px;
 		padding: 8px 6px;
@@ -358,13 +392,57 @@
 	}
 	.date,
 	.rating,
-	.time-class {
+	.time-control {
 		color: rgba(0, 0, 0, 0.6);
 	}
+	.date {
+		text-align: right;
+	}
+	.time {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+	}
+	.time-control {
+		font-size: 0.8rem;
+		white-space: nowrap;
+	}
+	.speed {
+		width: 22px;
+		height: 22px;
+	}
+	.speed-rapid {
+		color: #6c9d2a;
+	}
+	.speed-blitz,
+	.speed-bullet {
+		color: #e0a800;
+	}
+	.speed-daily {
+		color: #e07b1a;
+	}
+	.players {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		min-width: 0;
+	}
+	.player {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.name {
+		font-weight: 600;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 	.side {
-		width: 12px;
-		height: 12px;
-		border-radius: 50%;
+		flex: none;
+		width: 11px;
+		height: 11px;
+		border-radius: 2px;
 		border: 1px solid rgba(0, 0, 0, 0.55);
 	}
 	.side-w {

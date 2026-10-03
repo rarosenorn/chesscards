@@ -45,13 +45,18 @@ export const readGame = pgn => {
 
 const uciOf = move => move.from + move.to + (move.promotion ?? "")
 
-// an engine line (UCI) as SAN, as far as it plays
+// an engine line (UCI) as SAN, as far as it plays: `max` moves, and past
+// them any captures still coming, since a line cut in the middle of an
+// exchange shows one side a piece up that it is not
 const lineSan = (fen, ucis, max) => {
 	const chess = new Chess(fen)
 	const out = []
-	for (const uci of ucis.slice(0, max)) {
-		try { out.push(chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] })) }
-		catch { break }
+	for (const uci of ucis) {
+		try {
+			const move = chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] })
+			if (out.length >= max && !move.captured) break
+			out.push(move)
+		} catch { break }
 	}
 	return out
 }
@@ -86,6 +91,47 @@ export const findMistakes = ({ moves, fens }, evals, color, kinds = KINDS) => {
 	return found
 }
 
+// a try is kept long enough for its answer to cash in — the reasons are
+// written from that — and shown only as far as the answer's point
+const TRY_PLIES = 9
+const TRY_SHOWN = 4
+
+// a capture, a check, a queen: what a player looks at first
+const isTempting = move => (move.captured || /[+#]/.test(move.san)) && (!move.promotion || move.promotion === "q")
+
+// The ways out a line's loser would look for, as { line, at, fen, uci } for
+// the engine to try: in the better line the opponent's tempting moves, in
+// the played one the player's, at each of their turns, the engine's own move
+// aside. `at` counts the line's moves made before the try; the played line
+// starts with the mistake itself. A missed mate has nothing to argue.
+export const triesToCheck = ({ move, better, followUp, missedMate }) => {
+	if (missedMate) return []
+	const asks = []
+	for (const [line, moves, first] of [["better", better, 1], ["played", [move, ...followUp], 2]])
+		for (let at = first; at <= moves.length; at += 2) {
+			const own = moves[at] && uciOf(moves[at])
+			for (const tried of new Chess(moves[at - 1].after).moves({ verbose: true }))
+				if (isTempting(tried) && uciOf(tried) !== own) asks.push({ line, at, fen: tried.before, uci: uciOf(tried) })
+		}
+	return asks
+}
+
+// The mistake with the tries that do fail, each { line, at, moves }: the try
+// and the engine's answer to it. `evals[i]` is the engine made to play
+// asks[i]. A try it finds about as good as the line's own move is no failed
+// way out, only another way, and is left out.
+export const withTries = (mistake, asks, evals) => ({
+	...mistake,
+	tries: asks.flatMap((ask, i) => {
+		const found = evals[i]
+		if (!found?.pv?.length) return []
+		const lineEval = ask.line === "better" ? mistake.evalBefore : mistake.evalAfter
+		if (!["mistake", "blunder"].includes(judge(lineEval, found, ask.fen.split(" ")[1]))) return []
+		const moves = lineSan(ask.fen, found.pv, TRY_PLIES)
+		return moves.length > 1 ? [{ line: ask.line, at: ask.at, moves }] : []
+	})
+})
+
 // "27.Qxg5", "10...e4"
 const numbered = move => {
 	const number = Number(move.before.split(" ")[5])
@@ -112,15 +158,25 @@ const reason = text => {
 // arrow for the better move. That one is a line of the text, written from
 // the board move it branches at.
 // The back is two bullets, "X was a blunder because ..." and "Y was the best
-// move because ...", the second ending in Y's line. `why` is { bad, better },
-// the two reasons, or absent. A missed mate needs none: that it was missed is
-// the whole reason, and the mate itself the answer.
+// move because ...", the second ending in Y's line. `why` is { bad, better,
+// tries }, the two reasons and the indexes of the mistake's tries they speak
+// of, or absent. Each such try is written after its bullet as a variation in
+// parentheses, from the move it answers. A missed mate needs none: that it
+// was missed is the whole reason, and the mate itself the answer.
 export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
 	const { ply, kind, move, better, followUp, missedMate } = mistake
 	const label = numbered(move)
 	const a = kind === "inaccuracy" ? "an" : "a"
 	const before = ply > 0 ? moves[ply - 1] : null
-	const betterLine = [...(before ? [numbered(before)] : []), ...better.map((m, i) => i === 0 && !before ? numbered(m) : m.san)].join(" ")
+	// moves of the better line, hung off the board move they branch from
+	const fromBoard = line => [...(before ? [numbered(before)] : []), ...line.map((m, i) => i === 0 && !before ? numbered(m) : m.san)].join(" ")
+	const betterLine = fromBoard(better)
+	const played = [move, ...followUp]
+	const variations = line => (why?.tries ?? [])
+		.map(index => mistake.tries?.[index])
+		.filter(tried => tried?.line === line)
+		.map(tried => ` ([${line === "better" ? fromBoard(better.slice(0, tried.at)) : numbered(played[tried.at - 1])} | ${tried.moves.slice(0, TRY_SHOWN).map(m => m.san).join(" ")}])`)
+		.join("")
 	return {
 		front: {
 			text: `Why was ${label} ${a} ${kind}, and what is a better move?`,
@@ -134,8 +190,8 @@ export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
 			}]
 		},
 		back: [
-			`- ${label} was ${a} ${kind}${missedMate ? ` because it misses mate in ${missedMate}.` : reason(why?.bad) ? ` because ${reason(why.bad)}` : "."}`,
-			`- ${numbered(better[0])} was the best move${missedMate ? ` because it ${missedMate === 1 ? "is" : "starts the"} mate:` : reason(why?.better) ? ` because ${reason(why.better)}` : ":"} [${betterLine}]`
+			`- ${label} was ${a} ${kind}${missedMate ? ` because it misses mate in ${missedMate}.` : reason(why?.bad) ? ` because ${reason(why.bad)}` : "."}${variations("played")}`,
+			`- ${numbered(better[0])} was the best move${missedMate ? ` because it ${missedMate === 1 ? "is" : "starts the"} mate:` : reason(why?.better) ? ` because ${reason(why.better)}` : ":"} [${betterLine}]${variations("better")}`
 		].join("\n")
 	}
 }

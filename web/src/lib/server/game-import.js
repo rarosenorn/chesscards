@@ -1,13 +1,13 @@
 import { createEmptyCard } from "ts-fsrs"
 import * as decks from "./decks.js"
-import { analysePositions, isInstalled, BINARY } from "./stockfish.js"
+import { analysePositions, analyseMoves, isInstalled, BINARY } from "./stockfish.js"
 import { explainMistake } from "./explain.js"
-import { readGame, findMistakes, mistakeCardSpec, KINDS } from "../game-mistakes.js"
+import { readGame, findMistakes, triesToCheck, withTries, mistakeCardSpec, KINDS } from "../game-mistakes.js"
 import { cardBuilder } from "../card-spec.js"
 
 // A game becoming cards: the engine goes through it, the mistakes of the
-// side asked about are picked out, each gets its reasons written, and the
-// cards go into the deck.
+// side asked about are picked out, the engine refutes the tempting moves
+// around each, each gets its reasons written, and the cards go into the deck.
 //
 // That is half a minute of every core the machine has, so it cannot be a
 // request: it is a job. Jobs wait in one line and run one at a time, each
@@ -32,7 +32,16 @@ const run = async job => {
 		skip,
 		onProgress: (done, total) => { job.done = done; job.total = total; }
 	});
-	const mistakes = findMistakes(job.game, evals, job.color, job.kinds);
+	const found = findMistakes(job.game, evals, job.color, job.kinds);
+
+	// the tempting moves around each mistake, for the reasons to rule out
+	job.phase = "trying";
+	job.done = 0;
+	const asks = found.map(triesToCheck);
+	job.total = asks.flat().length;
+	const tried = await analyseMoves(asks.flat(), { onProgress: done => { job.done = done; } });
+	let from = 0;
+	const mistakes = found.map((mistake, i) => withTries(mistake, asks[i], tried.slice(from, from += asks[i].length)));
 
 	job.phase = "explaining";
 	job.done = 0;

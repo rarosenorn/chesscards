@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { judge, readGame, findMistakes, mistakeCardSpec } from "./game-mistakes.js"
+import { judge, readGame, findMistakes, triesToCheck, withTries, mistakeCardSpec } from "./game-mistakes.js"
 import { cardBuilder } from "./card-spec.js"
 import games from "./fixtures/lichess-judgments.json"
 
@@ -78,6 +78,49 @@ describe("a mistake's card", () => {
 	})
 })
 
+describe("the tries around a mistake", () => {
+	const game = readGame("1. e4 e5 2. Nf3 Nc6 3. Bc4 Nd4 4. Nxe5 Qg5 5. Nxf7 Qxg2 6. Rf1 Qxe4+ 7. Be2 Nf3#")
+	const evals = game.fens.map((_, i) => ({ cp: i <= 6 ? 30 : -400, pv: [] }))
+	evals[6] = { cp: 30, pv: ["f3d4", "e5d4", "c2c3"] }
+	evals[7] = { cp: -400, pv: ["d8g5", "e5f7", "g5g2"] }
+	const [mistake] = findMistakes(game, evals, "w")
+	const asks = triesToCheck(mistake)
+	const at = (line, n) => asks.filter(ask => ask.line === line && ask.at === n).map(ask => ask.uci)
+
+	it("are the opponent's captures and checks in the better line, the player's in the played one", () => {
+		// after 4.Nxd4 the only capture is the line's own exd4
+		expect(at("better", 1)).toEqual([])
+		expect(at("better", 3)).toEqual(["d4c3"])
+		// after 4.Nxe5 Qg5: not the line's own Nxf7, and no quiet move
+		expect(at("played", 2).sort()).toEqual(["c4f7", "e5d7"])
+		expect(at("played", 4)).toContain("f7h8")
+		expect(asks.every(ask => ask.line === "better" ? ask.at % 2 === 1 : ask.at % 2 === 0)).toBe(true)
+	})
+
+	it("keep only what the engine refutes, and go onto the card as variations", () => {
+		const answers = asks.map(ask =>
+			ask.uci === "c4f7" ? { cp: -900, pv: ["c4f7", "e8e7", "d2d3", "g5g2", "f7g8"] }
+			: ask.uci === "d4c3" ? { cp: 900, pv: ["d4c3", "b1c3", "f8b4"] }
+			: { cp: ask.line === "better" ? 30 : -400, pv: [ask.uci, "a2a3"] })
+		const tried = withTries(mistake, asks, answers)
+		expect(tried.tries.map(t => [t.line, t.at, t.moves.map(m => m.san).join(" ")])).toEqual([
+			["better", 3, "dxc3 Nxc3 Bb4"],
+			["played", 2, "Bxf7+ Ke7 d3 Qxg2 Bxg8"]
+		])
+
+		const spec = mistakeCardSpec(game, tried, { bad: "it hangs g2", better: "it wins a knight", tries: [1, 0, 7] })
+		expect(spec.back).toBe("- 4.Nxe5 was a blunder because it hangs g2. ([4...Qg5 | Bxf7+ Ke7 d3 Qxg2])\n"
+			+ "- 4.Nxd4 was the best move because it wins a knight. [3...Nd4 Nxd4 exd4 c3] ([3...Nd4 Nxd4 exd4 c3 | dxc3 Nxc3 Bb4])")
+		const problems = []
+		cardBuilder(msg => problems.push(msg)).buildCard(spec, "card")
+		expect(problems).toEqual([])
+	})
+
+	it("are none for a missed mate", () => {
+		expect(triesToCheck({ ...mistake, missedMate: 2 })).toEqual([])
+	})
+})
+
 describe("the edges of a game", () => {
 	const built = spec => {
 		const problems = []
@@ -148,5 +191,12 @@ describe("the edges of a game", () => {
 		const [mistake] = findMistakes(game, evals, "w")
 		expect(mistake.missedMate).toBe(3)
 		expect(mistake.better.map(m => m.san)).toEqual(["e4", "e5", "Nf3", "Nc6", "Bc4"])
+	})
+
+	it("does not cut a line in the middle of an exchange", () => {
+		const game = readGame("1. a3 a6")
+		const evals = [{ cp: 300, pv: ["e2e4", "e7e5", "g1f3", "d7d5", "e4d5", "d8d5", "b1c3"] }, { cp: -100, pv: ["a7a6"] }, { cp: -100, pv: [] }]
+		const [mistake] = findMistakes(game, evals, "w")
+		expect(mistake.better.map(m => m.san)).toEqual(["e4", "e5", "Nf3", "d5", "exd5", "Qxd5"])
 	})
 })

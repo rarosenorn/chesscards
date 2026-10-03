@@ -53,10 +53,12 @@ const startEngine = async () => {
 	return {
 		newGame: () => send("ucinewgame"),
 		quit: () => { onFail = () => {}; proc.kill(); },
-		// the engine on one position: { cp | mate, pv } from White's side
-		async search(fen) {
+		// the engine on one position: { cp | mate, pv } from White's side.
+		// With `only` (a UCI move) it has to play that move, and says what
+		// comes of it.
+		async search(fen, only = null) {
 			send(`position fen ${fen}`);
-			const lines = await until(`go nodes ${NODES}`, line => line.startsWith("bestmove"));
+			const lines = await until(`go nodes ${NODES}${only ? ` searchmoves ${only}` : ""}`, line => line.startsWith("bestmove"));
 			// the last full line of thought; a bound is a search still
 			// narrowing, not its answer
 			const info = lines.findLast(line =>
@@ -67,6 +69,26 @@ const startEngine = async () => {
 			return { [unit]: white * Number(value), pv: info.split(" pv ")[1].trim().split(/\s+/) };
 		}
 	};
+}
+
+// `work(engine, run)` on `count` engines at once. They are all gone when it
+// is over, however it ends.
+const withEngines = async (count, work) => {
+	const engines = [];
+	let stopped = false;
+	try {
+		await Promise.all(Array.from({ length: count }, async (_, run) => {
+			const engine = await startEngine();
+			// another run already failed while this engine was starting
+			if (stopped) return engine.quit();
+			engines.push(engine);
+			engine.newGame();
+			await work(engine, run);
+		}));
+	} finally {
+		stopped = true;
+		for (const engine of engines) engine.quit();
+	}
 }
 
 // Every position of a game, in order. The game is cut into one run of
@@ -80,26 +102,30 @@ const analysePositions = async (fens, { skip = [], onProgress = () => {} } = {})
 	const runs = Math.min(WORKERS, todo.length);
 	const size = Math.ceil(todo.length / runs);
 	let done = 0;
-	const engines = [];
-	let stopped = false;
-	try {
-		await Promise.all(Array.from({ length: runs }, async (_, run) => {
-			const engine = await startEngine();
-			// another run already failed while this engine was starting
-			if (stopped) return engine.quit();
-			engines.push(engine);
-			engine.newGame();
-			for (const i of todo.slice(run * size, (run + 1) * size).reverse()) {
-				evals[i] = await engine.search(fens[i]);
-				done += 1;
-				onProgress(done, todo.length);
-			}
-		}));
-	} finally {
-		stopped = true;
-		for (const engine of engines) engine.quit();
-	}
+	await withEngines(runs, async (engine, run) => {
+		for (const i of todo.slice(run * size, (run + 1) * size).reverse()) {
+			evals[i] = await engine.search(fens[i]);
+			done += 1;
+			onProgress(done, todo.length);
+		}
+	});
 	return evals;
 }
 
-export { analysePositions, isInstalled, BINARY }
+// One move each, { fen, uci }: what the engine makes of the position once
+// that move is played. The pv starts with the move.
+const analyseMoves = async (asks, { onProgress = () => {} } = {}) => {
+	const evals = new Array(asks.length).fill(null);
+	let next = 0, done = 0;
+	await withEngines(Math.min(WORKERS, asks.length), async engine => {
+		while (next < asks.length) {
+			const i = next++;
+			evals[i] = await engine.search(asks[i].fen, asks[i].uci);
+			done += 1;
+			onProgress(done, asks.length);
+		}
+	});
+	return evals;
+}
+
+export { analysePositions, analyseMoves, isInstalled, BINARY }

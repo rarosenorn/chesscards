@@ -106,7 +106,7 @@
 		const me = color === "w" ? game.white : game.black;
 		const opponent = color === "w" ? game.black : game.white;
 		return {
-			color, opponent,
+			color, me, opponent,
 			result: me.result === "win" ? "Won" : DRAWS.includes(me.result) ? "Draw" : "Lost",
 			date: new Date(game.end_time * 1000).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
 		};
@@ -241,7 +241,7 @@
 					<button class="game" class:current={job?.url === game.url} onclick={() => importGame(game)}>
 						<span class="date">{row.date}</span>
 						<span class="side side-{row.color}" aria-label={row.color === "w" ? "You were White" : "You were Black"}></span>
-						<span class="opponent">{row.opponent.username} <span class="rating">({row.opponent.rating})</span></span>
+						<span class="players">{row.me.username} <span class="rating">({row.me.rating})</span> vs {row.opponent.username} <span class="rating">({row.opponent.rating})</span></span>
 						<span class="time-class">{game.time_class}</span>
 						<span class="result result-{row.result.toLowerCase()}">{row.result}</span>
 					</button>

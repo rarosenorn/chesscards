@@ -96,7 +96,6 @@
 				<th>New</th>
 				<th>Learn</th>
 				<th>Due</th>
-				<th>Cards</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -111,7 +110,7 @@
 					onmousedown={deck.placeholder ? undefined : e => handleRowMouseDown(e, list, deck)}
 				>
 					{#if deck.placeholder}
-						<td colspan="5"></td>
+						<td colspan="4"></td>
 					{:else}
 						<td><a
 							href={`my-flashcards/${deck.id}/study`}
@@ -123,7 +122,6 @@
 						<td class="count new" class:none={deck.new_cards == 0}>{deck.new_cards}</td>
 						<td class="count learn" class:none={deck.learn_cards == 0}>{deck.learn_cards}</td>
 						<td class="count review" class:none={deck.review_cards == 0}>{deck.review_cards}</td>
-						<td class:none={deck.no_cards == 0}>{deck.no_cards}</td>
 					{/if}
 				</tr>
 			{/each}
@@ -218,10 +216,8 @@
 	.count.review {
 		color: #070;
 	}
-	/* an empty count recedes, the total included: nothing there to study. The
-	   compound stays in the list to outrank .count.new and its siblings */
-	.count.none,
-	.none {
+	/* an empty count recedes: nothing there to study */
+	.count.none {
 		color: rgba(0, 0, 0, 0.35);
 		font-weight: 400;
 	}

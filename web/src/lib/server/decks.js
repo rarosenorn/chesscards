@@ -53,7 +53,7 @@ const BOUNDS = `select ((
 const getMineWithoutCards = async (userId, { timeZone, rolloverHour }) => {
 	const { rows } =
 		await pool.query(`with bounds as (${BOUNDS})
-			select d.id, d.name, count(c.id) no_cards,
+			select d.id, d.name,
 			count(c.id) filter (where ${DUE}) due_cards,
 			-- the deck list's anki columns. A tactic card carries no FSRS
 			-- state, so its reps stand in: never answered is new, otherwise

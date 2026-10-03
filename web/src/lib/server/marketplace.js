@@ -255,7 +255,7 @@ const DUE = `ci.finished_at is null and (
 const getInstancesWithoutCards = async (userId, { timeZone, rolloverHour }) => {
 	const { rows } = await pool.query(`
 		with bounds as (${BOUNDS})
-		select i.id, md.name, count(ci.id) no_cards,
+		select i.id, md.name,
 			count(ci.id) filter (where ${DUE}) due_cards,
 			-- the deck list's anki columns (see decks.getMineWithoutCards)
 			count(ci.id) filter (where ${DUE} and (ci.state = 0 or (ci.state is null and coalesce(ci.reps, 0) = 0))) new_cards,

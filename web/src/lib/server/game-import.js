@@ -19,7 +19,6 @@ import { cardBuilder } from "../card-spec.js"
 // of its own — it wants a real queue the day the app runs as more than one.
 const MAX_PLIES = 400;
 const MAX_PGN = 100_000;
-const EXPLAIN_AT_ONCE = 3;
 const KEEP_FINISHED = 10 * 60_000;
 
 // on globalThis, so a dev-server reload of this module keeps the line
@@ -34,28 +33,26 @@ const run = async job => {
 	});
 	const found = findMistakes(job.game, evals, job.color, job.kinds);
 
-	// the tempting moves around each mistake, for the reasons to rule out
-	job.phase = "trying";
-	job.done = 0;
-	const asks = found.map(triesToCheck);
-	job.total = asks.flat().length;
-	const tried = await analyseMoves(asks.flat(), { onProgress: done => { job.done = done; } });
-	let from = 0;
-	const mistakes = found.map((mistake, i) => withTries(mistake, asks[i], tried.slice(from, from += asks[i].length)));
-
+	// The engine goes from one mistake to the next, refuting the tempting
+	// moves around it, and each mistake's reasons are written as soon as its
+	// tries are in, while the engine is on the ones after it: that is what
+	// keeps the writing to a few at a time.
 	job.phase = "explaining";
 	job.done = 0;
-	job.total = mistakes.length;
-	const reasons = new Array(mistakes.length);
-	let next = 0;
-	await Promise.all(Array.from({ length: Math.min(EXPLAIN_AT_ONCE, mistakes.length) }, async () => {
-		while (next < mistakes.length) {
-			const index = next++;
+	job.total = found.length;
+	const mistakes = new Array(found.length);
+	const reasons = new Array(found.length);
+	const writing = [];
+	for (const [index, mistake] of found.entries()) {
+		const asks = triesToCheck(mistake);
+		mistakes[index] = withTries(mistake, asks, await analyseMoves(asks));
+		writing.push((async () => {
 			// a missed mate is its own reason; the card writes it out itself
-			reasons[index] = mistakes[index].missedMate ? null : await explainMistake(job.game, mistakes[index]);
+			reasons[index] = mistake.missedMate ? null : await explainMistake(job.game, mistakes[index]);
 			job.done += 1;
-		}
-	}));
+		})());
+	}
+	await Promise.all(writing);
 
 	job.phase = "saving";
 	const problems = [];

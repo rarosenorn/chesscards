@@ -162,7 +162,6 @@
 		if (!job) return null;
 		if (job.phase === "queued") return job.ahead > 0 ? `Waiting for ${plural(job.ahead, "game")} ahead of yours` : "Starting";
 		if (job.phase === "analysing") return job.total > 0 ? `Analysing the game: position ${job.done} of ${job.total}` : "Starting";
-		if (job.phase === "trying") return `Checking the tempting moves: ${job.done} of ${job.total}`;
 		if (job.phase === "explaining") return `Writing the explanations: ${job.done} of ${job.total}`;
 		if (job.phase === "saving") return "Adding the cards";
 		return null;

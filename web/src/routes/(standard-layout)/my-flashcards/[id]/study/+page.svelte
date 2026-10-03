@@ -282,6 +282,9 @@
 		const days = TACTIC_LADDER_DAYS[currentCard?.reps ?? 0];
 		return days == null ? "Done" : days >= 365 ? days / 365 + "y" : days + "d";
 	});
+	// how far up the card on screen has climbed, for the steps drawn beside
+	// the buttons
+	let tacticRung = $derived(Math.min(currentCard?.reps ?? 0, TACTIC_LADDER_DAYS.length));
 	const evaluateTactic = async correct => {
 		// shadows the queue's clock, which is advanced below like evaluateCard's
 		const now = new Date();
@@ -595,6 +598,15 @@
 		     space in the rendered line, and the gap is the plus's own margin.
 		     The hair spaces inside each count are what widen its underline —
 		     chrome draws the rule across the text, so padding cannot. -->
+		{#if isTactic}
+			<!-- the puzzle's ladder, in the corner the counts leave free: a step
+			     for each wait, filled as far as the card has climbed -->
+			<span class="ladder" role="img" aria-label="Climbed {tacticRung} of {TACTIC_LADDER_DAYS.length} steps">
+				{#each TACTIC_LADDER_DAYS as _, step}
+					<span class="step" class:climbed={step < tacticRung} style:height="{5 + step * 3}px"></span>
+				{/each}
+			</span>
+		{/if}
 		<p class="deck-counts"><span class="count new" class:current={currentQueue === "new"}><span class="hair">{"\u200a"}</span>{counts.new}<span class="hair">{"\u200a"}</span></span><span class="plus">+</span><span class="count learn" class:current={currentQueue === "learn"}><span class="hair">{"\u200a"}</span>{counts.learn}<span class="hair">{"\u200a"}</span></span><span class="plus">+</span><span class="count review" class:current={currentQueue === "review"}><span class="hair">{"\u200a"}</span>{counts.review}<span class="hair">{"\u200a"}</span></span></p>
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
@@ -893,6 +905,25 @@
 	.deck-counts .current {
 		text-decoration: underline;
 		text-underline-offset: 1px;
+	}
+	/* the counts' mirror in the bottom-left corner, standing on the line the
+	   button words stand on */
+	.ladder {
+		position: absolute;
+		left: 0;
+		bottom: 9px;
+		display: flex;
+		align-items: flex-end;
+		gap: 2px;
+	}
+	.ladder .step {
+		width: 7px;
+		border-radius: 1px;
+		background-color: rgba(0, 0, 0, 0.14);
+	}
+	/* the green of the reviews coming round: a climbed step is one earned */
+	.ladder .climbed {
+		background-color: #070;
 	}
 	.card-actions {
 		position: relative;

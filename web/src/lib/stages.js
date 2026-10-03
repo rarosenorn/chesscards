@@ -23,13 +23,14 @@ const stageLabel = stage => `Chapter ${stage.position} — ${stage.name}`;
 const stageName = stage => stage.name;
 
 // a tactic card carries no FSRS state; its grades stamp last_review
-// (seen) and finished_at (done for good, its graduation)
+// (seen) and reps (its ladder rung). It graduates on its first climb —
+// finishing the ladder takes over a year, too long to hold a chapter shut
 const isSeen = card => card.card_type === "tactic"
 	? card.finished_at != null || card.last_review != null
 	: card.state !== 0;
 
 const isGraduated = card => card.card_type === "tactic"
-	? card.finished_at != null
+	? card.finished_at != null || (card.reps ?? 0) > 0
 	: card.state === 2 || card.state === 3;
 
 const stagePasses = cards =>

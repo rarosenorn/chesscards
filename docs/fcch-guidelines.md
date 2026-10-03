@@ -225,9 +225,10 @@ course's line.
 **Trap and refutation cards** — "White has just played X, which loses a pawn —
 how?". Card the punishment for the natural mistake, not every sideline.
 
-**Tactic cards** (`card_type: "tactic"`) bypass FSRS entirely and are graded
-once, then finished forever. Use them only for one-off puzzle drills, never for
-repertoire knowledge.
+**Tactic cards** (`card_type: "tactic"`) bypass FSRS: Correct climbs a fixed
+ladder (1 week, 1 month, 3 months, 1 year, then finished), Incorrect drops a
+rung and comes back the next day. Use them for puzzles solved afresh each time
+(mate patterns, drills), never for repertoire knowledge.
 
 ## Density
 

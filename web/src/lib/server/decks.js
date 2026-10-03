@@ -56,11 +56,11 @@ const getMineWithoutCards = async (userId, { timeZone, rolloverHour }) => {
 			select d.id, d.name,
 			count(c.id) filter (where ${DUE}) due_cards,
 			-- the deck list's anki columns. A tactic card carries no FSRS
-			-- state, so its reps stand in: never answered is new, otherwise
-			-- it is a card coming round again (there is no learning step)
-			count(c.id) filter (where ${DUE} and (c.state = 0 or (c.state is null and coalesce(c.reps, 0) = 0))) new_cards,
+			-- state, so its last_review stands in: never answered is new,
+			-- otherwise it is a card coming round again (no learning step)
+			count(c.id) filter (where ${DUE} and (c.state = 0 or (c.state is null and c.last_review is null))) new_cards,
 			count(c.id) filter (where ${DUE} and c.state in (1, 3)) learn_cards,
-			count(c.id) filter (where ${DUE} and (c.state = 2 or (c.state is null and coalesce(c.reps, 0) > 0))) review_cards
+			count(c.id) filter (where ${DUE} and (c.state = 2 or (c.state is null and c.last_review is not null))) review_cards
 			from decks d left join cards c on d.id = c.deck_id cross join bounds
 			where d.user_id = $1 group by d.id, d.name order by d.position`,
 			[userId, timeZone, rolloverHour]

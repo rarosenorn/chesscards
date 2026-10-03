@@ -258,9 +258,9 @@ const getInstancesWithoutCards = async (userId, { timeZone, rolloverHour }) => {
 		select i.id, md.name,
 			count(ci.id) filter (where ${DUE}) due_cards,
 			-- the deck list's anki columns (see decks.getMineWithoutCards)
-			count(ci.id) filter (where ${DUE} and (ci.state = 0 or (ci.state is null and coalesce(ci.reps, 0) = 0))) new_cards,
+			count(ci.id) filter (where ${DUE} and (ci.state = 0 or (ci.state is null and ci.last_review is null))) new_cards,
 			count(ci.id) filter (where ${DUE} and ci.state in (1, 3)) learn_cards,
-			count(ci.id) filter (where ${DUE} and (ci.state = 2 or (ci.state is null and coalesce(ci.reps, 0) > 0))) review_cards
+			count(ci.id) filter (where ${DUE} and (ci.state = 2 or (ci.state is null and ci.last_review is not null))) review_cards
 		from marketplace_deck_instances i
 		join marketplace_decks md on md.id = i.marketplace_deck_id
 		left join marketplace_card_instances ci on ci.marketplace_deck_instance_id = i.id

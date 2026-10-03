@@ -80,7 +80,9 @@
 	// review instant, which would fuzz the preview under the button and the
 	// grade that follows it differently, and the button would be promising a
 	// date the card does not get.
-	const scheduler = fsrs({ enable_fuzz: true })
+	// 95% retention, not the default 90%: a half-remembered opening line is
+	// a lost game, so recall is worth the extra reviews (about 1.5-2x).
+	const scheduler = fsrs({ enable_fuzz: true, request_retention: 0.95 })
 		.useStrategy(StrategyMode.SEED, GenSeedStrategyWithCardId("id"));
 
 	// --- the queue ---
@@ -141,7 +143,7 @@
 	// counted.
 	const queueOf = card =>
 		card.state === 1 || card.state === 3 ? "learn"
-			: card.state === 0 || (card.state == null && (card.reps ?? 0) === 0) ? "new"
+			: card.state === 0 || (card.state == null && card.last_review == null) ? "new"
 			: "review";
 	let counts = $derived.by(() => {
 		const due = deck.cards.filter(isDue);
@@ -268,15 +270,29 @@
 		await updateCardStudyStateAndAddLog(cardAndLog);
 	}
 
-	// tactic cards: Correct finishes the card for good, Incorrect re-queues
-	// it a day later (a post-fail success can't come from short-term memory)
+	// Tactic cards climb a fixed ladder, not FSRS: a puzzle is solved afresh
+	// each time rather than recalled, so it is exposure that is scheduled.
+	// Correct waits the rung's interval and climbs (reps is the rung); past the
+	// last rung the card is finished for good. Incorrect re-queues it a day
+	// later (a post-fail success can't come from short-term memory) and drops
+	// a rung.
+	const TACTIC_LADDER_DAYS = [7, 30, 90, 365];
+	// what Correct does to the card on screen, as the label over the button
+	let tacticCorrectLabel = $derived.by(() => {
+		const days = TACTIC_LADDER_DAYS[currentCard?.reps ?? 0];
+		return days == null ? "Done" : days >= 365 ? days / 365 + "y" : days + "d";
+	});
 	const evaluateTactic = async correct => {
 		// shadows the queue's clock, which is advanced below like evaluateCard's
 		const now = new Date();
+		const rung = currentCard.reps ?? 0;
+		const finished = correct && rung >= TACTIC_LADDER_DAYS.length;
+		const waitDays = !correct ? 1 : finished ? 0 : TACTIC_LADDER_DAYS[rung];
 		const card = {
 			...currentCard,
-			due: correct ? currentCard.due : new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-			finished_at: correct ? now.toISOString() : null,
+			due: new Date(now.getTime() + waitDays * DAY_MS).toISOString(),
+			reps: correct ? rung + 1 : Math.max(0, rung - 1),
+			finished_at: finished ? now.toISOString() : null,
 			// the tactic's "seen" mark: with no FSRS state, last_review is what
 			// tells an attempted card from an untouched one (stage progression
 			// reads it)
@@ -284,7 +300,7 @@
 		};
 		const log = {
 			rating: correct ? Rating.Good : Rating.Again,
-			state: null, due: correct ? null : card.due, stability: null,
+			state: null, due: finished ? null : card.due, stability: null,
 			difficulty: null, elapsed_days: null, last_elapsed_days: null,
 			scheduled_days: null, learning_steps: null, review: now.toISOString()
 		};
@@ -621,6 +637,7 @@
 							</button>
 						</div>
 						<div class="eval-btn">
+							<p>{tacticCorrectLabel}</p>
 							<button
 								onclick={() => evaluateTactic(true)}
 								class="std-btn"

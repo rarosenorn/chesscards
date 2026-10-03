@@ -201,8 +201,14 @@
 		// moves the difference can be the one pixel that wraps a pair
 		const width = moveLineEl.clientWidth - 4 - 6;
 		placedFor = board;
-		const widths = [...measureEl.querySelectorAll(".move-pair")].map(el => el.offsetWidth);
-		if (width <= 0 || widths.length === 0 || widths.length !== moveLine.length) { foldStart = 0; foldEnd = null; return; }
+		const all = [...measureEl.querySelectorAll(".move-pair")].map(el => el.offsetWidth);
+		if (width <= 0 || all.length === 0 || all.length !== moveLine.length) { foldStart = 0; foldEnd = null; return; }
+		// the cuts are the question's: the answer's moves, played or shown,
+		// join the line on new rows and never push its start out of sight
+		const questionPlies = authorView || solutionFrom == null ? lineMoves.length : Math.min(solutionFrom, lineMoves.length);
+		const widths = questionPlies === 0 ? []
+			: all.slice(0, moveLine.findIndex(pair => pair.moves.at(-1).index >= questionPlies - 1) + 1);
+		if (widths.length === 0) { foldStart = 0; foldEnd = null; return; }
 		const steps = [...moveLineEl.querySelectorAll(".step-btn")].reduce((sum, el) => sum + el.offsetWidth + ROW_GAP, 4);
 		const dots = (measureEl.querySelector(".fold-btn")?.offsetWidth ?? 0) + ROW_GAP;
 		// the rows the pairs from `pair` on fall into: [{ pairs, used }]

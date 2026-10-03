@@ -62,11 +62,7 @@ const run = async job => {
 	const cardIds = cards.length > 0
 		? await decks.addCards(job.userId, job.deckId, job.stageId, cards, Object.values(createEmptyCard()))
 		: [];
-	job.result = {
-		cardIds,
-		counts: Object.fromEntries(KINDS.map(kind => [kind, mistakes.filter(m => m.kind === kind).length])),
-		unexplained: reasons.filter((why, i) => !why && !mistakes[i].missedMate).length
-	};
+	job.result = { cardIds };
 }
 
 const work = async () => {

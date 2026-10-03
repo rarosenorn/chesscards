@@ -144,10 +144,8 @@
 
 	let summary = $derived.by(() => {
 		if (job?.phase !== "done") return null;
-		const { cardIds, unexplained } = job.result;
-		if (cardIds.length === 0) return "Nothing to make a card of in this game.";
-		return `${plural(cardIds.length, "card")} added.`
-			+ (unexplained ? ` ${plural(unexplained, "card")} got no explanation.` : "");
+		const { cardIds } = job.result;
+		return cardIds.length === 0 ? "Nothing to make a card of in this game." : `${plural(cardIds.length, "card")} added.`;
 	});
 	let progress = $derived.by(() => {
 		if (!job) return null;

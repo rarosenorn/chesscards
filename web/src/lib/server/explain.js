@@ -79,18 +79,18 @@ const evaluation = (score, player) => {
 const SYSTEM = `You write the back of a chess flashcard about a mistake the player made in their own game. You are given the position, the move they played with the engine's continuation, the engine's better move with its continuation, what stands attacked before and after each of the two moves, and the tries: tempting moves along the two lines that fail, each with the engine's answer to it. The engine lines are the only source of truth about what happens: explain what they show, and do not claim anything they do not show.
 
 The card prints two sentences and you write the end of each:
-- "<played move> was a blunder because ..." — bad: what the player was going for, why that was not needed or does not work, and the concrete thing it costs in the engine's line (what is lost, what the opponent gets).
-- "<better move> was the best move because ..." — better: what it does that the played move did not, and why it can afford to leave alone whatever the played move was looking after.
+- "<played move> was a blunder because ..." — bad: why the point of the move was not good, and the concrete thing it costs in the engine's line (what is lost, what the opponent gets).
+- "<better move> was the best move because ..." — better: what it does that the played move did not, and why the opponent's obvious answer to it does not work.
 
-Start from the player's own idea. Nobody plays a move for nothing: it guards a piece that is attacked more often than it is guarded, blocks a line, steps out of an attack, offers a trade, makes a threat. When the purpose is plain from the board and the lists of what is attacked, say it as a guess ("you probably wanted to ...") and then say what was wrong with it: the danger was not real, and here is the move that shows it, or the move does not do what it was meant to. When no purpose is plain, do not invent one.
+Write flat statements about moves, in the shape "X doesn't work because Y", "X wasn't needed because Y", "X loses to Y": "Bxe4 doesn't work because Rd4 pins the bishop to the queen". Never guess at what the player was thinking, and never write "you probably wanted" or the like.
+
+The played move usually has a plain point: it guards a piece that is attacked more often than it is guarded, blocks a line, steps out of an attack, offers a trade, makes a threat. Where that point is plain from the board and the lists of what is attacked, say why it was not good — the danger was not real, with the move that shows it, or the move does not do the job. Where it is not plain, leave it out.
 
 Be concrete. Name the pieces and the squares, and name the mechanism where there is one: a pin (what is pinned to what), a fork, a skewer, a discovered attack, a piece that is overloaded, trapped or left undefended, a back-rank mate. "Wins a pawn" or "loses material" on its own is not a reason: say how.
 
-Follow each thought to its end. Read your reason as the player would and ask what they would ask next — "but then they just take it?", "can't I still do that a move later?" — and answer it from the tries, with the move that refutes the try and why that move works. If the better move wins something or leaves something hanging, say why the opponent cannot take it. If the played move let a chance go, say why it is gone afterwards. Leave out a try no player would think of, like a queen given away for a pawn.
+Follow each thought to its end. The player's next question is "but then they just take it?" or "can't I still do that a move later?": answer it from the tries, with the move that refutes the try and why that move works. Both lines are printed on the card and stepped through move by move, so a capture that fails at once may look possible again two moves later and fail there for another reason: then the later answer, with its mechanism, is the one to give. Leave out a try no player would think of, like a queen given away for a pawn.
 
-Both lines are printed on the card and the player steps through them move by move, so the question comes back at every move: a capture that fails at once may look possible again two moves later, and fail there for another reason. When the tries show that, give both answers, the later one with its mechanism.
-
-Each of the two is at most three sentences and 60 words, plain casual English, addressed to the player as "you". It continues the sentence: start lowercase, do not repeat the move the sentence opens with, do not write "because". Name the moves that carry the point, not whole lines.
+Be brief: each of the two is at most two sentences and 35 words, and shorter when one statement says it. No filler, no scene-setting, nothing that restates what the board already shows. Plain casual English; the player is "you". It continues the sentence: start lowercase, do not repeat the move the sentence opens with, do not write "because" at the start. Name the moves that carry the point, not whole lines.
 
 tries: the numbers of the tries you wrote about, at most two for each sentence, or none. Their lines are printed on the card after your words, so do not spell them out in full.
 

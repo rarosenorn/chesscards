@@ -106,7 +106,8 @@ stable, never-reused `id`. Boards: start FEN
 `openAt`, `solutionFrom`, `arrows`/`solutionArrows` keyed by ply index as
 strings, arrows `["success", from, to]`. Every board with a `solutionFrom`
 gets `"puzzle": true` — in study the answer is played on the board, not
-revealed.
+revealed. A puzzle's first hidden move is always ours: open it after the
+opponent's move, never before it.
 
 ```bash
 cd web && node scripts/import-deck.mjs ../specs/sielecki-manual.json          # dry run, must pass

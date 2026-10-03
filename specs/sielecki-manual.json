@@ -437,7 +437,7 @@
         {
           "id": "tk-kg1-threat",
           "front": {
-            "text": "After 9.Kg1, what do you threaten, and what happens if Black castles?",
+            "text": "What is your move after 9...O-O? and why?",
             "boards": [
               {
                 "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -463,10 +463,10 @@
                   "Bg5"
                 ],
                 "orientation": "w",
-                "openAt": 17,
-                "solutionFrom": 17,
+                "openAt": 18,
+                "solutionFrom": 18,
                 "solutionArrows": {
-                  "17": [
+                  "18": [
                     [
                       "success",
                       "c1",

@@ -117,7 +117,7 @@
 							draggable="false"
 							onclick={e => { if (justDragged) e.preventDefault() }}
 						>
-								{deck.name}
+								{deck.name} <span class="total">({deck.no_cards})</span>
 						</a></td>
 						<td class="count new" class:none={deck.new_cards == 0}>{deck.new_cards}</td>
 						<td class="count learn" class:none={deck.learn_cards == 0}>{deck.learn_cards}</td>
@@ -191,6 +191,12 @@
 		color: #404040;
 		text-decoration: none;
 		font-weight: 500;
+	}
+	/* the deck's size, there to be read but not to act on */
+	.total {
+		color: rgba(0, 0, 0, 0.4);
+		font-size: 0.85em;
+		font-weight: 400;
 	}
 	table a::after {
 		content: "";

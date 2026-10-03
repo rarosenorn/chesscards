@@ -1,7 +1,7 @@
 import { importStatus } from "./import.remote.js"
 
 // The import under way, or the last one: { jobId, url, deckId, phase, done,
-// total, ahead, result, error, undone }. It lives here and not in the page
+// total, ahead, result, error }. It lives here and not in the page
 // because the job runs on the server whether or not the page stays to watch:
 // leaving for Cards must not stop the asking, or the cards would arrive in
 // the database and never in the deck the tabs are showing.

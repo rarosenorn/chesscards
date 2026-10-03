@@ -1,11 +1,9 @@
 <script>
 	import { getContext, onMount } from "svelte"
-	import { page } from "$app/state"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import { stageName } from "$lib/stages.js"
 	import { startImport, saveChesscomUsername } from "./import.remote.js"
 	import { current, follow, resume } from "./import-state.svelte.js"
-	import { deleteCards } from "../../browse/browse.remote.js"
 
 	let { data } = $props();
 	const deck = getContext("deck");
@@ -144,26 +142,11 @@
 		}
 	}
 
-	const undo = async () => {
-		const ids = job.result.cardIds;
-		// the server refuses only when not one of them is left: cards already
-		// deleted by hand, which is the same end
-		try { await deleteCards({ cardIds: ids }); }
-		catch (err) { if (err?.status !== 403) throw err; }
-		deck.cards = deck.cards.filter(card => !ids.includes(card.id));
-		current.job = { ...current.job, undone: true };
-	}
-
 	let summary = $derived.by(() => {
 		if (job?.phase !== "done") return null;
-		const { cardIds, counts, unexplained } = job.result;
+		const { cardIds, unexplained } = job.result;
 		if (cardIds.length === 0) return "Nothing to make a card of in this game.";
-		const parts = [
-			counts.blunder && plural(counts.blunder, "blunder"),
-			counts.mistake && plural(counts.mistake, "mistake"),
-			counts.inaccuracy && plural(counts.inaccuracy, "inaccuracy", "inaccuracies")
-		].filter(Boolean);
-		return `Added ${plural(cardIds.length, "card")}: ${parts.join(", ")}.`
+		return `${plural(cardIds.length, "card")} added.`
 			+ (unexplained ? ` ${plural(unexplained, "card")} got no explanation.` : "");
 	});
 	let progress = $derived.by(() => {
@@ -243,16 +226,8 @@
 			<progress value={job.total ? job.done : undefined} max={job.total || undefined}></progress>
 		{:else if job.phase === "failed"}
 			<p class="status status-failed">{job.error}</p>
-		{:else if job.undone}
-			<p class="status">Removed the cards again.</p>
 		{:else}
 			<p class="status status-done">{summary}</p>
-			{#if job.result.cardIds.length > 0}
-				<div class="after">
-					<a class="std-btn" href="/my-flashcards/{page.params.id}/browse">See them in Cards</a>
-					<button class="std-btn" onclick={undo}>Undo</button>
-				</div>
-			{/if}
 		{/if}
 	</section>
 	{/if}
@@ -323,7 +298,6 @@
 		padding: 6px 8px;
 	}
 	.username-form .std-btn,
-	.after .std-btn,
 	section > .std-btn {
 		padding: 6px 12px;
 		border-radius: 4px;
@@ -356,10 +330,6 @@
 	progress {
 		width: 100%;
 		max-width: 420px;
-	}
-	.after {
-		display: flex;
-		gap: 8px;
 	}
 	.games {
 		list-style: none;

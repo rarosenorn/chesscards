@@ -384,16 +384,20 @@
 		// as on Lichess
 		if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
 			cmBoard.addMarker(PIECE_MARKER.square, event.squareFrom);
+			draggingPiece = true;
+			clickMoving = false;
 			return true;
 		}
 		if (event.type === INPUT_EVENT_TYPE.moveInputFinished || event.type === INPUT_EVENT_TYPE.moveInputCanceled) {
 			cmBoard.removeMarkers(PIECE_MARKER.square);
+			endPieceInHand(event.squareTo);
 			return;
 		}
 		if (event.type !== INPUT_EVENT_TYPE.validateMoveInput) return;
 		// the drop itself clears it: a right move ends the board's turn to
 		// take input, and the "finished" that would clear it never arrives
 		cmBoard.removeMarkers(PIECE_MARKER.square);
+		endPieceInHand(event.squareTo);
 		const at = solutionFrom + solved;
 		const made = tryMove(replay.fens[at], replay.moveInfos[at].san, event.squareFrom, event.squareTo);
 		// a drop that is no legal move goes back without a word: only a
@@ -432,8 +436,42 @@
 			cmBoard.removeMarkers(PIECE_MARKER.square);
 			cmBoard.disableMoveInput();
 			inputOn = false;
+			draggingPiece = false;
+			clickMoving = false;
+			hoverPiece = false;
 		}
 	});
+
+	// the editor's cursors: open hand over a piece that can be moved, closed
+	// hand while one is dragged, pointer while a click-picked piece awaits
+	// its square, default everywhere else
+	let hoverPiece = $state(false);
+	let draggingPiece = $state(false);
+	let clickMoving = $state(false);
+	$effect(() => {
+		if (!draggingPiece) return;
+		document.body.classList.add("piece-grabbing");
+		return () => document.body.classList.remove("piece-grabbing");
+	});
+	const movablePieceAt = square => !!(square && inputOn && cmBoard.getPiece(square)?.[0] === solver);
+	const endPieceInHand = square => {
+		draggingPiece = false;
+		clickMoving = false;
+		// the position commits after the event: read the drop square then
+		setTimeout(() => { if (cmBoard) hoverPiece = movablePieceAt(square); }, 0);
+	}
+	// pointerup (the library's finish/cancel path) always precedes mouseup, so
+	// a press that ends with the piece still in hand was a click-pick
+	const handleBoardMouseUp = () => {
+		if (draggingPiece) {
+			draggingPiece = false;
+			clickMoving = true;
+		}
+	}
+	const handleBoardHoverCursor = e => {
+		hoverPiece = movablePieceAt(e.target.closest?.("[data-square]")?.getAttribute("data-square"));
+	}
+	const clearHoverCursor = () => { hoverPiece = false; }
 
 	// where the "#" sits: the top right corner of the mated king's square,
 	// measured off the drawn board (and again whenever the board resizes)
@@ -619,8 +657,14 @@
 		resizeObserver.observe(chessboardElement);
 		resizeObserver.observe(document.body);
 		chessboardElement.addEventListener("wheel", handleWheel, { passive: false });
+		chessboardElement.addEventListener("mouseup", handleBoardMouseUp);
+		chessboardElement.addEventListener("mousemove", handleBoardHoverCursor);
+		chessboardElement.addEventListener("mouseleave", clearHoverCursor);
 		return () => {
 			chessboardElement.removeEventListener("wheel", handleWheel);
+			chessboardElement.removeEventListener("mouseup", handleBoardMouseUp);
+			chessboardElement.removeEventListener("mousemove", handleBoardHoverCursor);
+			chessboardElement.removeEventListener("mouseleave", clearHoverCursor);
 			resizeObserver.disconnect();
 			cmBoard.destroy();
 		};
@@ -989,6 +1033,9 @@
 		class="board"
 		class:black-border={hasBlackBorder(boardPrefs())}
 		class:flush-bottom={flushBottom}
+		class:pointer-squares={clickMoving}
+		class:grab-squares={hoverPiece && !clickMoving}
+		class:grabbing-squares={draggingPiece}
 		bind:this={chessboardElement}
 		onclick={hasMoves ? takeFocus : undefined}
 	></div>
@@ -1326,6 +1373,21 @@
 	}
 	.move-btn.found-late.current {
 		color: #ffd08a;
+	}
+	/* the library puts a pointer on every input-enabled square; the editor's
+	   cursors instead, keyed on the classes the hover and move input set */
+	.board :global(.cm-chessboard .board.input-enabled .square) {
+		cursor: default;
+	}
+	.board.pointer-squares :global(.cm-chessboard .board.input-enabled .square) {
+		cursor: pointer;
+	}
+	.board.grab-squares :global(.cm-chessboard .board.input-enabled .square) {
+		cursor: grab;
+	}
+	/* last so an active drag beats the hover cursors */
+	.board.grabbing-squares :global(.cm-chessboard .board.input-enabled .square) {
+		cursor: grabbing;
 	}
 	/* the last move's two squares: Lichess's own tint */
 	.board :global(.cm-chessboard .markers .marker.marker-last-move) {

@@ -116,8 +116,11 @@
 			asidePly = null;
 			return;
 		}
-		following = { from, moves };
-		asidePly = Math.min(Math.max(at, 0), moves.length);
+		// its first written move is as far back as an aside goes
+		const key = moves.join(" ");
+		const start = lines?.().find(l => l.from === from && l.moves.join(" ") === key)?.start ?? 1;
+		following = { from, moves, start };
+		asidePly = Math.min(Math.max(at, start), moves.length);
 	}
 	// the click arrives as a prop, so only the click is a dependency: the
 	// request is answered once, not again when the board re-renders around it
@@ -281,11 +284,10 @@
 		takeFocus();
 	}
 
-	// the board stepped into what a "…" holds opens that side — the start of
-	// an aside too, which stands on a move of the line
+	// the board stepped into what a "…" holds opens that side
 	$effect(() => {
 		void foldStart; void foldEnd;
-		if (!folds || asidePly > 0 || placedFor !== board) return;
+		if (!folds || asidePly != null || placedFor !== board) return;
 		const at = displayIndex - 1;
 		if (cutBefore && at < foldStart) openedBefore = true;
 		if (cutAfter && at > foldEnd) openedAfter = true;
@@ -536,10 +538,10 @@
 	let everyMove = $derived(!!boardPrefs().highlightEveryMove);
 	let lastMove = $derived.by(() => {
 		if (asidePly != null) {
-			if (!everyMove) return null;
-			if (asidePly > 0) return asideReplay ? moveSquares(asideReplay.fens[asidePly - 1], following.moves[asidePly - 1]) : null;
-			// its ply 0 is the line's own position it branches at
-			return following.from > 0 ? moveSquares(replay.fens[following.from - 1], normalized.moves[following.from - 1]) : null;
+			// an aside's first move is tinted as the move a board opens on is:
+			// the board arrives on it without having shown it played
+			if (!(everyMove || asidePly === following.start) || !asideReplay) return null;
+			return moveSquares(asideReplay.fens[asidePly - 1], following.moves[asidePly - 1]);
 		}
 		if (displayIndex === 0 || !(everyMove || displayIndex === openAt)) return null;
 		return moveSquares(replay.fens[displayIndex - 1], normalized.moves[displayIndex - 1]);
@@ -706,25 +708,25 @@
 		asidePly = null;
 		currentIndex = index;
 	}
-	// the same two, inside an aside. Its ply 0 is the position it branched
-	// at, still inside it: the move line marks the move that reached it, and
-	// the text marks the aside as the open one. The arrows keep to the line
-	// the text wrote, and Shift+arrows (stepLine) are what move between it
-	// and the board's own.
+	// the same two, inside an aside. The first move the text writes is as far
+	// back as it goes, so the board never stands where the text shows nothing:
+	// the arrows keep to the line the text wrote, and Shift+arrows (stepLine)
+	// are what move between it and the board's own.
+	let asideStart = $derived(following?.start ?? 1);
 	const stepAside = ply => {
 		playMoveSound(asideMoves[ply > asidePly ? ply - 1 : asidePly - 1]?.san);
 		stepping = true;
 		asidePly = ply;
 	}
 	// An aside is a dead end both ways: its last move is the last thing the
-	// text claimed, and its start is the position it left the line at.
-	let atLineStart = $derived(asidePly != null ? asidePly <= 0 : displayIndex === 0);
+	// text claimed, and its start is the first thing it shows.
+	let atLineStart = $derived(asidePly != null ? asidePly <= asideStart : displayIndex === 0);
 	let atLineEnd = $derived(
 		asidePly != null ? asidePly >= asideMoves.length : displayIndex === positions.length - 1
 	);
 	const previous = () => {
 		if (asidePly != null) {
-			if (asidePly > 0) stepAside(asidePly - 1);
+			if (asidePly > asideStart) stepAside(asidePly - 1);
 			return;
 		}
 		if (displayIndex > 0) goTo(displayIndex - 1);
@@ -738,7 +740,7 @@
 	}
 	// Up/Down: either end of whichever line the board is on
 	const jumpToEnd = end => {
-		if (asidePly != null) asidePly = end ? asideMoves.length : 0;
+		if (asidePly != null) asidePly = end ? asideMoves.length : asideStart;
 		else jumpTo(end ? positions.length - 1 : 0);
 	}
 
@@ -911,8 +913,8 @@
 	}
 
 	// Shift+arrows walk the text's lines as one more line each: the next (or
-	// previous) one opens at its start, the position it branches at, so Right
-	// plays its first move — and past either end the board is
+	// previous) one opens on its first move, played and tinted on the board
+	// as the move a board opens on is — and past either end the board is
 	// back on its own line, at the ply it stood on when it left. Jumps, like a
 	// click on the text, so unsounded.
 	let lineReturn = null;
@@ -932,7 +934,7 @@
 			currentIndex = lineReturn ?? displayIndex;
 			return;
 		}
-		followAside({ ...all[target], at: 0 });
+		followAside({ ...all[target], at: all[target].start });
 	}
 
 	// only reached outside an editor (inEditor boards take no focus, so the
@@ -971,7 +973,7 @@
 				{#if moveIndex > 0 && markerAt(move.index)}{@render backMarker()}{/if}
 				<button
 					class="move-btn"
-					class:current={live && !asidePly && displayIndex === move.index + 1}
+					class:current={live && asidePly == null && displayIndex === move.index + 1}
 					class:found={live && foundAs(move.index) === "clean"}
 					class:found-late={live && foundAs(move.index) === "late"}
 					class:opens-here={inEditor && openAt === move.index + 1}

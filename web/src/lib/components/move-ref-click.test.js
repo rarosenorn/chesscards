@@ -128,7 +128,7 @@ describe("a move written in a card's text", () => {
 		unmount(app);
 	});
 
-	it("steps back to the position it branches at, marked in the board's move line", async () => {
+	it("steps back no further than the first move the text writes, tinted on the board", async () => {
 		const branchFen = replayMoves({ fen: START, moves: ["e4", "e5", "Nf3"] }).fens.at(-1);
 		const parsed = parseAside(branchFen, "Nc6 Bb5");
 		const content = moveRefContent({ board: 1, from: 3, moves: parsed.moves, infos: parsed.infos });
@@ -137,37 +137,28 @@ describe("a move written in a card's text", () => {
 
 		const tokens = [...target.querySelectorAll("[data-move-ref]")];
 		tokens[1].click();
-		await tick();
+		await settle();
 		const back = target.querySelector('[aria-label="Previous move"]');
 		const forward = target.querySelector('[aria-label="Next move"]');
+		// the squares of the move the board stands on, tinted
+		const tinted = () => [...target.querySelectorAll(".marker-last-move")]
+			.map(el => el.closest("[data-square]").getAttribute("data-square")).sort().join(" ");
 
 		// the aside's end is the end of the road forwards
 		expect(forward.disabled).toBe(true);
-
-		const currentInLine = () => target.querySelector(".move-line .move-btn.current")?.textContent.trim() ?? null;
-		// inside the aside nothing of the board's own line is the current move
-		expect(currentInLine()).toBe(null);
+		// a later move of it is not tinted, as a later move of the line is not
+		expect(tinted()).toBe("");
 
 		back.click();          // 3.Bb5 unmade
 		await settle();
 		// the mark in the text follows the board through the aside
 		expect(tokens.map(el => el.classList.contains("current"))).toEqual([true, false]);
-		expect(back.disabled).toBe(false);
-
-		back.click();          // 2...Nc6 unmade: the branch, a position of the line
-		await settle();
-		expect(pieces(target)).toBe(pieces_of(branchFen));
-		// the text has no move for it — the move line marks the one that reached
-		// it, and the aside stays marked as the one the arrows walk
-		expect(tokens.map(el => el.classList.contains("current"))).toEqual([false, false]);
-		expect(tokens.map(el => el.classList.contains("open"))).toEqual([true, true]);
-		expect(currentInLine()).toBe("Nf3");
-		// and that is the start of the road backwards
+		// its first move shows on the board as the move a board opens on does
+		expect(tinted()).toBe("b8 c6");
+		// and it is the start of the road backwards: the arrows do not walk
+		// into the board's own line
 		expect(back.disabled).toBe(true);
-
-		forward.click();       // 2...Nc6 again, from the aside
-		await settle();
-		expect(tokens.map(el => el.classList.contains("current"))).toEqual([true, false]);
+		expect(target.querySelector(".move-line .move-btn.current")).toBe(null);
 		unmount(app);
 	});
 

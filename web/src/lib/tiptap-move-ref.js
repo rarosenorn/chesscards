@@ -55,36 +55,43 @@ export const MoveRef = Mark.create({
 	}
 })
 
-// Where each board stands, marked in the text. The aside a board is following
-// is `open`, every token of it: at its start the board stands on a move of
-// its own line, which the move line under the board marks, and this is what
-// says the arrows now walk the aside and not the line. The token the board
-// stands on — same board, same branch, same ply — is `current`: an aside is
-// not listed in the move line, the text it was written in is where it reads.
+// The token each board is standing on, marked in the text: same board, same
+// branch, same ply. An aside is not listed in the move line under the board —
+// the text it was written in is where it reads — so this is what says where
+// the board is while one is being followed, and it marks a plain reference to
+// the line just as well.
 export const markMoveRefs = (root, boards) => {
 	if (!root) return;
 	for (const token of root.querySelectorAll("[data-move-ref]")) {
 		const at = boards[Number(token.dataset.moveRef)];
-		const same = !!at
+		token.classList.toggle("current", !!at
 			&& Number(token.dataset.from) === at.from
-			&& (token.dataset.moves ?? "") === at.moves;
-		token.classList.toggle("open", same && !!at.moves);
-		token.classList.toggle("current", same && Number(token.dataset.at) === at.at);
+			&& (token.dataset.moves ?? "") === at.moves
+			&& Number(token.dataset.at) === at.at);
 	}
 }
 
 // The lines the text writes off a board's own line, once each and in reading
-// order — what Shift+arrows step between. A reference to a move of the line
-// itself is not one: the line is already stepped with the plain arrows.
+// order — what Shift+arrows step between. `start` is the first of its moves
+// the text writes: where the line opens, and as far back as it steps (moves
+// played ahead of it without being written are not stops). A reference to a
+// move of the line itself is not one: the line is already stepped with the
+// plain arrows.
 export const moveRefLines = (root, board) => {
 	const lines = [];
-	const seen = new Set();
+	const seen = new Map();
 	for (const token of root?.querySelectorAll(`[data-move-ref="${board}"]`) ?? []) {
 		const moves = token.dataset.moves ?? "";
+		if (!moves) continue;
 		const key = `${token.dataset.from} ${moves}`;
-		if (!moves || seen.has(key)) continue;
-		seen.add(key);
-		lines.push({ from: Number(token.dataset.from) || 0, moves: moves.split(" ") });
+		const at = Math.max(Number(token.dataset.at) || 1, 1);
+		if (seen.has(key)) {
+			seen.get(key).start = Math.min(seen.get(key).start, at);
+			continue;
+		}
+		const entry = { from: Number(token.dataset.from) || 0, moves: moves.split(" "), start: at };
+		seen.set(key, entry);
+		lines.push(entry);
 	}
 	return lines;
 }
@@ -140,9 +147,8 @@ export const parseAside = (fen, text) => {
 // follow it, they ARE it: the board already plays them and its move line
 // already names them, so they are written as ordinary prose — nothing to
 // click, nothing to go to. The aside starts where the two part company, and
-// only that part becomes moves you can play. The position it branches at is
-// its ply 0, and the text needs no move for it: the board's move line marks
-// the move that reached it.
+// only that part becomes moves you can play. The move reaching the position
+// it branches at gets no token: an aside opens on its own first move.
 //
 // `hidden` counts moves the aside must be played through but that the text
 // does not write out: prose says "after 7...b6 8.Nc3" about a position the

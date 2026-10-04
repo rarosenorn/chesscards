@@ -90,8 +90,8 @@ they play on the board: `[4...Nf6 5.Nxc6 dxc6 6.h3]`, `[7.Bd3 Qf6+]` (syntax
 in `web/scripts/import-deck.mjs`). Every bracketed line **starts with its own
 first move, numbered** so it hangs at the right ply — `[4...Nf6 5.Nxc6 dxc6
 6.h3]`, `[7.Bc4]` — and never with the board-line move it branches from: a
-line opens (Shift+arrows) on the position it branches at, and the board's own
-move line marks the move that reached it (since 2026-10-04). On a branch card
+line opens (Shift+arrows) on its own first move, played and tinted on the
+board, and steps back no further (since 2026-10-04). On a branch card
 **every candidate is a bracketed line**, even a single move (`[4...Bxf2+]?!`),
 so Shift+arrows step through them all. Annotation marks go after
 the bracket when they belong to its last move; inside a bracket they are

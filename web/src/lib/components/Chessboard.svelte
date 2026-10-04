@@ -308,14 +308,14 @@
 	// A puzzle board, played. The move asked for is the next back move; the
 	// player makes it on the board. Lichess's rule for what counts: the move
 	// the line has, or any move that mates. A right move joins the line —
-	// green if it was found at once, red after a wrong try — and the other
+	// green if it was found at once, orange after a wrong try — and the other
 	// side's reply plays itself; a wrong one goes back where it came from.
 	// Once the line is through the host is told, and turns the card.
 	let finds = $state({});
-	let missed = false;
-	// a wrong move has been made on this puzzle: the tag says so from that
-	// moment, not only once the line is through
-	let anyMiss = $state(false);
+	// a wrong move stands unanswered: the tag is red, with a cross, until the
+	// right one is found — and orange with its check from then on
+	let missed = $state(false);
+	let foundLate = $derived(Object.values(finds).includes("late"));
 	// played through to the end: "clean", or "late" if any move took a
 	// second try. Not set by Show — that is the answer given, not found.
 	let puzzleDone = $state(null);
@@ -327,7 +327,6 @@
 		solved = 0;
 		finds = {};
 		missed = false;
-		anyMiss = false;
 		puzzleDone = null;
 	}
 	// A card turned back over (study's Hide) is the question again, and its
@@ -440,7 +439,6 @@
 		}
 		if (!made.right) {
 			missed = true;
-			anyMiss = true;
 			// it is a move made, and sounds like one
 			playMoveSound(made.san);
 			// after the board has put the king back, which it does on a no
@@ -1062,7 +1060,7 @@
 			></span>
 		{/if}
 		{#if normalized.puzzle}
-			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late" || anyMiss}>{#if puzzleDone === "late" || anyMiss}<svg class="done-cross" viewBox="0.4 0.6 9.1 9.1" aria-hidden="true"><path d="M2.4 1.0 C4.6 2.4 7.6 5.6 9.4 9.0 C7.0 6.6 4.0 4.6 1.2 2.9 C0.5 2.4 0.4 1.5 1.0 1.0 C1.4 0.6 2.0 0.7 2.4 1.0 Z M0.9 7.6 C2.6 5.2 5.6 2.4 9.5 0.6 C6.6 3.0 4.2 6.0 2.6 9.0 C2.2 9.6 1.3 9.7 0.8 9.1 C0.4 8.6 0.5 8.0 0.9 7.6 Z" fill="currentColor" /></svg>{:else if puzzleDone}<svg class="done-check" viewBox="1.8 3.3 12.3 9.4" aria-hidden="true"><path d="M2.05 8 C1.9 7.1 2.5 6.75 3 6.75 C3.6 6.75 4 7.15 4.2 7.75 L4.85 9.7 C8 7 11.6 4.3 13.95 3.5 L5.9 11.7 C5.3 12.3 4.6 12.55 4 12.5 C3.6 12.5 3.4 12.3 3.3 12 Z" fill="currentColor" /></svg>{/if}Puzzle</span>
+			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={!missed && foundLate} class:missed>{#if missed}<svg class="done-cross" viewBox="0.4 0.6 9.1 9.1" aria-hidden="true"><path d="M2.4 1.0 C4.6 2.4 7.6 5.6 9.4 9.0 C7.0 6.6 4.0 4.6 1.2 2.9 C0.5 2.4 0.4 1.5 1.0 1.0 C1.4 0.6 2.0 0.7 2.4 1.0 Z M0.9 7.6 C2.6 5.2 5.6 2.4 9.5 0.6 C6.6 3.0 4.2 6.0 2.6 9.0 C2.2 9.6 1.3 9.7 0.8 9.1 C0.4 8.6 0.5 8.0 0.9 7.6 Z" fill="currentColor" /></svg>{:else if puzzleDone || foundLate}<svg class="done-check" viewBox="1.8 3.3 12.3 9.4" aria-hidden="true"><path d="M2.05 8 C1.9 7.1 2.5 6.75 3 6.75 C3.6 6.75 4 7.15 4.2 7.75 L4.85 9.7 C8 7 11.6 4.3 13.95 3.5 L5.9 11.7 C5.3 12.3 4.6 12.55 4 12.5 C3.6 12.5 3.4 12.3 3.3 12 Z" fill="currentColor" /></svg>{/if}Puzzle</span>
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse</a>
@@ -1220,10 +1218,12 @@
 		line-height: 1.3;
 		color: rgba(0, 0, 0, 0.55);
 	}
-	/* played through: the tag fills, green — or red, from the first wrong
-	   move on */
+	/* the tag fills as the puzzle goes: red with a cross while a wrong move
+	   stands unanswered, orange with the check once the right one is found
+	   after it, green when the line is played through without a miss */
 	.puzzle-tag.done,
-	.puzzle-tag.done-late {
+	.puzzle-tag.done-late,
+	.puzzle-tag.missed {
 		display: inline-flex;
 		align-items: center;
 		gap: 5px;
@@ -1242,8 +1242,8 @@
 		height: 0.8em;
 		flex: none;
 	}
-	/* its cross, for a puzzle with a miss in it: two strokes of the same
-	   brush, each from a round head to a point */
+	/* its cross, for a wrong move: two strokes of the same brush, each from
+	   a round head to a point */
 	.done-cross {
 		width: 0.8em;
 		height: 0.8em;
@@ -1253,6 +1253,9 @@
 		--tag-colour: #2e9e5b;
 	}
 	.puzzle-tag.done-late {
+		--tag-colour: #d98a1f;
+	}
+	.puzzle-tag.missed {
 		--tag-colour: #c0392b;
 	}
 	/* the mated king's mark, as Lichess has it: a red disc with a white "#",
@@ -1400,10 +1403,10 @@
 		flex-wrap: nowrap;
 		width: max-content;
 	}
-	/* a puzzle's moves as the player found them, a mark before each: a green
-	   check found at once, a red cross after a miss. On the move the board
-	   stands on the colour is kept as it is: the pill itself is the green or
-	   the red, in place of the blue, and the move reads white on it. */
+	/* a puzzle's moves as the player found them, a check mark before each:
+	   green found at once, orange after a miss. On the move the board stands
+	   on the colour is kept as it is: the pill itself is the green or the
+	   orange, in place of the blue, and the move reads white on it. */
 	.move-btn.found::before,
 	.move-btn.found-late::before {
 		content: "✓";
@@ -1413,11 +1416,8 @@
 	.move-btn.found {
 		color: #1b7a3d;
 	}
-	.move-btn.found-late::before {
-		content: "✗";
-	}
 	.move-btn.found-late {
-		color: #b3261e;
+		color: #c26a00;
 	}
 	.move-btn.found.current,
 	.move-btn.found.current:hover:enabled {
@@ -1426,7 +1426,7 @@
 	}
 	.move-btn.found-late.current,
 	.move-btn.found-late.current:hover:enabled {
-		background-color: #b3261e;
+		background-color: #c26a00;
 		color: white;
 	}
 	/* the library puts a pointer on every input-enabled square; the editor's

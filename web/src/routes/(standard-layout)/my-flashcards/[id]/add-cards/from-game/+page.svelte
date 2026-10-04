@@ -348,7 +348,7 @@
 		{#if games.length === 0 && !loading}
 			<p class="section-note">No games yet.</p>
 		{:else}
-			<h3>Choose game to make cards from blunders, mistakes and inaccuracies</h3>
+			<h3>Choose game to make cards from your blunders, mistakes and inaccuracies</h3>
 		{/if}
 		<ul class="games">
 			{#each games.slice(0, shown) as game (game.url)}

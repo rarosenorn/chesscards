@@ -383,8 +383,11 @@
 	section:first-child {
 		padding-top: 0;
 	}
+	/* in by a game row's own padding, so a heading starts where the rows'
+	   content does and not at their hover edge */
 	h3 {
 		margin: 0;
+		padding-left: 6px;
 		font-size: 1.05rem;
 	}
 	.section-note {

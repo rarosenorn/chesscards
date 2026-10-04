@@ -109,8 +109,14 @@
 			if (until != null) query.set("until", until);
 			const response = await fetch(`${LICHESS}/${encodeURIComponent(name)}?${query}`, { headers: { Accept: "application/x-ndjson" } });
 			if (response.status === 404) throw new Error(`No Lichess player called "${name}"`);
-			// Lichess does not say how long: its rule is a full minute after a 429
-			if (response.status === 429) throw new Error("Lichess rate limit reached. Please try again in 1 minute.");
+			// Two limits answer 429 and neither says how long. Too many
+			// requests: Lichess's rule is a full minute. A download it still
+			// counts as running ("only run 1 request(s) at a time", e.g. one
+			// cut off halfway): it forgets that within the hour.
+			if (response.status === 429) {
+				const stuck = /at a time/.test((await response.json().catch(() => null))?.error ?? "");
+				throw new Error(`Lichess rate limit reached. ${stuck ? "It can take up to 1 hour to clear." : "Please try again in 1 minute."}`);
+			}
 			if (!response.ok) throw new Error("Lichess did not answer");
 			const page = (await response.text()).split("\n").filter(Boolean).map(line => JSON.parse(line));
 			if (page.length > 0) until = page.at(-1).createdAt - 1;

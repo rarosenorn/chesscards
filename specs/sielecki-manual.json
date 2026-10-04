@@ -887,6 +887,635 @@
             ]
           },
           "back": "11.Bd3 We have a great position. A way to continue is Qf2, followed by Be3 and Rf1. Black has a misplaced knight on h6, while our knight will find a good route to the kingside via f4."
+        },
+        {
+          "id": "tk-4nxe5-d4",
+          "front": {
+            "text": "What is your move after 4...Nxe5 and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4"
+                ],
+                "orientation": "w",
+                "openAt": 8,
+                "solutionArrows": {
+                  "8": [
+                    [
+                      "success",
+                      "d2",
+                      "d4"
+                    ]
+                  ]
+                },
+                "solutionFrom": 8,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "5.d4 We regain our piece, forking two minor pieces. 4...Nxe5 is Black's best defense."
+        },
+        {
+          "id": "tk-5d4-replies",
+          "front": {
+            "text": "What are Black's 2 replies to 5.d4, and how do they turn out?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4"
+                ],
+                "orientation": "w",
+                "openAt": 9,
+                "solutionArrows": {
+                  "9": [
+                    [
+                      "success",
+                      "c5",
+                      "d6"
+                    ],
+                    [
+                      "success",
+                      "c5",
+                      "d4"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "Black's path to a reasonable game is narrow.\n\n- [5.d4 Bd6] is Black's best bet and the only way to reach a playable position, but it is still nice for White.\n- [5.d4 Bxd4]? You'll meet this a lot, and we'll get a huge advantage."
+        },
+        {
+          "id": "tk-bd6-next3",
+          "front": {
+            "text": "What are the next 3 plies following 5...Bd6?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bd6",
+                  "dxe5",
+                  "Bxe5",
+                  "Bd3"
+                ],
+                "orientation": "w",
+                "openAt": 10,
+                "solutionFrom": 10,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 6.dxe5 We restore material equality, an easy move.\n- 6...Bxe5 claude: Black recaptures.\n- 7.Bd3 The final move to remember. We develop our bishop and prepare kingside castling, a similar picture as in the main lines of the Four Knights Scotch, which also features the bishop development to d3."
+        },
+        {
+          "id": "tk-bd3-not-bc4",
+          "front": {
+            "text": "After 6...Bxe5, why does the bishop go to d3 and not to c4?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bd6",
+                  "dxe5",
+                  "Bxe5"
+                ],
+                "orientation": "w",
+                "openAt": 12,
+                "solutionArrows": {
+                  "12": [
+                    [
+                      "success",
+                      "f1",
+                      "d3"
+                    ],
+                    [
+                      "warning",
+                      "f1",
+                      "c4"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "It looks more active to place it on c4, but after [6...Bxe5 7.Bc4 Nf6 8.O-O O-O] Black has secured the f7-spot and puts some pressure on e4 (taking on c3 and ...Nxe4 is an idea)."
+        },
+        {
+          "id": "tk-bd3-nf6-next3",
+          "front": {
+            "text": "What are the next 3 plies following 7...Nf6, and how do we stand?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bd6",
+                  "dxe5",
+                  "Bxe5",
+                  "Bd3",
+                  "Nf6",
+                  "O-O",
+                  "O-O",
+                  "Bg5"
+                ],
+                "orientation": "w",
+                "openAt": 14,
+                "solutionFrom": 14,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 8.O-O claude: We castle, as prepared by 7.Bd3.\n- 8...O-O claude: Black castles too.\n- 9.Bg5 White has a comfortable position. Our pieces are more active than Black's, and we have established an annoying pin. See the game Szwed-Romanishin for more information."
+        },
+        {
+          "id": "tk-bd3-bxc3",
+          "front": {
+            "text": "Black doubles your pawns with 7...Bxc3+. Do you need to worry, and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bd6",
+                  "dxe5",
+                  "Bxe5",
+                  "Bd3",
+                  "Bxc3+",
+                  "bxc3"
+                ],
+                "orientation": "w",
+                "openAt": 14,
+                "solutionArrows": {
+                  "15": [
+                    [
+                      "success",
+                      "a1",
+                      "b1"
+                    ],
+                    [
+                      "success",
+                      "c3",
+                      "c4"
+                    ],
+                    [
+                      "success",
+                      "c1",
+                      "b2"
+                    ]
+                  ]
+                },
+                "solutionFrom": 14,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "8.bxc3 claude: We recapture.\n\nWe don't need to worry about 7...Bxc3+ or similar lines that double our pawns. Black gives up the most powerful piece in return for a weakening of our pawns, which is tough to exploit. Black has no pieces out to attack our queenside pawns while we gain additional possibilities. Later, we might play Ra1-b1-b5 or c3-c4 and Bc1-b2, for example."
+        },
+        {
+          "id": "tk-bxd4-qxd4",
+          "front": {
+            "text": "What is your move after 5...Bxd4? and why is it a welcome sight?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bxd4",
+                  "Qxd4"
+                ],
+                "orientation": "w",
+                "openAt": 10,
+                "solutionArrows": {
+                  "10": [
+                    [
+                      "success",
+                      "d1",
+                      "d4"
+                    ]
+                  ]
+                },
+                "solutionFrom": 10,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "6.Qxd4 A welcome sight! Black surrenders the bishop pair and activates our queen. Black has a limited choice now, as we attack the knight."
+        },
+        {
+          "id": "tk-qxd4-replies",
+          "front": {
+            "text": "What are Black's options after 6.Qxd4, and how do they turn out?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bxd4",
+                  "Qxd4"
+                ],
+                "orientation": "w",
+                "openAt": 11,
+                "solutionArrows": {
+                  "11": [
+                    [
+                      "success",
+                      "d8",
+                      "f6"
+                    ],
+                    [
+                      "success",
+                      "e5",
+                      "c6"
+                    ],
+                    [
+                      "success",
+                      "e5",
+                      "g6"
+                    ],
+                    [
+                      "success",
+                      "d7",
+                      "d6"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "- [6.Qxd4 Qf6] introduces fun complications.\n- [6.Qxd4 Nc6 7.Qxg7] or [6.Qxd4 Ng6 7.Qxg7] is simple: both knight moves are blunders.\n- [6.Qxd4 d6] is better, but White is in great shape."
+        },
+        {
+          "id": "tk-6nc6-qxg7",
+          "front": {
+            "text": "What do you play after 6...Nc6?? and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bxd4",
+                  "Qxd4",
+                  "Nc6",
+                  "Qxg7"
+                ],
+                "orientation": "w",
+                "openAt": 12,
+                "solutionArrows": {
+                  "12": [
+                    [
+                      "success",
+                      "d4",
+                      "g7"
+                    ]
+                  ]
+                },
+                "solutionFrom": 12,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "7.Qxg7 is simple. claude: Once the knight leaves e5, the diagonal to g7 is open; we win a pawn and attack the rook on h8.\n\nThe same goes for [6.Qxd4 Ng6 7.Qxg7]."
+        },
+        {
+          "id": "tk-6d6-be3",
+          "front": {
+            "text": "What is your move after 6...d6, and what is the plan? Why not 7.f4 at once?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bxd4",
+                  "Qxd4",
+                  "d6",
+                  "Be3"
+                ],
+                "orientation": "w",
+                "openAt": 12,
+                "solutionArrows": {
+                  "12": [
+                    [
+                      "success",
+                      "c1",
+                      "e3"
+                    ]
+                  ]
+                },
+                "solutionFrom": 12,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "7.Be3 or [6...d6 7.Bd2], and White is in great shape. We prepare queenside castling and are ready to attack the knight on e5 with f2-f4 later.\n\nNot at once: [6...d6 7.f4 Qh4+]! is annoying because we can't play [6...d6 7.f4 Qh4+ 8.g3 Nf3+]!"
+        },
+        {
+          "id": "tk-6qf6-nb5",
+          "front": {
+            "text": "What is your move after 6...Qf6 and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bxd4",
+                  "Qxd4",
+                  "Qf6",
+                  "Nb5"
+                ],
+                "orientation": "w",
+                "openAt": 12,
+                "solutionArrows": {
+                  "12": [
+                    [
+                      "success",
+                      "c3",
+                      "b5"
+                    ]
+                  ]
+                },
+                "solutionFrom": 12,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "7.Nb5! A cool move to remember! We attack c7, but at the same time, the knight does now protect our queen. Black has no good reply now."
+        },
+        {
+          "id": "tk-6qf6-not-nd5",
+          "front": {
+            "text": "After 6...Qf6, why not attack the queen with 7.Nd5?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bxd4",
+                  "Qxd4",
+                  "Qf6"
+                ],
+                "orientation": "w",
+                "openAt": 12,
+                "solutionArrows": {
+                  "12": [
+                    [
+                      "success",
+                      "c3",
+                      "b5"
+                    ],
+                    [
+                      "danger",
+                      "c3",
+                      "d5"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "Black's last move set a trap. If we'd attack with 7.Nd5??, they have [6...Qf6 7.Nd5 Nf3+]!, winning our queen! claude: the knight check uncovers Black's queen on ours.\n\nThis is why 7.Nb5! is so strong."
+        },
+        {
+          "id": "tk-nb5-replies",
+          "front": {
+            "text": "What are Black's 2 replies to 7.Nb5! and how do they turn out?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bxd4",
+                  "Qxd4",
+                  "Qf6",
+                  "Nb5"
+                ],
+                "orientation": "w",
+                "openAt": 13,
+                "solutionArrows": {
+                  "13": [
+                    [
+                      "success",
+                      "e8",
+                      "d8"
+                    ],
+                    [
+                      "success",
+                      "c7",
+                      "c6"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "back": "Black has no good reply now.\n\n- [7.Nb5 Kd8 8.Qc5]! is powerful.\n- [7.Nb5 c6 8.Nd6+] and Black's position is lost."
+        },
+        {
+          "id": "tk-nb5-kd8-qc5",
+          "front": {
+            "text": "What is your move after 7...Kd8 and why?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bxd4",
+                  "Qxd4",
+                  "Qf6",
+                  "Nb5",
+                  "Kd8",
+                  "Qc5"
+                ],
+                "orientation": "w",
+                "openAt": 14,
+                "solutionArrows": {
+                  "14": [
+                    [
+                      "success",
+                      "d4",
+                      "c5"
+                    ]
+                  ]
+                },
+                "solutionFrom": 14,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "8.Qc5! is powerful. We threaten c7, but also Qf8+!"
+        },
+        {
+          "id": "tk-nb5-c6-next3",
+          "front": {
+            "text": "What are the next 3 plies following 7...c6?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bxd4",
+                  "Qxd4",
+                  "Qf6",
+                  "Nb5",
+                  "c6",
+                  "Nd6+",
+                  "Kf8",
+                  "Be3"
+                ],
+                "orientation": "w",
+                "openAt": 14,
+                "solutionFrom": 14,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 8.Nd6+ Much simpler than [7...c6 8.Nc7+ Kd8], when Black can hope for the ...Nf3+ discovery again. We gain some time with the check.\n- 8...Kf8 claude: The king steps out of the check.\n- 9.Be3 is allowed thanks to that check. Our queen is secured now against the knight discovery, and Black's position is lost. Our d6-knight is dominating, and their king is stranded on f8."
+        },
+        {
+          "id": "tk-conclusion",
+          "front": {
+            "text": "What is the conclusion on 3...Bc5?! and what must we put up with in the 4...Bxf2+ line?",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5"
+                ],
+                "orientation": "w",
+                "openAt": 7
+              }
+            ]
+          },
+          "back": "3...Bc5 follows general opening principles but has a substantial drawback. We have the strong reply 4.Nxe5!, which often leads to favorable complications.\n\nSome positions are excellent for White, but there are some pitfalls we must avoid. The best example is 4...Bxf2+, which is great for White, but our king is vulnerable. We usually want a safe king, but here we must endure this inconvenience because the upsides (center, bishop pair) are enormous.\n\nThat 3...Bc5?! 4.Nxe5! is promising for White is a huge incentive to play 3.Nc3, compared to other options. Black will often get into unexpected trouble."
         }
       ]
     }

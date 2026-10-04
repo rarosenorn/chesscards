@@ -296,7 +296,7 @@
 	// A puzzle board, played. The move asked for is the next back move; the
 	// player makes it on the board. Lichess's rule for what counts: the move
 	// the line has, or any move that mates. A right move joins the line —
-	// green if it was found at once, orange after a wrong try — and the other
+	// green if it was found at once, red after a wrong try — and the other
 	// side's reply plays itself; a wrong one goes back where it came from.
 	// Once the line is through the host is told, and turns the card.
 	let finds = $state({});
@@ -1203,7 +1203,7 @@
 		line-height: 1.3;
 		color: rgba(0, 0, 0, 0.55);
 	}
-	/* played through: the tag fills, green — or orange if a move was missed */
+	/* played through: the tag fills, green — or red if a move was missed */
 	.puzzle-tag.done,
 	.puzzle-tag.done-late {
 		display: inline-flex;
@@ -1228,7 +1228,7 @@
 		--tag-colour: #2e9e5b;
 	}
 	.puzzle-tag.done-late {
-		--tag-colour: #d98a1f;
+		--tag-colour: #c0392b;
 	}
 	/* the mated king's mark, as Lichess has it: a red disc with a white "#",
 	   in the top right corner of its square */
@@ -1376,7 +1376,7 @@
 		width: max-content;
 	}
 	/* a puzzle's moves as the player found them, a check mark before each:
-	   green found at once, orange after a miss. On the move the board stands
+	   green found at once, red after a miss. On the move the board stands
 	   on they keep those colours, in the lighter shades that read on its
 	   blue. */
 	.move-btn.found::before,
@@ -1389,13 +1389,13 @@
 		color: #1b7a3d;
 	}
 	.move-btn.found-late {
-		color: #c26a00;
+		color: #b3261e;
 	}
 	.move-btn.found.current {
 		color: #a9f5c4;
 	}
 	.move-btn.found-late.current {
-		color: #ffd08a;
+		color: #ffb8b0;
 	}
 	/* the library puts a pointer on every input-enabled square; the editor's
 	   cursors instead, keyed on the classes the hover and move input set */

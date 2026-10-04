@@ -382,10 +382,15 @@
 			if (asked === board) cmBoard.setPosition(displayFen, true);
 		}, 350);
 	}
+	// set by a castle made by putting the king on its rook, for the length of
+	// the event that made it
+	let castledOntoRook = false;
 	const handlePuzzleInput = event => {
 		// the square a piece is lifted from is tinted while it is in the hand,
 		// as on Lichess
 		if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
+			// the click that castled landed on the rook: it does not pick it up
+			if (castledOntoRook) return castledOntoRook = false;
 			cmBoard.addMarker(PIECE_MARKER.square, event.squareFrom);
 			draggingPiece = true;
 			clickMoving = false;
@@ -400,18 +405,30 @@
 		// the drop itself clears it: a right move ends the board's turn to
 		// take input, and the "finished" that would clear it never arrives
 		cmBoard.removeMarkers(PIECE_MARKER.square);
+		const byClick = clickMoving;
 		endPieceInHand(event.squareTo);
 		const at = solutionFrom + solved;
 		const made = tryMove(replay.fens[at], replay.moveInfos[at].san, event.squareFrom, event.squareTo);
 		// a drop that is no legal move goes back without a word: only a
 		// real move that is not the answer is a miss
 		if (!made) return false;
+		// The king put on its own rook castles. The board is told no — left to
+		// make the move itself it would stand the king on the rook's square —
+		// and the castled position is drawn from here: at once after a drag,
+		// slid into after a click, as any clicked move is.
+		const ontoRook = made.to !== event.squareTo;
+		if (ontoRook) {
+			castledOntoRook = true;
+			setTimeout(() => { castledOntoRook = false; }, 0);
+		}
 		if (!made.right) {
 			missed = true;
 			// it is a move made, and sounds like one
 			playMoveSound(made.san);
-			takeBack(event.squareTo);
-			return true;
+			// after the board has put the king back, which it does on a no
+			if (ontoRook) queueMicrotask(() => cmBoard?.setPosition(made.after, byClick));
+			takeBack(made.to);
+			return !ontoRook;
 		}
 		finds = { ...finds, [at]: missed ? "late" : "clean" };
 		missed = false;
@@ -421,12 +438,13 @@
 			// back on the line's own position as the card turns.
 			markDone();
 			puzzleTimer = setTimeout(() => { snapTo(displayFen); onSolved?.(); }, 0);
-			return true;
+			return !ontoRook;
 		}
+		if (ontoRook && byClick) stepping = true;
 		solved += 1;
 		currentIndex = at + 1;
 		afterFind();
-		return true;
+		return !ontoRook;
 	}
 	// the pieces can be moved exactly while a move is awaited
 	let inputOn = false;

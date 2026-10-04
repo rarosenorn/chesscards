@@ -15,6 +15,7 @@
 	import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
 	import { isValidFen } from "$lib/isValidFen.js"
 	import { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations, arrowKey, markerKey, isPositionFinished } from "$lib/board-utils.js"
+	import { castleSquare } from "$lib/puzzle.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
 	// inlined so the palette's <use href="#wk"> works in Firefox, which doesn't
 	// render <use> that references an external SVG file
@@ -229,9 +230,15 @@
 		board.setPosition(fen, false);
 	}
 
+	// set by a castle made by putting the king on its rook, for the length of
+	// the event that made it
+	let castledOntoRook = false;
+
 	const handleMoveInput = event => {
 		// a piece picked up by CLICK (not held): the flags below are reset
 		// before the setup handling runs, so capture it here
+		// the click that castled landed on the rook: it does not pick it up
+		if (event.type === INPUT_EVENT_TYPE.moveInputStarted && castledOntoRook) return castledOntoRook = false;
 		const wasClickMove = clickMoving;
 		// drag cursor lifecycle: closed hand for the whole drag (any square),
 		// back to open hand right at the drop — the hover state is recomputed
@@ -294,7 +301,20 @@
 						const piece = chess.get(event.squareFrom);
 						const flipped = !!piece && piece.color !== chess.turn();
 						if (flipped) chess.load(flipTurn(chess.fen()), { skipValidation: true });
-						const move = chess.move({ from: event.squareFrom, to: event.squareTo, promotion: "q" });
+						const to = castleSquare(chess, event.squareFrom, event.squareTo);
+						const move = chess.move({ from: event.squareFrom, to, promotion: "q" });
+						if (to !== event.squareTo) {
+							// The king put on its own rook castles. The board is
+							// told no — left to make the move itself it would
+							// stand the king on the rook's square — and the move
+							// is committed from here, once the board has put the
+							// king back.
+							const san = flipped ? FLIPPED_MOVE_PREFIX + move.san : move.san, fen = chess.fen();
+							castledOntoRook = true;
+							setTimeout(() => { castledOntoRook = false; }, 0);
+							queueMicrotask(() => commitMove(san, fen));
+							return false;
+						}
 						if (move.promotion) {
 							pendingPromotion = { from: event.squareFrom, to: event.squareTo, flipped, color: move.color };
 						} else {

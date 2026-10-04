@@ -116,10 +116,8 @@
 			asidePly = null;
 			return;
 		}
-		const key = moves.join(" ");
-		const lead = at === 0 || !!lines?.().find(l => l.from === from && l.moves.join(" ") === key)?.lead;
-		following = { from, moves, lead };
-		asidePly = Math.min(Math.max(at, lead ? 0 : 1), moves.length);
+		following = { from, moves };
+		asidePly = Math.min(Math.max(at, 0), moves.length);
 	}
 	// the click arrives as a prop, so only the click is a dependency: the
 	// request is answered once, not again when the board re-renders around it
@@ -283,10 +281,11 @@
 		takeFocus();
 	}
 
-	// the board stepped into what a "…" holds opens that side
+	// the board stepped into what a "…" holds opens that side — the start of
+	// an aside too, which stands on a move of the line
 	$effect(() => {
 		void foldStart; void foldEnd;
-		if (!folds || asidePly != null || placedFor !== board) return;
+		if (!folds || asidePly > 0 || placedFor !== board) return;
 		const at = displayIndex - 1;
 		if (cutBefore && at < foldStart) openedBefore = true;
 		if (cutAfter && at > foldEnd) openedAfter = true;
@@ -708,26 +707,24 @@
 		currentIndex = index;
 	}
 	// the same two, inside an aside. Its ply 0 is the position it branched
-	// at, still inside it — but only where the text writes the move reaching
-	// it (`following.lead`); otherwise the first move is as far back as it
-	// goes, so the board never stands where the text shows nothing. The
-	// arrows keep to the line the text wrote, and Shift+arrows (stepLine) are
-	// what move between it and the board's own.
-	let asideStart = $derived(following?.lead ? 0 : 1);
+	// at, still inside it: the move line marks the move that reached it, and
+	// the text marks the aside as the open one. The arrows keep to the line
+	// the text wrote, and Shift+arrows (stepLine) are what move between it
+	// and the board's own.
 	const stepAside = ply => {
 		playMoveSound(asideMoves[ply > asidePly ? ply - 1 : asidePly - 1]?.san);
 		stepping = true;
 		asidePly = ply;
 	}
 	// An aside is a dead end both ways: its last move is the last thing the
-	// text claimed, and its start is the first thing it shows.
-	let atLineStart = $derived(asidePly != null ? asidePly <= asideStart : displayIndex === 0);
+	// text claimed, and its start is the position it left the line at.
+	let atLineStart = $derived(asidePly != null ? asidePly <= 0 : displayIndex === 0);
 	let atLineEnd = $derived(
 		asidePly != null ? asidePly >= asideMoves.length : displayIndex === positions.length - 1
 	);
 	const previous = () => {
 		if (asidePly != null) {
-			if (asidePly > asideStart) stepAside(asidePly - 1);
+			if (asidePly > 0) stepAside(asidePly - 1);
 			return;
 		}
 		if (displayIndex > 0) goTo(displayIndex - 1);
@@ -741,7 +738,7 @@
 	}
 	// Up/Down: either end of whichever line the board is on
 	const jumpToEnd = end => {
-		if (asidePly != null) asidePly = end ? asideMoves.length : asideStart;
+		if (asidePly != null) asidePly = end ? asideMoves.length : 0;
 		else jumpTo(end ? positions.length - 1 : 0);
 	}
 
@@ -914,8 +911,8 @@
 	}
 
 	// Shift+arrows walk the text's lines as one more line each: the next (or
-	// previous) one opens at its start — the lead-in move where the text writes one, so
-	// Right plays its first new move — and past either end the board is
+	// previous) one opens at its start, the position it branches at, so Right
+	// plays its first move — and past either end the board is
 	// back on its own line, at the ply it stood on when it left. Jumps, like a
 	// click on the text, so unsounded.
 	let lineReturn = null;
@@ -935,7 +932,7 @@
 			currentIndex = lineReturn ?? displayIndex;
 			return;
 		}
-		followAside({ ...all[target], at: all[target].lead ? 0 : 1 });
+		followAside({ ...all[target], at: 0 });
 	}
 
 	// only reached outside an editor (inEditor boards take no focus, so the
@@ -974,7 +971,7 @@
 				{#if moveIndex > 0 && markerAt(move.index)}{@render backMarker()}{/if}
 				<button
 					class="move-btn"
-					class:current={live && asidePly == null && displayIndex === move.index + 1}
+					class:current={live && !asidePly && displayIndex === move.index + 1}
 					class:found={live && foundAs(move.index) === "clean"}
 					class:found-late={live && foundAs(move.index) === "late"}
 					class:opens-here={inEditor && openAt === move.index + 1}

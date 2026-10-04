@@ -128,7 +128,7 @@ describe("a move written in a card's text", () => {
 		unmount(app);
 	});
 
-	it("steps back no further than the first move the text writes", async () => {
+	it("steps back to the position it branches at, marked in the board's move line", async () => {
 		const branchFen = replayMoves({ fen: START, moves: ["e4", "e5", "Nf3"] }).fens.at(-1);
 		const parsed = parseAside(branchFen, "Nc6 Bb5");
 		const content = moveRefContent({ board: 1, from: 3, moves: parsed.moves, infos: parsed.infos });
@@ -144,17 +144,34 @@ describe("a move written in a card's text", () => {
 		// the aside's end is the end of the road forwards
 		expect(forward.disabled).toBe(true);
 
+		const currentInLine = () => target.querySelector(".move-line .move-btn.current")?.textContent.trim() ?? null;
+		// inside the aside nothing of the board's own line is the current move
+		expect(currentInLine()).toBe(null);
+
 		back.click();          // 3.Bb5 unmade
 		await settle();
 		// the mark in the text follows the board through the aside
 		expect(tokens.map(el => el.classList.contains("current"))).toEqual([true, false]);
-		// and the first move written is the start of the road backwards: the
-		// position before it is shown nowhere in the text
+		expect(back.disabled).toBe(false);
+
+		back.click();          // 2...Nc6 unmade: the branch, a position of the line
+		await settle();
+		expect(pieces(target)).toBe(pieces_of(branchFen));
+		// the text has no move for it — the move line marks the one that reached
+		// it, and the aside stays marked as the one the arrows walk
+		expect(tokens.map(el => el.classList.contains("current"))).toEqual([false, false]);
+		expect(tokens.map(el => el.classList.contains("open"))).toEqual([true, true]);
+		expect(currentInLine()).toBe("Nf3");
+		// and that is the start of the road backwards
 		expect(back.disabled).toBe(true);
+
+		forward.click();       // 2...Nc6 again, from the aside
+		await settle();
+		expect(tokens.map(el => el.classList.contains("current"))).toEqual([true, false]);
 		unmount(app);
 	});
 
-	it("steps back to the lead-in move when the text writes it", async () => {
+	it("writes no move for the position it branches at", async () => {
 		const line = ["e4", "e5", "Nf3"];
 		const parsed = parseAside(START, "1.e4 e5 2.Nf3 Nc6 3.Bb5");
 		const content = moveRefContent({ board: 1, from: 0, moves: parsed.moves, infos: parsed.infos, line });
@@ -162,18 +179,7 @@ describe("a move written in a card's text", () => {
 		await tick();
 
 		const tokens = [...target.querySelectorAll("[data-move-ref]")];
-		expect(tokens.map(el => el.textContent)).toEqual(["2.Nf3", "Nc6", "3.Bb5"]);
-		tokens[2].click();
-		await tick();
-		const back = target.querySelector('[aria-label="Previous move"]');
-
-		back.click();
-		await settle();
-		back.click();          // 2...Nc6 unmade: the branch, marked on 2.Nf3
-		await settle();
-		expect(tokens.map(el => el.classList.contains("current"))).toEqual([true, false, false]);
-		expect(pieces(target)).toBe(pieces_of(replayMoves({ fen: START, moves: line }).fens.at(-1)));
-		expect(back.disabled).toBe(true);
+		expect(tokens.map(el => el.textContent)).toEqual(["Nc6", "3.Bb5"]);
 		unmount(app);
 	});
 });

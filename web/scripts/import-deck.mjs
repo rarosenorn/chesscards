@@ -66,8 +66,12 @@
 //                                    "3." white's third, "3..." black's — or
 //                                    at the end of the line if it has none
 //   "as after [2...Nc6]"             a move that replaces one of the line's own
-//   "[8.Bxf7+ Kd7 9.Qe6#]"           moves already on the line: each token
-//                                    steps the board to itself
+//   "[8.Bxf7+ Kd7 9.Qe6#]"           moves already on the line: plain prose,
+//                                    the board's own move line plays them
+//   "[4...Nf6 5.Nxc6]"               write a line from its own first move, not
+//                                    from the line's move before it: stepped
+//                                    back to its start, the board's move line
+//                                    marks that move
 //   "[6.Bf4](2)"                     board 2, on a card with more than one
 //                                    (boards are numbered front then back, as
 //                                    the card numbers them)

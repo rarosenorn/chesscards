@@ -391,8 +391,8 @@ body.piece-grabbing * {
    grey is on at all times — a move you can play is worth spotting in a
    paragraph — and deepens under the pointer. An aside is not listed in the
    move line under the board, so this is where the board's place in one shows:
-   the move it stands on takes the same blue the move line gives its current
-   move. */
+   the aside the board is following stays deepened, and the move it stands on
+   takes the same blue the move line gives its current move. */
 .flashcard .move-ref {
 	cursor: pointer;
 	border-radius: 3px;
@@ -403,7 +403,8 @@ body.piece-grabbing * {
 	white-space: nowrap;
 	background-color: rgba(0, 0, 0, 0.1);
 }
-.flashcard .move-ref:hover {
+.flashcard .move-ref:hover,
+.flashcard .move-ref.open {
 	background-color: rgba(0, 0, 0, 0.18);
 }
 .flashcard .move-ref.current {

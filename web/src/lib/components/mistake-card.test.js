@@ -74,10 +74,10 @@ describe("a mistake's card on the board", () => {
 		expect(pieces(target)).toBe(piecesOf(game.fens[7]));
 
 		const tokens = [...target.querySelectorAll("[data-move-ref]")];
-		expect(tokens.map(el => el.textContent)).toEqual(["3…Nd4", "4.Nxd4", "exd4", "5.c3"]);
+		expect(tokens.map(el => el.textContent)).toEqual(["4.Nxd4", "exd4", "5.c3"]);
 
 		// the better move, from the position the mistake was played in
-		tokens[1].click();
+		tokens[0].click();
 		await tick();
 		const better = readGame("1. e4 e5 2. Nf3 Nc6 3. Bc4 Nd4 4. Nxd4");
 		expect(pieces(target)).toBe(piecesOf(better.fens.at(-1)));

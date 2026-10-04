@@ -87,12 +87,13 @@ idea 4...Nxe5 5.d4" → moves ...Bc5 | Nxe5 Nxe5 d4), with the green answer
 arrow kept on reveal. Brackets are only for lines that leave that one line —
 alternatives, refutations, "can't play X". Put those side lines in brackets so
 they play on the board: `[4...Nf6 5.Nxc6 dxc6 6.h3]`, `[7.Bd3 Qf6+]` (syntax
-in `web/scripts/import-deck.mjs`). Every bracketed line **starts with the board-line
-move it branches from** — `[4.Nxe5 Nf6 5.Nxc6 dxc6 6.h3]`, `[6...Ng6 7.Bc4]` —
-so a line opens (Shift+arrows) and ends stepping back on that move, shown and
-marked in the text, one before the line's first new move. On a branch card
-**every candidate is a bracketed line**, even a single move (`[4.Nxe5
-Bxf2+]?!`), so Shift+arrows step through them all. Annotation marks go after
+in `web/scripts/import-deck.mjs`). Every bracketed line **starts with its own
+first move, numbered** so it hangs at the right ply — `[4...Nf6 5.Nxc6 dxc6
+6.h3]`, `[7.Bc4]` — and never with the board-line move it branches from: a
+line opens (Shift+arrows) on the position it branches at, and the board's own
+move line marks the move that reached it (since 2026-10-04). On a branch card
+**every candidate is a bracketed line**, even a single move (`[4...Bxf2+]?!`),
+so Shift+arrows step through them all. Annotation marks go after
 the bracket when they belong to its last move; inside a bracket they are
 dropped. Never brackets on moves the board's own
 line plays, never in a front that would give the answer away.

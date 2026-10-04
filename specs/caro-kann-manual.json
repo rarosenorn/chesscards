@@ -31,7 +31,7 @@
 							"puzzle": true
 						}]
 					},
-					"back": "- 4...Nf6 develops and guards the pawn on e4.\n- 5...exf3 just take it. If White takes back with the queen, [5...exf3 6.Qxf3 Qxd4] wins a second pawn and hits the bishop on c4.\n- 6...Bf5 the Caro-Kann bishop comes out before ...e6 shuts it in."
+					"back": "- 4...Nf6 develops and guards the pawn on e4.\n- 5...exf3 just take it. If White takes back with the queen, [6.Qxf3 Qxd4] wins a second pawn and hits the bishop on c4.\n- 6...Bf5 the Caro-Kann bishop comes out before ...e6 shuts it in."
 				},
 				{
 					"id": "vh-e6-bg6",
@@ -46,7 +46,7 @@
 							"puzzle": true
 						}]
 					},
-					"back": "- 7...e6 shuts the c4 bishop's diagonal to f7 and lets your own bishop out.\n- 8...Bg6 guards f7 once more and takes the bishop off the open f-file. The same move answers [7...e6 8.Ng5 Bg6].\n- Don't take on c2: after [8.Ne5 Bxc2 9.Nxf7 Bxd1 10.Nxd8 Kxd8 11.Rxd1] the queens are off, your king is stuck in the middle and e6 is weak.\n- Next comes ...Bd6, ...Nbd7 and castling: you are a healthy pawn up."
+					"back": "- 7...e6 shuts the c4 bishop's diagonal to f7 and lets your own bishop out.\n- 8...Bg6 guards f7 once more and takes the bishop off the open f-file. The same move answers [8.Ng5 Bg6].\n- Don't take on c2: after [8...Bxc2 9.Nxf7 Bxd1 10.Nxd8 Kxd8 11.Rxd1] the queens are off, your king is stuck in the middle and e6 is weak.\n- Next comes ...Bd6, ...Nbd7 and castling: you are a healthy pawn up."
 				}
 			]
 		}

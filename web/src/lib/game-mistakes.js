@@ -155,8 +155,7 @@ const reason = text => {
 // game up to and including the move and opens with it already played (the
 // board tints the squares of the move it stands on, so it needs no arrow); what follows the move
 // is the back of the line, shown when the card is turned, along with a green
-// arrow for the better move. That one is a line of the text, written from
-// the board move it branches at.
+// arrow for the better move. That one is a line of the text.
 // The back is two bullets, "X was a blunder because ..." and "Y was the best
 // move because ...", the second ending in Y's line. `why` is { bad, better,
 // tries }, the two reasons and the indexes of the mistake's tries they speak
@@ -167,9 +166,9 @@ export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
 	const { ply, kind, move, better, followUp, missedMate } = mistake
 	const label = numbered(move)
 	const a = kind === "inaccuracy" ? "an" : "a"
-	const before = ply > 0 ? moves[ply - 1] : null
-	// moves of the better line, hung off the board move they branch from
-	const fromBoard = line => [...(before ? [numbered(before)] : []), ...line.map((m, i) => i === 0 && !before ? numbered(m) : m.san)].join(" ")
+	// moves of the better line, numbered so they hang off the board at the
+	// position the mistake was made in
+	const fromBoard = line => line.map((m, i) => i === 0 ? numbered(m) : m.san).join(" ")
 	const betterLine = fromBoard(better)
 	const played = [move, ...followUp]
 	const variations = line => (why?.tries ?? [])

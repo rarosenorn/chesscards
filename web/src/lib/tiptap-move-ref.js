@@ -55,41 +55,36 @@ export const MoveRef = Mark.create({
 	}
 })
 
-// The token each board is standing on, marked in the text: same board, same
-// branch, same ply. An aside is not listed in the move line under the board —
-// the text it was written in is where it reads — so this is what says where
-// the board is while one is being followed, and it marks a plain reference to
-// the line just as well.
+// Where each board stands, marked in the text. The aside a board is following
+// is `open`, every token of it: at its start the board stands on a move of
+// its own line, which the move line under the board marks, and this is what
+// says the arrows now walk the aside and not the line. The token the board
+// stands on — same board, same branch, same ply — is `current`: an aside is
+// not listed in the move line, the text it was written in is where it reads.
 export const markMoveRefs = (root, boards) => {
 	if (!root) return;
 	for (const token of root.querySelectorAll("[data-move-ref]")) {
 		const at = boards[Number(token.dataset.moveRef)];
-		token.classList.toggle("current", !!at
+		const same = !!at
 			&& Number(token.dataset.from) === at.from
-			&& (token.dataset.moves ?? "") === at.moves
-			&& Number(token.dataset.at) === at.at);
+			&& (token.dataset.moves ?? "") === at.moves;
+		token.classList.toggle("open", same && !!at.moves);
+		token.classList.toggle("current", same && Number(token.dataset.at) === at.at);
 	}
 }
 
 // The lines the text writes off a board's own line, once each and in reading
-// order — what Shift+arrows step between. `lead`: the text writes the move
-// before the branch too, so the line can be stepped back to its ply 0. A reference to a move of the line
+// order — what Shift+arrows step between. A reference to a move of the line
 // itself is not one: the line is already stepped with the plain arrows.
 export const moveRefLines = (root, board) => {
 	const lines = [];
-	const seen = new Map();
+	const seen = new Set();
 	for (const token of root?.querySelectorAll(`[data-move-ref="${board}"]`) ?? []) {
 		const moves = token.dataset.moves ?? "";
-		if (!moves) continue;
 		const key = `${token.dataset.from} ${moves}`;
-		const lead = token.dataset.at === "0";
-		if (seen.has(key)) {
-			if (lead) seen.get(key).lead = true;
-			continue;
-		}
-		const entry = { from: Number(token.dataset.from) || 0, moves: moves.split(" "), lead };
-		seen.set(key, entry);
-		lines.push(entry);
+		if (!moves || seen.has(key)) continue;
+		seen.add(key);
+		lines.push({ from: Number(token.dataset.from) || 0, moves: moves.split(" ") });
 	}
 	return lines;
 }
@@ -145,10 +140,9 @@ export const parseAside = (fen, text) => {
 // follow it, they ARE it: the board already plays them and its move line
 // already names them, so they are written as ordinary prose — nothing to
 // click, nothing to go to. The aside starts where the two part company, and
-// only that part becomes moves you can play — plus the last shared move, the
-// one reaching the position it branches at: that is the aside's ply 0, and
-// stepping back to it has to show where the board stands, as the move line
-// does for the board's own moves.
+// only that part becomes moves you can play. The position it branches at is
+// its ply 0, and the text needs no move for it: the board's move line marks
+// the move that reached it.
 //
 // `hidden` counts moves the aside must be played through but that the text
 // does not write out: prose says "after 7...b6 8.Nc3" about a position the
@@ -163,7 +157,7 @@ export const moveRefContent = ({ board, from, moves, infos, line = [], hidden = 
 		{
 			type: "text",
 			text: moveLabel(info, i - hidden),
-			...(i < shared - 1 || (i === shared - 1 && !branch) ? {} : {
+			...(i < shared ? {} : {
 				marks: [{
 					type: "moveRef",
 					attrs: { board, from: from + shared, moves: branch, at: i - shared + 1 }

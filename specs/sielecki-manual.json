@@ -59,7 +59,7 @@
               }
             ]
           },
-          "back": "- [3.Nc3 Nf6], entering the Four Knights Game. The most popular choice on all levels; masters play more or less only this, as they know the alternatives are inferior.\n- [3.Nc3 Bc5]?! develops the bishop and increases control over d4, so it looks logical, but it has a severe drawback. Your opponents will often choose it."
+          "back": "- [3...Nf6], entering the Four Knights Game. The most popular choice on all levels; masters play more or less only this, as they know the alternatives are inferior.\n- [3...Bc5]?! develops the bishop and increases control over d4, so it looks logical, but it has a severe drawback. Your opponents will often choose it."
         },
         {
           "id": "tk-bc5-nxe5",
@@ -147,7 +147,7 @@
               }
             ]
           },
-          "back": "- [4.Nxe5 Nxe5 5.d4] is the most common. We restore material equality and gain some advantage, but there are a few traps to avoid.\n- [4.Nxe5 Bxf2+]?! is dubious but leads to fun complications. Black returns the piece and thus avoids the fork trick.\n- [4.Nxe5 Nf6 5.Nxc6 dxc6 6.h3]: White is much better, as Black has no compensation for the pawn.\n- [4.Nxe5 Qh4 5.g3] or [4.Nxe5 Qf6 5.Ng4] are easily defused attempts at a Scholar's Mate."
+          "back": "- [4...Nxe5 5.d4] is the most common. We restore material equality and gain some advantage, but there are a few traps to avoid.\n- [4...Bxf2+]?! is dubious but leads to fun complications. Black returns the piece and thus avoids the fork trick.\n- [4...Nf6 5.Nxc6 dxc6 6.h3]: White is much better, as Black has no compensation for the pawn.\n- [4...Qh4 5.g3] or [4...Qf6 5.Ng4] are easily defused attempts at a Scholar's Mate."
         },
         {
           "id": "tk-qh4",
@@ -316,7 +316,7 @@
               }
             ]
           },
-          "back": "- [5.Kxf2 Qh4+ 6.g3] claude: the pawn blocks the check and hits the queen.\n- [5.Kxf2 Qf6+ 6.Nf3] claude: the knight blocks the check and escapes.\n\nEither way we keep the extra piece."
+          "back": "- [5...Qh4+ 6.g3] claude: the pawn blocks the check and hits the queen.\n- [5...Qf6+ 6.Nf3] claude: the knight blocks the check and escapes.\n\nEither way we keep the extra piece."
         },
         {
           "id": "tk-d4-eval-replies",
@@ -357,7 +357,7 @@
               }
             ]
           },
-          "back": "We have an excellent pawn center and the pair of bishops, two significant pluses. The problem: our king had to move and looks vulnerable on f2, so we must be careful until it is on a safer spot.\n\n- [6.d4 Qf6+]? is Black's most popular choice, but it is a mistake that only helps us.\n- [6.d4 Ng6] is Black's relatively best choice."
+          "back": "We have an excellent pawn center and the pair of bishops, two significant pluses. The problem: our king had to move and looks vulnerable on f2, so we must be careful until it is on a safer spot.\n\n- [6...Qf6+]? is Black's most popular choice, but it is a mistake that only helps us.\n- [6...Ng6] is Black's relatively best choice."
         },
         {
           "id": "tk-ng6-be2",
@@ -397,7 +397,7 @@
               }
             ]
           },
-          "back": "7.Be2 We must get our king to safety and develop the kingside, so we 'castle by hand': we can't play O-O anymore, but Be2, Rf1 and Kg1 reach the same setup. [6...Ng6 7.Bc4] has a similar idea.\n\n[6...Ng6 7.Bd3 Qf6+] is less precise, as our d-pawn is hanging."
+          "back": "7.Be2 We must get our king to safety and develop the kingside, so we 'castle by hand': we can't play O-O anymore, but Be2, Rf1 and Kg1 reach the same setup. [7.Bc4] has a similar idea.\n\n[7.Bd3 Qf6+] is less precise, as our d-pawn is hanging."
         },
         {
           "id": "tk-d6-next3",
@@ -600,7 +600,7 @@
               }
             ]
           },
-          "back": "- [7.Kg1 Ne7] sets a trap, but it is not a great move: if we avoid the trap, Black is stuck with their problems.\n- [7.Kg1 Nc6] is met in a similar way.\n- [7.Kg1 Ng4] is the most dangerous trick that Black has. A rare move, but it can be extremely irritating to face."
+          "back": "- [7...Ne7] sets a trap, but it is not a great move: if we avoid the trap, Black is stuck with their problems.\n- [7...Nc6] is met in a similar way.\n- [7...Ng4] is the most dangerous trick that Black has. A rare move, but it can be extremely irritating to face."
         },
         {
           "id": "tk-ne7-be3",
@@ -642,7 +642,7 @@
               }
             ]
           },
-          "back": "8.Be3 secures the sensitive a7-g1 diagonal. Finally, we threaten to capture the knight.\n\nWe are NOT immediately threatening to capture Black's knight after 7.Kg1! [7...Ne7 8.dxe5 Qb6+ 9.Be3 Qxe3#] — a disaster!"
+          "back": "8.Be3 secures the sensitive a7-g1 diagonal. Finally, we threaten to capture the knight.\n\nWe are NOT immediately threatening to capture Black's knight after 7.Kg1! [8.dxe5 Qb6+ 9.Be3 Qxe3#] — a disaster!"
         },
         {
           "id": "tk-ne7-plan",
@@ -759,7 +759,7 @@
               }
             ]
           },
-          "back": "Black threatens ...Qf2#.\n\nIt looks like a blunder, but [7...Ng4 8.Qxg4 Qxd4+ 9.Be3 Qxe3#] is a familiar pattern by now. We can't take the knight."
+          "back": "Black threatens ...Qf2#.\n\nIt looks like a blunder, but [8.Qxg4 Qxd4+ 9.Be3 Qxe3#] is a familiar pattern by now. We can't take the knight."
         },
         {
           "id": "tk-ng4-qd2",
@@ -801,7 +801,7 @@
               }
             ]
           },
-          "back": "8.Qd2! The only move that works! There is just one move that covers the mate and keeps the d4-pawn protected. The queen must cover f2, and [7...Ng4 8.Qf3 Qxd4+] shows the issue with other squares.\n\nThe queen is on an odd square and our bishop on c1 is unhappy about the situation, but this is a minor problem. More importantly, we'll send Black's knight back home with h3 next, while Nd5 is looming too."
+          "back": "8.Qd2! The only move that works! There is just one move that covers the mate and keeps the d4-pawn protected. The queen must cover f2, and [8.Qf3 Qxd4+] shows the issue with other squares.\n\nThe queen is on an odd square and our bishop on c1 is unhappy about the situation, but this is a minor problem. More importantly, we'll send Black's knight back home with h3 next, while Nd5 is looming too."
         },
         {
           "id": "tk-ng4-d6-next3",
@@ -961,7 +961,7 @@
               }
             ]
           },
-          "back": "Black's path to a reasonable game is narrow.\n\n- [5.d4 Bd6] is Black's best bet and the only way to reach a playable position, but it is still nice for White.\n- [5.d4 Bxd4]? You'll meet this a lot, and we'll get a huge advantage."
+          "back": "Black's path to a reasonable game is narrow.\n\n- [5...Bd6] is Black's best bet and the only way to reach a playable position, but it is still nice for White.\n- [5...Bxd4]? You'll meet this a lot, and we'll get a huge advantage."
         },
         {
           "id": "tk-bd6-next3",
@@ -1034,7 +1034,7 @@
               }
             ]
           },
-          "back": "It looks more active to place it on c4, but after [6...Bxe5 7.Bc4 Nf6 8.O-O O-O] Black has secured the f7-spot and puts some pressure on e4 (taking on c3 and ...Nxe4 is an idea)."
+          "back": "It looks more active to place it on c4, but after [7.Bc4 Nf6 8.O-O O-O] Black has secured the f7-spot and puts some pressure on e4 (taking on c3 and ...Nxe4 is an idea)."
         },
         {
           "id": "tk-bd3-nf6-next3",
@@ -1210,7 +1210,7 @@
               }
             ]
           },
-          "back": "- [6.Qxd4 Qf6] introduces fun complications.\n- [6.Qxd4 Nc6 7.Qxg7] or [6.Qxd4 Ng6 7.Qxg7] is simple: both knight moves are blunders.\n- [6.Qxd4 d6] is better, but White is in great shape."
+          "back": "- [6...Qf6] introduces fun complications.\n- [6...Nc6 7.Qxg7] or [6...Ng6 7.Qxg7] is simple: both knight moves are blunders.\n- [6...d6] is better, but White is in great shape."
         },
         {
           "id": "tk-6nc6-qxg7",
@@ -1250,7 +1250,7 @@
               }
             ]
           },
-          "back": "7.Qxg7 is simple. claude: Once the knight leaves e5, the diagonal to g7 is open; we win a pawn and attack the rook on h8.\n\nThe same goes for [6.Qxd4 Ng6 7.Qxg7]."
+          "back": "7.Qxg7 is simple. claude: Once the knight leaves e5, the diagonal to g7 is open; we win a pawn and attack the rook on h8.\n\nThe same goes for [6...Ng6 7.Qxg7]."
         },
         {
           "id": "tk-6d6-be3",
@@ -1290,7 +1290,7 @@
               }
             ]
           },
-          "back": "7.Be3 or [6...d6 7.Bd2], and White is in great shape. We prepare queenside castling and are ready to attack the knight on e5 with f2-f4 later.\n\nNot at once: [6...d6 7.f4 Qh4+]! is annoying because we can't play [6...d6 7.f4 Qh4+ 8.g3 Nf3+]!"
+          "back": "7.Be3 or [7.Bd2], and White is in great shape. We prepare queenside castling and are ready to attack the knight on e5 with f2-f4 later.\n\nNot at once: [7.f4 Qh4+]! is annoying because we can't play [7.f4 Qh4+ 8.g3 Nf3+]!"
         },
         {
           "id": "tk-6qf6-nb5",
@@ -1372,7 +1372,7 @@
               }
             ]
           },
-          "back": "Black's last move set a trap. If we'd attack with 7.Nd5??, they have [6...Qf6 7.Nd5 Nf3+]!, winning our queen! claude: the knight check uncovers Black's queen on ours.\n\nThis is why 7.Nb5! is so strong."
+          "back": "Black's last move set a trap. If we'd attack with 7.Nd5??, they have [7.Nd5 Nf3+]!, winning our queen! claude: the knight check uncovers Black's queen on ours.\n\nThis is why 7.Nb5! is so strong."
         },
         {
           "id": "tk-nb5-replies",
@@ -1415,7 +1415,7 @@
               }
             ]
           },
-          "back": "Black has no good reply now.\n\n- [7.Nb5 Kd8 8.Qc5]! is powerful.\n- [7.Nb5 c6 8.Nd6+] and Black's position is lost."
+          "back": "Black has no good reply now.\n\n- [7...Kd8 8.Qc5]! is powerful.\n- [7...c6 8.Nd6+] and Black's position is lost."
         },
         {
           "id": "tk-nb5-kd8-qc5",
@@ -1492,7 +1492,7 @@
               }
             ]
           },
-          "back": "- 8.Nd6+ Much simpler than [7...c6 8.Nc7+ Kd8], when Black can hope for the ...Nf3+ discovery again. We gain some time with the check.\n- 8...Kf8 claude: The king steps out of the check.\n- 9.Be3 is allowed thanks to that check. Our queen is secured now against the knight discovery, and Black's position is lost. Our d6-knight is dominating, and their king is stranded on f8."
+          "back": "- 8.Nd6+ Much simpler than [8.Nc7+ Kd8], when Black can hope for the ...Nf3+ discovery again. We gain some time with the check.\n- 8...Kf8 claude: The king steps out of the check.\n- 9.Be3 is allowed thanks to that check. Our queen is secured now against the knight discovery, and Black's position is lost. Our d6-knight is dominating, and their king is stranded on f8."
         },
         {
           "id": "tk-conclusion",

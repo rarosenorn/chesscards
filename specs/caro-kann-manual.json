@@ -1,0 +1,54 @@
+{
+	"deck": "Caro-Kann",
+	"chapters": [
+		{
+			"name": "Von Hennig Gambit",
+			"cards": [
+				{
+					"id": "vh-what",
+					"front": {
+						"text": "White left the e4 pawn and played 4.Bc4. What is this called, and what is White's idea?",
+						"boards": [{
+							"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+							"moves": ["e4", "c6", "d4", "d5", "Nc3", "dxe4", "Bc4"],
+							"orientation": "b",
+							"openAt": 7,
+							"solutionArrows": { "7": [["danger", "f2", "f3"], ["danger", "c4", "f7"]] }
+						}]
+					},
+					"back": "The Von Hennig Gambit. White gives up the e4 pawn and plays f3 next, to open the f-file and go after f7 together with the bishop on c4."
+				},
+				{
+					"id": "vh-first-moves",
+					"front": {
+						"text": "How do you meet the Von Hennig Gambit? Play your next 3 moves.",
+						"boards": [{
+							"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+							"moves": ["e4", "c6", "d4", "d5", "Nc3", "dxe4", "Bc4", "Nf6", "f3", "exf3", "Nxf3", "Bf5"],
+							"orientation": "b",
+							"openAt": 7,
+							"solutionFrom": 7,
+							"puzzle": true
+						}]
+					},
+					"back": "- 4...Nf6 develops and guards the pawn on e4.\n- 5...exf3 just take it. If White takes back with the queen, [5...exf3 6.Qxf3 Qxd4] wins a second pawn and hits the bishop on c4.\n- 6...Bf5 the Caro-Kann bishop comes out before ...e6 shuts it in."
+				},
+				{
+					"id": "vh-e6-bg6",
+					"front": {
+						"text": "White has castled. What are your next 2 moves?",
+						"boards": [{
+							"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+							"moves": ["e4", "c6", "d4", "d5", "Nc3", "dxe4", "Bc4", "Nf6", "f3", "exf3", "Nxf3", "Bf5", "O-O", "e6", "Ne5", "Bg6"],
+							"orientation": "b",
+							"openAt": 13,
+							"solutionFrom": 13,
+							"puzzle": true
+						}]
+					},
+					"back": "- 7...e6 shuts the c4 bishop's diagonal to f7 and lets your own bishop out.\n- 8...Bg6 guards f7 once more and takes the bishop off the open f-file. The same move answers [7...e6 8.Ng5 Bg6].\n- Don't take on c2: after [8.Ne5 Bxc2 9.Nxf7 Bxd1 10.Nxd8 Kxd8 11.Rxd1] the queens are off, your king is stuck in the middle and e6 is weak.\n- Next comes ...Bd6, ...Nbd7 and castling: you are a healthy pawn up."
+				}
+			]
+		}
+	]
+}

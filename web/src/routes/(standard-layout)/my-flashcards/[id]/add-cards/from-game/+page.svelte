@@ -143,6 +143,8 @@
 	let hasEarlier = $state(false);
 	let shown = $state(PAGE);
 	let loading = $state(false);
+	// the site a Fetch is under way for: its button turns while it is
+	let fetching = $state(null);
 	let loadError = $state(null);
 
 	// each Fetch is a load of its own; one that a later one overtook leaves
@@ -154,6 +156,7 @@
 		if (!name) return;
 		const load = ++latestLoad;
 		loading = true;
+		fetching = key;
 		loadError = null;
 		try {
 			const next = await SITES[key].open(name);
@@ -175,7 +178,7 @@
 			hasEarlier = false;
 			loadError = err.message;
 		} finally {
-			if (load === latestLoad) loading = false;
+			if (load === latestLoad) { loading = false; fetching = null; }
 		}
 	}
 
@@ -303,7 +306,10 @@
 				<form class="username-form" onsubmit={e => { e.preventDefault(); loadGames(key); }}>
 					<svg class="logo" viewBox="0 0 24 24" fill={SITE_LOGOS[key].color} aria-hidden="true"><path d={SITE_LOGOS[key].path} /></svg>
 					<input bind:value={usernames[key]} placeholder="username" aria-label="{name} username" autocomplete="off" />
-					<button class="std-btn">Fetch</button>
+					<button class="std-btn fetch-btn" class:fetching={fetching === key} aria-busy={fetching === key}>
+						<span class="label">Fetch</span>
+						{#if fetching === key}<span class="spinner" role="status" aria-label="Fetching games"></span>{/if}
+					</button>
 				</form>
 			{/each}
 		</div>
@@ -416,6 +422,29 @@
 	section > .std-btn {
 		padding: 6px 12px;
 		border-radius: 4px;
+	}
+	/* the button keeps its size while it turns: the word stays in place,
+	   unseen, and the ring sits over it */
+	.fetch-btn {
+		position: relative;
+	}
+	.fetch-btn.fetching .label {
+		visibility: hidden;
+	}
+	.spinner {
+		position: absolute;
+		inset: 0;
+		margin: auto;
+		width: 14px;
+		height: 14px;
+		box-sizing: border-box;
+		border: 2px solid rgba(0, 0, 0, 0.2);
+		border-top-color: rgba(0, 0, 0, 0.65);
+		border-radius: 50%;
+		animation: fetch-spin 0.7s linear infinite;
+	}
+	@keyframes fetch-spin {
+		to { transform: rotate(360deg); }
 	}
 	.game-options {
 		display: flex;

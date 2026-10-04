@@ -4,6 +4,7 @@
 	import { stageName } from "$lib/stages.js"
 	import { startImport, saveChesscomUsername } from "./import.remote.js"
 	import { current, follow, resume } from "./import-state.svelte.js"
+	import { SPEED_ICON_PATHS } from "$lib/lichess-speed-icons.js"
 
 	let { data } = $props();
 	const deck = getContext("deck");
@@ -158,23 +159,9 @@
 </script>
 
 {#snippet speed(timeClass)}
-	{#if timeClass === "rapid"}
-		<svg class="speed speed-rapid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-label="Rapid">
-			<circle cx="12" cy="14" r="7.5" /><path d="M9.5 2.5h5M12 2.5v4M12 14l3-3.5" />
-		</svg>
-	{:else if timeClass === "blitz"}
-		<svg class="speed speed-blitz" viewBox="0 0 24 24" fill="currentColor" aria-label="Blitz">
-			<path d="M14 1.5 4.5 13.5h6L9 22.5l10.5-13h-6.5z" />
-		</svg>
-	{:else if timeClass === "bullet"}
-		<svg class="speed speed-bullet" viewBox="0 0 24 24" fill="currentColor" aria-label="Bullet">
-			<path d="M2.5 8h10.5c4.5 0 7.5 2 8.5 4-1 2-4 4-8.5 4H2.5z" />
-		</svg>
-	{:else}
-		<svg class="speed speed-daily" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-label="Daily">
-			<circle cx="12" cy="12" r="4.5" stroke="none" /><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" />
-		</svg>
-	{/if}
+	<svg class="speed speed-{timeClass}" viewBox="0 0 512 512" fill="currentColor" aria-label={timeClass}>
+		<path transform="translate(0 512) scale(1 -1)" d={SPEED_ICON_PATHS[timeClass] ?? SPEED_ICON_PATHS.daily} />
+	</svg>
 {/snippet}
 
 <StandardLayout>
@@ -379,6 +366,7 @@
 	.speed {
 		width: 22px;
 		height: 22px;
+		overflow: visible;
 	}
 	.speed-rapid {
 		color: #6c9d2a;

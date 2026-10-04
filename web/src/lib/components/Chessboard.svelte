@@ -202,14 +202,26 @@
 		// moves the difference can be the one pixel that wraps a pair
 		const width = moveLineEl.clientWidth - 4 - 6;
 		placedFor = board;
-		const all = [...measureEl.querySelectorAll(".move-pair")].map(el => el.offsetWidth);
+		const pairEls = [...measureEl.querySelectorAll(".move-pair")];
+		const all = pairEls.map(el => el.offsetWidth);
 		if (width <= 0 || all.length === 0 || all.length !== moveLine.length) { foldStart = 0; foldEnd = null; return; }
-		// the cuts are the question's: the answer's moves, played or shown,
-		// join the line on new rows and never push its start out of sight
-		const questionPlies = authorView || solutionFrom == null ? lineMoves.length : Math.min(solutionFrom, lineMoves.length);
+		// The cuts are the question's, whoever is looking and whether or not
+		// the answer is on show: the answer's moves, played or revealed, join
+		// the line and may take it onto new rows, but never push its start
+		// out of sight — the line must not be cut again as the card turns.
+		const questionPlies = solutionFrom == null ? lineMoves.length : Math.min(solutionFrom, lineMoves.length);
 		const widths = questionPlies === 0 ? []
 			: all.slice(0, moveLine.findIndex(pair => pair.moves.at(-1).index >= questionPlies - 1) + 1);
 		if (widths.length === 0) { foldStart = 0; foldEnd = null; return; }
+		// a pair the answer finishes (the question ends on White's move) counts
+		// for its question half alone, as it stood before the answer joined it
+		const lastPair = widths.length - 1;
+		const answerAt = moveLine[lastPair].moves.findIndex(move => move.index >= questionPlies);
+		if (answerAt > 0) {
+			const button = pairEls[lastPair].querySelectorAll(".move-btn")[answerAt - 1];
+			const half = button.getBoundingClientRect().right - pairEls[lastPair].getBoundingClientRect().left;
+			if (half > 0) widths[lastPair] = Math.ceil(half);
+		}
 		const steps = [...moveLineEl.querySelectorAll(".step-btn")].reduce((sum, el) => sum + el.offsetWidth + ROW_GAP, 4);
 		const dots = (measureEl.querySelector(".fold-btn")?.offsetWidth ?? 0) + ROW_GAP;
 		// the rows the pairs from `pair` on fall into: [{ pairs, used }]
@@ -301,6 +313,9 @@
 	// Once the line is through the host is told, and turns the card.
 	let finds = $state({});
 	let missed = false;
+	// a wrong move has been made on this puzzle: the tag says so from that
+	// moment, not only once the line is through
+	let anyMiss = $state(false);
 	// played through to the end: "clean", or "late" if any move took a
 	// second try. Not set by Show — that is the answer given, not found.
 	let puzzleDone = $state(null);
@@ -312,6 +327,7 @@
 		solved = 0;
 		finds = {};
 		missed = false;
+		anyMiss = false;
 		puzzleDone = null;
 	}
 	// A card turned back over (study's Hide) is the question again, and its
@@ -424,6 +440,7 @@
 		}
 		if (!made.right) {
 			missed = true;
+			anyMiss = true;
 			// it is a move made, and sounds like one
 			playMoveSound(made.san);
 			// after the board has put the king back, which it does on a no
@@ -1045,7 +1062,7 @@
 			></span>
 		{/if}
 		{#if normalized.puzzle}
-			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone === "late"}<svg class="done-cross" viewBox="0.4 0.6 9.1 9.1" aria-hidden="true"><path d="M2.4 1.0 C4.6 2.4 7.6 5.6 9.4 9.0 C7.0 6.6 4.0 4.6 1.2 2.9 C0.5 2.4 0.4 1.5 1.0 1.0 C1.4 0.6 2.0 0.7 2.4 1.0 Z M0.9 7.6 C2.6 5.2 5.6 2.4 9.5 0.6 C6.6 3.0 4.2 6.0 2.6 9.0 C2.2 9.6 1.3 9.7 0.8 9.1 C0.4 8.6 0.5 8.0 0.9 7.6 Z" fill="currentColor" /></svg>{:else if puzzleDone}<svg class="done-check" viewBox="1.8 3.3 12.3 9.4" aria-hidden="true"><path d="M2.05 8 C1.9 7.1 2.5 6.75 3 6.75 C3.6 6.75 4 7.15 4.2 7.75 L4.85 9.7 C8 7 11.6 4.3 13.95 3.5 L5.9 11.7 C5.3 12.3 4.6 12.55 4 12.5 C3.6 12.5 3.4 12.3 3.3 12 Z" fill="currentColor" /></svg>{/if}Puzzle</span>
+			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late" || anyMiss}>{#if puzzleDone === "late" || anyMiss}<svg class="done-cross" viewBox="0.4 0.6 9.1 9.1" aria-hidden="true"><path d="M2.4 1.0 C4.6 2.4 7.6 5.6 9.4 9.0 C7.0 6.6 4.0 4.6 1.2 2.9 C0.5 2.4 0.4 1.5 1.0 1.0 C1.4 0.6 2.0 0.7 2.4 1.0 Z M0.9 7.6 C2.6 5.2 5.6 2.4 9.5 0.6 C6.6 3.0 4.2 6.0 2.6 9.0 C2.2 9.6 1.3 9.7 0.8 9.1 C0.4 8.6 0.5 8.0 0.9 7.6 Z" fill="currentColor" /></svg>{:else if puzzleDone}<svg class="done-check" viewBox="1.8 3.3 12.3 9.4" aria-hidden="true"><path d="M2.05 8 C1.9 7.1 2.5 6.75 3 6.75 C3.6 6.75 4 7.15 4.2 7.75 L4.85 9.7 C8 7 11.6 4.3 13.95 3.5 L5.9 11.7 C5.3 12.3 4.6 12.55 4 12.5 C3.6 12.5 3.4 12.3 3.3 12 Z" fill="currentColor" /></svg>{/if}Puzzle</span>
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse</a>
@@ -1203,7 +1220,8 @@
 		line-height: 1.3;
 		color: rgba(0, 0, 0, 0.55);
 	}
-	/* played through: the tag fills, green — or red if a move was missed */
+	/* played through: the tag fills, green — or red, from the first wrong
+	   move on */
 	.puzzle-tag.done,
 	.puzzle-tag.done-late {
 		display: inline-flex;

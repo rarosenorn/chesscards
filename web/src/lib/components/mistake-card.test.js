@@ -162,6 +162,20 @@ describe("a mistake's card on the board", () => {
 		restore();
 	});
 
+	it("is cut for the question alone: the answer's moves join it without hiding its start", async () => {
+		const restore = layOut();
+		// eight pairs of question, two of answer; the board opens on 8...Ba7
+		const card = longCard(16);
+		card.front[0].content[0].solutionFrom = 16;
+		const { target, app } = await show(card);
+		await tick();
+		// the question's last row, whole, and the answer after it — not the
+		// line's last row, which would have pushed 6 and 7 out of sight
+		expect(lineOf(target)).toBe("‹ › … 6 O-O O-O 7 Re1 a6 8 Bb3 Ba7Back: 9 h3 h6 10 Nbd2 Re8");
+		unmount(app);
+		restore();
+	});
+
 	it("starts one move before the move it opens on when that is further back", async () => {
 		const restore = layOut();
 		// opens on 2...Nc6: 2.Nf3 leads, Nc6 is the second move showing

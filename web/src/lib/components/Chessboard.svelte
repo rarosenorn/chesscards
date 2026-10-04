@@ -116,7 +116,7 @@
 			asidePly = null;
 			return;
 		}
-		// its first written move is as far back as an aside goes
+		// an aside opens on the first move the text writes
 		const key = moves.join(" ");
 		const start = lines?.().find(l => l.from === from && l.moves.join(" ") === key)?.start ?? 1;
 		following = { from, moves, start };
@@ -541,7 +541,9 @@
 			// an aside's first move is tinted as the move a board opens on is:
 			// the board arrives on it without having shown it played
 			if (!(everyMove || asidePly === following.start) || !asideReplay) return null;
-			return moveSquares(asideReplay.fens[asidePly - 1], following.moves[asidePly - 1]);
+			if (asidePly > 0) return moveSquares(asideReplay.fens[asidePly - 1], following.moves[asidePly - 1]);
+			// its ply 0 is the line's own position it branches at
+			return following.from > 0 ? moveSquares(replay.fens[following.from - 1], normalized.moves[following.from - 1]) : null;
 		}
 		if (displayIndex === 0 || !(everyMove || displayIndex === openAt)) return null;
 		return moveSquares(replay.fens[displayIndex - 1], normalized.moves[displayIndex - 1]);
@@ -708,18 +710,19 @@
 		asidePly = null;
 		currentIndex = index;
 	}
-	// the same two, inside an aside. The first move the text writes is as far
-	// back as it goes, so the board never stands where the text shows nothing:
-	// the arrows keep to the line the text wrote, and Shift+arrows (stepLine)
-	// are what move between it and the board's own.
-	let asideStart = $derived(following?.start ?? 1);
+	// the same two, inside an aside. It steps back as far as the position
+	// before the first move the text writes — its own start position, with no
+	// move to mark, as the board's start has none. The arrows keep to the line
+	// the text wrote, and Shift+arrows (stepLine) are what move between it and
+	// the board's own.
+	let asideStart = $derived((following?.start ?? 1) - 1);
 	const stepAside = ply => {
 		playMoveSound(asideMoves[ply > asidePly ? ply - 1 : asidePly - 1]?.san);
 		stepping = true;
 		asidePly = ply;
 	}
 	// An aside is a dead end both ways: its last move is the last thing the
-	// text claimed, and its start is the first thing it shows.
+	// text claimed, and its start is the position its first move is played in.
 	let atLineStart = $derived(asidePly != null ? asidePly <= asideStart : displayIndex === 0);
 	let atLineEnd = $derived(
 		asidePly != null ? asidePly >= asideMoves.length : displayIndex === positions.length - 1

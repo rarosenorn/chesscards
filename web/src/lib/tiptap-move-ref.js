@@ -73,8 +73,9 @@ export const markMoveRefs = (root, boards) => {
 
 // The lines the text writes off a board's own line, once each and in reading
 // order — what Shift+arrows step between. `start` is the first of its moves
-// the text writes: where the line opens, and as far back as it steps (moves
-// played ahead of it without being written are not stops). A reference to a
+// the text writes: where the line opens. It steps back one further, to the
+// position that move is played in, and no more (moves played ahead of it
+// without being written are not stops). A reference to a
 // move of the line itself is not one: the line is already stepped with the
 // plain arrows.
 export const moveRefLines = (root, board) => {

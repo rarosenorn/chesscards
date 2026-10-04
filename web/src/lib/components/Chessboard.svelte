@@ -1383,9 +1383,9 @@
 		width: max-content;
 	}
 	/* a puzzle's moves as the player found them, a mark before each: a green
-	   check found at once, a red cross after a miss. On the move the board stands
-	   on they keep those colours, in the lighter shades that read on its
-	   blue. */
+	   check found at once, a red cross after a miss. On the move the board
+	   stands on the colour is kept as it is: the pill itself is the green or
+	   the red, in place of the blue, and the move reads white on it. */
 	.move-btn.found::before,
 	.move-btn.found-late::before {
 		content: "✓";
@@ -1401,11 +1401,15 @@
 	.move-btn.found-late {
 		color: #b3261e;
 	}
-	.move-btn.found.current {
-		color: #a9f5c4;
+	.move-btn.found.current,
+	.move-btn.found.current:hover:enabled {
+		background-color: #1b7a3d;
+		color: white;
 	}
-	.move-btn.found-late.current {
-		color: #ffb8b0;
+	.move-btn.found-late.current,
+	.move-btn.found-late.current:hover:enabled {
+		background-color: #b3261e;
+		color: white;
 	}
 	/* the library puts a pointer on every input-enabled square; the editor's
 	   cursors instead, keyed on the classes the hover and move input set */

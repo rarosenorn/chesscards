@@ -312,10 +312,11 @@
 	// side's reply plays itself; a wrong one goes back where it came from.
 	// Once the line is through the host is told, and turns the card.
 	let finds = $state({});
-	// a wrong move stands unanswered: the tag is red, with a cross, until the
-	// right one is found — and orange with its check from then on
+	// a wrong move stands unanswered. One wrong move marks the whole puzzle:
+	// the tag is red, with a cross, from then on — only the move itself turns
+	// orange with its check once it is found
 	let missed = $state(false);
-	let foundLate = $derived(Object.values(finds).includes("late"));
+	let anyMiss = $derived(missed || Object.values(finds).includes("late"));
 	// played through to the end: "clean", or "late" if any move took a
 	// second try. Not set by Show — that is the answer given, not found.
 	let puzzleDone = $state(null);
@@ -836,7 +837,10 @@
 	let dragGap = $state(null);
 	const splitEditable = $derived(!!onSolutionFromChange && authorView && lineMoves.length > 0);
 	const shownGap = $derived(dragGap ?? solutionFrom ?? lineMoves.length);
-	const markerAt = g => authorView && (splitEditable ? shownGap === g : solutionFrom === g);
+	// It is there from the first answer move played on a puzzle, too, not
+	// only once the card is turned: put in afterwards, it widened the pair it
+	// stands in and sent it onto the next row under the player's eyes.
+	const markerAt = g => (authorView || solved > 0) && (splitEditable ? shownGap === g : solutionFrom === g);
 
 	// The moves' boxes, measured. Frozen for the length of a drag: the marker
 	// takes room in the line, so every gap it lands on pushes the moves after
@@ -1060,7 +1064,7 @@
 			></span>
 		{/if}
 		{#if normalized.puzzle}
-			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={!missed && foundLate} class:missed>{#if missed}<svg class="done-cross" viewBox="0.4 0.6 9.1 9.1" aria-hidden="true"><path d="M2.4 1.0 C4.6 2.4 7.6 5.6 9.4 9.0 C7.0 6.6 4.0 4.6 1.2 2.9 C0.5 2.4 0.4 1.5 1.0 1.0 C1.4 0.6 2.0 0.7 2.4 1.0 Z M0.9 7.6 C2.6 5.2 5.6 2.4 9.5 0.6 C6.6 3.0 4.2 6.0 2.6 9.0 C2.2 9.6 1.3 9.7 0.8 9.1 C0.4 8.6 0.5 8.0 0.9 7.6 Z" fill="currentColor" /></svg>{:else if puzzleDone || foundLate}<svg class="done-check" viewBox="1.8 3.3 12.3 9.4" aria-hidden="true"><path d="M2.05 8 C1.9 7.1 2.5 6.75 3 6.75 C3.6 6.75 4 7.15 4.2 7.75 L4.85 9.7 C8 7 11.6 4.3 13.95 3.5 L5.9 11.7 C5.3 12.3 4.6 12.55 4 12.5 C3.6 12.5 3.4 12.3 3.3 12 Z" fill="currentColor" /></svg>{/if}Puzzle</span>
+			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:missed={anyMiss}>{#if anyMiss}<svg class="done-cross" viewBox="0.4 0.6 9.1 9.1" aria-hidden="true"><path d="M2.4 1.0 C4.6 2.4 7.6 5.6 9.4 9.0 C7.0 6.6 4.0 4.6 1.2 2.9 C0.5 2.4 0.4 1.5 1.0 1.0 C1.4 0.6 2.0 0.7 2.4 1.0 Z M0.9 7.6 C2.6 5.2 5.6 2.4 9.5 0.6 C6.6 3.0 4.2 6.0 2.6 9.0 C2.2 9.6 1.3 9.7 0.8 9.1 C0.4 8.6 0.5 8.0 0.9 7.6 Z" fill="currentColor" /></svg>{:else if puzzleDone}<svg class="done-check" viewBox="1.8 3.3 12.3 9.4" aria-hidden="true"><path d="M2.05 8 C1.9 7.1 2.5 6.75 3 6.75 C3.6 6.75 4 7.15 4.2 7.75 L4.85 9.7 C8 7 11.6 4.3 13.95 3.5 L5.9 11.7 C5.3 12.3 4.6 12.55 4 12.5 C3.6 12.5 3.4 12.3 3.3 12 Z" fill="currentColor" /></svg>{/if}Puzzle</span>
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse</a>
@@ -1218,11 +1222,9 @@
 		line-height: 1.3;
 		color: rgba(0, 0, 0, 0.55);
 	}
-	/* the tag fills as the puzzle goes: red with a cross while a wrong move
-	   stands unanswered, orange with the check once the right one is found
-	   after it, green when the line is played through without a miss */
+	/* the tag fills: red with a cross from the first wrong move on, green
+	   with the check when the line is played through without one */
 	.puzzle-tag.done,
-	.puzzle-tag.done-late,
 	.puzzle-tag.missed {
 		display: inline-flex;
 		align-items: center;
@@ -1251,9 +1253,6 @@
 	}
 	.puzzle-tag.done {
 		--tag-colour: #2e9e5b;
-	}
-	.puzzle-tag.done-late {
-		--tag-colour: #d98a1f;
 	}
 	.puzzle-tag.missed {
 		--tag-colour: #c0392b;

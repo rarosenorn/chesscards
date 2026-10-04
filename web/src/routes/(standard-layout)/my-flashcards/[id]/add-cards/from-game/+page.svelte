@@ -6,6 +6,7 @@
 	import { current, follow, resume } from "./import-state.svelte.js"
 	import { SPEED_ICON_PATHS } from "$lib/lichess-speed-icons.js"
 	import { SITE_LOGOS } from "$lib/game-site-logos.js"
+	import { confirmModal } from "$lib/modals.svelte.js"
 
 	let { data } = $props();
 	const deck = getContext("deck");
@@ -157,7 +158,6 @@
 		const load = ++latestLoad;
 		loading = true;
 		loadError = null;
-		choosing = null;
 		try {
 			const next = await SITES[key].open(name);
 			let found = [], more = true;
@@ -217,15 +217,18 @@
 
 	const messageOf = err => err?.body?.message ?? err?.message ?? "Something went wrong";
 
-	// the game whose options are open under its row, by url: a click on a
-	// game asks what to make of it before anything is made
-	let choosing = $state(null);
-	const closeChooser = event => {
-		if (choosing && !event.target.closest?.(".game, .chooser")) choosing = null;
+	// a click on a game asks what to make of it before anything is made
+	const chooseGame = async game => {
+		const go = await confirmModal({
+			title: "Make cards from this game",
+			message: `${game.white.name} vs ${game.black.name}, ${dateOf(game)}`,
+			body: gameOptions,
+			confirmLabel: "Make cards"
+		});
+		if (go) importGame(game);
 	}
 
 	const importGame = async game => {
-		choosing = null;
 		startError = null;
 		try {
 			const { jobId } = await startImport({
@@ -256,7 +259,24 @@
 	});
 </script>
 
-<svelte:window onclick={closeChooser} onkeydown={e => { if (e.key === "Escape") choosing = null; }} />
+<!-- what the dialog over a chosen game asks -->
+{#snippet gameOptions()}
+	<div class="game-options">
+		{#each KINDS as [kind, label]}
+			<label><input type="checkbox" bind:checked={kinds[kind]} /> {label}</label>
+		{/each}
+		{#if deck.chapters}
+			<label class="chapter">
+				Chapter
+				<select value={validStageId} onchange={e => stageId = e.currentTarget.value}>
+					{#each stagesSorted as stage (stage.id)}
+						<option value={stage.id}>{stageName(stage)}</option>
+					{/each}
+				</select>
+			</label>
+		{/if}
+	</div>
+{/snippet}
 
 <!-- a game's speed, drawn the way the site it came from draws it -->
 {#snippet speed(kind)}
@@ -329,12 +349,7 @@
 		<ul class="games">
 			{#each games.slice(0, shown) as game (game.url)}
 				<li>
-					<button
-						class="game"
-						class:current={job?.url === game.url || choosing === game.url}
-						aria-expanded={choosing === game.url}
-						onclick={() => choosing = choosing === game.url ? null : game.url}
-					>
+					<button class="game" class:current={job?.url === game.url} onclick={() => chooseGame(game)}>
 						<span class="time">
 							{@render speed(game.speed)}
 							<span class="time-control">{game.time}</span>
@@ -347,24 +362,6 @@
 						<span class="result result-{game.result.toLowerCase()}">{game.result}</span>
 						<span class="date">{dateOf(game)}</span>
 					</button>
-					{#if choosing === game.url}
-						<div class="chooser">
-							{#each KINDS as [kind, label]}
-								<label><input type="checkbox" bind:checked={kinds[kind]} /> {label}</label>
-							{/each}
-							{#if deck.chapters}
-								<label class="chapter">
-									Chapter
-									<select value={validStageId} onchange={e => stageId = e.currentTarget.value}>
-										{#each stagesSorted as stage (stage.id)}
-											<option value={stage.id}>{stageName(stage)}</option>
-										{/each}
-									</select>
-								</label>
-							{/if}
-							<button class="std-btn" onclick={() => importGame(game)}>Make cards</button>
-						</div>
-					{/if}
 				</li>
 			{/each}
 		</ul>
@@ -427,37 +424,20 @@
 		padding: 6px 12px;
 		border-radius: 4px;
 	}
-	/* a game's options, hung under its row at the players' column: the list
-	   stays as it is underneath, and a row near the bottom lengthens the
-	   page rather than being cut */
-	.games li {
-		position: relative;
-	}
-	.chooser {
-		position: absolute;
-		top: calc(100% - 4px);
-		left: 82px;
-		z-index: 10;
+	.game-options {
 		display: flex;
 		flex-direction: column;
 		align-items: start;
 		gap: 8px;
-		padding: 12px 14px;
-		background-color: white;
-		border: 1px solid #ccc;
-		border-radius: 5px;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
 		font-size: 0.95rem;
 	}
-	.chooser label {
+	.game-options label {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 	}
-	.chooser .std-btn {
+	.game-options .chapter {
 		margin-top: 4px;
-		padding: 6px 12px;
-		border-radius: 4px;
 	}
 	.status {
 		margin: 0;

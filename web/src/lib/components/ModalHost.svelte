@@ -34,7 +34,12 @@
 	{#if modal}
 		<div class="modal-content">
 			<h2>{modal.title}</h2>
-			<p class="message">{modal.message}</p>
+			{#if modal.message}
+				<p class="message">{modal.message}</p>
+			{/if}
+			{#if modal.body}
+				{@render modal.body()}
+			{/if}
 			{#if modal.kind === "typed"}
 				<label class="typed-label">
 					<span>Type <strong>{modal.requiredText}</strong> to confirm</span>

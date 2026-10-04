@@ -8,8 +8,10 @@ const open = options => new Promise(resolve => {
 });
 
 // Yes/no question; resolves true on confirm, false on cancel/Esc/backdrop.
-const confirmModal = ({ title, message, confirmLabel = "OK", cancelLabel = "Cancel", danger = false }) =>
-	open({ kind: "confirm", title, message, confirmLabel, cancelLabel, danger });
+// `body` is a snippet of the asker's own, drawn under the message: the
+// choices that go with a yes, bound to the asker's state.
+const confirmModal = ({ title, message, body, confirmLabel = "OK", cancelLabel = "Cancel", danger = false }) =>
+	open({ kind: "confirm", title, message, body, confirmLabel, cancelLabel, danger });
 
 // Destructive confirmation: the confirm button unlocks only after the user
 // types requiredText exactly.

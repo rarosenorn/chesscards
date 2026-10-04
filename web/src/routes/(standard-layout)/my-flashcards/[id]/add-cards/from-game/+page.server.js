@@ -6,6 +6,9 @@ export const load = async ({ locals, parent }) => {
 	if (deck.isMarketplace) error(404);
 	return {
 		pageTitle: "Import from game",
-		chesscomUsername: locals.user?.chesscomUsername ?? ""
+		usernames: {
+			chesscom: locals.user?.chesscomUsername ?? "",
+			lichess: locals.user?.lichessUsername ?? ""
+		}
 	}
 }

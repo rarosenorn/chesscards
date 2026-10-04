@@ -27,9 +27,11 @@ export const importStatus =
 	})
 
 // remembered once a name has turned up games, so the page opens on them
-export const saveChesscomUsername =
-	command("unchecked", async ({ username }) => {
+const USERNAME_COLUMNS = { chesscom: "chesscomUsername", lichess: "lichessUsername" };
+export const saveUsername =
+	command("unchecked", async ({ site, username }) => {
 		const { locals } = getRequestEvent();
-		if (typeof username !== "string" || !/^[A-Za-z0-9_-]{1,50}$/.test(username)) error(400, "Not a Chess.com username");
-		await pool.query('update "user" set "chesscomUsername" = $1 where id = $2', [username, locals.userId]);
+		const column = Object.hasOwn(USERNAME_COLUMNS, site) ? USERNAME_COLUMNS[site] : null;
+		if (!column || typeof username !== "string" || !/^[A-Za-z0-9_-]{1,50}$/.test(username)) error(400, "Not a username");
+		await pool.query(`update "user" set "${column}" = $1 where id = $2`, [username, locals.userId]);
 	})

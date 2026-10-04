@@ -36,7 +36,8 @@ create table "user" (
 	-- the same day's session. The zone it is read in comes from the browser.
 	"rolloverHour" smallint default 4 not null check ("rolloverHour" between 0 and 23),
 	-- whose games "Import from a game" lists; asked for once, on that page
-	"chesscomUsername" text
+	"chesscomUsername" text,
+	"lichessUsername" text
 );
 
 create table "session" (

@@ -2,9 +2,10 @@
 	import { getContext, onMount } from "svelte"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import { stageName } from "$lib/stages.js"
-	import { startImport, saveChesscomUsername } from "./import.remote.js"
+	import { startImport, saveUsername } from "./import.remote.js"
 	import { current, follow, resume } from "./import-state.svelte.js"
 	import { SPEED_ICON_PATHS } from "$lib/lichess-speed-icons.js"
+	import { SITE_LOGOS } from "$lib/game-site-logos.js"
 
 	let { data } = $props();
 	const deck = getContext("deck");
@@ -18,89 +19,11 @@
 		stagesSorted.some(stage => stage.id === stageId) ? stageId : stagesSorted.at(-1)?.id
 	);
 
-	// svelte-ignore state_referenced_locally
-	let username = $state(data.chesscomUsername);
-	// the player the list below belongs to, as Chess.com spells the name
-	let player = $state(null);
-	let games = $state([]);
-	// month archives not loaded yet, newest last
-	let earlier = $state([]);
 	// a busy month is hundreds of games: the list shows the newest, and
-	// "Earlier games" walks back through the rest, into the months before
+	// "Earlier games" walks back through the rest
 	const PAGE = 30;
-	let shown = $state(PAGE);
-	let loading = $state(false);
-	let loadError = $state(null);
-
-	// Chess.com's public API answers a browser directly; asked from a server
-	// it puts a bot check in the way, so the games are fetched from here
-	const API = "https://api.chess.com/pub/player";
-
-	// each "Show games" is a load of its own; one that a later one overtook
-	// leaves the lists alone
-	let latestLoad = 0;
-
-	const loadMonth = async () => {
-		const url = earlier.at(-1);
-		if (!url) return;
-		const load = latestLoad;
-		const response = await fetch(url);
-		if (!response.ok) throw new Error("Chess.com did not answer");
-		const month = (await response.json()).games
-			.filter(game => game.rules === "chess" && game.pgn)
-			.sort((a, b) => b.end_time - a.end_time);
-		if (load !== latestLoad) return;
-		earlier = earlier.slice(0, -1);
-		games = [...games, ...month];
-	}
-
-	const loadGames = async () => {
-		const name = username.trim();
-		if (!name) return;
-		const load = ++latestLoad;
-		loading = true;
-		loadError = null;
-		try {
-			const response = await fetch(`${API}/${encodeURIComponent(name.toLowerCase())}/games/archives`);
-			if (load !== latestLoad) return;
-			if (response.status === 404) throw new Error(`No Chess.com player called "${name}"`);
-			if (!response.ok) throw new Error("Chess.com did not answer");
-			const archives = (await response.json()).archives;
-			if (load !== latestLoad) return;
-			earlier = archives;
-			games = [];
-			shown = PAGE;
-			player = name.toLowerCase();
-			// a month that has only just begun may hold nothing yet
-			while (games.length === 0 && earlier.length > 0 && load === latestLoad) await loadMonth();
-			// remembering the name is a convenience; the games are already here
-			if (name !== data.chesscomUsername) saveChesscomUsername({ username: name }).catch(() => {});
-		} catch (err) {
-			if (load !== latestLoad) return;
-			player = null;
-			games = [];
-			loadError = err.message;
-		} finally {
-			if (load === latestLoad) loading = false;
-		}
-	}
-
-	const showEarlier = async () => {
-		shown += PAGE;
-		if (shown <= games.length || earlier.length === 0) return;
-		loading = true;
-		try { await loadMonth(); }
-		catch (err) { loadError = err.message; }
-		finally { loading = false; }
-	}
-
-	onMount(() => {
-		resume(deck);
-		if (username) loadGames();
-	});
 
 	const plural = (n, word, many = word + "s") => `${n} ${n === 1 ? word : many}`;
-	const DRAWS = ["agreed", "repetition", "stalemate", "insufficient", "50move", "timevsinsufficient"];
 	// "900+10" is "15 + 10", "600" is "10 min", "1/259200" (daily) is "3 days"
 	const timeControl = raw => {
 		const daily = /^1\/(\d+)$/.exec(raw);
@@ -109,16 +32,176 @@
 		const clock = base >= 60 ? String(+(base / 60).toFixed(1)) : `${base} sec`;
 		return increment ? `${clock} + ${increment}` : base >= 60 ? `${clock} min` : clock;
 	}
-	const rowOf = game => {
+
+	// The two sites a game can be fetched from. Both answer a browser
+	// directly (Chess.com puts a bot check in a server's way), so the games
+	// are fetched from here. A site's `open` looks the player up and answers
+	// with the way to their games: a function that fetches the next batch,
+	// newest first, and says whether older ones remain. A game of either
+	// site is made into the one shape the list shows: { url, pgn, color,
+	// white, black, speed, time, result, ended }, `color` being the
+	// player's.
+	const CHESSCOM = "https://api.chess.com/pub/player";
+	const CHESSCOM_DRAWS = ["agreed", "repetition", "stalemate", "insufficient", "50move", "timevsinsufficient"];
+	const fromChesscom = (game, player) => {
 		const color = game.white.username.toLowerCase() === player ? "w" : "b";
-		const me = color === "w" ? game.white : game.black;
+		const mine = (color === "w" ? game.white : game.black).result;
 		return {
-			color,
+			url: game.url, pgn: game.pgn, color,
+			white: { name: game.white.username, rating: game.white.rating },
+			black: { name: game.black.username, rating: game.black.rating },
+			speed: game.time_class,
 			time: timeControl(game.time_control),
-			result: me.result === "win" ? "Won" : DRAWS.includes(me.result) ? "Draw" : "Lost",
-			date: new Date(game.end_time * 1000).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+			result: mine === "win" ? "Won" : CHESSCOM_DRAWS.includes(mine) ? "Draw" : "Lost",
+			ended: game.end_time * 1000
 		};
 	}
+	const openChesscom = async name => {
+		const player = name.toLowerCase();
+		const response = await fetch(`${CHESSCOM}/${encodeURIComponent(player)}/games/archives`);
+		if (response.status === 404) throw new Error(`No Chess.com player called "${name}"`);
+		if (!response.ok) throw new Error("Chess.com did not answer");
+		// a month each, newest last
+		const months = (await response.json()).archives;
+		return async () => {
+			if (months.length === 0) return { games: [], more: false };
+			const response = await fetch(months.at(-1));
+			if (!response.ok) throw new Error("Chess.com did not answer");
+			const month = (await response.json()).games
+				.filter(game => game.rules === "chess" && game.pgn)
+				.sort((a, b) => b.end_time - a.end_time);
+			months.pop();
+			return { games: month.map(game => fromChesscom(game, player)), more: months.length > 0 };
+		};
+	}
+
+	const LICHESS = "https://lichess.org/api/games/user";
+	const fromLichess = (game, player) => {
+		const side = color => {
+			const who = game.players[color];
+			return {
+				name: who.user?.name ?? (who.aiLevel ? `Stockfish level ${who.aiLevel}` : "Anonymous"),
+				rating: who.rating ?? null
+			};
+		};
+		const color = game.players.white.user?.id === player ? "w" : "b";
+		return {
+			url: `https://lichess.org/${game.id}`, pgn: game.pgn, color,
+			white: side("white"), black: side("black"),
+			speed: { ultraBullet: "bullet", correspondence: "daily" }[game.speed] ?? game.speed,
+			time: game.clock ? timeControl(`${game.clock.initial}+${game.clock.increment}`)
+				: game.daysPerTurn ? plural(game.daysPerTurn, "day") : "",
+			result: !game.winner ? "Draw" : (game.winner === "white") === (color === "w") ? "Won" : "Lost",
+			ended: game.lastMoveAt
+		};
+	}
+	// Lichess has no look-up of its own to make: a name it does not know
+	// fails the first batch
+	const openLichess = async name => {
+		const player = name.toLowerCase();
+		// the next page ends where the last one's oldest game began
+		let until = null;
+		return async () => {
+			const query = new URLSearchParams({
+				max: PAGE, pgnInJson: true, finished: true,
+				perfType: "ultraBullet,bullet,blitz,rapid,classical,correspondence"
+			});
+			if (until != null) query.set("until", until);
+			const response = await fetch(`${LICHESS}/${encodeURIComponent(name)}?${query}`, { headers: { Accept: "application/x-ndjson" } });
+			if (response.status === 404) throw new Error(`No Lichess player called "${name}"`);
+			if (response.status === 429) throw new Error("Lichess asks for a minute's wait before the next fetch");
+			if (!response.ok) throw new Error("Lichess did not answer");
+			const page = (await response.text()).split("\n").filter(Boolean).map(line => JSON.parse(line));
+			if (page.length > 0) until = page.at(-1).createdAt - 1;
+			return {
+				games: page.filter(game => game.variant === "standard" && game.pgn).map(game => fromLichess(game, player)),
+				more: page.length === PAGE
+			};
+		};
+	}
+
+	const SITES = {
+		chesscom: { name: "Chess.com", open: openChesscom },
+		lichess: { name: "Lichess", open: openLichess }
+	};
+	// the site fetched from last opens the page next time, in this browser
+	const LAST_SITE = "from-game-site";
+
+	// svelte-ignore state_referenced_locally
+	let usernames = $state({ ...data.usernames });
+	// the site the list below was fetched from: a fetch from the other one
+	// replaces it
+	let site = $state(null);
+	let games = $state([]);
+	// the fetched site's way to its next batch, and whether there is one
+	let nextBatch = null;
+	let hasEarlier = $state(false);
+	let shown = $state(PAGE);
+	let loading = $state(false);
+	let loadError = $state(null);
+
+	// each Fetch is a load of its own; one that a later one overtook leaves
+	// the list alone
+	let latestLoad = 0;
+
+	const loadGames = async key => {
+		const name = usernames[key].trim();
+		if (!name) return;
+		const load = ++latestLoad;
+		loading = true;
+		loadError = null;
+		choosing = null;
+		try {
+			const next = await SITES[key].open(name);
+			let found = [], more = true;
+			// a month that has only just begun may hold nothing yet
+			while (found.length === 0 && more && load === latestLoad) ({ games: found, more } = await next());
+			if (load !== latestLoad) return;
+			site = key;
+			games = found;
+			nextBatch = next;
+			hasEarlier = more;
+			shown = PAGE;
+			// remembering is a convenience; the games are already here
+			try { localStorage.setItem(LAST_SITE, key); } catch { /* storage is off */ }
+			if (name !== data.usernames[key]) saveUsername({ site: key, username: name }).catch(() => {});
+		} catch (err) {
+			if (load !== latestLoad) return;
+			site = null;
+			games = [];
+			hasEarlier = false;
+			loadError = err.message;
+		} finally {
+			if (load === latestLoad) loading = false;
+		}
+	}
+
+	const showEarlier = async () => {
+		shown += PAGE;
+		if (shown <= games.length || !hasEarlier) return;
+		const load = latestLoad;
+		loading = true;
+		try {
+			const { games: found, more } = await nextBatch();
+			if (load !== latestLoad) return;
+			games = [...games, ...found];
+			hasEarlier = more;
+		} catch (err) {
+			if (load === latestLoad) loadError = err.message;
+		} finally {
+			if (load === latestLoad) loading = false;
+		}
+	}
+
+	onMount(() => {
+		resume(deck);
+		let last = null;
+		try { last = localStorage.getItem(LAST_SITE); } catch { /* storage is off */ }
+		const first = [last, ...Object.keys(SITES)].find(key => Object.hasOwn(SITES, key ?? "") && usernames[key]);
+		if (first) loadGames(first);
+	});
+
+	const dateOf = game => new Date(game.ended).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
 	// the import under way or the last one, when it is this deck's
 	let job = $derived(current.job?.deckId === deck.id ? current.job : null);
@@ -127,14 +210,22 @@
 
 	const messageOf = err => err?.body?.message ?? err?.message ?? "Something went wrong";
 
+	// the game whose options are open under its row, by url: a click on a
+	// game asks what to make of it before anything is made
+	let choosing = $state(null);
+	const closeChooser = event => {
+		if (choosing && !event.target.closest?.(".game, .chooser")) choosing = null;
+	}
+
 	const importGame = async game => {
+		choosing = null;
 		startError = null;
 		try {
 			const { jobId } = await startImport({
 				deckId: deck.id,
 				stageId: deck.chapters ? validStageId : null,
 				pgn: game.pgn,
-				color: rowOf(game).color,
+				color: game.color,
 				kinds: KINDS.map(([kind]) => kind).filter(kind => kinds[kind])
 			});
 			follow(deck, jobId, game.url);
@@ -158,44 +249,48 @@
 	});
 </script>
 
-{#snippet speed(timeClass)}
-	<svg class="speed speed-{timeClass}" viewBox="0 0 512 512" fill="currentColor" aria-label={timeClass}>
-		<path transform="translate(0 512) scale(1 -1)" d={SPEED_ICON_PATHS[timeClass] ?? SPEED_ICON_PATHS.daily} />
-	</svg>
+<svelte:window onclick={closeChooser} onkeydown={e => { if (e.key === "Escape") choosing = null; }} />
+
+<!-- a game's speed, drawn the way the site it came from draws it -->
+{#snippet speed(kind)}
+	{#if site === "lichess"}
+		<svg class="speed speed-{kind}" viewBox="0 0 512 512" fill="currentColor" aria-label={kind}>
+			<path transform="translate(0 512) scale(1 -1)" d={SPEED_ICON_PATHS[kind] ?? SPEED_ICON_PATHS.daily} />
+		</svg>
+	{:else if kind === "rapid"}
+		<svg class="speed speed-rapid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-label="rapid">
+			<circle cx="12" cy="14" r="7.5" /><path d="M9.5 2.5h5M12 2.5v4M12 14l3-3.5" />
+		</svg>
+	{:else if kind === "blitz"}
+		<svg class="speed speed-blitz" viewBox="0 0 24 24" fill="currentColor" aria-label="blitz">
+			<path d="M14 1.5 4.5 13.5h6L9 22.5l10.5-13h-6.5z" />
+		</svg>
+	{:else if kind === "bullet"}
+		<svg class="speed speed-bullet" viewBox="0 0 24 24" fill="currentColor" aria-label="bullet">
+			<path d="M2.5 8h10.5c4.5 0 7.5 2 8.5 4-1 2-4 4-8.5 4H2.5z" />
+		</svg>
+	{:else}
+		<svg class="speed speed-daily" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-label="daily">
+			<circle cx="12" cy="12" r="4.5" stroke="none" /><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" />
+		</svg>
+	{/if}
 {/snippet}
 
 <StandardLayout>
 	<section>
-		<h3>Your games</h3>
-		<p class="section-note">
-			Pick a game and its blunders, mistakes and inaccuracies become cards in this deck.
-		</p>
-		<form class="username-form" onsubmit={e => { e.preventDefault(); loadGames(); }}>
-			<input bind:value={username} placeholder="Chess.com username" autocomplete="off" />
-			<button class="std-btn">Show games</button>
-		</form>
+		<h3>Enter username to fetch games</h3>
+		<div class="sites">
+			{#each Object.entries(SITES) as [key, { name }] (key)}
+				<form class="username-form" onsubmit={e => { e.preventDefault(); loadGames(key); }}>
+					<svg class="logo" viewBox="0 0 24 24" fill={SITE_LOGOS[key].color} aria-hidden="true"><path d={SITE_LOGOS[key].path} /></svg>
+					<input bind:value={usernames[key]} placeholder="username" aria-label="{name} username" autocomplete="off" />
+					<button class="std-btn">Fetch</button>
+				</form>
+			{/each}
+		</div>
 		{#if loadError}
 			<p class="status status-failed">{loadError}</p>
 		{/if}
-	</section>
-
-	<section>
-		<h3>Make cards of</h3>
-		<div class="options">
-			{#each KINDS as [kind, label]}
-				<label><input type="checkbox" bind:checked={kinds[kind]} /> {label}</label>
-			{/each}
-			{#if deck.chapters}
-				<label class="chapter">
-					Chapter
-					<select value={validStageId} onchange={e => stageId = e.currentTarget.value}>
-						{#each stagesSorted as stage (stage.id)}
-							<option value={stage.id}>{stageName(stage)}</option>
-						{/each}
-					</select>
-				</label>
-			{/if}
-		</div>
 	</section>
 
 	{#if startError}
@@ -217,32 +312,56 @@
 	</section>
 	{/if}
 
-	{#if player}
+	{#if site}
 	<section>
 		{#if games.length === 0 && !loading}
 			<p class="section-note">No games yet.</p>
+		{:else}
+			<h3>Choose game to make cards from blunders, mistakes and inaccuracies</h3>
 		{/if}
 		<ul class="games">
 			{#each games.slice(0, shown) as game (game.url)}
-				{@const row = rowOf(game)}
 				<li>
-					<button class="game" class:current={job?.url === game.url} onclick={() => importGame(game)}>
+					<button
+						class="game"
+						class:current={job?.url === game.url || choosing === game.url}
+						aria-expanded={choosing === game.url}
+						onclick={() => choosing = choosing === game.url ? null : game.url}
+					>
 						<span class="time">
-							{@render speed(game.time_class)}
-							<span class="time-control">{row.time}</span>
+							{@render speed(game.speed)}
+							<span class="time-control">{game.time}</span>
 						</span>
 						<span class="players">
 							{#each [["w", game.white], ["b", game.black]] as [side, who]}
-								<span class="player"><span class="side side-{side}"></span><span class="name">{who.username}</span> <span class="rating">({who.rating})</span></span>
+								<span class="player"><span class="side side-{side}"></span><span class="name">{who.name}</span>{#if who.rating != null}<span class="rating">({who.rating})</span>{/if}</span>
 							{/each}
 						</span>
-						<span class="result result-{row.result.toLowerCase()}">{row.result}</span>
-						<span class="date">{row.date}</span>
+						<span class="result result-{game.result.toLowerCase()}">{game.result}</span>
+						<span class="date">{dateOf(game)}</span>
 					</button>
+					{#if choosing === game.url}
+						<div class="chooser">
+							{#each KINDS as [kind, label]}
+								<label><input type="checkbox" bind:checked={kinds[kind]} /> {label}</label>
+							{/each}
+							{#if deck.chapters}
+								<label class="chapter">
+									Chapter
+									<select value={validStageId} onchange={e => stageId = e.currentTarget.value}>
+										{#each stagesSorted as stage (stage.id)}
+											<option value={stage.id}>{stageName(stage)}</option>
+										{/each}
+									</select>
+								</label>
+							{/if}
+							<button class="std-btn" onclick={() => importGame(game)}>Make cards</button>
+						</div>
+					{/if}
 				</li>
 			{/each}
 		</ul>
-		{#if shown < games.length || earlier.length > 0}
+		{#if shown < games.length || hasEarlier}
 			<button class="std-btn" onclick={showEarlier}>{loading ? "Loading" : "Earlier games"}</button>
 		{/if}
 	</section>
@@ -272,12 +391,23 @@
 		font-size: 0.9rem;
 		color: rgba(0, 0, 0, 0.6);
 	}
+	.sites {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px 32px;
+	}
 	.username-form {
 		display: flex;
+		align-items: center;
 		gap: 8px;
 	}
+	.logo {
+		flex: none;
+		width: 22px;
+		height: 22px;
+	}
 	.username-form input {
-		width: 280px;
+		width: 200px;
 		border: 1px solid rgba(0, 0, 0, 0.25);
 		border-radius: 4px;
 		padding: 6px 8px;
@@ -287,20 +417,37 @@
 		padding: 6px 12px;
 		border-radius: 4px;
 	}
-	.options {
+	/* a game's options, hung under its row at the players' column: the list
+	   stays as it is underneath, and a row near the bottom lengthens the
+	   page rather than being cut */
+	.games li {
+		position: relative;
+	}
+	.chooser {
+		position: absolute;
+		top: calc(100% - 4px);
+		left: 82px;
+		z-index: 10;
 		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 18px;
+		flex-direction: column;
+		align-items: start;
+		gap: 8px;
+		padding: 12px 14px;
+		background-color: white;
+		border: 1px solid #ccc;
+		border-radius: 5px;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
 		font-size: 0.95rem;
 	}
-	.options label {
+	.chooser label {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 	}
-	.options .chapter {
-		margin-left: 12px;
+	.chooser .std-btn {
+		margin-top: 4px;
+		padding: 6px 12px;
+		border-radius: 4px;
 	}
 	.status {
 		margin: 0;
@@ -368,7 +515,8 @@
 		height: 22px;
 		overflow: visible;
 	}
-	.speed-rapid {
+	.speed-rapid,
+	.speed-classical {
 		color: #6c9d2a;
 	}
 	.speed-blitz,
@@ -388,6 +536,9 @@
 		display: flex;
 		align-items: center;
 		gap: 6px;
+	}
+	.rating {
+		white-space: nowrap;
 	}
 	.name {
 		font-weight: 600;

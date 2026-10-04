@@ -1045,7 +1045,7 @@
 			></span>
 		{/if}
 		{#if normalized.puzzle}
-			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone}<svg class="done-check" viewBox="1.8 3.3 12.3 9.4" aria-hidden="true"><path d="M2.05 8 C1.9 7.1 2.5 6.75 3 6.75 C3.6 6.75 4 7.15 4.2 7.75 L4.85 9.7 C8 7 11.6 4.3 13.95 3.5 L5.9 11.7 C5.3 12.3 4.6 12.55 4 12.5 C3.6 12.5 3.4 12.3 3.3 12 Z" fill="currentColor" /></svg>{/if}Puzzle</span>
+			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone === "late"}<svg class="done-cross" viewBox="0.4 0.6 9.1 9.1" aria-hidden="true"><path d="M2.4 1.0 C4.6 2.4 7.6 5.6 9.4 9.0 C7.0 6.6 4.0 4.6 1.2 2.9 C0.5 2.4 0.4 1.5 1.0 1.0 C1.4 0.6 2.0 0.7 2.4 1.0 Z M0.9 7.6 C2.6 5.2 5.6 2.4 9.5 0.6 C6.6 3.0 4.2 6.0 2.6 9.0 C2.2 9.6 1.3 9.7 0.8 9.1 C0.4 8.6 0.5 8.0 0.9 7.6 Z" fill="currentColor" /></svg>{:else if puzzleDone}<svg class="done-check" viewBox="1.8 3.3 12.3 9.4" aria-hidden="true"><path d="M2.05 8 C1.9 7.1 2.5 6.75 3 6.75 C3.6 6.75 4 7.15 4.2 7.75 L4.85 9.7 C8 7 11.6 4.3 13.95 3.5 L5.9 11.7 C5.3 12.3 4.6 12.55 4 12.5 C3.6 12.5 3.4 12.3 3.3 12 Z" fill="currentColor" /></svg>{/if}Puzzle</span>
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse</a>
@@ -1224,6 +1224,13 @@
 		height: 0.8em;
 		flex: none;
 	}
+	/* its cross, for a puzzle with a miss in it: two strokes of the same
+	   brush, each from a round head to a point */
+	.done-cross {
+		width: 0.8em;
+		height: 0.8em;
+		flex: none;
+	}
 	.puzzle-tag.done {
 		--tag-colour: #2e9e5b;
 	}
@@ -1375,8 +1382,8 @@
 		flex-wrap: nowrap;
 		width: max-content;
 	}
-	/* a puzzle's moves as the player found them, a check mark before each:
-	   green found at once, red after a miss. On the move the board stands
+	/* a puzzle's moves as the player found them, a mark before each: a green
+	   check found at once, a red cross after a miss. On the move the board stands
 	   on they keep those colours, in the lighter shades that read on its
 	   blue. */
 	.move-btn.found::before,
@@ -1387,6 +1394,9 @@
 	}
 	.move-btn.found {
 		color: #1b7a3d;
+	}
+	.move-btn.found-late::before {
+		content: "✗";
 	}
 	.move-btn.found-late {
 		color: #b3261e;

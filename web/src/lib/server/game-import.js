@@ -24,12 +24,17 @@ const KEEP_FINISHED = 10 * 60_000;
 // on globalThis, so a dev-server reload of this module keeps the line
 const state = globalThis.__gameImports ??= { jobs: new Map(), queue: [], running: false };
 
+// A job its owner called off. It stops where it next looks up: between two
+// searches of the engine, and at once while the reasons are being written.
+class Cancelled extends Error {}
+const check = job => { if (job.cancelled) throw new Cancelled(); }
+
 const run = async job => {
 	job.phase = "analysing";
 	const skip = job.game.finished ? [job.game.fens.length - 1] : [];
 	const evals = await analysePositions(job.game.fens, {
 		skip,
-		onProgress: (done, total) => { job.done = done; job.total = total; }
+		onProgress: (done, total) => { check(job); job.done = done; job.total = total; }
 	});
 	const found = findMistakes(job.game, evals, job.color, job.kinds);
 
@@ -44,16 +49,23 @@ const run = async job => {
 	const reasons = new Array(found.length);
 	const writing = [];
 	for (const [index, mistake] of found.entries()) {
+		check(job);
 		const asks = triesToCheck(mistake);
-		mistakes[index] = withTries(mistake, asks, await analyseMoves(asks));
+		mistakes[index] = withTries(mistake, asks, await analyseMoves(asks, { onProgress: () => check(job) }));
 		writing.push((async () => {
 			// a missed mate is its own reason; the card writes it out itself
 			reasons[index] = mistake.missedMate ? null : await explainMistake(job.game, mistakes[index]);
 			job.done += 1;
 		})());
 	}
-	await Promise.all(writing);
+	// the writing is not waited out by a job called off: what is still being
+	// written is left to finish on its own, and comes to nothing
+	const calledOff = new Promise((_, reject) => { job.abort = () => reject(new Cancelled()); });
+	calledOff.catch(() => {});
+	await Promise.race([Promise.all(writing), calledOff]);
+	check(job);
 
+	// past this the cards are on their way in, and the job is not stopped
 	job.phase = "saving";
 	const problems = [];
 	const { buildCard } = cardBuilder(problem => problems.push(problem));
@@ -74,9 +86,12 @@ const work = async () => {
 			await run(job);
 			job.phase = "done";
 		} catch (error) {
-			console.error("game import:", error);
-			job.phase = "failed";
-			job.error = error.message;
+			if (error instanceof Cancelled) job.phase = "cancelled";
+			else {
+				console.error("game import:", error);
+				job.phase = "failed";
+				job.error = error.message;
+			}
 		}
 		// the game itself is the bulk of a job, and nothing asks for it again
 		job.game = null;
@@ -85,10 +100,10 @@ const work = async () => {
 	state.running = false;
 }
 
-const isActive = job => !["done", "failed"].includes(job.phase);
+const isActive = job => !job.cancelled && !["done", "failed", "cancelled"].includes(job.phase);
 
 // Returns the job's id. Throws an Error whose message is for the user.
-const start = async (userId, { deckId, stageId, pgn, color, kinds }) => {
+const start = async (userId, { deckId, stageId, pgn, color, kinds, url }) => {
 	if (!isInstalled()) throw new Error(`Stockfish is not installed on the server (${BINARY})`);
 	const UUID = /^[0-9a-f-]{36}$/i;
 	if (!UUID.test(deckId ?? "") || !await decks.userIdOwnsDeckId(userId, deckId)) throw new Error("Unauthorized");
@@ -106,6 +121,8 @@ const start = async (userId, { deckId, stageId, pgn, color, kinds }) => {
 
 	const job = {
 		id: crypto.randomUUID(), userId, deckId, stageId: stageId || null, color, kinds: wanted, game,
+		// where the game came from, for the page to mark it in its list
+		url: typeof url === "string" && url.length <= 300 ? url : null,
 		phase: "queued", done: 0, total: 0, result: null, error: null
 	};
 	state.jobs.set(job.id, job);
@@ -125,4 +142,28 @@ const status = (userId, jobId) => {
 	};
 }
 
-export { start, status }
+// Calls the user's job off: out of the line if it is still waiting, stopped
+// if it is running. False when there is nothing to stop any more — it is
+// done, or its cards are already going into the deck.
+const cancel = (userId, jobId) => {
+	const job = state.jobs.get(jobId);
+	if (!job || job.userId !== userId || !isActive(job) || job.phase === "saving") return false;
+	job.cancelled = true;
+	const waiting = state.queue.indexOf(job);
+	if (waiting >= 0) {
+		state.queue.splice(waiting, 1);
+		job.phase = "cancelled";
+		job.game = null;
+		state.jobs.delete(job.id);
+	} else job.abort?.();
+	return true;
+}
+
+// The user's job in the line, if there is one: a page opened afresh has no
+// other way to know of it, and the job runs whether or not a page watches.
+const active = userId => {
+	const job = [...state.jobs.values()].find(job => job.userId === userId && isActive(job));
+	return job ? { jobId: job.id, deckId: job.deckId, url: job.url } : null;
+}
+
+export { start, status, cancel, active }

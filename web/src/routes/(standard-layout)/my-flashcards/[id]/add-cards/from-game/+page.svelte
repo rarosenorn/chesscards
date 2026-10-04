@@ -3,7 +3,7 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import { stageName } from "$lib/stages.js"
 	import { startImport, saveUsername } from "./import.remote.js"
-	import { current, follow, resume } from "./import-state.svelte.js"
+	import { current, follow, resume, cancel } from "./import-state.svelte.js"
 	import { SPEED_ICON_PATHS } from "$lib/lichess-speed-icons.js"
 	import { SITE_LOGOS } from "$lib/game-site-logos.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
@@ -20,8 +20,10 @@
 		stagesSorted.some(stage => stage.id === stageId) ? stageId : stagesSorted.at(-1)?.id
 	);
 
-	// a busy month is hundreds of games: the list shows the newest, and
-	// "Earlier games" walks back through the rest
+	// a busy month is hundreds of games: the list opens on the newest few —
+	// the game just played is nearly always the one wanted — and "Load more"
+	// walks back through the rest, a page at a time
+	const FIRST = 3;
 	const PAGE = 30;
 
 	const plural = (n, word, many = word + "s") => `${n} ${n === 1 ? word : many}`;
@@ -141,7 +143,7 @@
 	// the fetched site's way to its next batch, and whether there is one
 	let nextBatch = null;
 	let hasEarlier = $state(false);
-	let shown = $state(PAGE);
+	let shown = $state(FIRST);
 	let loading = $state(false);
 	// the site a Fetch is under way for: its button turns while it is
 	let fetching = $state(null);
@@ -168,7 +170,7 @@
 			games = found;
 			nextBatch = next;
 			hasEarlier = more;
-			shown = PAGE;
+			shown = FIRST;
 			// remembering is a convenience; the games are already here
 			if (name !== data.usernames[key]) saveUsername({ site: key, username: name }).catch(() => {});
 		} catch (err) {
@@ -201,7 +203,7 @@
 
 	// no games until they are asked for: the page opens with the names filled
 	// in and nothing fetched
-	onMount(() => resume(deck));
+	onMount(() => resume(deck, data.activeImport));
 
 	const dateOf = game => new Date(game.ended).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
@@ -231,7 +233,8 @@
 				stageId: deck.chapters ? validStageId : null,
 				pgn: game.pgn,
 				color: game.color,
-				kinds: KINDS.map(([kind]) => kind).filter(kind => kinds[kind])
+				kinds: KINDS.map(([kind]) => kind).filter(kind => kinds[kind]),
+				url: game.url
 			});
 			follow(deck, jobId, game.url);
 		} catch (err) {
@@ -328,7 +331,10 @@
 	<section>
 		{#if progress}
 			<p class="status">{progress}</p>
-			<progress value={job.total ? job.done : undefined} max={job.total || undefined}></progress>
+			<div class="progress-row">
+				<progress value={job.total ? job.done : undefined} max={job.total || undefined}></progress>
+				{#if job.phase !== "saving"}<button class="std-btn" onclick={cancel}>Cancel</button>{/if}
+			</div>
 		{:else if job.phase === "failed"}
 			<p class="status status-failed">{job.error}</p>
 		{:else}
@@ -364,7 +370,7 @@
 			{/each}
 		</ul>
 		{#if shown < games.length || hasEarlier}
-			<button class="std-btn" onclick={showEarlier}>{loading ? "Loading" : "Earlier games"}</button>
+			<button class="std-btn" onclick={showEarlier}>{loading ? "Loading" : "Load more"}</button>
 		{/if}
 	</section>
 	{/if}
@@ -419,6 +425,7 @@
 		padding: 6px 8px;
 	}
 	.username-form .std-btn,
+	.progress-row .std-btn,
 	section > .std-btn {
 		padding: 6px 12px;
 		border-radius: 4px;
@@ -470,6 +477,11 @@
 	}
 	.status-done {
 		color: #1b6e3c;
+	}
+	.progress-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
 	}
 	progress {
 		width: 100%;

@@ -6,10 +6,10 @@ import * as gameImport from "$lib/server/game-import.js"
 
 // the game goes into the line; the page asks after it with importStatus
 export const startImport =
-	command("unchecked", async ({ deckId, stageId, pgn, color, kinds }) => {
+	command("unchecked", async ({ deckId, stageId, pgn, color, kinds, url }) => {
 		const { locals } = getRequestEvent();
 		try {
-			return { jobId: await gameImport.start(locals.userId, { deckId, stageId, pgn, color, kinds }) };
+			return { jobId: await gameImport.start(locals.userId, { deckId, stageId, pgn, color, kinds, url }) };
 		} catch (err) {
 			error(400, err.message);
 		}
@@ -24,6 +24,12 @@ export const importStatus =
 		if (!status) error(404, "The import is gone: the server restarted, or it finished a while ago");
 		if (status.phase !== "done") return status;
 		return { ...status, deck: await decks.getById(locals.userId, deckId) };
+	})
+
+export const cancelImport =
+	command("unchecked", async ({ jobId }) => {
+		const { locals } = getRequestEvent();
+		return { cancelled: gameImport.cancel(locals.userId, jobId) };
 	})
 
 // remembered once a name has turned up games, so the page opens on them

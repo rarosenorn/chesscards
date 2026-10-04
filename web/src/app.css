@@ -353,9 +353,9 @@ body.piece-grabbing * {
 	width: fit-content;
 	margin-inline: auto;
 }
-/* ...but only while the whole block, up to the next board, fits on a line
-   per paragraph: once any of it wraps, every line reads from the column's
-   edge (text-block-wrap.js) */
+/* ...but only while nothing on the side reads from the edge: once a line
+   anywhere on it wraps, or it has a list, every paragraph on the side reads
+   from the column's edge (text-block-wrap.js) */
 .flashcard .text-block.wraps > p {
 	width: auto;
 	margin-inline: 0;

@@ -536,7 +536,7 @@
 						board={chessboard}
 						{revealed}
 						{onBack}
-						analysis={revealed}
+						analysis
 						backDots={false}
 						authorView={marksBack}
 						minWidth="280px"

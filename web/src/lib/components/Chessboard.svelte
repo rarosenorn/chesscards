@@ -1045,7 +1045,7 @@
 			<span class="puzzle-tag" class:done={puzzleDone === "clean"} class:done-late={puzzleDone === "late"}>{#if puzzleDone}<svg class="done-check" viewBox="1.8 3.3 12.3 9.4" aria-hidden="true"><path d="M2.05 8 C1.9 7.1 2.5 6.75 3 6.75 C3.6 6.75 4 7.15 4.2 7.75 L4.85 9.7 C8 7 11.6 4.3 13.95 3.5 L5.9 11.7 C5.3 12.3 4.6 12.55 4 12.5 C3.6 12.5 3.4 12.3 3.3 12 Z" fill="currentColor" /></svg>{/if}Puzzle</span>
 		{/if}
 		{#if analysis}
-			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyze</a>
+			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse</a>
 		{/if}
 	</div>
 	<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- keyboard stepping lives on the focusable wrapper -->

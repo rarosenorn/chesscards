@@ -392,6 +392,7 @@
 		margin: 0;
 		padding-left: 6px;
 		font-size: 1.05rem;
+		font-weight: 400;
 	}
 	.section-note {
 		margin: 0;

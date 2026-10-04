@@ -132,9 +132,6 @@
 		chesscom: { name: "Chess.com", open: openChesscom },
 		lichess: { name: "Lichess", open: openLichess }
 	};
-	// the site fetched from last opens the page next time, in this browser
-	const LAST_SITE = "from-game-site";
-
 	// svelte-ignore state_referenced_locally
 	let usernames = $state({ ...data.usernames });
 	// the site the list below was fetched from: a fetch from the other one
@@ -170,7 +167,6 @@
 			hasEarlier = more;
 			shown = PAGE;
 			// remembering is a convenience; the games are already here
-			try { localStorage.setItem(LAST_SITE, key); } catch { /* storage is off */ }
 			if (name !== data.usernames[key]) saveUsername({ site: key, username: name }).catch(() => {});
 		} catch (err) {
 			if (load !== latestLoad) return;
@@ -200,13 +196,9 @@
 		}
 	}
 
-	onMount(() => {
-		resume(deck);
-		let last = null;
-		try { last = localStorage.getItem(LAST_SITE); } catch { /* storage is off */ }
-		const first = [last, ...Object.keys(SITES)].find(key => Object.hasOwn(SITES, key ?? "") && usernames[key]);
-		if (first) loadGames(first);
-	});
+	// no games until they are asked for: the page opens with the names filled
+	// in and nothing fetched
+	onMount(() => resume(deck));
 
 	const dateOf = game => new Date(game.ended).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 

@@ -1217,23 +1217,25 @@
 	/* out at the header's far end, quiet until pointed at: it leaves the card
 	   rather than acting on it */
 	/* says the board is one to be played, wherever the board is shown */
+	/* a filled tag: grey while the puzzle is still to be played, red with a
+	   cross from the first wrong move on, green with the check when the line
+	   is played through without one */
 	.puzzle-tag {
-		font-size: 0.8rem;
-		line-height: 1.3;
-		color: rgba(0, 0, 0, 0.55);
-	}
-	/* the tag fills: red with a cross from the first wrong move on, green
-	   with the check when the line is played through without one */
-	.puzzle-tag.done,
-	.puzzle-tag.missed {
+		--tag-colour: #757575;
 		display: inline-flex;
 		align-items: center;
 		gap: 5px;
-		/* the same room either side of what it holds */
-		padding: 0 7px 0 6px;
+		font-size: 0.8rem;
+		line-height: 1.3;
+		padding: 0 7px;
 		border-radius: 3px;
 		background-color: var(--tag-colour);
 		color: white;
+	}
+	.puzzle-tag.done,
+	.puzzle-tag.missed {
+		/* the same room either side of what it holds */
+		padding: 0 7px 0 6px;
 	}
 	/* drawn to its own edges: the box around it is the mark and nothing
 	   more, so the tag's padding is what stands either side of it */

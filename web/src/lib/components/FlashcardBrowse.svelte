@@ -64,6 +64,7 @@
 						board={chessboard}
 						{authorView}
 						{onBack}
+						playable={!onBack}
 						analysis
 						minWidth="280px"
 						number={showBoardNumbers ? n : null}

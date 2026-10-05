@@ -37,9 +37,10 @@
 	// `onSolved` makes a board marked `puzzle` one to be played: until the
 	// reveal, the back moves of the side to move are made on the board, the
 	// other side's replies play themselves, and onSolved is called when the
-	// line is through. Without it (browse, the editors) such a board is an
-	// ordinary one.
-	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, analysis = false, backDots = true, onSolutionFromChange = null, aside = null, onPosition = null, lines = null, onSolved = null, children } = $props();
+	// line is through. Without it (the editors) such a board is an ordinary
+	// one. `playable` has it played with the answer on show (browse): the
+	// line is all there, and the moves can be made on the board all the same.
+	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, analysis = false, backDots = true, onSolutionFromChange = null, aside = null, onPosition = null, lines = null, onSolved = null, playable = false, children } = $props();
 
 	const boardPrefs = getContext("boardPrefs") ?? (() => DEFAULT_BOARD_PREFS);
 
@@ -345,15 +346,17 @@
 	// (the card turned before it was played) is a plain move.
 	const foundAs = index => finds[index] ?? null;
 	let puzzling = $derived(
-		!!normalized.puzzle && !!onSolved && !revealed && !authorView && !inEditor
+		!!normalized.puzzle && !inEditor && (playable || (!!onSolved && !revealed && !authorView))
 			&& solutionFrom != null && solutionFrom < replay.moveInfos.length
 	);
 	let solver = $derived(solutionFrom != null ? replay.fens[solutionFrom]?.split(" ")[1] : null);
-	// the board is waiting for the player's move: at the end of what the line
-	// shows, with more to come, and theirs to make
+	// the board is waiting for the player's move: on the position the next
+	// move to find is made from, with the line not yet through, and theirs
+	// to make
+	let frontier = $derived(solutionFrom + solved);
 	let awaiting = $derived(
-		puzzling && asidePly == null && displayIndex === visiblePlies
-			&& visiblePlies < replay.moveInfos.length
+		puzzling && !puzzleDone && asidePly == null && displayIndex === frontier
+			&& frontier < replay.moveInfos.length
 			&& positions[displayIndex]?.split(" ")[1] === solver
 	);
 	// at once — but not inside the board's own handling of the move that

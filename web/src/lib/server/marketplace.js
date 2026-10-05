@@ -311,7 +311,7 @@ const getInstanceById = async (userId, instanceId) => {
 		left join marketplace_cards mc on mc.id = ci.marketplace_card_id
 		left join marketplace_stages ms on ms.id = mc.stage_id
 		where i.user_id = $1 and i.id = $2
-		group by i.id, md.name, md.chapters`,
+		group by i.id, md.id, md.name, md.chapters`,
 		[userId, instanceId]
 	);
 

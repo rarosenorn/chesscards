@@ -179,7 +179,11 @@
 					{#if data.reviews}
 						<p>
 							<span>Reviews:</span>
-							<a href="#reviews" onclick={showReviews}>{reviewSummary(data.listing) ?? "none yet"}</a>
+							{#if reviewSummary(data.listing)}
+								<a href="#reviews" onclick={showReviews}>{reviewSummary(data.listing)}</a>
+							{:else}
+								n/a
+							{/if}
 						</p>
 					{/if}
 				</div>

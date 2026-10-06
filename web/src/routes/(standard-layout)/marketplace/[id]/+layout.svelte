@@ -21,16 +21,18 @@
 			<p><span>No. of cards:</span> {data.mpDeck.cardCount}</p>
 			<p>
 				<span>Reviews:</span>
-				<a href="/marketplace/{data.mpDeck.id}/overview#reviews">{reviewSummary(data.mpDeck) ?? "none yet"}</a>
+				{#if reviewSummary(data.mpDeck)}
+					<a href="/marketplace/{data.mpDeck.id}/overview#reviews">{reviewSummary(data.mpDeck)}</a>
+				{:else}
+					n/a
+				{/if}
 			</p>
 		</div>
-		{#if data.alreadyOwned}
-			<p class="owned-note">You already have this deck. <a href="/my-flashcards">Go to My flashcards</a></p>
-		{:else}
-			<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
-				<button class="std-btn">{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}</button>
-			</form>
-		{/if}
+		<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
+			<button class="std-btn" disabled={data.alreadyOwned}>
+				{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}
+			</button>
+		</form>
 	</div>
 </div>
 <FormErrors form={page.form} />
@@ -82,10 +84,15 @@
 	.deck-info a {
 		color: inherit;
 	}
-	.deck-side form,
-	.owned-note {
+	.deck-side form {
 		margin-top: auto;
 		margin-bottom: auto;
+	}
+	/* you have the deck already: greyed, and deaf to the hover and press of
+	   a live button */
+	.deck-side button:disabled {
+		color: rgba(0, 0, 0, 0.4);
+		pointer-events: none;
 	}
 	.tabs {
 		margin-top: 24px;

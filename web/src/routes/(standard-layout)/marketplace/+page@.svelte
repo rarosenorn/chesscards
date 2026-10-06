@@ -30,7 +30,7 @@
 								{#if mpDeck.owned}
 									<span class="owned-stamp"><OwnedStamp /></span>
 								{/if}
-								<span class="price" class:free={Number(mpDeck.price) === 0}>
+								<span class="price" class:free={Number(mpDeck.price) === 0} class:owned={mpDeck.owned}>
 									{Number(mpDeck.price) === 0 ? "Free" : `${mpDeck.price}$`}
 								</span>
 							</div>
@@ -159,5 +159,9 @@
 	}
 	.price.free {
 		color: var(--accent);
+	}
+	/* no longer a price to you */
+	.price.owned {
+		color: rgba(0, 0, 0, 0.4);
 	}
 </style>

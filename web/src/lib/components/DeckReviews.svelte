@@ -18,6 +18,19 @@
 	// the viewer's own review leads the list, whatever the order of the rest
 	let myReview = $derived(reviews.find(review => review.mine));
 
+	// Your review can be rewritten for five minutes after it is posted; the
+	// server says how long is left (editableMs). Then it is locked and Edit
+	// goes, here on the page as well, without a reload.
+	let windowClosed = $state(false);
+	$effect(() => {
+		const left = myReview?.editableMs ?? 0;
+		windowClosed = false;
+		if (left <= 0) return;
+		const timer = setTimeout(() => windowClosed = true, left);
+		return () => clearTimeout(timer);
+	});
+	let canEdit = $derived(canReview && (myReview?.editableMs ?? 0) > 0 && !windowClosed);
+
 	let recommendCount = $derived(reviews.filter(review => review.recommended).length);
 
 	// Only the reviews that recommend the deck, or only those that don't: a
@@ -45,7 +58,8 @@
 		return sort.descending ? sorted : sorted.reverse();
 	});
 
-	// The review form: there for a first review, and on Edit for a posted one.
+	// The review form: there for a first review, and on Edit for one posted
+	// within the last five minutes.
 	// It is only its two verdict buttons until one is chosen; the text and
 	// Post come with the choice, and go again if it is taken back.
 	let editing = $state(false);
@@ -201,7 +215,7 @@
 				</p>
 				<p class="review-meta">
 					{review.cardsStudied} {review.cardsStudied === 1 ? "card" : "cards"} studied
-					· {dateOf(review.createdAt)}{review.editedAt ? ` · edited ${dateOf(review.editedAt)}` : ""}
+					· {dateOf(review.createdAt)}
 				</p>
 			</div>
 		</div>
@@ -237,8 +251,10 @@
 				</span>
 			{/if}
 			{#if review.mine}
-				{#if canReview}
+				{#if canEdit}
 					<button type="button" class="link-btn" onclick={startEditing}>Edit</button>
+				{/if}
+				{#if canReview}
 					<button type="button" class="link-btn" onclick={deleteReview}>Delete</button>
 				{/if}
 			{:else}
@@ -267,11 +283,7 @@
 			</div>
 		{:else if review.authorResponse}
 			<div class="author-response">
-				<p class="response-label">
-					Author's response · {dateOf(review.authorResponseAt)}{#if review.responseOutdated}
-						<span class="outdated">· to an earlier version of this review</span>
-					{/if}
-				</p>
+				<p class="response-label">Author's response · {dateOf(review.authorResponseAt)}</p>
 				<p class="review-body">{review.authorResponse}</p>
 				{#if isAuthor}
 					<div class="review-foot">
@@ -549,9 +561,6 @@
 	}
 	.response-label {
 		font-weight: 600;
-	}
-	.outdated {
-		font-weight: 400;
 	}
 	.review-form,
 	.response-form {

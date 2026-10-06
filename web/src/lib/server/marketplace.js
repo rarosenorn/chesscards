@@ -403,21 +403,26 @@ const createInstanceReviewLog = async (userId, instanceCardId, log) => {
 	)
 }
 
+// How long after posting a review can still be rewritten. Past it the text
+// is fixed, so the votes and the author's response stay true to what they
+// were given to; changing your mind then is deleting and writing a new one.
+const EDIT_WINDOW = "interval '5 minutes'";
+
 // A deck's reviews, most helpful first: by helpful votes less unhelpful ones,
 // both of which are shown. userId (null when logged out) marks the viewer's
-// own review and their vote on the others. cardsStudied is how
+// own review, with how long it can still be edited (editableMs, 0 once it is
+// locked), and their vote on the others. cardsStudied is how
 // many of the deck's cards the reviewer has graded at least once: what Steam's
 // hours played is to a game.
 const getReviews = async (marketplaceDeckId, userId) => {
 	const { rows } = await pool.query(`
 		select r.id, r.recommended, r.body, u.name author,
 			r.created_at "createdAt",
-			-- null unless the review was rewritten after it was posted
-			case when r.updated_at > r.created_at then r.updated_at end "editedAt",
 			r.author_response "authorResponse", r.author_response_at "authorResponseAt",
-			-- the review was rewritten after the author answered it
-			coalesce(r.updated_at > r.author_response_at, false) "responseOutdated",
 			coalesce(r.user_id = $2::uuid, false) mine,
+			case when r.user_id = $2::uuid
+				then greatest(0, extract(epoch from r.created_at + ${EDIT_WINDOW} - now()) * 1000)::int
+				else 0 end "editableMs",
 			(select count(*) from marketplace_review_votes v where v.review_id = r.id and v.value = 1)::int helpful,
 			(select count(*) from marketplace_review_votes v where v.review_id = r.id and v.value = -1)::int unhelpful,
 			coalesce((select v.value from marketplace_review_votes v where v.review_id = r.id and v.user_id = $2::uuid), 0)::int "myVote",
@@ -437,34 +442,28 @@ const getReviews = async (marketplaceDeckId, userId) => {
 	return rows;
 }
 
-// Posts the user's review of a deck, or rewrites the one they have. Only for
-// someone who has the deck and did not write it; false otherwise. A rewrite
-// that turns the verdict round loses the review's votes: they were cast on
-// the opposite opinion. Any other rewrite keeps them.
+// Posts the user's review of a deck, or rewrites the one they posted within
+// the edit window. "saved"; "locked" when their review is past the window;
+// "refused" when they do not have the deck or wrote it themselves.
 const saveReview = async (userId, marketplaceDeckId, { recommended, body }) => {
-	const { rows } = await pool.query(`
-		with previous as (
-			select id, recommended from marketplace_reviews
-			where marketplace_deck_id = $2 and user_id = $1
-		), saved as (
-			insert into marketplace_reviews(marketplace_deck_id, user_id, recommended, body)
-			select md.id, $1, $3, $4
-			from marketplace_decks md
-			where md.id = $2 and md.user_id <> $1
-				and exists (select 1 from marketplace_deck_instances i where i.user_id = $1 and i.marketplace_deck_id = md.id)
-			on conflict (marketplace_deck_id, user_id)
-			do update set recommended = excluded.recommended, body = excluded.body, updated_at = now()
-			returning id, recommended
-		), cleared as (
-			delete from marketplace_review_votes v
-			using saved s, previous p
-			where v.review_id = s.id and p.id = s.id and p.recommended <> s.recommended
-		)
-		select count(*)::int saved from saved`,
+	const { rowCount } = await pool.query(`
+		insert into marketplace_reviews(marketplace_deck_id, user_id, recommended, body)
+		select md.id, $1, $3, $4
+		from marketplace_decks md
+		where md.id = $2 and md.user_id <> $1
+			and exists (select 1 from marketplace_deck_instances i where i.user_id = $1 and i.marketplace_deck_id = md.id)
+		on conflict (marketplace_deck_id, user_id)
+		do update set recommended = excluded.recommended, body = excluded.body
+		where marketplace_reviews.created_at > now() - ${EDIT_WINDOW}`,
 		[userId, marketplaceDeckId, recommended, body]
 	);
+	if (rowCount === 1) return "saved";
 
-	return rows[0].saved === 1;
+	const existing = await pool.query(
+		"select 1 from marketplace_reviews where user_id = $1 and marketplace_deck_id = $2",
+		[userId, marketplaceDeckId]
+	);
+	return existing.rowCount === 1 ? "locked" : "refused";
 }
 
 // Takes the user's review of a deck down, and with it its votes and the

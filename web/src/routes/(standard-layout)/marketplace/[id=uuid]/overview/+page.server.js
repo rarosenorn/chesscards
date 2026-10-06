@@ -28,7 +28,7 @@ export const actions = {
 		redirect(303, "/my-flashcards");
 	},
 
-	// a first review, or the rewrite of the one already posted
+	// a first review, or the rewrite of one posted a moment ago
 	saveReview: async ({ request, params, locals, url }) => {
 		if (!locals.userId) {
 			redirect(303, `/login?redirect_to=${url.pathname}`);
@@ -52,7 +52,10 @@ export const actions = {
 			recommended: recommended === "true",
 			body
 		});
-		if (!saved) {
+		if (saved === "locked") {
+			return fail(403, { errors: ["A review can be edited for 5 minutes after it is posted. Delete it to write a new one."] });
+		}
+		if (saved === "refused") {
 			return fail(403, { errors: ["Only someone who has the deck, and did not write it, can review it"] });
 		}
 	},

@@ -261,7 +261,10 @@ create table marketplace_upload_requests (
 );
 
 -- A studier's verdict on a marketplace deck, as Steam's: recommended or not,
--- always with the reason in words. One per user and deck, theirs to edit.
+-- always with the reason in words. One per user and deck. It can be rewritten
+-- for a few minutes after it is posted and is then fixed (delete it to write
+-- another), so the votes and the author's response are always about the text
+-- that is there.
 create table marketplace_reviews (
 	id uuid primary key default gen_random_uuid(),
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
@@ -272,7 +275,6 @@ create table marketplace_reviews (
 	author_response text,
 	author_response_at timestamptz,
 	created_at timestamptz not null default now(),
-	updated_at timestamptz not null default now(),
 	unique (marketplace_deck_id, user_id)
 );
 

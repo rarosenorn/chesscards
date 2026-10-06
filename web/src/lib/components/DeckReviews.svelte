@@ -201,22 +201,20 @@
 				</p>
 				<p class="review-meta">
 					{review.cardsStudied} {review.cardsStudied === 1 ? "card" : "cards"} studied
-					· {dateOf(review.createdAt)}{review.edited ? " (edited)" : ""}
+					· {dateOf(review.createdAt)}{review.editedAt ? ` · edited ${dateOf(review.editedAt)}` : ""}
 				</p>
 			</div>
 		</div>
 		<p class="review-body">{review.body}</p>
 		<div class="review-foot">
-			{#if review.mine}
+			<!-- your own review is not yours to vote on, nor are the reviews
+			     of a deck you wrote -->
+			{#if review.mine || isAuthor}
 				<span class="helpful">
 					Helpful:
 					<span class="vote up"><ArrowUp /> {review.helpful}</span>
 					<span class="vote down"><ArrowDown /> {review.unhelpful}</span>
 				</span>
-				{#if canReview}
-					<button type="button" class="link-btn" onclick={startEditing}>Edit</button>
-					<button type="button" class="link-btn" onclick={deleteReview}>Delete</button>
-				{/if}
 			{:else}
 				<span class="helpful">
 					Helpful?
@@ -237,6 +235,13 @@
 						onclick={() => vote(review, -1)}
 					><ArrowDown /> {review.unhelpful}</button>
 				</span>
+			{/if}
+			{#if review.mine}
+				{#if canReview}
+					<button type="button" class="link-btn" onclick={startEditing}>Edit</button>
+					<button type="button" class="link-btn" onclick={deleteReview}>Delete</button>
+				{/if}
+			{:else}
 				{#if isAuthor && !review.authorResponse && respondingTo !== review.id}
 					<button type="button" class="link-btn" onclick={() => startResponding(review)}>Respond</button>
 				{/if}
@@ -262,7 +267,11 @@
 			</div>
 		{:else if review.authorResponse}
 			<div class="author-response">
-				<p class="response-label">Author's response · {dateOf(review.authorResponseAt)}</p>
+				<p class="response-label">
+					Author's response · {dateOf(review.authorResponseAt)}{#if review.responseOutdated}
+						<span class="outdated">· to an earlier version of this review</span>
+					{/if}
+				</p>
 				<p class="review-body">{review.authorResponse}</p>
 				{#if isAuthor}
 					<div class="review-foot">
@@ -540,6 +549,9 @@
 	}
 	.response-label {
 		font-weight: 600;
+	}
+	.outdated {
+		font-weight: 400;
 	}
 	.review-form,
 	.response-form {

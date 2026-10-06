@@ -411,8 +411,12 @@ const createInstanceReviewLog = async (userId, instanceCardId, log) => {
 const getReviews = async (marketplaceDeckId, userId) => {
 	const { rows } = await pool.query(`
 		select r.id, r.recommended, r.body, u.name author,
-			r.created_at "createdAt", r.updated_at > r.created_at edited,
+			r.created_at "createdAt",
+			-- null unless the review was rewritten after it was posted
+			case when r.updated_at > r.created_at then r.updated_at end "editedAt",
 			r.author_response "authorResponse", r.author_response_at "authorResponseAt",
+			-- the review was rewritten after the author answered it
+			coalesce(r.updated_at > r.author_response_at, false) "responseOutdated",
 			coalesce(r.user_id = $2::uuid, false) mine,
 			(select count(*) from marketplace_review_votes v where v.review_id = r.id and v.value = 1)::int helpful,
 			(select count(*) from marketplace_review_votes v where v.review_id = r.id and v.value = -1)::int unhelpful,
@@ -434,20 +438,33 @@ const getReviews = async (marketplaceDeckId, userId) => {
 }
 
 // Posts the user's review of a deck, or rewrites the one they have. Only for
-// someone who has the deck and did not write it; false otherwise.
+// someone who has the deck and did not write it; false otherwise. A rewrite
+// that turns the verdict round loses the review's votes: they were cast on
+// the opposite opinion. Any other rewrite keeps them.
 const saveReview = async (userId, marketplaceDeckId, { recommended, body }) => {
-	const { rowCount } = await pool.query(`
-		insert into marketplace_reviews(marketplace_deck_id, user_id, recommended, body)
-		select md.id, $1, $3, $4
-		from marketplace_decks md
-		where md.id = $2 and md.user_id <> $1
-			and exists (select 1 from marketplace_deck_instances i where i.user_id = $1 and i.marketplace_deck_id = md.id)
-		on conflict (marketplace_deck_id, user_id)
-		do update set recommended = excluded.recommended, body = excluded.body, updated_at = now()`,
+	const { rows } = await pool.query(`
+		with previous as (
+			select id, recommended from marketplace_reviews
+			where marketplace_deck_id = $2 and user_id = $1
+		), saved as (
+			insert into marketplace_reviews(marketplace_deck_id, user_id, recommended, body)
+			select md.id, $1, $3, $4
+			from marketplace_decks md
+			where md.id = $2 and md.user_id <> $1
+				and exists (select 1 from marketplace_deck_instances i where i.user_id = $1 and i.marketplace_deck_id = md.id)
+			on conflict (marketplace_deck_id, user_id)
+			do update set recommended = excluded.recommended, body = excluded.body, updated_at = now()
+			returning id, recommended
+		), cleared as (
+			delete from marketplace_review_votes v
+			using saved s, previous p
+			where v.review_id = s.id and p.id = s.id and p.recommended <> s.recommended
+		)
+		select count(*)::int saved from saved`,
 		[userId, marketplaceDeckId, recommended, body]
 	);
 
-	return rowCount === 1;
+	return rows[0].saved === 1;
 }
 
 // Takes the user's review of a deck down, and with it its votes and the
@@ -482,7 +499,8 @@ const removeReviewResponse = async (marketplaceDeckId, reviewId) => {
 }
 
 // The user's helpful (1) / not helpful (-1) vote on someone else's review of
-// the deck; 0 takes it back
+// the deck; 0 takes it back. Not the deck's author's to cast: one vote would
+// be enough to push a critical review down.
 const setReviewVote = async (userId, marketplaceDeckId, reviewId, value) => {
 	if (value === 0) {
 		await pool.query(
@@ -496,6 +514,7 @@ const setReviewVote = async (userId, marketplaceDeckId, reviewId, value) => {
 		select r.id, $1, $4
 		from marketplace_reviews r
 		where r.id = $3 and r.marketplace_deck_id = $2 and r.user_id <> $1
+			and not exists (select 1 from marketplace_decks md where md.id = r.marketplace_deck_id and md.user_id = $1)
 		on conflict (review_id, user_id) do update set value = excluded.value`,
 		[userId, marketplaceDeckId, reviewId, value]
 	);

@@ -15,22 +15,20 @@
 
 	let recommendCount = $derived(reviews.filter(review => review.recommended).length);
 
-	// Most helpful or newest first; a second click on the one in use turns it
-	// round, to least helpful or oldest first.
+	// By helpfulness or by date, most helpful and newest first; a second click
+	// on the one in use turns it round.
 	let sort = $state({ by: "helpful", descending: true });
 	const sortBy = by => {
 		sort = { by, descending: sort.by === by ? !sort.descending : true };
 	}
-	const SORT_NAMES = { helpful: ["Most helpful", "Least helpful"], newest: ["Newest", "Oldest"] };
-	const sortLabel = by =>
-		sort.by === by ? `${SORT_NAMES[by][sort.descending ? 0 : 1]} ${sort.descending ? "↓" : "↑"}` : SORT_NAMES[by][0];
+	const arrow = by => sort.by === by ? (sort.descending ? " ↓" : " ↑") : "";
 
 	let others = $derived.by(() => {
 		const newest = (a, b) => new Date(b.createdAt) - new Date(a.createdAt);
 		const net = review => review.helpful - review.unhelpful;
 		const sorted = reviews
 			.filter(review => !review.mine)
-			.sort(sort.by === "newest" ? newest : (a, b) => net(b) - net(a) || newest(a, b));
+			.sort(sort.by === "date" ? newest : (a, b) => net(b) - net(a) || newest(a, b));
 		return sort.descending ? sorted : sorted.reverse();
 	});
 
@@ -161,8 +159,8 @@
 			{#if review.mine}
 				<span class="helpful">
 					Helpful:
-					<span class="vote"><ThumbUp /> {review.helpful}</span>
-					<span class="vote"><ThumbDown /> {review.unhelpful}</span>
+					<span class="vote up"><ThumbUp /> {review.helpful}</span>
+					<span class="vote down"><ThumbDown /> {review.unhelpful}</span>
 				</span>
 				{#if canReview}
 					<button type="button" class="link-btn" onclick={startEditing}>Edit</button>
@@ -173,7 +171,7 @@
 					Helpful?
 					<button
 						type="button"
-						class="vote"
+						class="vote up"
 						class:active={review.myVote === 1}
 						aria-label="Helpful"
 						aria-pressed={review.myVote === 1}
@@ -181,7 +179,7 @@
 					><ThumbUp /> {review.helpful}</button>
 					<button
 						type="button"
-						class="vote"
+						class="vote down"
 						class:active={review.myVote === -1}
 						aria-label="Not helpful"
 						aria-pressed={review.myVote === -1}
@@ -229,8 +227,8 @@
 		{/if}
 		{#if others.length > 1}
 			<div class="sort">
-				<button type="button" class:active={sort.by === "helpful"} onclick={() => sortBy("helpful")}>{sortLabel("helpful")}</button>
-				<button type="button" class:active={sort.by === "newest"} onclick={() => sortBy("newest")}>{sortLabel("newest")}</button>
+				<button type="button" class:active={sort.by === "helpful"} onclick={() => sortBy("helpful")}>Helpful{arrow("helpful")}</button>
+				<button type="button" class:active={sort.by === "date"} onclick={() => sortBy("date")}>Date{arrow("date")}</button>
 			</div>
 		{/if}
 	</div>
@@ -301,6 +299,10 @@
 	}
 	h3 {
 		font-size: 1.1rem;
+	}
+	.overview,
+	.sort {
+		font-size: 0.9rem;
 	}
 	.overview {
 		color: rgba(0, 0, 0, 0.6);
@@ -403,21 +405,41 @@
 		color: inherit;
 		font-variant-numeric: tabular-nums;
 	}
+	/* quieter than the verdict's thumb: small and half faded, on a chip that
+	   is only a breath of its color until it is hovered or is your vote */
 	.vote :global(svg) {
-		font-size: 1.2rem;
+		font-size: 1rem;
+		opacity: 0.6;
 	}
 	button.vote {
 		cursor: pointer;
-		background-color: rgba(0, 0, 0, 0.06);
 	}
-	button.vote:hover {
-		background-color: rgba(0, 0, 0, 0.11);
+	button.vote.up {
+		background-color: #f1f7e3;
 	}
-	/* your vote: a darker chip, its count in black */
+	button.vote.down {
+		background-color: #fdecea;
+	}
+	button.vote.up:hover {
+		background-color: #e7f2cf;
+	}
+	button.vote.down:hover {
+		background-color: #fbdeda;
+	}
+	/* your vote: the verdict square's tint, thumb and count at full strength */
+	button.vote.up.active {
+		background-color: #dcedb9;
+	}
+	button.vote.down.active {
+		background-color: #f9cfca;
+	}
 	button.vote.active {
-		background-color: rgba(0, 0, 0, 0.18);
 		color: black;
 		font-weight: 600;
+	}
+	button.vote:hover :global(svg),
+	button.vote.active :global(svg) {
+		opacity: 1;
 	}
 	.link-btn {
 		border: none;

@@ -3,6 +3,8 @@
 	import { goto, invalidateAll } from "$app/navigation"
 	import ThumbUp from "$lib/icons/ThumbUp.svelte"
 	import ThumbDown from "$lib/icons/ThumbDown.svelte"
+	import ArrowUp from "$lib/icons/ArrowUp.svelte"
+	import ArrowDown from "$lib/icons/ArrowDown.svelte"
 
 	// A marketplace deck's reviews, under its description on the marketplace
 	// page and on the Deck tab of whoever has the deck. canReview: the viewer
@@ -96,7 +98,7 @@
 		rowErrors = await post("deleteReview", {});
 	}
 
-	// a second click on the thumb you chose takes the vote back
+	// a second click on the arrow you chose takes the vote back
 	const vote = async (review, value) => {
 		rowErrors = await post("vote", { reviewId: review.id, value: review.myVote === value ? 0 : value });
 	}
@@ -159,8 +161,8 @@
 			{#if review.mine}
 				<span class="helpful">
 					Helpful:
-					<span class="vote up"><ThumbUp /> {review.helpful}</span>
-					<span class="vote down"><ThumbDown /> {review.unhelpful}</span>
+					<span class="vote up"><ArrowUp /> {review.helpful}</span>
+					<span class="vote down"><ArrowDown /> {review.unhelpful}</span>
 				</span>
 				{#if canReview}
 					<button type="button" class="link-btn" onclick={startEditing}>Edit</button>
@@ -176,7 +178,7 @@
 						aria-label="Helpful"
 						aria-pressed={review.myVote === 1}
 						onclick={() => vote(review, 1)}
-					><ThumbUp /> {review.helpful}</button>
+					><ArrowUp /> {review.helpful}</button>
 					<button
 						type="button"
 						class="vote down"
@@ -184,7 +186,7 @@
 						aria-label="Not helpful"
 						aria-pressed={review.myVote === -1}
 						onclick={() => vote(review, -1)}
-					><ThumbDown /> {review.unhelpful}</button>
+					><ArrowDown /> {review.unhelpful}</button>
 				</span>
 				{#if isAuthor && respondingTo !== review.id}
 					<button type="button" class="link-btn" onclick={() => startResponding(review)}>
@@ -328,23 +330,20 @@
 		color: black;
 		font-weight: 600;
 	}
-	/* each review in a box of its own, as Steam's; the form is the box your
-	   own review will be */
 	.review,
 	.review-form {
-		margin-top: 12px;
-		padding: 14px 16px;
-		border-radius: 6px;
-		background-color: #f5f5f5;
+		padding: 16px 0;
+		border-bottom: 1px solid #eee;
 	}
 	.review-head {
 		display: flex;
 		align-items: center;
 		gap: 12px;
 	}
-	/* The one place the reviews take a color: the thumbs, which bring their
-	   own (ThumbUp, ThumbDown). The verdict's stands in a square of its
-	   color, pale so that the filled thumb still shows on it. */
+	/* Where the reviews take a color: the thumbs, which bring their own
+	   (ThumbUp, ThumbDown), and a vote once it is cast. The verdict's thumb
+	   stands in a square of its color, pale so that the filled thumb still
+	   shows on it. */
 	.thumb-box {
 		display: flex;
 		align-items: center;
@@ -392,54 +391,42 @@
 		align-items: center;
 		gap: 6px;
 	}
-	/* a thumb and how many chose it: a button on someone else's review, the
-	   bare count on your own */
+	/* Reddit's arrows, each with how many chose it: buttons on someone else's
+	   review, the bare counts on your own. Grey until one is your vote, which
+	   fills its arrow and takes the thumbs' green or red. */
 	.vote {
 		display: inline-flex;
 		align-items: center;
-		gap: 5px;
+		gap: 3px;
 		border: none;
 		background: none;
-		padding: 2px 8px 2px 6px;
+		padding: 2px 6px 2px 4px;
 		border-radius: 4px;
 		color: inherit;
 		font-variant-numeric: tabular-nums;
 	}
-	/* quieter than the verdict's thumb: small and half faded, on a chip that
-	   is only a breath of its color until it is hovered or is your vote */
 	.vote :global(svg) {
-		font-size: 1rem;
-		opacity: 0.6;
+		font-size: 1.1rem;
 	}
 	button.vote {
 		cursor: pointer;
 	}
-	button.vote.up {
-		background-color: #f1f7e3;
+	button.vote:hover {
+		background-color: rgba(0, 0, 0, 0.06);
 	}
-	button.vote.down {
-		background-color: #fdecea;
-	}
-	button.vote.up:hover {
-		background-color: #e7f2cf;
-	}
-	button.vote.down:hover {
-		background-color: #fbdeda;
-	}
-	/* your vote: the verdict square's tint, thumb and count at full strength */
+	button.vote.up:hover,
 	button.vote.up.active {
-		background-color: #dcedb9;
+		color: #4f8a1c;
 	}
+	button.vote.down:hover,
 	button.vote.down.active {
-		background-color: #f9cfca;
+		color: #cf3a2e;
 	}
 	button.vote.active {
-		color: black;
 		font-weight: 600;
 	}
-	button.vote:hover :global(svg),
 	button.vote.active :global(svg) {
-		opacity: 1;
+		fill: currentColor;
 	}
 	.link-btn {
 		border: none;
@@ -458,7 +445,7 @@
 	}
 	.author-response {
 		padding-left: 12px;
-		border-left: 2px solid #d5d5d5;
+		border-left: 2px solid #e3e1e1;
 	}
 	.response-label {
 		font-weight: 600;

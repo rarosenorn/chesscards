@@ -35,15 +35,20 @@
 					<ReviewCounts reviewCount={data.mpDeck.reviewCount} recommendCount={data.mpDeck.recommendCount} />
 				</p>
 			</div>
-			<form
-				method="POST"
-				action="/marketplace/{data.mpDeck.id}/overview?/getDeck"
-				title={data.alreadyOwned ? "You own this deck" : undefined}
-			>
-				<button class="std-btn" disabled={data.alreadyOwned}>
-					{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}
-				</button>
-			</form>
+			<div class="buy-row">
+				<form
+					method="POST"
+					action="/marketplace/{data.mpDeck.id}/overview?/getDeck"
+					title={data.alreadyOwned ? "You own this deck" : undefined}
+				>
+					<button class="std-btn" disabled={data.alreadyOwned}>
+						{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}
+					</button>
+				</form>
+				{#if data.alreadyOwned}
+					<span class="owned-stamp">Owned</span>
+				{/if}
+			</div>
 		</div>
 	</div>
 	<FormErrors form={page.form} />
@@ -99,11 +104,31 @@
 	.deck-info span {
 		font-weight: 600;
 	}
-	/* no wider than its button: the form answers the hover for a disabled
-	   one, with why it is */
-	.deck-side form {
+	/* the form is no wider than its button, and answers the hover for a
+	   disabled one with why it is */
+	.buy-row {
+		display: flex;
+		align-items: center;
+		gap: 18px;
 		margin-top: 8px;
-		align-self: start;
+	}
+	/* A rubber stamp beside the button it has voided, which keeps the price
+	   on show: double-ruled, tilted and a little taller than the button, in
+	   an ink faint enough not to shout. */
+	.owned-stamp {
+		padding: 4px 12px;
+		border: 4px double currentColor;
+		border-radius: 3px;
+		color: #c0392b;
+		opacity: 0.65;
+		font-family: Georgia, "Times New Roman", serif;
+		font-weight: 700;
+		font-size: 1.15rem;
+		line-height: 1.3;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		transform: rotate(-7deg);
+		user-select: none;
 	}
 	/* you have the deck already: greyed, and deaf to the hover and press of
 	   a live button */

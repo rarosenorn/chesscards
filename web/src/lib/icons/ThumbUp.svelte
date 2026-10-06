@@ -1,5 +1,6 @@
-<!-- outline thumbs up: a cuff and a fist with the thumb raised -->
-<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-	<rect x="2.5" y="10.5" width="4.5" height="10.5" rx="1.2" />
-	<path d="M7 11.5 10.6 4.4a1.6 1.6 0 0 1 1.5-.9 2.4 2.4 0 0 1 2.3 3L13.6 10H19a2.2 2.2 0 0 1 2.1 2.8l-1.8 6.4A2.5 2.5 0 0 1 16.9 21H7" />
+<!-- old-school sticker thumb: a filled fist with four knuckles and a cuff,
+     dark outline all round. Its colors are its own, not the text's. -->
+<svg viewBox="0 0 24 24" width="1em" height="1em" fill="#9ccb3b" stroke="#16323f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+	<path d="M7 11.2C9.2 9.7 10.5 7.4 10.7 4.7a1.75 1.75 0 0 1 3.5 0c0 1.9-.4 3.5-1 4.9H19a1.45 1.45 0 0 1 0 2.9 1.42 1.42 0 0 1-.4 2.8 1.38 1.38 0 0 1-.5 2.7 1.35 1.35 0 0 1-.9 2.6H7Z" />
+	<rect x="2.2" y="10.6" width="4.8" height="10.6" rx="1" />
 </svg>

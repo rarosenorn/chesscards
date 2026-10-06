@@ -128,7 +128,7 @@
 	<article class="review">
 		<div class="review-head">
 			<span class="verdict">
-				<span class="thumb" class:up={review.recommended} class:down={!review.recommended}>
+				<span class="thumb">
 					{#if review.recommended}<ThumbUp />{:else}<ThumbDown />{/if}
 				</span>
 				{review.recommended ? "Recommended" : "Not recommended"}
@@ -151,7 +151,7 @@
 					Helpful?
 					<button
 						type="button"
-						class="vote up"
+						class="vote"
 						class:active={review.myVote === 1}
 						aria-label="Helpful"
 						aria-pressed={review.myVote === 1}
@@ -160,7 +160,7 @@
 					<span class="score">{review.score}</span>
 					<button
 						type="button"
-						class="vote down"
+						class="vote"
 						class:active={review.myVote === -1}
 						aria-label="Not helpful"
 						aria-pressed={review.myVote === -1}
@@ -219,7 +219,7 @@
 					aria-pressed={recommended === true}
 					onclick={() => recommended = true}
 				>
-					<span class="thumb up"><ThumbUp /></span> Recommend
+					<span class="thumb"><ThumbUp /></span> Recommend
 				</button>
 				<button
 					type="button"
@@ -228,7 +228,7 @@
 					aria-pressed={recommended === false}
 					onclick={() => recommended = false}
 				>
-					<span class="thumb down"><ThumbDown /></span> Don't recommend
+					<span class="thumb"><ThumbDown /></span> Don't recommend
 				</button>
 			</div>
 			<textarea
@@ -314,19 +314,11 @@
 		gap: 6px;
 		font-weight: 600;
 	}
-	/* the one place the reviews take a color: the thumbs themselves, the
-	   review's verdict and the helpful votes on it */
+	/* the one place the reviews take a color: the thumbs, which bring their
+	   own (ThumbUp, ThumbDown) for the verdict and the helpful votes on it */
 	.thumb {
 		display: inline-flex;
-		font-size: 1.15rem;
-	}
-	.thumb.up,
-	.vote.up {
-		color: #3a8f4d;
-	}
-	.thumb.down,
-	.vote.down {
-		color: #c0453b;
+		font-size: 1.3rem;
 	}
 	.review-meta,
 	.review-foot,
@@ -363,7 +355,7 @@
 		cursor: pointer;
 		padding: 3px;
 		border-radius: 4px;
-		font-size: 1.05rem;
+		font-size: 1.2rem;
 	}
 	.vote:hover {
 		background-color: rgba(0, 0, 0, 0.06);

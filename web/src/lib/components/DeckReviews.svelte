@@ -301,7 +301,7 @@
 						<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
 					{/if}
 					{#if recommended !== null}
-						<button type="button" class="std-btn" onclick={saveReview}>{editing ? "Save" : "Post review"}</button>
+						<button type="button" class="std-btn" onclick={saveReview}>{editing ? "Save" : "Post"}</button>
 					{/if}
 				</div>
 			{/if}
@@ -503,6 +503,9 @@
 	.form-actions {
 		display: flex;
 		gap: 8px;
+	}
+	.reviews .std-btn {
+		cursor: pointer;
 	}
 	.verdict-choice .std-btn {
 		display: inline-flex;

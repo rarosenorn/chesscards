@@ -1,6 +1,7 @@
 <script>
 	import { deserialize } from "$app/forms"
 	import { goto, invalidateAll } from "$app/navigation"
+	import { tick } from "svelte"
 	import ThumbUp from "$lib/icons/ThumbUp.svelte"
 	import ThumbDown from "$lib/icons/ThumbDown.svelte"
 	import ArrowUp from "$lib/icons/ArrowUp.svelte"
@@ -17,6 +18,14 @@
 
 	let recommendCount = $derived(reviews.filter(review => review.recommended).length);
 
+	// Only the reviews that recommend the deck, or only those that don't: a
+	// click on that half of the overview line, and another to see all again.
+	let only = $state(null);
+	const showOnly = verdict => {
+		only = only === verdict ? null : verdict;
+	}
+	const shown = review => only === null || review.recommended === only;
+
 	// By helpfulness or by date, most helpful and newest first; a second click
 	// on the one in use turns it round.
 	let sort = $state({ by: "helpful", descending: true });
@@ -29,16 +38,28 @@
 		const newest = (a, b) => new Date(b.createdAt) - new Date(a.createdAt);
 		const net = review => review.helpful - review.unhelpful;
 		const sorted = reviews
-			.filter(review => !review.mine)
+			.filter(review => !review.mine && shown(review))
 			.sort(sort.by === "date" ? newest : (a, b) => net(b) - net(a) || newest(a, b));
 		return sort.descending ? sorted : sorted.reverse();
 	});
 
-	// the review form: there for a first review, and on Edit for a posted one
+	// The review form: there for a first review, and on Edit for a posted one.
+	// It is only its two verdict buttons until one is chosen; the text and
+	// Post come with the choice, and go again if it is taken back.
 	let editing = $state(false);
 	let recommended = $state(null);
 	let body = $state("");
+	let bodyField = $state(null);
 	let errors = $state([]);
+
+	const choose = async verdict => {
+		const opening = recommended === null;
+		recommended = recommended === verdict ? null : verdict;
+		if (opening) {
+			await tick();
+			bodyField?.focus();
+		}
+	}
 
 	// the author's reply, written under one review at a time
 	let respondingTo = $state(null);
@@ -224,10 +245,16 @@
 		<h3>Reviews</h3>
 		{#if reviews.length > 0}
 			<p class="overview">
-				Recommended by {recommendCount} · Not recommended by {reviews.length - recommendCount}
+				<button type="button" class:active={only === true} aria-pressed={only === true} onclick={() => showOnly(true)}>
+					Recommended by {recommendCount}
+				</button>
+				·
+				<button type="button" class:active={only === false} aria-pressed={only === false} onclick={() => showOnly(false)}>
+					Not recommended by {reviews.length - recommendCount}
+				</button>
 			</p>
 		{/if}
-		{#if others.length > 1}
+		{#if reviews.length - (myReview ? 1 : 0) > 1}
 			<div class="sort">
 				<button type="button" class:active={sort.by === "helpful"} onclick={() => sortBy("helpful")}>Helpful{arrow("helpful")}</button>
 				<button type="button" class:active={sort.by === "date"} onclick={() => sortBy("date")}>Date{arrow("date")}</button>
@@ -243,7 +270,7 @@
 					class="std-btn"
 					class:chosen={recommended === true}
 					aria-pressed={recommended === true}
-					onclick={() => recommended = true}
+					onclick={() => choose(true)}
 				>
 					<span class="thumb"><ThumbUp /></span> Recommend
 				</button>
@@ -252,27 +279,34 @@
 					class="std-btn"
 					class:chosen={recommended === false}
 					aria-pressed={recommended === false}
-					onclick={() => recommended = false}
+					onclick={() => choose(false)}
 				>
 					<span class="thumb"><ThumbDown /></span> Don't recommend
 				</button>
 			</div>
-			<textarea
-				use:autoGrow
-				bind:value={body}
-				aria-label="Your review"
-				placeholder="What makes you say so?"
-				maxlength="5000"
-			></textarea>
-			{@render errorList(errors)}
-			<div class="form-actions">
-				{#if editing}
-					<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
-				{/if}
-				<button type="button" class="std-btn" onclick={saveReview}>{editing ? "Save" : "Post review"}</button>
-			</div>
+			{#if recommended !== null}
+				<textarea
+					use:autoGrow
+					bind:this={bodyField}
+					bind:value={body}
+					aria-label="Your review"
+					placeholder="What makes you say so?"
+					maxlength="5000"
+				></textarea>
+				{@render errorList(errors)}
+			{/if}
+			{#if recommended !== null || editing}
+				<div class="form-actions">
+					{#if editing}
+						<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
+					{/if}
+					{#if recommended !== null}
+						<button type="button" class="std-btn" onclick={saveReview}>{editing ? "Save" : "Post review"}</button>
+					{/if}
+				</div>
+			{/if}
 		</div>
-	{:else if myReview}
+	{:else if myReview && shown(myReview)}
 		{@render reviewRow(myReview)}
 	{/if}
 
@@ -283,6 +317,8 @@
 
 	{#if reviews.length === 0 && !canReview}
 		<p class="empty">No reviews yet</p>
+	{:else if only !== null && !reviews.some(shown)}
+		<p class="empty">None</p>
 	{/if}
 </section>
 
@@ -314,6 +350,9 @@
 		gap: 4px;
 		margin-left: auto;
 	}
+	/* the heading row's text buttons: the two halves of the overview, which
+	   filter, and the sorts */
+	.overview button,
 	.sort button {
 		border: none;
 		background: none;
@@ -322,10 +361,15 @@
 		border-radius: 4px;
 		color: rgba(0, 0, 0, 0.6);
 	}
+	.overview button {
+		padding: 2px 4px;
+	}
+	.overview button:hover,
 	.sort button:hover {
 		color: black;
 		background-color: rgba(0, 0, 0, 0.05);
 	}
+	.overview button.active,
 	.sort button.active {
 		color: black;
 		font-weight: 600;

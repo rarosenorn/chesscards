@@ -1,7 +1,7 @@
 <script>
 	import { page } from "$app/state"
 	import FormErrors from "$lib/components/FormErrors.svelte"
-	import { reviewSummary } from "$lib/reviews.js"
+	import ReviewCounts from "$lib/components/ReviewCounts.svelte"
 
 	let { data, children } = $props();
 
@@ -21,11 +21,9 @@
 			<p><span>No. of cards:</span> {data.mpDeck.cardCount}</p>
 			<p>
 				<span>Reviews:</span>
-				{#if reviewSummary(data.mpDeck)}
-					<a href="/marketplace/{data.mpDeck.id}/overview#reviews">{reviewSummary(data.mpDeck)}</a>
-				{:else}
-					None
-				{/if}
+				<a href="/marketplace/{data.mpDeck.id}/overview#reviews">
+					<ReviewCounts reviewCount={data.mpDeck.reviewCount} recommendCount={data.mpDeck.recommendCount} />
+				</a>
 			</p>
 		</div>
 		<form

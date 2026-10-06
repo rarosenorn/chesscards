@@ -9,7 +9,7 @@
 	import DeckReviews from "$lib/components/DeckReviews.svelte"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import ThumbnailCrop from "$lib/components/ThumbnailCrop.svelte"
-	import { reviewSummary } from "$lib/reviews.js"
+	import ReviewCounts from "$lib/components/ReviewCounts.svelte"
 
 	let { data } = $props();
 
@@ -179,11 +179,9 @@
 					{#if data.reviews}
 						<p>
 							<span>Reviews:</span>
-							{#if reviewSummary(data.listing)}
-								<a href="#reviews" onclick={showReviews}>{reviewSummary(data.listing)}</a>
-							{:else}
-								None
-							{/if}
+							<a href="#reviews" onclick={showReviews}>
+								<ReviewCounts reviewCount={data.listing.reviewCount} recommendCount={data.listing.recommendCount} />
+							</a>
 						</p>
 					{/if}
 				</div>

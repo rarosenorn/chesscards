@@ -1,7 +1,6 @@
 <script>
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
-	import ThumbUp from "$lib/icons/ThumbUp.svelte"
-	import ThumbDown from "$lib/icons/ThumbDown.svelte"
+	import ReviewCounts from "$lib/components/ReviewCounts.svelte"
 
 	let { data } = $props();
 </script>
@@ -23,10 +22,7 @@
 							<p class="deck-name">{mpDeck.name}</p>
 							<p class="deck-meta">
 								{mpDeck.cardCount} cards ·
-								<span class="verdicts">
-									<ThumbUp /> {mpDeck.recommendCount}
-									<ThumbDown /> {mpDeck.reviewCount - mpDeck.recommendCount}
-								</span>
+								<ReviewCounts reviewCount={mpDeck.reviewCount} recommendCount={mpDeck.recommendCount} />
 							</p>
 							<div class="card-footer">
 								<span class="theme-chip">{mpDeck.theme}</span>
@@ -123,20 +119,6 @@
 		gap: 5px;
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.55);
-	}
-	/* how many recommend the deck and how many don't, each by its thumb; 0 and
-	   0 on a deck nobody has reviewed, so every tile reads the same way */
-	.verdicts {
-		display: inline-flex;
-		align-items: center;
-		gap: 2px;
-		font-variant-numeric: tabular-nums;
-	}
-	.verdicts :global(svg) {
-		font-size: 1.05rem;
-	}
-	.verdicts :global(svg:last-of-type) {
-		margin-left: 4px;
 	}
 	.card-footer {
 		display: flex;

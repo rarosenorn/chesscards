@@ -5,8 +5,7 @@ import { createEmptyCard } from "ts-fsrs"
 const themes = ["openings", "endgames", "tactics", "strategy", "checkmates"];
 
 // how many reviews a deck has and how many of them recommend it: two columns
-// for any query that has marketplace_decks as md (see reviews.js for the line
-// they are shown as)
+// for any query that has marketplace_decks as md (ReviewCounts shows them)
 const REVIEW_COUNTS = `
 	(select count(*) from marketplace_reviews r where r.marketplace_deck_id = md.id)::int "reviewCount",
 	(select count(*) from marketplace_reviews r where r.marketplace_deck_id = md.id and r.recommended)::int "recommendCount"`;

@@ -95,7 +95,6 @@
 		text-transform: capitalize;
 	}
 	.deck-side {
-		height: 200px;
 		display: flex;
 		flex-direction: column;
 	}
@@ -109,11 +108,12 @@
 	   disabled one with why it is */
 	.buy-row {
 		display: flex;
-		align-items: center;
-		gap: 18px;
+		flex-direction: column;
+		align-items: start;
+		gap: 12px;
 		margin-top: 8px;
 	}
-	/* A rubber stamp (OwnedStamp) beside the button it has voided, which
+	/* A rubber stamp (OwnedStamp) under the button it has voided, which
 	   keeps the price on show: tilted, the button's own height, and
 	   in an ink faint enough not to shout. */
 	.owned-stamp {

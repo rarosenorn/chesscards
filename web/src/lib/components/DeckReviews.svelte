@@ -334,7 +334,17 @@
 
 <style>
 	.reviews {
-		margin-top: 32px;
+		margin-top: 25px;
+	}
+	/* A card of their own, under the description's, as Chessable has it: a
+	   strip of the page's grey (body, app.css) right across the white card
+	   this sits in, out through its 25px padding (StandardLayout). */
+	.reviews::before {
+		content: "";
+		display: block;
+		height: 16px;
+		margin: 0 -25px 25px;
+		background-color: #efefef;
 	}
 	.reviews-heading {
 		display: flex;

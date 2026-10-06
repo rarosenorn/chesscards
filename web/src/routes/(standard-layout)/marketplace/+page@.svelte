@@ -143,11 +143,11 @@
 	   to the price it voids */
 	.owned-stamp {
 		display: flex;
-		height: 24px;
+		height: 21px;
 		margin-left: auto;
 		margin-right: 10px;
 		opacity: 0.75;
-		transform: rotate(-7deg);
+		transform: rotate(-4deg);
 	}
 	.owned-stamp :global(svg) {
 		height: 100%;

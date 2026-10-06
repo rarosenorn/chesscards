@@ -114,13 +114,13 @@
 		margin-top: 8px;
 	}
 	/* A rubber stamp (OwnedStamp) beside the button it has voided, which
-	   keeps the price on show: tilted, a little taller than the button, and
+	   keeps the price on show: tilted, the button's own height, and
 	   in an ink faint enough not to shout. */
 	.owned-stamp {
 		display: flex;
-		height: 44px;
+		height: 38px;
 		opacity: 0.75;
-		transform: rotate(-7deg);
+		transform: rotate(-4deg);
 	}
 	.owned-stamp :global(svg) {
 		height: 100%;

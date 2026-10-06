@@ -136,6 +136,10 @@
 		if (responseErrors.length === 0) respondingTo = null;
 	}
 
+	const deleteResponse = async review => {
+		rowErrors = await post("respond", { reviewId: review.id, response: "" });
+	}
+
 	const dateOf = date => new Date(date).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
 	// a text area as tall as its text: the page scrolls, not the box
@@ -209,10 +213,8 @@
 						onclick={() => vote(review, -1)}
 					><ArrowDown /> {review.unhelpful}</button>
 				</span>
-				{#if isAuthor && respondingTo !== review.id}
-					<button type="button" class="link-btn" onclick={() => startResponding(review)}>
-						{review.authorResponse ? "Edit response" : "Respond"}
-					</button>
+				{#if isAuthor && !review.authorResponse && respondingTo !== review.id}
+					<button type="button" class="link-btn" onclick={() => startResponding(review)}>Respond</button>
 				{/if}
 			{/if}
 		</div>
@@ -235,6 +237,12 @@
 			<div class="author-response">
 				<p class="response-label">Author's response · {dateOf(review.authorResponseAt)}</p>
 				<p class="review-body">{review.authorResponse}</p>
+				{#if isAuthor}
+					<div class="review-foot">
+						<button type="button" class="link-btn" onclick={() => startResponding(review)}>Edit</button>
+						<button type="button" class="link-btn" onclick={() => deleteResponse(review)}>Delete</button>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</article>

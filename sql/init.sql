@@ -40,6 +40,10 @@ create table "user" (
 	"lichessUsername" text
 );
 
+-- display names are public (a review is signed with one), so no two accounts
+-- share one, whatever the case
+create unique index user_name_key on "user" (lower("name"));
+
 create table "session" (
 	"id" uuid not null primary key,
 	"expiresAt" timestamptz not null,

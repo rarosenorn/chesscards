@@ -27,8 +27,33 @@ const lichessUserInfo = async tokens => {
 	};
 }
 
+// A display name nobody has yet: the one asked for or, when it is taken, the
+// same with four random digits after it. Names are public (a review is signed
+// with one) and unique whatever the case; the profile page is where a name
+// that came out with digits gets changed.
+const freeName = async name => {
+	const taken = async candidate => {
+		const { rowCount } = await pool.query('select 1 from "user" where lower(name) = lower($1)', [candidate]);
+		return rowCount > 0;
+	}
+	let candidate = name;
+	while (await taken(candidate)) {
+		candidate = `${name}${Math.floor(1000 + Math.random() * 9000)}`;
+	}
+
+	return candidate;
+}
+
 export const auth = betterAuth({
 	database: pool,
+	// every way in (email, Lichess, Google) creates its user here
+	databaseHooks: {
+		user: {
+			create: {
+				before: async user => ({ data: { ...user, name: await freeName(user.name) } })
+			}
+		}
+	},
 	baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:5173",
 	secret: process.env.BETTER_AUTH_SECRET,
 	advanced: {

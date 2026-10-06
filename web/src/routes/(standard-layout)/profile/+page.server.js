@@ -14,8 +14,14 @@ export const actions = {
 	name: async ({ request, locals }) => {
 		const data = await request.formData();
 		const displayName = (data.get("display-name") ?? "").toString().trim().slice(0, 100);
-		if (!displayName) return fail(400, { errors: ["A display name is required"] });
-		await pool.query('update "user" set name = $1 where id = $2', [displayName, locals.userId]);
+		if (!displayName) return fail(400, { errors: ["A display name is required"], failed: "name" });
+		try {
+			await pool.query('update "user" set name = $1 where id = $2', [displayName, locals.userId]);
+		} catch (err) {
+			// user_name_key: someone has the name already, in whatever case
+			if (err.code === "23505") return fail(409, { errors: ["That name is taken"], failed: "name" });
+			throw err;
+		}
 		return { saved: "name" };
 	},
 	// board preferences save on every change (no explicit save button)

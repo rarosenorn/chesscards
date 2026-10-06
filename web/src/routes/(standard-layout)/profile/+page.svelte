@@ -112,6 +112,8 @@
 			<button class="std-btn">Change</button>
 			{#if form?.saved === "name"}
 				<span class="saved">Saved</span>
+			{:else if form?.failed === "name"}
+				<span class="error">{form.errors[0]}</span>
 			{/if}
 		</div>
 	</form>
@@ -197,7 +199,7 @@
 						{/each}
 					</div>
 				</fieldset>
-				{#if form?.errors}
+				{#if form?.errors && form.failed !== "name"}
 					<p class="error">{form.errors[0]}</p>
 				{/if}
 			</div>

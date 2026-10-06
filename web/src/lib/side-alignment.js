@@ -14,8 +14,4 @@ const boardAlignment = side =>
 		? "left"
 		: "center";
 
-// A card whose every board stands alone, front and back.
-const boardsAllAlone = card =>
-	boardAlignment(card.front) === "center" && boardAlignment(card.back) === "center";
-
-export { boardAlignment, boardsAllAlone }
+export { boardAlignment }

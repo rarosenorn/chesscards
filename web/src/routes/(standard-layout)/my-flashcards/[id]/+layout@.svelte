@@ -116,14 +116,12 @@
 	// there for the one thing that is theirs, resetting their study progress.
 	// the editor trials (add-cards-2/-3/-5) keep their routes but not their
 	// tabs: the block editor won, and only it is offered
-	// study1 is the side-by-side trial of the study card (text left, board
-	// right); it keeps a tab of its own until the two can be compared
 	const paths = deck.isMarketplace
-		? ["study", "study1", "browse", "deck", "settings"]
-		: ["study", "study1", "browse", "add-cards", "deck", "settings"];
+		? ["study", "browse", "deck", "settings"]
+		: ["study", "browse", "add-cards", "deck", "settings"];
 	const names = deck.isMarketplace
-		? ["Study", "Study 1", "Cards", "Deck", "Settings"]
-		: ["Study", "Study 1", "Cards", "Add cards", "Deck", "Settings"];
+		? ["Study", "Cards", "Deck", "Settings"]
+		: ["Study", "Cards", "Add cards", "Deck", "Settings"];
 
 	// s/c/a/d/i jump between the deck's tabs. Bare letters, so they stand down
 	// wherever the keyboard is already spoken for — a text field, a card

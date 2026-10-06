@@ -33,7 +33,8 @@
 	let response = $state("");
 	let responseErrors = $state([]);
 
-	let voteErrors = $state([]);
+	// from what is done on a review's own row: a vote, a delete
+	let rowErrors = $state([]);
 
 	// The actions are the marketplace deck page's; the Deck tab shows the same
 	// reviews, so both post there by fetch. Resolves to the errors, none when
@@ -76,16 +77,18 @@
 		if (errors.length === 0) editing = false;
 	}
 
-	// the form stays as it was, now a first review's: posting it again is the
+	// the form comes back holding what was deleted: posting it again is the
 	// way back
 	const deleteReview = async () => {
-		errors = await post("deleteReview", {});
-		if (errors.length === 0) editing = false;
+		recommended = myReview.recommended;
+		body = myReview.body;
+		errors = [];
+		rowErrors = await post("deleteReview", {});
 	}
 
 	// a second click on the arrow you chose takes the vote back
 	const vote = async (review, value) => {
-		voteErrors = await post("vote", { reviewId: review.id, value: review.myVote === value ? 0 : value });
+		rowErrors = await post("vote", { reviewId: review.id, value: review.myVote === value ? 0 : value });
 	}
 
 	const startResponding = review => {
@@ -145,6 +148,7 @@
 				<span class="helpful">Helpful: <span class="score">{review.score}</span></span>
 				{#if canReview}
 					<button type="button" class="link-btn" onclick={startEditing}>Edit</button>
+					<button type="button" class="link-btn" onclick={deleteReview}>Delete</button>
 				{/if}
 			{:else}
 				<span class="helpful">
@@ -241,7 +245,6 @@
 			{@render errorList(errors)}
 			<div class="form-actions">
 				{#if editing}
-					<button type="button" class="std-btn" onclick={deleteReview}>Delete</button>
 					<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
 				{/if}
 				<button type="button" class="std-btn" onclick={saveReview}>{editing ? "Save" : "Post review"}</button>
@@ -251,7 +254,7 @@
 		{@render reviewRow(myReview)}
 	{/if}
 
-	{@render errorList(voteErrors)}
+	{@render errorList(rowErrors)}
 	{#each others as review (review.id)}
 		{@render reviewRow(review)}
 	{/each}

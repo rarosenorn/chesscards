@@ -22,13 +22,11 @@
 						<div class="card-body">
 							<p class="deck-name">{mpDeck.name}</p>
 							<p class="deck-meta">
-								{mpDeck.cardCount} cards
-								{#if mpDeck.reviewCount > 0}
-									<span class="verdicts">
-										<ThumbUp /> {mpDeck.recommendCount}
-										<ThumbDown /> {mpDeck.reviewCount - mpDeck.recommendCount}
-									</span>
-								{/if}
+								{mpDeck.cardCount} cards ·
+								<span class="verdicts">
+									<ThumbUp /> {mpDeck.recommendCount}
+									<ThumbDown /> {mpDeck.reviewCount - mpDeck.recommendCount}
+								</span>
 							</p>
 							<div class="card-footer">
 								<span class="theme-chip">{mpDeck.theme}</span>
@@ -121,12 +119,13 @@
 	}
 	.deck-meta {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
+		gap: 5px;
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.55);
 	}
-	/* how many recommend the deck and how many don't, each by its thumb */
+	/* how many recommend the deck and how many don't, each by its thumb; 0 and
+	   0 on a deck nobody has reviewed, so every tile reads the same way */
 	.verdicts {
 		display: inline-flex;
 		align-items: center;

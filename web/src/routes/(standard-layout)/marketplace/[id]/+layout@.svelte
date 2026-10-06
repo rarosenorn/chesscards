@@ -37,11 +37,7 @@
 				</p>
 			</div>
 			<div class="buy-row">
-				<form
-					method="POST"
-					action="/marketplace/{data.mpDeck.id}/overview?/getDeck"
-					title={data.alreadyOwned ? "You own this deck" : undefined}
-				>
+				<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
 					<button class="std-btn" disabled={data.alreadyOwned}>
 						{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}
 					</button>
@@ -104,8 +100,6 @@
 	.deck-info span {
 		font-weight: 600;
 	}
-	/* the form is no wider than its button, and answers the hover for a
-	   disabled one with why it is */
 	.buy-row {
 		display: flex;
 		flex-direction: column;

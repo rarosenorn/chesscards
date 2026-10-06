@@ -129,14 +129,14 @@
 	.verdicts {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: 2px;
 		font-variant-numeric: tabular-nums;
 	}
 	.verdicts :global(svg) {
 		font-size: 1.05rem;
 	}
 	.verdicts :global(svg:last-of-type) {
-		margin-left: 6px;
+		margin-left: 4px;
 	}
 	.card-footer {
 		display: flex;

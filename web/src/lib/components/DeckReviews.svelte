@@ -285,12 +285,14 @@
 				</button>
 			</div>
 			{#if recommended !== null}
+				<label class="prompt" for="review-body">
+					Please describe why you recommend or don't recommend this deck
+				</label>
 				<textarea
 					use:autoGrow
 					bind:this={bodyField}
 					bind:value={body}
-					aria-label="Your review"
-					placeholder="What makes you say so?"
+					id="review-body"
 					maxlength="5000"
 				></textarea>
 				{@render errorList(errors)}
@@ -498,6 +500,12 @@
 		flex-direction: column;
 		align-items: start;
 		gap: 10px;
+	}
+	.prompt {
+		font-size: 0.9rem;
+		color: rgba(0, 0, 0, 0.6);
+		/* close to the box it is about */
+		margin-bottom: -4px;
 	}
 	.verdict-choice,
 	.form-actions {

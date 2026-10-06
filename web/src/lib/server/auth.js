@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth"
 import { genericOAuth } from "better-auth/plugins"
 import { pool } from "./pool.js"
 import { sendMail } from "./mail.js"
+import { cleanName } from "../display-name.js"
 
 // deliberately plain process.env (not $env): the better-auth CLI loads this
 // file outside the SvelteKit build to generate the database schema
@@ -46,11 +47,21 @@ const freeName = async name => {
 
 export const auth = betterAuth({
 	database: pool,
-	// every way in (email, Lichess, Google) creates its user here
+	// Every way in (email, Lichess, Google) creates its user here, and the
+	// auth API's own rename comes through update: a name is cleaned on both
+	// (display-name.js), so none is a look-alike of another's.
 	databaseHooks: {
 		user: {
 			create: {
-				before: async user => ({ data: { ...user, name: await freeName(user.name) } })
+				before: async user => ({ data: { ...user, name: await freeName(cleanName(user.name) || "player") } })
+			},
+			update: {
+				// a name that cleans away to nothing is no rename
+				before: async user => {
+					if (!("name" in user)) return { data: user };
+					const name = cleanName(user.name);
+					return name ? { data: { ...user, name } } : false;
+				}
 			}
 		}
 	},

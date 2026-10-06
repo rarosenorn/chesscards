@@ -1,5 +1,6 @@
 import { fail } from "@sveltejs/kit"
 import { pool } from "$lib/server/pool.js"
+import { cleanName } from "$lib/display-name.js"
 import * as decks from "$lib/server/decks.js"
 import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS } from "$lib/board-prefs.js"
 import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
@@ -13,7 +14,7 @@ export const load = async ({ locals }) => ({
 export const actions = {
 	name: async ({ request, locals }) => {
 		const data = await request.formData();
-		const displayName = (data.get("display-name") ?? "").toString().trim().slice(0, 100);
+		const displayName = cleanName(data.get("display-name"));
 		if (!displayName) return fail(400, { errors: ["A display name is required"], failed: "name" });
 		try {
 			await pool.query('update "user" set name = $1 where id = $2', [displayName, locals.userId]);

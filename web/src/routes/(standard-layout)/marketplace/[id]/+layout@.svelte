@@ -102,8 +102,7 @@
 	/* no wider than its button: the form answers the hover for a disabled
 	   one, with why it is */
 	.deck-side form {
-		margin-top: auto;
-		margin-bottom: auto;
+		margin-top: 8px;
 		align-self: start;
 	}
 	/* you have the deck already: greyed, and deaf to the hover and press of

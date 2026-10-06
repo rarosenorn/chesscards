@@ -340,10 +340,9 @@
 		align-items: center;
 		gap: 12px;
 	}
-	/* Where the reviews take a color: the thumbs, which bring their own
-	   (ThumbUp, ThumbDown), and a vote once it is cast. The verdict's thumb
-	   stands in a square of its color, pale so that the filled thumb still
-	   shows on it. */
+	/* The one place the reviews take a color: the thumbs, which bring their
+	   own (ThumbUp, ThumbDown). The verdict's stands in a square of its
+	   color, pale so that the filled thumb still shows on it. */
 	.thumb-box {
 		display: flex;
 		align-items: center;
@@ -389,21 +388,24 @@
 	.helpful {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
+		gap: 2px;
 	}
 	/* Reddit's arrows, each with how many chose it: buttons on someone else's
-	   review, the bare counts on your own. Grey until one is your vote, which
-	   fills its arrow and takes the thumbs' green or red. */
+	   review, the bare counts on your own. Grey; the one that is your vote is
+	   black, its arrow filled. */
 	.vote {
 		display: inline-flex;
 		align-items: center;
-		gap: 3px;
+		gap: 1px;
 		border: none;
 		background: none;
-		padding: 2px 6px 2px 4px;
+		padding: 2px 4px 2px 2px;
 		border-radius: 4px;
 		color: inherit;
 		font-variant-numeric: tabular-nums;
+	}
+	.vote.up {
+		margin-left: 3px;
 	}
 	.vote :global(svg) {
 		font-size: 1.1rem;
@@ -414,13 +416,9 @@
 	button.vote:hover {
 		background-color: rgba(0, 0, 0, 0.06);
 	}
-	button.vote.up:hover,
-	button.vote.up.active {
-		color: #4f8a1c;
-	}
-	button.vote.down:hover,
-	button.vote.down.active {
-		color: #cf3a2e;
+	button.vote:hover,
+	button.vote.active {
+		color: black;
 	}
 	button.vote.active {
 		font-weight: 600;

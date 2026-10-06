@@ -13,13 +13,25 @@
 	// the viewer's own review leads the list, whatever the order of the rest
 	let myReview = $derived(reviews.find(review => review.mine));
 
-	// the reviews arrive most helpful first
-	let sort = $state("helpful");
+	let recommendCount = $derived(reviews.filter(review => review.recommended).length);
+
+	// Most helpful or newest first; a second click on the one in use turns it
+	// round, to least helpful or oldest first.
+	let sort = $state({ by: "helpful", descending: true });
+	const sortBy = by => {
+		sort = { by, descending: sort.by === by ? !sort.descending : true };
+	}
+	const SORT_NAMES = { helpful: ["Most helpful", "Least helpful"], newest: ["Newest", "Oldest"] };
+	const sortLabel = by =>
+		sort.by === by ? `${SORT_NAMES[by][sort.descending ? 0 : 1]} ${sort.descending ? "↓" : "↑"}` : SORT_NAMES[by][0];
+
 	let others = $derived.by(() => {
-		const rest = reviews.filter(review => !review.mine);
-		return sort === "newest"
-			? [...rest].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-			: rest;
+		const newest = (a, b) => new Date(b.createdAt) - new Date(a.createdAt);
+		const net = review => review.helpful - review.unhelpful;
+		const sorted = reviews
+			.filter(review => !review.mine)
+			.sort(sort.by === "newest" ? newest : (a, b) => net(b) - net(a) || newest(a, b));
+		return sort.descending ? sorted : sorted.reverse();
 	});
 
 	// the review form: there for a first review, and on Edit for a posted one
@@ -86,7 +98,7 @@
 		rowErrors = await post("deleteReview", {});
 	}
 
-	// a second click on the arrow you chose takes the vote back
+	// a second click on the thumb you chose takes the vote back
 	const vote = async (review, value) => {
 		rowErrors = await post("vote", { reviewId: review.id, value: review.myVote === value ? 0 : value });
 	}
@@ -130,22 +142,28 @@
 {#snippet reviewRow(review)}
 	<article class="review">
 		<div class="review-head">
-			<span class="verdict">
-				<span class="thumb">
-					{#if review.recommended}<ThumbUp />{:else}<ThumbDown />{/if}
-				</span>
-				{review.recommended ? "Recommended" : "Not recommended"}
+			<span class="thumb-box" class:up={review.recommended} class:down={!review.recommended}>
+				{#if review.recommended}<ThumbUp />{:else}<ThumbDown />{/if}
 			</span>
-			<span class="review-meta">
-				{review.mine ? "Your review" : review.author}
-				· {review.cardsStudied} {review.cardsStudied === 1 ? "card" : "cards"} studied
-				· {dateOf(review.createdAt)}{review.edited ? " (edited)" : ""}
-			</span>
+			<div>
+				<p class="verdict">
+					<strong>{review.recommended ? "Recommended" : "Not recommended"}</strong>
+					by {review.mine ? "you" : review.author}
+				</p>
+				<p class="review-meta">
+					{review.cardsStudied} {review.cardsStudied === 1 ? "card" : "cards"} studied
+					· {dateOf(review.createdAt)}{review.edited ? " (edited)" : ""}
+				</p>
+			</div>
 		</div>
 		<p class="review-body">{review.body}</p>
 		<div class="review-foot">
 			{#if review.mine}
-				<span class="helpful">Helpful: <span class="score">{review.score}</span></span>
+				<span class="helpful">
+					Helpful:
+					<span class="vote"><ThumbUp /> {review.helpful}</span>
+					<span class="vote"><ThumbDown /> {review.unhelpful}</span>
+				</span>
 				{#if canReview}
 					<button type="button" class="link-btn" onclick={startEditing}>Edit</button>
 					<button type="button" class="link-btn" onclick={deleteReview}>Delete</button>
@@ -160,8 +178,7 @@
 						aria-label="Helpful"
 						aria-pressed={review.myVote === 1}
 						onclick={() => vote(review, 1)}
-					><ThumbUp /></button>
-					<span class="score">{review.score}</span>
+					><ThumbUp /> {review.helpful}</button>
 					<button
 						type="button"
 						class="vote"
@@ -169,7 +186,7 @@
 						aria-label="Not helpful"
 						aria-pressed={review.myVote === -1}
 						onclick={() => vote(review, -1)}
-					><ThumbDown /></button>
+					><ThumbDown /> {review.unhelpful}</button>
 				</span>
 				{#if isAuthor && respondingTo !== review.id}
 					<button type="button" class="link-btn" onclick={() => startResponding(review)}>
@@ -205,10 +222,15 @@
 <section class="reviews" id="reviews">
 	<div class="reviews-heading">
 		<h3>Reviews</h3>
+		{#if reviews.length > 0}
+			<p class="overview">
+				Recommended by {recommendCount} · Not recommended by {reviews.length - recommendCount}
+			</p>
+		{/if}
 		{#if others.length > 1}
 			<div class="sort">
-				<button type="button" class:active={sort === "helpful"} onclick={() => sort = "helpful"}>Most helpful</button>
-				<button type="button" class:active={sort === "newest"} onclick={() => sort = "newest"}>Newest</button>
+				<button type="button" class:active={sort.by === "helpful"} onclick={() => sortBy("helpful")}>{sortLabel("helpful")}</button>
+				<button type="button" class:active={sort.by === "newest"} onclick={() => sortBy("newest")}>{sortLabel("newest")}</button>
 			</div>
 		{/if}
 	</div>
@@ -272,17 +294,21 @@
 	}
 	.reviews-heading {
 		display: flex;
-		justify-content: space-between;
 		align-items: baseline;
+		gap: 16px;
 		padding-bottom: 8px;
 		border-bottom: 1px solid #e3e1e1;
 	}
 	h3 {
 		font-size: 1.1rem;
 	}
+	.overview {
+		color: rgba(0, 0, 0, 0.6);
+	}
 	.sort {
 		display: flex;
 		gap: 4px;
+		margin-left: auto;
 	}
 	.sort button {
 		border: none;
@@ -300,28 +326,46 @@
 		color: black;
 		font-weight: 600;
 	}
+	/* each review in a box of its own, as Steam's; the form is the box your
+	   own review will be */
 	.review,
 	.review-form {
-		padding: 16px 0;
-		border-bottom: 1px solid #eee;
+		margin-top: 12px;
+		padding: 14px 16px;
+		border-radius: 6px;
+		background-color: #f5f5f5;
 	}
 	.review-head {
 		display: flex;
-		flex-wrap: wrap;
 		align-items: center;
-		gap: 4px 12px;
+		gap: 12px;
 	}
-	.verdict {
-		display: inline-flex;
+	/* The one place the reviews take a color: the thumbs, which bring their
+	   own (ThumbUp, ThumbDown). The verdict's stands in a square of its
+	   color, pale so that the filled thumb still shows on it. */
+	.thumb-box {
+		display: flex;
 		align-items: center;
-		gap: 6px;
-		font-weight: 600;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border-radius: 4px;
+		font-size: 1.75rem;
+		flex-shrink: 0;
 	}
-	/* the one place the reviews take a color: the thumbs, which bring their
-	   own (ThumbUp, ThumbDown) for the verdict and the helpful votes on it */
+	.thumb-box.up {
+		background-color: #dcedb9;
+	}
+	.thumb-box.down {
+		background-color: #f9cfca;
+	}
 	.thumb {
 		display: inline-flex;
 		font-size: 1.3rem;
+	}
+	.verdict {
+		font-size: 1.05rem;
+		line-height: 1.3;
 	}
 	.review-meta,
 	.review-foot,
@@ -330,7 +374,7 @@
 		color: rgba(0, 0, 0, 0.55);
 	}
 	.review-body {
-		margin-top: 8px;
+		margin-top: 12px;
 		max-width: 80ch;
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
@@ -339,33 +383,41 @@
 		display: flex;
 		align-items: center;
 		gap: 16px;
-		margin-top: 10px;
+		margin-top: 12px;
 	}
 	.helpful {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: 6px;
 	}
-	.score {
-		min-width: 1.5ch;
-		text-align: center;
-		font-variant-numeric: tabular-nums;
-	}
+	/* a thumb and how many chose it: a button on someone else's review, the
+	   bare count on your own */
 	.vote {
 		display: inline-flex;
+		align-items: center;
+		gap: 5px;
 		border: none;
 		background: none;
-		cursor: pointer;
-		padding: 3px;
+		padding: 2px 8px 2px 6px;
 		border-radius: 4px;
+		color: inherit;
+		font-variant-numeric: tabular-nums;
+	}
+	.vote :global(svg) {
 		font-size: 1.2rem;
 	}
-	.vote:hover {
+	button.vote {
+		cursor: pointer;
 		background-color: rgba(0, 0, 0, 0.06);
 	}
-	/* your vote: the thumb sits on a grey chip */
-	.vote.active {
-		background-color: rgba(0, 0, 0, 0.13);
+	button.vote:hover {
+		background-color: rgba(0, 0, 0, 0.11);
+	}
+	/* your vote: a darker chip, its count in black */
+	button.vote.active {
+		background-color: rgba(0, 0, 0, 0.18);
+		color: black;
+		font-weight: 600;
 	}
 	.link-btn {
 		border: none;
@@ -384,7 +436,7 @@
 	}
 	.author-response {
 		padding-left: 12px;
-		border-left: 2px solid #e3e1e1;
+		border-left: 2px solid #d5d5d5;
 	}
 	.response-label {
 		font-weight: 600;
@@ -422,6 +474,7 @@
 		overflow: hidden;
 	}
 	.errors {
+		margin-top: 8px;
 		color: red;
 		padding-left: 16px;
 	}

@@ -1,6 +1,7 @@
 <script>
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
-	import { reviewSummary } from "$lib/reviews.js"
+	import ThumbUp from "$lib/icons/ThumbUp.svelte"
+	import ThumbDown from "$lib/icons/ThumbDown.svelte"
 
 	let { data } = $props();
 </script>
@@ -21,7 +22,13 @@
 						<div class="card-body">
 							<p class="deck-name">{mpDeck.name}</p>
 							<p class="deck-meta">
-								{mpDeck.cardCount} cards{#if reviewSummary(mpDeck)}{" · "}{reviewSummary(mpDeck)}{/if}
+								{mpDeck.cardCount} cards
+								{#if mpDeck.reviewCount > 0}
+									<span class="verdicts">
+										<ThumbUp /> {mpDeck.recommendCount}
+										<ThumbDown /> {mpDeck.reviewCount - mpDeck.recommendCount}
+									</span>
+								{/if}
 							</p>
 							<div class="card-footer">
 								<span class="theme-chip">{mpDeck.theme}</span>
@@ -113,8 +120,24 @@
 		text-overflow: ellipsis;
 	}
 	.deck-meta {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.55);
+	}
+	/* how many recommend the deck and how many don't, each by its thumb */
+	.verdicts {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-variant-numeric: tabular-nums;
+	}
+	.verdicts :global(svg) {
+		font-size: 1.05rem;
+	}
+	.verdicts :global(svg:last-of-type) {
+		margin-left: 6px;
 	}
 	.card-footer {
 		display: flex;

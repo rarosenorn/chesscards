@@ -404,8 +404,9 @@ const createInstanceReviewLog = async (userId, instanceCardId, log) => {
 	)
 }
 
-// A deck's reviews, most helpful first. userId (null when logged out) marks
-// the viewer's own review and their vote on the others. cardsStudied is how
+// A deck's reviews, most helpful first: by helpful votes less unhelpful ones,
+// both of which are shown. userId (null when logged out) marks the viewer's
+// own review and their vote on the others. cardsStudied is how
 // many of the deck's cards the reviewer has graded at least once: what Steam's
 // hours played is to a game.
 const getReviews = async (marketplaceDeckId, userId) => {
@@ -414,7 +415,8 @@ const getReviews = async (marketplaceDeckId, userId) => {
 			r.created_at "createdAt", r.updated_at > r.created_at edited,
 			r.author_response "authorResponse", r.author_response_at "authorResponseAt",
 			coalesce(r.user_id = $2::uuid, false) mine,
-			coalesce((select sum(v.value) from marketplace_review_votes v where v.review_id = r.id), 0)::int score,
+			(select count(*) from marketplace_review_votes v where v.review_id = r.id and v.value = 1)::int helpful,
+			(select count(*) from marketplace_review_votes v where v.review_id = r.id and v.value = -1)::int unhelpful,
 			coalesce((select v.value from marketplace_review_votes v where v.review_id = r.id and v.user_id = $2::uuid), 0)::int "myVote",
 			(select count(distinct rl.marketplace_card_instance_id)
 				from review_logs rl
@@ -424,7 +426,8 @@ const getReviews = async (marketplaceDeckId, userId) => {
 		from marketplace_reviews r
 		join "user" u on u.id = r.user_id
 		where r.marketplace_deck_id = $1
-		order by score desc, r.created_at desc`,
+		order by coalesce((select sum(v.value) from marketplace_review_votes v where v.review_id = r.id), 0) desc,
+			r.created_at desc`,
 		[marketplaceDeckId, userId ?? null]
 	);
 

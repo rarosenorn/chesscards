@@ -3,6 +3,7 @@
 	import FormErrors from "$lib/components/FormErrors.svelte"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import ReviewCounts from "$lib/components/ReviewCounts.svelte"
+	import OwnedStamp from "$lib/icons/OwnedStamp.svelte"
 
 	let { data, children } = $props();
 
@@ -46,7 +47,7 @@
 					</button>
 				</form>
 				{#if data.alreadyOwned}
-					<span class="owned-stamp">Owned</span>
+					<span class="owned-stamp"><OwnedStamp /></span>
 				{/if}
 			</div>
 		</div>
@@ -112,23 +113,18 @@
 		gap: 18px;
 		margin-top: 8px;
 	}
-	/* A rubber stamp beside the button it has voided, which keeps the price
-	   on show: double-ruled, tilted and a little taller than the button, in
-	   an ink faint enough not to shout. */
+	/* A rubber stamp (OwnedStamp) beside the button it has voided, which
+	   keeps the price on show: tilted, a little taller than the button, and
+	   in an ink faint enough not to shout. */
 	.owned-stamp {
-		padding: 4px 12px;
-		border: 4px double currentColor;
-		border-radius: 3px;
-		color: #c0392b;
-		opacity: 0.65;
-		font-family: Georgia, "Times New Roman", serif;
-		font-weight: 700;
-		font-size: 1.15rem;
-		line-height: 1.3;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
+		display: flex;
+		height: 44px;
+		opacity: 0.75;
 		transform: rotate(-7deg);
-		user-select: none;
+	}
+	.owned-stamp :global(svg) {
+		height: 100%;
+		width: auto;
 	}
 	/* you have the deck already: greyed, and deaf to the hover and press of
 	   a live button */

@@ -24,7 +24,7 @@
 				{#if reviewSummary(data.mpDeck)}
 					<a href="/marketplace/{data.mpDeck.id}/overview#reviews">{reviewSummary(data.mpDeck)}</a>
 				{:else}
-					n/a
+					None
 				{/if}
 			</p>
 		</div>

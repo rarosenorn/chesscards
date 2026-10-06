@@ -182,7 +182,7 @@
 							{#if reviewSummary(data.listing)}
 								<a href="#reviews" onclick={showReviews}>{reviewSummary(data.listing)}</a>
 							{:else}
-								n/a
+								None
 							{/if}
 						</p>
 					{/if}

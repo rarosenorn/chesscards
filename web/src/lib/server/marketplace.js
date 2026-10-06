@@ -328,7 +328,7 @@ const getInstanceById = async (userId, instanceId) => {
 // shows it, which is the author's and read-only here
 const getInstanceListing = async (userId, instanceId) => {
 	const { rows } = await pool.query(`
-		select i.id, md.id "marketplaceDeckId", md.name, md.description, md.theme, u.email author,
+		select i.id, md.id "marketplaceDeckId", md.name, md.description, md.theme, u.name author,
 			(select count(*) from marketplace_cards mc where mc.marketplace_deck_id = md.id)::int "cardCount",
 			md.user_id = i.user_id "isAuthor",
 			${REVIEW_COUNTS}

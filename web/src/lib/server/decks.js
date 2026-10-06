@@ -120,7 +120,7 @@ const remove = async (id, userId) => {
 // of it travels here, for the tab to put in that route's url
 const getListing = async (userId, id) => {
 	const { rows } = await pool.query(`
-		select d.id, d.name, d.description, d.theme, left(md5(d.image), 8) "imageVersion", u.email author,
+		select d.id, d.name, d.description, d.theme, left(md5(d.image), 8) "imageVersion", u.name author,
 			d.preview_card_ids "previewCardIds",
 			(select count(*) from cards c where c.deck_id = d.id)::int "cardCount"
 		from decks d

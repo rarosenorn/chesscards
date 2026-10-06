@@ -12,21 +12,20 @@
 	];
 </script>
 
-<!-- the page is one deck's, so its heading is the way back to the
-     marketplace (as My flashcards' deck pages have theirs), and the deck's
-     name below is the only title -->
+<!-- the way back to the marketplace, in the bar My flashcards' deck pages
+     have theirs in; the page's title is the deck's name -->
+<div class="deck-nav-container">
+	<div class="breadcrumbs">
+		<a href="/marketplace">Marketplace</a>
+		<span>{"->"}</span>
+		<span>{data.mpDeck.name}</span>
+	</div>
+</div>
+
 <StandardLayout>
-	{#snippet heading()}
-		<div class="breadcrumbs">
-			<a href="/marketplace">Marketplace</a>
-			<span>{"->"}</span>
-			<span>{data.mpDeck.name}</span>
-		</div>
-	{/snippet}
 	<div class="deck-header">
 		<img class="thumbnail" src="/marketplace/{data.mpDeck.id}/thumbnail" alt={data.mpDeck.name} />
 		<div class="deck-side">
-			<h2>{data.mpDeck.name}</h2>
 			<div class="deck-info">
 				<p><span>Author:</span> {data.mpDeck.author}</p>
 				<p class="theme"><span>Theme:</span> {data.mpDeck.theme}</p>
@@ -62,6 +61,10 @@
 </StandardLayout>
 
 <style>
+	.deck-nav-container {
+		box-shadow: inset 0 -4px 6px -4px rgba(0, 0, 0, 0.2);
+		padding: 8px 30px;
+	}
 	.breadcrumbs a {
 		color: black;
 	}
@@ -79,11 +82,7 @@
 		object-fit: cover;
 		border-radius: 4px;
 	}
-	h2 {
-		font-size: 1.3rem;
-	}
 	.deck-info {
-		margin-top: 8px;
 		color: rgba(0, 0, 0, 0.6);
 	}
 	.theme {

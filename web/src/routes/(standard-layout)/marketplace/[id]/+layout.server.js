@@ -21,6 +21,7 @@ export const load = async ({ params, locals }) => {
 		alreadyOwned: locals.userId
 			? await marketplace.userHasDeckInstance(locals.userId, params.id)
 			: false,
-		pageTitle: "Marketplace"
+		// the page is the deck's: its name is the title
+		pageTitle: rows[0].name
 	}
 }

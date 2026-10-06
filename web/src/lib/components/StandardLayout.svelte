@@ -1,17 +1,11 @@
 <script>
 	import { page } from "$app/state";
-	// heading: what stands in the heading strip in place of the page's title
-	// (a marketplace deck's breadcrumb)
-	let { children, heading, headerActions } = $props();
+	let { children, headerActions } = $props();
 </script>
 
 <div class="page-container">
 	<div class="page-heading">
-		{#if heading}
-			{@render heading()}
-		{:else}
-			<h1>{page.data.pageTitle}</h1>
-		{/if}
+		<h1>{page.data.pageTitle}</h1>
 		{#if headerActions}
 			{@render headerActions()}
 		{/if}

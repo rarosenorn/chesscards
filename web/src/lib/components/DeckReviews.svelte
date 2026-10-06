@@ -3,8 +3,6 @@
 	import { goto, invalidateAll } from "$app/navigation"
 	import ThumbUp from "$lib/icons/ThumbUp.svelte"
 	import ThumbDown from "$lib/icons/ThumbDown.svelte"
-	import ChevronUp from "$lib/icons/ChevronUp.svelte"
-	import ChevronDown from "$lib/icons/ChevronDown.svelte"
 
 	// A marketplace deck's reviews, under its description on the marketplace
 	// page and on the Deck tab of whoever has the deck. canReview: the viewer
@@ -153,21 +151,21 @@
 					Helpful?
 					<button
 						type="button"
-						class="vote"
+						class="vote up"
 						class:active={review.myVote === 1}
 						aria-label="Helpful"
 						aria-pressed={review.myVote === 1}
 						onclick={() => vote(review, 1)}
-					><ChevronUp /></button>
+					><ThumbUp /></button>
 					<span class="score">{review.score}</span>
 					<button
 						type="button"
-						class="vote"
+						class="vote down"
 						class:active={review.myVote === -1}
 						aria-label="Not helpful"
 						aria-pressed={review.myVote === -1}
 						onclick={() => vote(review, -1)}
-					><ChevronDown /></button>
+					><ThumbDown /></button>
 				</span>
 				{#if isAuthor && respondingTo !== review.id}
 					<button type="button" class="link-btn" onclick={() => startResponding(review)}>
@@ -316,15 +314,18 @@
 		gap: 6px;
 		font-weight: 600;
 	}
-	/* the one place the reviews take a color: the thumb itself */
+	/* the one place the reviews take a color: the thumbs themselves, the
+	   review's verdict and the helpful votes on it */
 	.thumb {
 		display: inline-flex;
 		font-size: 1.15rem;
 	}
-	.thumb.up {
+	.thumb.up,
+	.vote.up {
 		color: #3a8f4d;
 	}
-	.thumb.down {
+	.thumb.down,
+	.vote.down {
 		color: #c0453b;
 	}
 	.review-meta,
@@ -360,18 +361,16 @@
 		border: none;
 		background: none;
 		cursor: pointer;
-		padding: 2px;
+		padding: 3px;
 		border-radius: 4px;
-		font-size: 1.15rem;
-		color: rgba(0, 0, 0, 0.45);
+		font-size: 1.05rem;
 	}
 	.vote:hover {
-		color: black;
 		background-color: rgba(0, 0, 0, 0.06);
 	}
+	/* your vote: the thumb sits on a grey chip */
 	.vote.active {
-		color: black;
-		background-color: rgba(0, 0, 0, 0.1);
+		background-color: rgba(0, 0, 0, 0.13);
 	}
 	.link-btn {
 		border: none;

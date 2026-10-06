@@ -448,6 +448,17 @@ const saveReview = async (userId, marketplaceDeckId, { recommended, body }) => {
 	return rowCount === 1;
 }
 
+// Takes the user's review of a deck down, and with it its votes and the
+// author's response
+const deleteReview = async (userId, marketplaceDeckId) => {
+	const { rowCount } = await pool.query(
+		"delete from marketplace_reviews where user_id = $1 and marketplace_deck_id = $2",
+		[userId, marketplaceDeckId]
+	);
+
+	return rowCount === 1;
+}
+
 // The user's helpful (1) / not helpful (-1) vote on someone else's review of
 // the deck; 0 takes it back
 const setReviewVote = async (userId, marketplaceDeckId, reviewId, value) => {
@@ -483,4 +494,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }

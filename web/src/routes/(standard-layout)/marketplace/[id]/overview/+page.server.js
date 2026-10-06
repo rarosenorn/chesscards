@@ -56,6 +56,16 @@ export const actions = {
 		}
 	},
 
+	deleteReview: async ({ params, locals, url }) => {
+		if (!locals.userId) {
+			redirect(303, `/login?redirect_to=${url.pathname}`);
+		}
+		const deleted = await marketplace.deleteReview(locals.userId, params.id);
+		if (!deleted) {
+			return fail(404, { errors: ["You have no review of this deck"] });
+		}
+	},
+
 	vote: async ({ request, params, locals, url }) => {
 		if (!locals.userId) {
 			redirect(303, `/login?redirect_to=${url.pathname}`);

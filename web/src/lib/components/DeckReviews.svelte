@@ -78,6 +78,13 @@
 		if (errors.length === 0) editing = false;
 	}
 
+	// the form stays as it was, now a first review's: posting it again is the
+	// way back
+	const deleteReview = async () => {
+		errors = await post("deleteReview", {});
+		if (errors.length === 0) editing = false;
+	}
+
 	// a second click on the arrow you chose takes the vote back
 	const vote = async (review, value) => {
 		voteErrors = await post("vote", { reviewId: review.id, value: review.myVote === value ? 0 : value });
@@ -236,6 +243,7 @@
 			{@render errorList(errors)}
 			<div class="form-actions">
 				{#if editing}
+					<button type="button" class="std-btn" onclick={deleteReview}>Delete</button>
 					<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
 				{/if}
 				<button type="button" class="std-btn" onclick={saveReview}>{editing ? "Save" : "Post review"}</button>

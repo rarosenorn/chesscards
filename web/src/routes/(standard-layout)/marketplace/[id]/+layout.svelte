@@ -28,7 +28,11 @@
 				{/if}
 			</p>
 		</div>
-		<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
+		<form
+			method="POST"
+			action="/marketplace/{data.mpDeck.id}/overview?/getDeck"
+			title={data.alreadyOwned ? "You own this deck" : undefined}
+		>
 			<button class="std-btn" disabled={data.alreadyOwned}>
 				{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}
 			</button>
@@ -84,9 +88,12 @@
 	.deck-info a {
 		color: inherit;
 	}
+	/* no wider than its button: the form answers the hover for a disabled
+	   one, with why it is */
 	.deck-side form {
 		margin-top: auto;
 		margin-bottom: auto;
+		align-self: start;
 	}
 	/* you have the deck already: greyed, and deaf to the hover and press of
 	   a live button */

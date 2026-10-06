@@ -2,11 +2,14 @@
 	import { deserialize } from "$app/forms"
 	import { invalidateAll } from "$app/navigation"
 	import { page } from "$app/state"
+	import { tick } from "svelte"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import DescriptionEditor from "$lib/components/DescriptionEditor.svelte"
 	import DescriptionView from "$lib/components/DescriptionView.svelte"
+	import DeckReviews from "$lib/components/DeckReviews.svelte"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import ThumbnailCrop from "$lib/components/ThumbnailCrop.svelte"
+	import { reviewSummary } from "$lib/reviews.js"
 
 	let { data } = $props();
 
@@ -34,9 +37,18 @@
 
 	let errors = $state([]);
 
-	// the marketplace page's Description | Sample cards tabs, client-side;
+	// the marketplace page's Overview | Sample cards tabs, client-side;
 	// the sample card picker sends you back to its own
-	let view = $state(page.url.searchParams.get("view") === "sample-cards" ? "sample-cards" : "description");
+	let view = $state(page.url.searchParams.get("view") === "sample-cards" ? "sample-cards" : "overview");
+
+	// the header's Reviews line: they sit under the description, which may
+	// not be the view that is showing
+	const showReviews = async e => {
+		e.preventDefault();
+		view = "overview";
+		await tick();
+		document.getElementById("reviews")?.scrollIntoView();
+	}
 
 	const startEditing = () => {
 		name = data.listing.name;
@@ -85,7 +97,7 @@
 	// e opens the editor, as on Cards; Ctrl+Enter saving is the description
 	// editor's own, window-wide
 	const handleKeyDown = e => {
-		if (!editable || editing || view !== "description") return;
+		if (!editable || editing || view !== "overview") return;
 		if (e.key !== "e" || e.ctrlKey || e.metaKey || e.altKey) return;
 		const target = e.target;
 		if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.tagName === "SELECT" || target?.isContentEditable) return;
@@ -164,22 +176,36 @@
 					<p><span>Author:</span> {data.listing.author}</p>
 					<p class="theme"><span>Theme:</span> {data.listing.theme ?? "none"}</p>
 					<p><span>No. of cards:</span> {data.listing.cardCount}</p>
+					{#if data.reviews}
+						<p>
+							<span>Reviews:</span>
+							<a href="#reviews" onclick={showReviews}>{reviewSummary(data.listing) ?? "none yet"}</a>
+						</p>
+					{/if}
 				</div>
 			</div>
 		</div>
 		<div class="tabs">
-			<button class:active={view === "description"} onclick={() => view = "description"}>
-				Description
+			<button class:active={view === "overview"} onclick={() => view = "overview"}>
+				Overview
 			</button>
 			<button class:active={view === "sample-cards"} onclick={() => view = "sample-cards"}>
 				Sample cards
 			</button>
 		</div>
-		{#if view === "description"}
+		{#if view === "overview"}
 			{#if data.listing.description}
 				<DescriptionView blocks={data.listing.description} />
 			{:else}
 				<p class="empty">No description</p>
+			{/if}
+			{#if data.reviews}
+				<DeckReviews
+					marketplaceDeckId={data.listing.marketplaceDeckId}
+					reviews={data.reviews}
+					canReview={!data.listing.isAuthor}
+					isAuthor={data.listing.isAuthor}
+				/>
 			{/if}
 		{:else}
 			{#each data.sampleCards as card (card.id)}
@@ -198,7 +224,7 @@
 		{#if editing}
 			<button type="button" class="std-btn" onclick={() => editing = false}>Cancel</button>
 			<button type="button" class="std-btn" onclick={save}>Save</button>
-		{:else if view === "description"}
+		{:else if view === "overview"}
 			<button type="button" class="std-btn" onclick={startEditing}>Edit</button>
 		{:else}
 			<a class="std-btn" href="/my-flashcards/{data.listing.id}/sample-cards">Edit sample cards</a>
@@ -256,6 +282,9 @@
 	.deck-info span,
 	.deck-info label {
 		font-weight: 600;
+	}
+	.deck-info a {
+		color: inherit;
 	}
 	/* the marketplace deck page's tabs */
 	.tabs {

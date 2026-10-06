@@ -1,5 +1,6 @@
 <script>
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
+	import { reviewSummary } from "$lib/reviews.js"
 
 	let { data } = $props();
 </script>
@@ -19,7 +20,9 @@
 						<img class="thumbnail" src="/marketplace/{mpDeck.id}/thumbnail" alt={mpDeck.name} />
 						<div class="card-body">
 							<p class="deck-name">{mpDeck.name}</p>
-							<p class="deck-meta">{mpDeck.cardCount} cards</p>
+							<p class="deck-meta">
+								{mpDeck.cardCount} cards{#if reviewSummary(mpDeck)}{" · "}{reviewSummary(mpDeck)}{/if}
+							</p>
 							<div class="card-footer">
 								<span class="theme-chip">{mpDeck.theme}</span>
 								<span class="price" class:free={Number(mpDeck.price) === 0}>

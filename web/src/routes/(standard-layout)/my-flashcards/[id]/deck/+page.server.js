@@ -21,6 +21,10 @@ export const load = async ({ locals, params, parent }) => {
 		pageTitle: "Deck",
 		listing,
 		sampleCards,
+		// a deck taken from the marketplace is reviewed here as well as there
+		reviews: deck.isMarketplace
+			? await marketplace.getReviews(listing.marketplaceDeckId, locals.userId)
+			: null,
 		themes: marketplace.themes
 	}
 }

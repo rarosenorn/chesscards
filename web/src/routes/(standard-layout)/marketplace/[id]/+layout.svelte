@@ -1,11 +1,12 @@
 <script>
 	import { page } from "$app/state"
 	import FormErrors from "$lib/components/FormErrors.svelte"
+	import { reviewSummary } from "$lib/reviews.js"
 
 	let { data, children } = $props();
 
 	const tabs = [
-		{ path: "description", name: "Description" },
+		{ path: "overview", name: "Overview" },
 		{ path: "cards", name: "Sample cards" }
 	];
 </script>
@@ -18,11 +19,15 @@
 			<p><span>Author:</span> {data.mpDeck.author}</p>
 			<p class="theme"><span>Theme:</span> {data.mpDeck.theme}</p>
 			<p><span>No. of cards:</span> {data.mpDeck.cardCount}</p>
+			<p>
+				<span>Reviews:</span>
+				<a href="/marketplace/{data.mpDeck.id}/overview#reviews">{reviewSummary(data.mpDeck) ?? "none yet"}</a>
+			</p>
 		</div>
 		{#if data.alreadyOwned}
 			<p class="owned-note">You already have this deck. <a href="/my-flashcards">Go to My flashcards</a></p>
 		{:else}
-			<form method="POST" action="/marketplace/{data.mpDeck.id}/description?/getDeck">
+			<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
 				<button class="std-btn">{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}</button>
 			</form>
 		{/if}
@@ -73,6 +78,9 @@
 	}
 	.deck-info span {
 		font-weight: 600;
+	}
+	.deck-info a {
+		color: inherit;
 	}
 	.deck-side form,
 	.owned-note {

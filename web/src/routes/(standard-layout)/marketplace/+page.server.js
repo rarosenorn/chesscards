@@ -7,7 +7,8 @@ export const load = async ({ url }) => {
 	if (theme && !marketplace.themes.includes(theme)) error(404);
 
 	const result = await pool.query(`
-		select md.id, md.name, md.theme, md.price, count(mc.id) "cardCount"
+		select md.id, md.name, md.theme, md.price, count(mc.id) "cardCount",
+			${marketplace.REVIEW_COUNTS}
 		from marketplace_decks md
 		left join marketplace_cards mc on md.id = mc.marketplace_deck_id
 		where $1::deck_theme is null or md.theme = $1

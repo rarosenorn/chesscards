@@ -4,6 +4,13 @@ import { createEmptyCard } from "ts-fsrs"
 
 const themes = ["openings", "endgames", "tactics", "strategy", "checkmates"];
 
+// how many reviews a deck has and how many of them recommend it: two columns
+// for any query that has marketplace_decks as md (see reviews.js for the line
+// they are shown as)
+const REVIEW_COUNTS = `
+	(select count(*) from marketplace_reviews r where r.marketplace_deck_id = md.id)::int "reviewCount",
+	(select count(*) from marketplace_reviews r where r.marketplace_deck_id = md.id and r.recommended)::int "recommendCount"`;
+
 // Latest upload request for a deck, or undefined
 const getUploadRequestForDeck = async (userId, deckId) => {
 	const { rows } = await pool.query(`
@@ -323,7 +330,9 @@ const getInstanceById = async (userId, instanceId) => {
 const getInstanceListing = async (userId, instanceId) => {
 	const { rows } = await pool.query(`
 		select i.id, md.id "marketplaceDeckId", md.name, md.description, md.theme, u.email author,
-			(select count(*) from marketplace_cards mc where mc.marketplace_deck_id = md.id)::int "cardCount"
+			(select count(*) from marketplace_cards mc where mc.marketplace_deck_id = md.id)::int "cardCount",
+			md.user_id = i.user_id "isAuthor",
+			${REVIEW_COUNTS}
 		from marketplace_deck_instances i
 		join marketplace_decks md on md.id = i.marketplace_deck_id
 		join "user" u on u.id = md.user_id
@@ -395,4 +404,83 @@ const createInstanceReviewLog = async (userId, instanceCardId, log) => {
 	)
 }
 
-export { themes, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }
+// A deck's reviews, most helpful first. userId (null when logged out) marks
+// the viewer's own review and their vote on the others. cardsStudied is how
+// many of the deck's cards the reviewer has graded at least once: what Steam's
+// hours played is to a game.
+const getReviews = async (marketplaceDeckId, userId) => {
+	const { rows } = await pool.query(`
+		select r.id, r.recommended, r.body, u.name author,
+			r.created_at "createdAt", r.updated_at > r.created_at edited,
+			r.author_response "authorResponse", r.author_response_at "authorResponseAt",
+			coalesce(r.user_id = $2::uuid, false) mine,
+			coalesce((select sum(v.value) from marketplace_review_votes v where v.review_id = r.id), 0)::int score,
+			coalesce((select v.value from marketplace_review_votes v where v.review_id = r.id and v.user_id = $2::uuid), 0)::int "myVote",
+			(select count(distinct rl.marketplace_card_instance_id)
+				from review_logs rl
+				join marketplace_card_instances ci on ci.id = rl.marketplace_card_instance_id
+				join marketplace_deck_instances i on i.id = ci.marketplace_deck_instance_id
+				where i.user_id = r.user_id and i.marketplace_deck_id = r.marketplace_deck_id)::int "cardsStudied"
+		from marketplace_reviews r
+		join "user" u on u.id = r.user_id
+		where r.marketplace_deck_id = $1
+		order by score desc, r.created_at desc`,
+		[marketplaceDeckId, userId ?? null]
+	);
+
+	return rows;
+}
+
+// Posts the user's review of a deck, or rewrites the one they have. Only for
+// someone who has the deck and did not write it; false otherwise.
+const saveReview = async (userId, marketplaceDeckId, { recommended, body }) => {
+	const { rowCount } = await pool.query(`
+		insert into marketplace_reviews(marketplace_deck_id, user_id, recommended, body)
+		select md.id, $1, $3, $4
+		from marketplace_decks md
+		where md.id = $2 and md.user_id <> $1
+			and exists (select 1 from marketplace_deck_instances i where i.user_id = $1 and i.marketplace_deck_id = md.id)
+		on conflict (marketplace_deck_id, user_id)
+		do update set recommended = excluded.recommended, body = excluded.body, updated_at = now()`,
+		[userId, marketplaceDeckId, recommended, body]
+	);
+
+	return rowCount === 1;
+}
+
+// The user's helpful (1) / not helpful (-1) vote on someone else's review of
+// the deck; 0 takes it back
+const setReviewVote = async (userId, marketplaceDeckId, reviewId, value) => {
+	if (value === 0) {
+		await pool.query(
+			"delete from marketplace_review_votes where review_id = $1 and user_id = $2",
+			[reviewId, userId]
+		);
+		return true;
+	}
+	const { rowCount } = await pool.query(`
+		insert into marketplace_review_votes(review_id, user_id, value)
+		select r.id, $1, $4
+		from marketplace_reviews r
+		where r.id = $3 and r.marketplace_deck_id = $2 and r.user_id <> $1
+		on conflict (review_id, user_id) do update set value = excluded.value`,
+		[userId, marketplaceDeckId, reviewId, value]
+	);
+
+	return rowCount === 1;
+}
+
+// The deck author's reply to a review of their deck; null removes it
+const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) => {
+	const { rowCount } = await pool.query(`
+		update marketplace_reviews r
+		set author_response = $4, author_response_at = case when $4::text is null then null else now() end
+		from marketplace_decks md
+		where r.id = $3 and r.marketplace_deck_id = $2 and md.id = r.marketplace_deck_id and md.user_id = $1`,
+		[userId, marketplaceDeckId, reviewId, response]
+	);
+
+	return rowCount === 1;
+}
+
+export { themes, REVIEW_COUNTS, getReviews, saveReview, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }

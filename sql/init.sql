@@ -255,3 +255,28 @@ create table marketplace_upload_requests (
 	rejection_reason text,
 	created_at timestamptz not null default now()
 );
+
+-- A studier's verdict on a marketplace deck, as Steam's: recommended or not,
+-- always with the reason in words. One per user and deck, theirs to edit.
+create table marketplace_reviews (
+	id uuid primary key default gen_random_uuid(),
+	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
+	user_id uuid references "user" ("id") on delete cascade not null,
+	recommended boolean not null,
+	body text not null check (length(trim(body)) > 0),
+	-- the deck author's one reply to the review
+	author_response text,
+	author_response_at timestamptz,
+	created_at timestamptz not null default now(),
+	updated_at timestamptz not null default now(),
+	unique (marketplace_deck_id, user_id)
+);
+
+-- whether a reader found a review helpful (1) or not (-1); the deck is the
+-- review's, so it is not repeated here
+create table marketplace_review_votes (
+	review_id uuid references marketplace_reviews(id) on delete cascade not null,
+	user_id uuid references "user" ("id") on delete cascade not null,
+	value smallint not null check (value in (-1, 1)),
+	primary key (review_id, user_id)
+);

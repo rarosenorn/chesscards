@@ -19,6 +19,8 @@
 		align-items: center;
 		gap: 2px;
 		font-variant-numeric: tabular-nums;
+		/* in a line of text, the counts on the text's own baseline */
+		vertical-align: bottom;
 	}
 	.counts :global(svg) {
 		font-size: 1.25em;

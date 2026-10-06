@@ -1,6 +1,7 @@
 <script>
 	import { page } from "$app/state"
 	import FormErrors from "$lib/components/FormErrors.svelte"
+	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import ReviewCounts from "$lib/components/ReviewCounts.svelte"
 
 	let { data, children } = $props();
@@ -11,46 +12,62 @@
 	];
 </script>
 
-<div class="deck-header">
-	<img class="thumbnail" src="/marketplace/{data.mpDeck.id}/thumbnail" alt={data.mpDeck.name} />
-	<div class="deck-side">
-		<h2>{data.mpDeck.name}</h2>
-		<div class="deck-info">
-			<p><span>Author:</span> {data.mpDeck.author}</p>
-			<p class="theme"><span>Theme:</span> {data.mpDeck.theme}</p>
-			<p><span>No. of cards:</span> {data.mpDeck.cardCount}</p>
-			<p>
-				<span>Reviews:</span>
-				<a href="/marketplace/{data.mpDeck.id}/overview#reviews">
-					<ReviewCounts reviewCount={data.mpDeck.reviewCount} recommendCount={data.mpDeck.recommendCount} />
-				</a>
-			</p>
+<!-- the page is one deck's, so its heading is the way back to the
+     marketplace (as My flashcards' deck pages have theirs), and the deck's
+     name below is the only title -->
+<StandardLayout>
+	{#snippet heading()}
+		<div class="breadcrumbs">
+			<a href="/marketplace">Marketplace</a>
+			<span>{"->"}</span>
+			<span>{data.mpDeck.name}</span>
 		</div>
-		<form
-			method="POST"
-			action="/marketplace/{data.mpDeck.id}/overview?/getDeck"
-			title={data.alreadyOwned ? "You own this deck" : undefined}
-		>
-			<button class="std-btn" disabled={data.alreadyOwned}>
-				{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}
-			</button>
-		</form>
+	{/snippet}
+	<div class="deck-header">
+		<img class="thumbnail" src="/marketplace/{data.mpDeck.id}/thumbnail" alt={data.mpDeck.name} />
+		<div class="deck-side">
+			<h2>{data.mpDeck.name}</h2>
+			<div class="deck-info">
+				<p><span>Author:</span> {data.mpDeck.author}</p>
+				<p class="theme"><span>Theme:</span> {data.mpDeck.theme}</p>
+				<p><span>No. of cards:</span> {data.mpDeck.cardCount}</p>
+				<p>
+					<span>Reviews:</span>
+					<ReviewCounts reviewCount={data.mpDeck.reviewCount} recommendCount={data.mpDeck.recommendCount} />
+				</p>
+			</div>
+			<form
+				method="POST"
+				action="/marketplace/{data.mpDeck.id}/overview?/getDeck"
+				title={data.alreadyOwned ? "You own this deck" : undefined}
+			>
+				<button class="std-btn" disabled={data.alreadyOwned}>
+					{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}
+				</button>
+			</form>
+		</div>
 	</div>
-</div>
-<FormErrors form={page.form} />
-<div class="tabs">
-	{#each tabs as tab}
-		<a
-			href="/marketplace/{data.mpDeck.id}/{tab.path}"
-			aria-current={page.url.pathname === `/marketplace/${data.mpDeck.id}/${tab.path}`}
-		>
-			{tab.name}
-		</a>
-	{/each}
-</div>
-{@render children()}
+	<FormErrors form={page.form} />
+	<div class="tabs">
+		{#each tabs as tab}
+			<a
+				href="/marketplace/{data.mpDeck.id}/{tab.path}"
+				aria-current={page.url.pathname === `/marketplace/${data.mpDeck.id}/${tab.path}`}
+			>
+				{tab.name}
+			</a>
+		{/each}
+	</div>
+	{@render children()}
+</StandardLayout>
 
 <style>
+	.breadcrumbs a {
+		color: black;
+	}
+	.breadcrumbs a:hover {
+		color: blue;
+	}
 	.deck-header {
 		display: flex;
 		gap: 30px;
@@ -82,9 +99,6 @@
 	}
 	.deck-info span {
 		font-weight: 600;
-	}
-	.deck-info a {
-		color: inherit;
 	}
 	/* no wider than its button: the form answers the hover for a disabled
 	   one, with why it is */

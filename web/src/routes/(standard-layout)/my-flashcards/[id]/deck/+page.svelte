@@ -2,7 +2,6 @@
 	import { deserialize } from "$app/forms"
 	import { invalidateAll } from "$app/navigation"
 	import { page } from "$app/state"
-	import { tick } from "svelte"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import DescriptionEditor from "$lib/components/DescriptionEditor.svelte"
 	import DescriptionView from "$lib/components/DescriptionView.svelte"
@@ -40,15 +39,6 @@
 	// the marketplace page's Overview | Sample cards tabs, client-side;
 	// the sample card picker sends you back to its own
 	let view = $state(page.url.searchParams.get("view") === "sample-cards" ? "sample-cards" : "overview");
-
-	// the header's Reviews line: they sit under the description, which may
-	// not be the view that is showing
-	const showReviews = async e => {
-		e.preventDefault();
-		view = "overview";
-		await tick();
-		document.getElementById("reviews")?.scrollIntoView();
-	}
 
 	const startEditing = () => {
 		name = data.listing.name;
@@ -179,9 +169,7 @@
 					{#if data.reviews}
 						<p>
 							<span>Reviews:</span>
-							<a href="#reviews" onclick={showReviews}>
-								<ReviewCounts reviewCount={data.listing.reviewCount} recommendCount={data.listing.recommendCount} />
-							</a>
+							<ReviewCounts reviewCount={data.listing.reviewCount} recommendCount={data.listing.recommendCount} />
 						</p>
 					{/if}
 				</div>
@@ -284,9 +272,6 @@
 	.deck-info span,
 	.deck-info label {
 		font-weight: 600;
-	}
-	.deck-info a {
-		color: inherit;
 	}
 	/* the marketplace deck page's tabs */
 	.tabs {

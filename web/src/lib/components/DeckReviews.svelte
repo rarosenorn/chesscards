@@ -327,8 +327,6 @@
 <style>
 	.reviews {
 		margin-top: 32px;
-		/* the header's Reviews line jumps here; clear of the window's top edge */
-		scroll-margin-top: 16px;
 	}
 	.reviews-heading {
 		display: flex;

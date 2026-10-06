@@ -11,4 +11,5 @@
 	reviews={data.reviews}
 	canReview={data.alreadyOwned && !data.mpDeck.isAuthor}
 	isAuthor={data.mpDeck.isAuthor}
+	isAdmin={data.isAdmin}
 />

@@ -25,6 +25,7 @@ export const load = async ({ locals, params, parent }) => {
 		reviews: deck.isMarketplace
 			? await marketplace.getReviews(listing.marketplaceDeckId, locals.userId)
 			: null,
+		isAdmin: locals.isAdmin,
 		themes: marketplace.themes
 	}
 }

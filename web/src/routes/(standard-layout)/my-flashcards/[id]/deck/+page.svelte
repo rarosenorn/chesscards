@@ -195,6 +195,7 @@
 					reviews={data.reviews}
 					canReview={!data.listing.isAuthor}
 					isAuthor={data.listing.isAuthor}
+					isAdmin={data.isAdmin}
 				/>
 			{/if}
 		{:else}

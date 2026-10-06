@@ -2,6 +2,7 @@
 	import { deserialize } from "$app/forms"
 	import { goto, invalidateAll } from "$app/navigation"
 	import { tick } from "svelte"
+	import { confirmModal } from "$lib/modals.svelte.js"
 	import ThumbUp from "$lib/icons/ThumbUp.svelte"
 	import ThumbDown from "$lib/icons/ThumbDown.svelte"
 	import ArrowUp from "$lib/icons/ArrowUp.svelte"
@@ -10,8 +11,9 @@
 	// A marketplace deck's reviews, under its description on the marketplace
 	// page and on the Deck tab of whoever has the deck. canReview: the viewer
 	// has the deck and did not write it. isAuthor: they wrote it, and answer
-	// its reviews instead.
-	let { marketplaceDeckId, reviews, canReview = false, isAuthor = false } = $props();
+	// its reviews instead. isAdmin: they moderate, and can take down what
+	// others wrote.
+	let { marketplaceDeckId, reviews, canReview = false, isAuthor = false, isAdmin = false } = $props();
 
 	// the viewer's own review leads the list, whatever the order of the rest
 	let myReview = $derived(reviews.find(review => review.mine));
@@ -140,6 +142,28 @@
 		rowErrors = await post("respond", { reviewId: review.id, response: "" });
 	}
 
+	// Moderation. Asked about first, unlike your own deletes: it is someone
+	// else's writing, and there is no posting it again.
+	const removeReview = async review => {
+		const confirmed = await confirmModal({
+			title: "Remove review",
+			message: `This permanently removes ${review.author}'s review, with its votes and the author's response.`,
+			confirmLabel: "Remove",
+			danger: true
+		});
+		if (confirmed) rowErrors = await post("removeReview", { reviewId: review.id });
+	}
+
+	const removeResponse = async review => {
+		const confirmed = await confirmModal({
+			title: "Remove response",
+			message: `This permanently removes the author's response to ${review.author}'s review.`,
+			confirmLabel: "Remove",
+			danger: true
+		});
+		if (confirmed) rowErrors = await post("removeResponse", { reviewId: review.id });
+	}
+
 	const dateOf = date => new Date(date).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
 	// a text area as tall as its text: the page scrolls, not the box
@@ -216,6 +240,9 @@
 				{#if isAuthor && !review.authorResponse && respondingTo !== review.id}
 					<button type="button" class="link-btn" onclick={() => startResponding(review)}>Respond</button>
 				{/if}
+				{#if isAdmin}
+					<button type="button" class="link-btn" onclick={() => removeReview(review)}>Remove</button>
+				{/if}
 			{/if}
 		</div>
 		{#if respondingTo === review.id}
@@ -241,6 +268,10 @@
 					<div class="review-foot">
 						<button type="button" class="link-btn" onclick={() => startResponding(review)}>Edit</button>
 						<button type="button" class="link-btn" onclick={() => deleteResponse(review)}>Delete</button>
+					</div>
+				{:else if isAdmin}
+					<div class="review-foot">
+						<button type="button" class="link-btn" onclick={() => removeResponse(review)}>Remove</button>
 					</div>
 				{/if}
 			</div>

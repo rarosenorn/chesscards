@@ -3,7 +3,8 @@ import * as marketplace from "$lib/server/marketplace.js"
 
 export const load = async ({ params, locals }) => {
 	return {
-		reviews: await marketplace.getReviews(params.id, locals.userId)
+		reviews: await marketplace.getReviews(params.id, locals.userId),
+		isAdmin: locals.isAdmin
 	}
 }
 
@@ -64,6 +65,22 @@ export const actions = {
 		if (!deleted) {
 			return fail(404, { errors: ["You have no review of this deck"] });
 		}
+	},
+
+	// moderation: an admin takes down anyone's review, or the author's
+	// response to one
+	removeReview: async ({ request, params, locals }) => {
+		if (!locals.isAdmin) return fail(403, { errors: ["Only an admin can remove a review"] });
+		const reviewId = (await request.formData()).get("reviewId")?.toString() ?? "";
+		const removed = UUID.test(reviewId) && await marketplace.removeReview(params.id, reviewId);
+		if (!removed) return fail(404, { errors: ["No such review"] });
+	},
+
+	removeResponse: async ({ request, params, locals }) => {
+		if (!locals.isAdmin) return fail(403, { errors: ["Only an admin can remove a response"] });
+		const reviewId = (await request.formData()).get("reviewId")?.toString() ?? "";
+		const removed = UUID.test(reviewId) && await marketplace.removeReviewResponse(params.id, reviewId);
+		if (!removed) return fail(404, { errors: ["No such review"] });
 	},
 
 	vote: async ({ request, params, locals, url }) => {

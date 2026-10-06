@@ -461,6 +461,26 @@ const deleteReview = async (userId, marketplaceDeckId) => {
 	return rowCount === 1;
 }
 
+// Moderation: an admin takes anyone's review down, votes and response with
+// it, or only the author's response to it. The callers check for the admin.
+const removeReview = async (marketplaceDeckId, reviewId) => {
+	const { rowCount } = await pool.query(
+		"delete from marketplace_reviews where id = $2 and marketplace_deck_id = $1",
+		[marketplaceDeckId, reviewId]
+	);
+
+	return rowCount === 1;
+}
+
+const removeReviewResponse = async (marketplaceDeckId, reviewId) => {
+	const { rowCount } = await pool.query(
+		"update marketplace_reviews set author_response = null, author_response_at = null where id = $2 and marketplace_deck_id = $1",
+		[marketplaceDeckId, reviewId]
+	);
+
+	return rowCount === 1;
+}
+
 // The user's helpful (1) / not helpful (-1) vote on someone else's review of
 // the deck; 0 takes it back
 const setReviewVote = async (userId, marketplaceDeckId, reviewId, value) => {
@@ -496,4 +516,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }

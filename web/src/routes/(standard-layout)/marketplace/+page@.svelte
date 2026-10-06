@@ -1,7 +1,7 @@
 <script>
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import ReviewCounts from "$lib/components/ReviewCounts.svelte"
-	import OwnedStamp from "$lib/icons/OwnedStamp.svelte"
+	import OwnedBadge from "$lib/components/OwnedBadge.svelte"
 
 	let { data } = $props();
 </script>
@@ -28,7 +28,7 @@
 							<div class="card-footer">
 								<span class="theme-chip">{mpDeck.theme}</span>
 								{#if mpDeck.owned}
-									<span class="owned-stamp"><OwnedStamp /></span>
+									<span class="owned-badge"><OwnedBadge /></span>
 								{/if}
 								<span class="price" class:free={Number(mpDeck.price) === 0} class:owned={mpDeck.owned}>
 									{Number(mpDeck.price) === 0 ? "Free" : `${mpDeck.price}$`}
@@ -139,19 +139,10 @@
 		border-radius: 999px;
 		padding: 2px 10px;
 	}
-	/* the deck is yours already: the deck page's stamp, small, pushed over
-	   to the price it voids */
-	.owned-stamp {
-		display: flex;
-		height: 21px;
+	/* the deck is yours already: the label, pushed over to the price */
+	.owned-badge {
 		margin-left: auto;
 		margin-right: 10px;
-		opacity: 0.75;
-		transform: rotate(-4deg);
-	}
-	.owned-stamp :global(svg) {
-		height: 100%;
-		width: auto;
 	}
 	.price {
 		font-weight: 600;

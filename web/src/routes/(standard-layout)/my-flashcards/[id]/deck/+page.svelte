@@ -169,7 +169,7 @@
 					{#if data.reviews}
 						<p>
 							<span>Reviews:</span>
-							<ReviewCounts reviewCount={data.listing.reviewCount} recommendCount={data.listing.recommendCount} />
+							<ReviewCounts reviewCount={data.listing.reviewCount} recommendCount={data.listing.recommendCount} none="None" />
 						</p>
 					{/if}
 				</div>

@@ -33,7 +33,7 @@
 				<p><span>No. of cards:</span> {data.mpDeck.cardCount}</p>
 				<p>
 					<span>Reviews:</span>
-					<ReviewCounts reviewCount={data.mpDeck.reviewCount} recommendCount={data.mpDeck.recommendCount} />
+					<ReviewCounts reviewCount={data.mpDeck.reviewCount} recommendCount={data.mpDeck.recommendCount} none="None" />
 				</p>
 			</div>
 			<div class="buy-row">

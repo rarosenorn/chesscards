@@ -3,14 +3,14 @@
 
 	// How a marketplace deck has been reviewed, on its tile and in its header:
 	// how many recommend it, by a thumb, and the share of all its reviews that
-	// is, "35 👍 (92%)". The header says "None" after its own "Reviews:" label.
+	// is, "👍 35 (92%)". The header says "None" after its own "Reviews:" label.
 	let { reviewCount, recommendCount, none = "No reviews" } = $props();
 </script>
 
 {#if reviewCount > 0}
 	<span class="counts">
-		{recommendCount}
 		<span class="thumb"><ThumbUpLine /></span>
+		{recommendCount}
 		({Math.round(100 * recommendCount / reviewCount)}%)
 	</span>
 {:else}

@@ -1,6 +1,6 @@
 <script>
-	import ThumbUp from "$lib/icons/ThumbUp.svelte"
-	import ThumbDown from "$lib/icons/ThumbDown.svelte"
+	import ThumbUpLine from "$lib/icons/ThumbUpLine.svelte"
+	import ThumbDownLine from "$lib/icons/ThumbDownLine.svelte"
 
 	// How many recommend a marketplace deck and how many don't, each by its
 	// thumb: on the deck's tile and in its header. 0 and 0 on a deck nobody
@@ -9,8 +9,8 @@
 </script>
 
 <span class="counts">
-	<ThumbUp /> {recommendCount}
-	<ThumbDown /> {reviewCount - recommendCount}
+	<span class="thumb up"><ThumbUpLine /></span> {recommendCount}
+	<span class="thumb down"><ThumbDownLine /></span> {reviewCount - recommendCount}
 </span>
 
 <style>
@@ -22,10 +22,17 @@
 		/* in a line of text, the counts on the text's own baseline */
 		vertical-align: bottom;
 	}
-	.counts :global(svg) {
-		font-size: 1.25em;
+	/* Quiet beside the reviews' own filled thumbs: line drawings, the one for
+	   recommending in a faded green (the Owned label's) and the other grey. */
+	.thumb {
+		display: inline-flex;
+		font-size: 1.2em;
 	}
-	.counts :global(svg:last-of-type) {
-		margin-left: 4px;
+	.thumb.up {
+		color: #5a8a2a;
+	}
+	.thumb.down {
+		margin-left: 5px;
+		color: rgba(0, 0, 0, 0.45);
 	}
 </style>

@@ -32,5 +32,7 @@
 		display: inline-flex;
 		font-size: 1.2em;
 		color: #5a8a2a;
+		/* its base on the numbers' baseline: centred, it hangs below them */
+		transform: translateY(-0.12em);
 	}
 </style>

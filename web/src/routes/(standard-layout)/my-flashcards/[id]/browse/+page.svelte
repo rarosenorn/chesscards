@@ -655,14 +655,14 @@
 		applyFresh(await renameSubdeck({ deckId: deck.id, subdeckId: rename.subdeckId, name: rename.value.trim() }));
 	}
 
-	// Unfolding: the way back from subdecks that deletes no card. The
+	// Flattening: the way back from subdecks that deletes no card. The
 	// subdecks inside a subdeck are taken away and all their cards become its
 	// own, in order; asked of no subdeck, it is the whole deck that goes back
 	// to a plain list. The grouping cannot be put back, so it is always asked
 	// about first, in words that say what goes and what stays.
 	const holdsSubdecks = subdeck => deck.subdecks.some(other => other.parent_id === subdeck.id);
 
-	const unfold = async (subdeck = null) => {
+	const flatten = async (subdeck = null) => {
 		const inside = subdeck ? subdeckSubtree(deck.subdecks, subdeck.id).size - 1 : deck.subdecks.length;
 		const cards = subdeck ? cardsUnder(deck.subdecks, deck.cards, subdeck.id).length : deck.cards.length;
 		const gone = subdeck
@@ -673,9 +673,9 @@
 			: `${cards === 1 ? "The 1 card in them stays" : `The ${cards} cards in them stay`}, in the same order, `
 				+ (subdeck ? `directly in "${subdeck.name}".` : "as one plain list.");
 		const confirmed = await confirmModal({
-			title: "Unfold subdecks",
+			title: "Flatten subdecks",
 			message: `This removes ${gone}. ${kept}`,
-			confirmLabel: "Unfold"
+			confirmLabel: "Flatten"
 		});
 		if (!confirmed) return;
 		applyFresh(await flattenSubdecks({ deckId: deck.id, subdeckId: subdeck?.id }));
@@ -1043,10 +1043,10 @@
 				onclick={() => {
 					const subdeck = subdeckMenu.subdeck;
 					subdeckMenu = null;
-					unfold(subdeck);
+					flatten(subdeck);
 				}}
 			>
-				Unfold subdecks
+				Flatten subdecks
 			</button>
 		{/if}
 		<button
@@ -1347,7 +1347,7 @@
 									<div class="subdeck-head">
 										<button class="add-subdeck-btn" onmousedown={e => e.stopPropagation()} onclick={() => startAddSubdeck()}>+ Add subdeck</button>
 										{#if deck.usesSubdecks}
-											<button class="add-subdeck-btn remove-subdecks-btn" onmousedown={e => e.stopPropagation()} onclick={() => unfold()}>Unfold subdecks</button>
+											<button class="add-subdeck-btn remove-subdecks-btn" onmousedown={e => e.stopPropagation()} onclick={() => flatten()}>Flatten subdecks</button>
 										{/if}
 									</div>
 								{/if}

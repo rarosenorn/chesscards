@@ -43,10 +43,11 @@
 			</div>
 		{/each}
 	</div>
+	<!-- each figure under its own name, the figure in the squares' green -->
 	<p class="summary">
-		{plural(summary.total, "review")} in the last year
-		· current streak {plural(summary.current, "day")}
-		· longest {plural(summary.longest, "day")}
+		<span>Reviews in the last year: <strong>{summary.total}</strong></span>
+		<span>Current streak: <strong>{plural(summary.current, "day")}</strong></span>
+		<span>Longest streak: <strong>{plural(summary.longest, "day")}</strong></span>
 	</p>
 </div>
 
@@ -117,7 +118,15 @@
 		background-color: #3b6427;
 	}
 	.summary {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 4px 28px;
 		margin: 6px 0 0;
 		font-size: 0.85rem;
+	}
+	.summary strong {
+		font-weight: 600;
+		color: #558b2f;
 	}
 </style>

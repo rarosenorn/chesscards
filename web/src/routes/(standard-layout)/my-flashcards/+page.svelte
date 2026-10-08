@@ -411,7 +411,6 @@
 {@render createForm("?/createMetadeck", true)}
 
 <!-- the year's study, a square a day, under everything there is to study -->
-<h2 class="activity-title">Activity</h2>
 <Heatmap days={data.activity.days} today={data.activity.today} />
 
 <style>
@@ -547,11 +546,10 @@
 		margin-top: 6px;
 		margin-bottom: 32px;
 	}
-	/* a section title as the tables' own (th:first-child) */
-	.activity-title {
-		margin: 12px 0 8px;
-		padding-left: 4px;
-		font-size: 1.05rem;
+	/* the heatmap stands as far under the last create field as the tables
+	   do under each other */
+	form:last-of-type {
+		margin-bottom: 44px;
 	}
 	/* mid-drag the rows stand still under the cursor: no hover tint, and the
 	   hand is the grab for the whole page */

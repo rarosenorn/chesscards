@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { cramOrder, startCram, answerCounts, backAt, takeNext, settle, forget, cardsLeft } from "./cram.js"
+import { cramOrder, startCram, answerCounts, backAt, takeNext, settle, forget, cardsLeft, resumeCram } from "./cram.js"
 
 const NOW = Date.parse("2026-10-08T12:00:00Z");
 const at = minutes => new Date(NOW + minutes * 60_000).toISOString();
@@ -96,6 +96,32 @@ describe("a cram session", () => {
 		forget(session, "c");
 		expect(session.total).toBe(1);
 		expect(takeNext(session, NOW)).toBe("b");
+	})
+})
+
+describe("a session taken up again", () => {
+	const saved = () => {
+		const session = startCram([fresh("a"), fresh("b"), fresh("c"), fresh("d")], { order: "in-order", counts: true });
+		takeNext(session, NOW); settle(session, NOW + 60_000);
+		takeNext(session, NOW);
+		return JSON.parse(JSON.stringify(session));
+	}
+
+	it("stands where it was left", () => {
+		const session = resumeCram(saved(), new Set(["a", "b", "c", "d"]));
+		expect(session).toEqual({ order: "in-order", counts: true, queue: ["c", "d"], waiting: { a: NOW + 60_000 }, currentId: "b", total: 4 });
+	})
+
+	it("is without the cards that have gone since", () => {
+		const session = resumeCram(saved(), new Set(["c", "d"]));
+		expect(session.currentId).toBe(null);
+		expect(session.waiting).toEqual({});
+		expect(session.total).toBe(2);
+		expect(takeNext(session, NOW)).toBe("c");
+	})
+
+	it("is nothing when no card of it is left", () => {
+		expect(resumeCram(saved(), new Set())).toBe(null);
 	})
 })
 

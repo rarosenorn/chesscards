@@ -1,6 +1,6 @@
 <script>
 	import { alignByWrap } from "$lib/text-block-wrap.js"
-	import { getContext, onMount } from "svelte"
+	import { getContext, onMount, untrack } from "svelte"
 	import { page } from "$app/state"
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating, StrategyMode, GenSeedStrategyWithCardId } from "ts-fsrs"
@@ -13,7 +13,7 @@
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState, settleModal } from "$lib/modals.svelte.js"
-	import { PRACTICE_AGAIN_MS, startCram, answerCounts, backAt, takeNext, settle, forget, cardsLeft } from "$lib/cram.js"
+	import { PRACTICE_AGAIN_MS, startCram, answerCounts, backAt, takeNext, settle, forget, cardsLeft, resumeCram } from "$lib/cram.js"
 	import { zen, zenActive, resetZen, setZen } from "$lib/zen-state.svelte.js"
 	import { updateCardStudyStateAndAddLog, updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
 
@@ -252,7 +252,57 @@
 	// what it was started on: turn Study to another subdeck and it is over.
 	let scopeKey = $derived(`${deck.id}:${scope?.id ?? ""}`);
 	let cram = $derived(studyState.cram?.scopeKey === scopeKey ? studyState.cram : null);
-	$effect(() => { if (studyState.cram && studyState.cram.scopeKey !== scopeKey) studyState.cram = null; });
+
+	// The session is also kept in this browser, under what it was started
+	// on, so a break elsewhere on the site, or a reload, does not end it.
+	// It lasts the study day (to the rollover hour, as due dates are read):
+	// come back after the day has turned and it is gone, so yesterday's
+	// cramming never stands in the way of today's reviews.
+	const CRAM_PREFIX = "chesscards:cram:";
+	const sameStudyDay = at => dayStart(at, rolloverHour()) === dayStart(Date.now(), rolloverHour());
+	const storedCram = key => {
+		try {
+			const saved = JSON.parse(localStorage.getItem(CRAM_PREFIX + key));
+			if (!saved || !sameStudyDay(saved.savedAt)) return null;
+			return resumeCram(saved, new Set(studyCards.map(card => card.id)));
+		} catch {
+			return null;
+		}
+	}
+	// arriving at something to study (the page opening, Study turned to
+	// another subdeck): its session is taken up again if it left one
+	$effect(() => {
+		const key = scopeKey;
+		untrack(() => {
+			if (studyState.cram?.scopeKey === key) return;
+			const resumed = storedCram(key);
+			studyState.cram = resumed && { ...resumed, scopeKey: key };
+			if (!resumed) return;
+			isCardTurned = false;
+			advanceQueueClock();
+			if (resumed.currentId == null) takeNext(studyState.cram, now);
+		});
+	});
+	// ...and written down as it moves; a finished one is not kept
+	$effect(() => {
+		if (!cram) return;
+		try {
+			if (cardsLeft(cram) === 0) localStorage.removeItem(CRAM_PREFIX + cram.scopeKey);
+			else localStorage.setItem(CRAM_PREFIX + cram.scopeKey, JSON.stringify({ ...cram, savedAt: Date.now() }));
+		} catch {}
+	});
+	// sessions of earlier days, left under things not visited since, are
+	// cleared out whenever Study opens
+	onMount(() => {
+		try {
+			for (const key of Object.keys(localStorage)) {
+				if (!key.startsWith(CRAM_PREFIX)) continue;
+				let fresh = false;
+				try { fresh = sameStudyDay(JSON.parse(localStorage.getItem(key)).savedAt); } catch {}
+				if (!fresh) localStorage.removeItem(key);
+			}
+		} catch {}
+	});
 
 	let currentCard = $derived(cram ? deck.cards.find(card => card.id === cram.currentId) : queuedCard);
 	// Whether the answer to the card on screen is a review like any other
@@ -296,6 +346,7 @@
 		takeNext(studyState.cram, now);
 	}
 	const endCram = () => {
+		try { localStorage.removeItem(CRAM_PREFIX + scopeKey); } catch {}
 		studyState.cram = null;
 		isCardTurned = false;
 		advanceQueueClock();

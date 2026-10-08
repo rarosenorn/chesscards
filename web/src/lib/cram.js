@@ -104,4 +104,19 @@ const forget = (session, id) => {
 const cardsLeft = session =>
 	session.queue.length + Object.keys(session.waiting).length + (session.currentId != null ? 1 : 0);
 
-export { ORDERS, PRACTICE_AGAIN_MS, cramOrder, startCram, answerCounts, backAt, takeNext, settle, forget, cardsLeft }
+// A session taken up again as it was saved, less the cards that are no
+// longer there (`ids`: those that are). Null when nothing of it is left to
+// do.
+const resumeCram = (saved, ids) => {
+	const session = {
+		order: saved.order,
+		counts: saved.counts,
+		queue: saved.queue.filter(id => ids.has(id)),
+		waiting: Object.fromEntries(Object.entries(saved.waiting).filter(([id]) => ids.has(id))),
+		currentId: ids.has(saved.currentId) ? saved.currentId : null
+	};
+	session.total = saved.total - (cardsLeft(saved) - cardsLeft(session));
+	return cardsLeft(session) > 0 ? session : null;
+}
+
+export { ORDERS, PRACTICE_AGAIN_MS, cramOrder, startCram, answerCounts, backAt, takeNext, settle, forget, cardsLeft, resumeCram }

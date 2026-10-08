@@ -104,6 +104,11 @@
 	.day {
 		background-color: rgba(0, 0, 0, 0.07);
 	}
+	/* the day under the pointer: an outline, so the square keeps its size
+	   and its neighbours their places */
+	.day:hover {
+		outline: 1px solid black;
+	}
 	/* the greens of Anki's review heatmap, light to dark */
 	.day.level-1 {
 		background-color: #dae289;

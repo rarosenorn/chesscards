@@ -146,7 +146,8 @@ const approveUploadRequest = async requestId => {
 		const { rows: [mpDeck] } = await client.query(
 			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, uses_subdecks, progression_depth)
 			 select $1, $2, $3, $4, $5, $6, $7, d.uses_subdecks, d.progression_depth from decks d where d.id = $8 returning id`,
-			[request.user_id, request.name, request.description, request.price, request.theme, request.image, request.image_type, request.deck_id]
+			// the description as JSON text, as pg would send its blocks array as a postgres array
+			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id]
 		);
 		// The subdeck tree travels with the cards. Every subdeck gets its new id
 		// up front (copies), so a copy can name its parent's copy and each

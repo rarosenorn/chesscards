@@ -14,6 +14,9 @@
 </script>
 
 <div class="heatmap">
+	<!-- the months, the weekdays and the squares keep to each other; the
+	     block of them is what is centred -->
+	<div class="chart">
 	<div class="months" aria-hidden="true">
 		{#each months as month}
 			<span>{month}</span>
@@ -21,7 +24,7 @@
 	</div>
 	<div class="body">
 		<div class="weekdays" aria-hidden="true">
-			<span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span></span>
+			<span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
 		</div>
 		<!-- the app's own tooltip says each day's date and count -->
 		<div class="weeks">
@@ -39,6 +42,7 @@
 			{/each}
 		</div>
 	</div>
+	</div>
 	<p class="summary">
 		{plural(summary.total, "review")} in the last year
 		· current streak {plural(summary.current, "day")}
@@ -52,10 +56,16 @@
 		--gap: 3px;
 		display: flex;
 		flex-direction: column;
-		align-items: start;
+		align-items: center;
 		gap: 4px;
 		font-size: 0.75rem;
 		color: rgba(0, 0, 0, 0.55);
+	}
+	.chart {
+		display: flex;
+		flex-direction: column;
+		align-items: start;
+		gap: 4px;
 	}
 	/* the months stand over their columns: the same tracks as the weeks,
 	   set in from the weekday names */
@@ -64,7 +74,7 @@
 		grid-auto-flow: column;
 		grid-auto-columns: var(--cell);
 		gap: var(--gap);
-		margin-left: 34px;
+		margin-left: 18px;
 		height: 14px;
 	}
 	.months span {
@@ -81,9 +91,10 @@
 		gap: var(--gap);
 	}
 	.weekdays {
-		width: 28px;
+		width: 12px;
 		line-height: var(--cell);
 		font-size: 0.65rem;
+		text-align: center;
 	}
 	/* a week is a column: the days run down it, then on to the next */
 	.weeks {

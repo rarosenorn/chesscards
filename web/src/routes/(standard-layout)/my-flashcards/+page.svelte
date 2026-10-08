@@ -15,6 +15,22 @@
 	let lists = $state({ meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks });
 	$effect(() => { lists = { meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks } });
 
+	// The row at the foot of a list that adds to it: "+ New deck" until it
+	// is clicked, then a field for the name in its place (Enter creates,
+	// Escape gives up). `adding` is the list whose field is open; `failure`
+	// what the server said of the last try ({ list, errors, name }), shown at
+	// that field until it is tried again or given up.
+	// svelte-ignore state_referenced_locally -- a create that failed without scripting comes back in `form`
+	let failure = $state(form?.errors ? { list: form.metadeck ? "meta" : "mine", errors: form.errors, name: form.name } : null);
+	// svelte-ignore state_referenced_locally
+	let adding = $state(failure?.list ?? null);
+	const stopAdding = () => { adding = null; failure = null; }
+	const create = list => () => async ({ result, update }) => {
+		await update();
+		if (result.type === "success") stopAdding();
+		else if (result.type === "failure") failure = { list, errors: result.data?.errors, name: result.data?.name };
+	}
+
 	// A row is dragged to reorder its own list, or onto a metadeck to go
 	// inside it; a row inside a metadeck is dragged out of it to leave it, or
 	// onto another metadeck to move there. A press only becomes a drag once
@@ -283,7 +299,7 @@
 {/snippet}
 
 {#snippet deckTable(firstTableHeader, list)}
-	<table data-list={list} class:creatable={list !== "market"} class:dragging={drag?.started}>
+	<table data-list={list} class:dragging={drag?.started}>
 		<thead>
 			<tr>
 				<th>
@@ -341,6 +357,37 @@
 					{/if}
 				</tr>
 			{/each}
+			{#if list !== "market"}
+				{@const isMeta = list === "meta"}
+				{@const failed = failure?.list === list ? failure : null}
+				<tr class="add-row" class:open={adding === list}>
+					<td colspan="4">
+						{#if adding === list}
+							<FormErrors form={failed} />
+							<form method="POST" action={isMeta ? "?/createMetadeck" : "?/create"} use:enhance={create(list)}>
+								<!-- svelte-ignore a11y_autofocus -- the field is there because the user just asked for it -->
+								<input
+									name="name"
+									class="add-input"
+									autofocus
+									placeholder={isMeta ? "Metadeck name" : "Deck name"}
+									value={failed?.name ?? ""}
+									required
+									minlength="4"
+									maxlength="100"
+									autocomplete="off"
+									onkeydown={e => { if (e.key === "Escape") stopAdding(); }}
+									onblur={e => { if (!e.currentTarget.value.trim()) stopAdding(); }}
+								/>
+							</form>
+						{:else}
+							<button class="add-btn" onclick={() => { failure = null; adding = list; }}>
+								+ New {isMeta ? "metadeck" : "deck"}
+							</button>
+						{/if}
+					</td>
+				</tr>
+			{/if}
 		</tbody>
 	</table>
 {/snippet}
@@ -396,29 +443,9 @@
 	</div>
 {/if}
 
-<!-- the field under a list that adds to it; `metadeck` says which of the two
-     a failed create came from, so its errors and its name go back there -->
-{#snippet createForm(action, metadeck)}
-	{@const mine = !!form?.metadeck === metadeck}
-	{#if mine}<FormErrors form={form} />{/if}
-	<form method="POST" action={action} use:enhance>
-		<input
-			name="name"
-			value={mine ? form?.name ?? "" : ""}
-			required
-			minlength="4"
-			maxlength="100"
-			autocomplete="off"
-		/>
-		<button>Create</button>
-	</form>
-{/snippet}
-
 {@render deckTable("Marketplace decks", "market")}
 {@render deckTable("My decks", "mine")}
-{@render createForm("?/create", false)}
 {@render deckTable("Metadecks", "meta")}
-{@render createForm("?/createMetadeck", true)}
 
 <!-- the year's study, a square a day, under everything there is to study -->
 <Heatmap days={data.activity.days} today={data.activity.today} />
@@ -565,20 +592,47 @@
 	th:first-child {
 		font-size: 1.05rem;
 	}
-	/* a create field belongs to the list it adds to, so it sits closer to it
-	   than the tables sit to each other, and keeps their distance from the
-	   next one */
-	table.creatable {
-		margin-bottom: 14px;
-	}
-	form {
-		margin-top: 6px;
-		margin-bottom: 32px;
-	}
-	/* the heatmap stands as far under the last create field as the tables
-	   do under each other */
-	form:last-of-type {
+	/* the heatmap stands as far under the last list as the lists do under
+	   each other */
+	table:last-of-type {
 		margin-bottom: 44px;
+	}
+	/* The row at the foot of a list that adds to it: quiet until it is
+	   wanted, its words standing where the names above it do. */
+	tr.add-row td {
+		padding-left: 24px;
+	}
+	.add-btn {
+		width: 100%;
+		padding: 0;
+		border: none;
+		background: none;
+		text-align: left;
+		font: inherit;
+		font-size: 0.9rem;
+		color: rgba(0, 0, 0, 0.45);
+		cursor: pointer;
+	}
+	tr.add-row:hover .add-btn {
+		color: black;
+	}
+	/* with the field open the row is a place to type, not a thing to click */
+	tbody > tr.add-row.open,
+	tbody > tr.add-row.open:hover {
+		background-color: transparent;
+		cursor: default;
+	}
+	tr.add-row form {
+		margin: 0;
+	}
+	.add-input {
+		width: 280px;
+		padding: 2px 6px;
+		border: 1px solid var(--accent);
+		font: inherit;
+	}
+	.add-input:focus {
+		outline: none;
 	}
 	/* mid-drag the rows stand still under the cursor: no hover tint, and the
 	   hand is the grab for the whole page */

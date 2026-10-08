@@ -19,8 +19,17 @@
 
 	let deck = getContext("deck");
 	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
-	// marketplace deck instances can only be viewed, not edited
-	const readonly = deck.isMarketplace;
+	// A deck is studied as itself; a metadeck (deck.parts) as the decks it
+	// comes to, each keeping its own subdecks and its own progression. A card
+	// says which of them it is of by its deck's id.
+	let parts = $derived(deck.parts ?? [deck]);
+	let partIndex = $derived(new Map(parts.map((part, index) => [part.id, index])));
+	const partOf = card => parts.length === 1 ? 0 : partIndex.get(card.deck_id ?? card.marketplace_deck_instance_id);
+	const cardsOfPart = part => parts.length === 1 ? deck.cards : deck.cards.filter(card => parts[partOf(card)] === part);
+
+	// a marketplace deck's cards can only be viewed, not edited: said of the
+	// card in hand, since a metadeck can hold both kinds
+	let readonly = $derived(deck.isMarketplace || !!currentCard?.marketplace_deck_instance_id);
 
 	// owners can edit the current card in place (like browse), via the Edit
 	// button on the answer row or the e key
@@ -102,22 +111,61 @@
 		? isSeen(card)
 		: card.state === 2 || card.state === 3;
 
-	let subdeckIndex = $derived(subdeckOrder(deck.subdecks));
+	// the reading order: subdeck by subdeck as each deck's outline reads, a
+	// metadeck's decks one after another
+	let subdeckIndex = $derived.by(() => {
+		const order = new Map();
+		for (const part of parts) {
+			for (const id of subdeckOrder(part.subdecks).keys()) order.set(id, order.size);
+		}
+		return order;
+	});
 	const byDeckOrder = (a, b) =>
 		subdeckIndex.get(a.subdeck_id) - subdeckIndex.get(b.subdeck_id) || a.position - b.position;
+
+	// How a metadeck's decks take turns. Mixed (the default), everything
+	// under it is one deck: the reviews shuffle together, and the new cards
+	// come one from each deck in rotation, each deck's in its own order. In
+	// order, one deck's cards are done with before the next deck's begin.
+	let mixed = $derived(parts.length > 1 && deck.studyOrder !== "in-order");
+	let sequential = $derived(parts.length > 1 && deck.studyOrder === "in-order");
+
+	// A new card's turn in the rotation: its place among its deck's new cards
+	// as the visit met them. Kept for the visit, like the shuffle keys, so
+	// the rotation holds still while the cards ahead leave it.
+	const turns = new Map();
+	const turnsTaken = new Map();
+	const byRotation = (a, b) => turns.get(a.id) - turns.get(b.id) || partOf(a) - partOf(b);
+	// `cards` in reading order
+	const inRotation = cards => {
+		for (const card of cards) {
+			if (turns.has(card.id)) continue;
+			const turn = turnsTaken.get(partOf(card)) ?? 0;
+			turns.set(card.id, turn);
+			turnsTaken.set(partOf(card), turn + 1);
+		}
+		return cards.sort(byRotation);
+	}
 
 	// Progression gates only the introduction of unseen cards: anything
 	// already met keeps its reviews coming even if its subdeck has fallen
 	// back behind the bar (cards moved, subdecks regrouped). How many levels
 	// of the deck's subdecks it runs through is the deck's own setting, and
 	// none at all where it gates nothing (gatingDepth).
-	let depth = $derived(gatingDepth(deck));
 	// A single subdeck can be studied on its own (?subdeck=<id>): the session
 	// is the cards under it, and it is open whatever stands before it in the
 	// deck, with progression still holding among the subdecks inside it.
-	let scope = $derived(deck.subdecks.find(subdeck => subdeck.id === page.url.searchParams.get("subdeck")) ?? null);
+	let scope = $derived(parts.length === 1
+		? deck.subdecks.find(subdeck => subdeck.id === page.url.searchParams.get("subdeck")) ?? null
+		: null);
 	let studyCards = $derived(scope ? cardsUnder(deck.subdecks, deck.cards, scope.id) : deck.cards);
-	let unlockedSubdecks = $derived(unlockedSubdeckIds(deck.subdecks, deck.cards, depth, scope?.id));
+	let unlockedSubdecks = $derived.by(() => {
+		const open = new Set();
+		for (const part of parts) {
+			for (const id of unlockedSubdeckIds(part.subdecks, cardsOfPart(part), gatingDepth(part), scope?.id)) open.add(id);
+		}
+		return open;
+	});
 	const gated = card => !isSeen(card) && !unlockedSubdecks.has(card.subdeck_id);
 
 	// The clock the queue is measured against. It ticks only while nothing is
@@ -162,7 +210,12 @@
 	const byDueTime = (min, card) => Date.parse(card.due) < Date.parse(min.due) ? card : min;
 
 	let currentCard = $derived.by(() => {
-		const due = studyCards.filter(isDue);
+		let due = studyCards.filter(isDue);
+		// in order: only the first deck with anything due is in play
+		if (sequential && due.length) {
+			const first = Math.min(...due.map(partOf));
+			due = due.filter(card => partOf(card) === first);
+		}
 		// Learning cards are time-critical, so they come first and in the order
 		// they fell due — Anki fetches them the same way. This is what brings a
 		// card graded Again back into the session a minute later instead of
@@ -173,7 +226,7 @@
 		if (reviews.length) {
 			return reviews.reduce((min, card) => shuffleKey(card.id) < shuffleKey(min.id) ? card : min);
 		}
-		if (due.length) return due.sort(byDeckOrder)[0];
+		if (due.length) return (mixed ? inRotation(due.sort(byDeckOrder)) : due.sort(byDeckOrder))[0];
 		// Nothing owed: reach ahead for the card the session would have waited
 		// on, nearest first. Only ever from an empty queue, so a card fetched
 		// early can never displace one that is genuinely due.
@@ -385,13 +438,19 @@
 	// the first locked subdeck and how far the one before it, with everything
 	// inside it, has to go
 	let lockedNote = $derived.by(() => {
-		const first = firstLockedSubdeck(deck.subdecks, deck.cards, depth, scope?.id);
-		if (!first) return null;
-		return {
-			locked: subdeckPath(deck.subdecks, first.locked.id),
-			before: subdeckPath(deck.subdecks, first.before.id),
-			progress: subdeckProgress(cardsUnder(deck.subdecks, deck.cards, first.before.id))
-		};
+		for (const part of parts) {
+			const own = cardsOfPart(part);
+			const first = firstLockedSubdeck(part.subdecks, own, gatingDepth(part), scope?.id);
+			if (!first) continue;
+			// in a metadeck a subdeck is said with the deck it is in
+			const name = id => (parts.length > 1 ? `${part.name} › ` : "") + subdeckPath(part.subdecks, id);
+			return {
+				locked: name(first.locked.id),
+				before: name(first.before.id),
+				progress: subdeckProgress(cardsUnder(part.subdecks, own, first.before.id))
+			};
+		}
+		return null;
 	});
 
 	// Zen mode: the page's two bars step aside while a card is up (the store
@@ -699,7 +758,7 @@
 				{lockedNote.progress.graduated} of {lockedNote.progress.graduatedNeeded} graduated.
 			</p>
 		{:else}
-			<p>Congratulations you finished this {scope ? "subdeck" : "deck"} for now! <span class="party"><PartyPopper /></span></p>
+			<p>Congratulations you finished this {scope ? "subdeck" : deck.isMetadeck ? "metadeck" : "deck"} for now! <span class="party"><PartyPopper /></span></p>
 		{/if}
 		{#if nextDue}
 			<p class="next-review">Next review: {formatNextReview(nextDue)}</p>

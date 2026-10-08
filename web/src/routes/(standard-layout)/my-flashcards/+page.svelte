@@ -3,14 +3,16 @@
 	import { flip } from "svelte/animate"
 	import { SvelteSet } from "svelte/reactivity"
 	import FormErrors from "$lib/components/FormErrors.svelte"
-	import { reorderDecks } from "./decks.remote.js"
+	import { invalidateAll } from "$app/navigation"
+	import { resolveDecks } from "$lib/metadecks.js"
+	import { reorderDecks, reorderMetadecks } from "./decks.remote.js"
 	let { data, form } = $props();
 
-	// the two lists as shown: a drop reorders them here at once, and a fresh
-	// load (a deck created) replaces them
+	// the three lists as shown: a drop reorders them here at once, and a
+	// fresh load (a deck created) replaces them
 	// svelte-ignore state_referenced_locally -- seeded here, kept in step below
-	let lists = $state({ market: data.marketplaceDecks, mine: data.decks });
-	$effect(() => { lists = { market: data.marketplaceDecks, mine: data.decks } });
+	let lists = $state({ meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks });
+	$effect(() => { lists = { meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks } });
 
 	// A row is dragged to reorder its own list. A press only becomes a drag
 	// once the pointer has moved, so a click still opens the deck; while it
@@ -70,19 +72,23 @@
 		const before = lists[d.list];
 		const rest = before.filter(deck => deck !== d.deck);
 		lists[d.list] = [...rest.slice(0, d.over), d.deck, ...rest.slice(d.over)];
+		const ids = lists[d.list].map(deck => deck.id);
 		try {
-			await reorderDecks({ marketplace: d.list === "market", ids: lists[d.list].map(deck => deck.id) });
+			await (d.list === "meta" ? reorderMetadecks({ ids }) : reorderDecks({ marketplace: d.list === "market", ids }));
 		} catch (err) {
 			lists[d.list] = before;
 			throw err;
 		}
+		// what a metadeck holds stands in the order of these lists
+		if (lists.meta.length) await invalidateAll();
 	}
 
 	// A deck that uses subdecks opens to show them, each with its own counts,
-	// and a subdeck that holds subdecks opens the same way, level by level.
-	// Which ones are open is the reader's own business, kept in this browser
-	// from one visit to the next (by the row's id: the deck's, or the deck's
-	// and the subdeck's together).
+	// and a subdeck that holds subdecks opens the same way, level by level; a
+	// metadeck opens onto the decks and metadecks it holds, which open in
+	// turn. Which ones are open is the reader's own business, kept in this
+	// browser from one visit to the next (by the row's id: its own for a row
+	// of a list, and for a row under another that row's and its own together).
 	const EXPANDED_KEY = "chesscards:expanded-decks";
 	const storedExpanded = () => {
 		try { return JSON.parse(localStorage.getItem(EXPANDED_KEY) ?? "[]"); } catch { return []; }
@@ -95,46 +101,97 @@
 		try { localStorage.setItem(EXPANDED_KEY, JSON.stringify([...expanded])); } catch {}
 	}
 
+	// A row of a table: its name, where a click on it studies, its three
+	// numbers, how far in it stands, and whether it opens (`holds` names what
+	// onto, `inside` gives those rows).
+
 	// the subdecks of an open deck that show: each level only under an open
 	// row, so a closed subdeck keeps everything inside it out of the list
-	const subdeckRows = deck => {
+	const subdeckRows = (deck, deckRowId, depth) => {
 		const rows = [];
 		// the level of the closed subdeck the walk is inside, if any
 		let closedAt = null;
 		for (const subdeck of deck.subdecks) {
 			if (closedAt !== null && subdeck.level > closedAt) continue;
-			const id = `${deck.id}:${subdeck.id}`;
+			const id = `${deckRowId}:${subdeck.id}`;
 			closedAt = subdeck.holdsSubdecks && !expanded.has(id) ? subdeck.level : null;
-			rows.push({ id, deck, subdeck });
+			// a subdeck is studied on its own from here, locked or not; its
+			// numbers are what that would bring
+			rows.push({
+				id, depth: depth + subdeck.level, name: subdeck.name,
+				href: `my-flashcards/${deck.id}/study?subdeck=${subdeck.id}`,
+				counts: subdeck, opens: subdeck.holdsSubdecks, holds: "subdecks", locked: subdeck.locked
+			});
 		}
 		return rows;
 	}
 
-	// What a table shows, row by row: each deck, with its subdecks under it
-	// when it is open. While a deck is lifted, the others with a placeholder
-	// at the slot it would drop into — and no subdecks, which would be rows
-	// that are not the lifted kind standing between the slots.
+	const deckRow = (deck, id, depth) => ({
+		id, depth, name: deck.name, href: `my-flashcards/${deck.id}/study`,
+		counts: deck, opens: deck.subdecks.length > 0, holds: "subdecks",
+		inside: () => subdeckRows(deck, id, depth)
+	});
+
+	let decksById = $derived(new Map([...data.marketplaceDecks, ...data.decks].map(deck => [deck.id, deck])));
+	let metadecksById = $derived(new Map(data.metadecks.map(metadeck => [metadeck.id, metadeck])));
+
+	// a metadeck's numbers: those of the decks it comes to, each counted once
+	// however many ways lead to it
+	const totals = metadeck => {
+		const sum = { new: 0, learn: 0, review: 0 };
+		for (const { id } of resolveDecks(data.metadecks, metadeck.id)) {
+			const deck = decksById.get(id);
+			if (!deck) continue;
+			sum.new += Number(deck.new);
+			sum.learn += Number(deck.learn);
+			sum.review += Number(deck.review);
+		}
+		return sum;
+	}
+
+	const metadeckRow = (metadeck, id, depth) => ({
+		id, depth, name: metadeck.name, href: `my-flashcards/metadecks/${metadeck.id}/study`,
+		counts: totals(metadeck), opens: metadeck.items.length > 0, holds: "decks",
+		inside: () => metadeck.items.flatMap(item => {
+			const held = item.kind === "metadeck" ? metadecksById.get(item.id) : decksById.get(item.id);
+			if (!held) return [];
+			return opened((item.kind === "metadeck" ? metadeckRow : deckRow)(held, `${id}/${item.id}`, depth + 1));
+		})
+	});
+
+	// a row, and under it what it holds when it is open
+	const opened = row => [row, ...(expanded.has(row.id) ? row.inside() : [])];
+
+	// a row of a list itself: the one that is dragged to reorder it
+	const listRow = (list, item) => ({ ...(list === "meta" ? metadeckRow : deckRow)(item, item.id, 0), item });
+
+	// What a table shows, row by row: each of its list, with what it holds
+	// under it when it is open. While one is lifted, the others with a
+	// placeholder at the slot it would drop into — and nothing under them,
+	// which would be rows that are not the lifted kind standing between the
+	// slots.
 	const rowsOf = list => {
 		if (drag?.list === list && drag.started) {
-			const rest = lists[list].filter(deck => deck !== drag.deck);
+			const rest = lists[list].filter(item => item !== drag.deck).map(item => listRow(list, item));
 			return [...rest.slice(0, drag.over), { id: "__placeholder__", placeholder: true }, ...rest.slice(drag.over)];
 		}
-		return lists[list].flatMap(deck => [deck, ...(expanded.has(deck.id) ? subdeckRows(deck) : [])]);
+		return lists[list].flatMap(item => opened(listRow(list, item)));
 	}
 </script>
 
 <svelte:window onmousemove={handleWindowMouseMove} onmouseup={handleWindowMouseUp} />
 
-<!-- The arrow that opens a row onto the subdecks inside it. It is there only
-     for a row that has some; the name keeps its place either way. -->
-{#snippet expander(id, hasSubdecks)}
+<!-- The arrow that opens a row onto what is inside it. It is there only for
+     a row that holds something; the name keeps its place either way. -->
+{#snippet expander(row)}
+	{@const id = row.id}
 	<button
 		class="expander"
 		class:open={expanded.has(id)}
-		class:empty={!hasSubdecks}
-		aria-label={expanded.has(id) ? "Hide subdecks" : "Show subdecks"}
+		class:empty={!row.opens}
+		aria-label={`${expanded.has(id) ? "Hide" : "Show"} ${row.holds}`}
 		aria-expanded={expanded.has(id)}
-		tabindex={hasSubdecks ? 0 : -1}
+		tabindex={row.opens ? 0 : -1}
 		onmousedown={e => e.stopPropagation()}
 		onclick={() => toggleExpanded(id)}
 	></button>
@@ -159,46 +216,36 @@
 		</thead>
 		<tbody>
 			{#each rowsOf(list) as row (row.id)}
-				<!-- one tr for deck, subdeck and placeholder alike: the animate
-				     directive must sit directly under the keyed each -->
+				<!-- one tr for every kind of row and the placeholder alike: the
+				     animate directive must sit directly under the keyed each -->
 				<tr
-					data-deck-row={row.placeholder || row.subdeck ? undefined : row.id}
+					data-deck-row={row.item ? row.id : undefined}
 					class:placeholder-row={row.placeholder}
-					class:subdeck-row={row.subdeck}
+					class:inner-row={row.depth > 0}
 					style:height={row.placeholder ? `${drag.rowHeight}px` : undefined}
 					animate:flip={{ duration: drag?.started ? 150 : 0 }}
-					onmousedown={row.placeholder || row.subdeck ? undefined : e => handleRowMouseDown(e, list, row)}
+					onmousedown={row.item ? e => handleRowMouseDown(e, list, row.item) : undefined}
 				>
 					{#if row.placeholder}
 						<td colspan="4"></td>
-					{:else if row.subdeck}
-						<!-- a subdeck is studied on its own from here, locked or
-						     not; its numbers are what that would bring -->
-						<td style:padding-left="{20 + (row.subdeck.level - 1) * 16}px">
-							{@render expander(row.id, row.subdeck.holdsSubdecks)}
-							<a href={`my-flashcards/${row.deck.id}/study?subdeck=${row.subdeck.id}`} draggable="false">
-								{row.subdeck.name}
+					{:else}
+						<td style:padding-left={row.depth ? `${4 + row.depth * 16}px` : undefined}>
+							{@render expander(row)}
+							<a
+								href={row.href}
+								draggable="false"
+								onclick={e => { if (justDragged) e.preventDefault() }}
+							>
+								{row.name}
 							</a>
-							{#if row.subdeck.locked}
+							{#if row.locked}
 								<svg class="lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
 									<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
 									<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
 								</svg>
 							{/if}
 						</td>
-						{@render counts(row.subdeck)}
-					{:else}
-						<td>
-							{@render expander(row.id, row.subdecks.length > 0)}
-							<a
-								href={`my-flashcards/${row.id}/study`}
-								draggable="false"
-								onclick={e => { if (justDragged) e.preventDefault() }}
-							>
-								{row.name}
-							</a>
-						</td>
-						{@render counts(row)}
+						{@render counts(row.counts)}
 					{/if}
 				</tr>
 			{/each}
@@ -210,9 +257,13 @@
 	<div class="drag-ghost" style="left: {drag.x + 14}px; top: {drag.y + 10}px">{drag.deck.name}</div>
 {/if}
 
+{#if lists.meta.length}
+	{@render deckTable("Metadecks", "meta")}
+{/if}
 {@render deckTable("Marketplace decks", "market")}
 {@render deckTable("My decks", "mine")}
 <FormErrors form={form} />
+<!-- one name field for both: a deck holds cards, a metadeck holds decks -->
 <form method="POST" action="?/create" use:enhance>
 	<input
 		name="name"
@@ -222,7 +273,8 @@
 		maxlength="100"
 		autocomplete="off"
 	/>
-	<button>Create</button>
+	<button>Create deck</button>
+	<button formaction="?/createMetadeck">Create metadeck</button>
 </form>
 
 <style>
@@ -248,8 +300,8 @@
 	tbody td:first-child {
 		padding-left: 4px;
 	}
-	/* The arrow that opens a deck or a subdeck onto the subdecks inside it:
-	   above the row-filling link, so it takes its own click. A row with none
+	/* The arrow that opens a row onto what is inside it: above the
+	   row-filling link, so it takes its own click. A row that holds nothing
 	   keeps the arrow's room, unseen, so the names of a level line up. */
 	.expander {
 		position: relative;
@@ -280,11 +332,11 @@
 	.expander.empty {
 		visibility: hidden;
 	}
-	/* a subdeck's row: lighter than the deck it belongs to */
-	tr.subdeck-row a {
+	/* a row under another: lighter than the rows of the list itself */
+	tr.inner-row a {
 		font-weight: 400;
 	}
-	tr.subdeck-row .count {
+	tr.inner-row .count {
 		font-weight: 400;
 	}
 	.lock {

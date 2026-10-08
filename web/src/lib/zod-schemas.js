@@ -17,4 +17,6 @@ const registerUser = z.object({
 
 const deck = z.string().min(4, "Deck name must be minimum 4 characters").max(100, "Deck name must be 100 chararcters or less");
 
-export { loginUser, registerUser, deck }
+const metadeck = z.string().min(4, "Metadeck name must be minimum 4 characters").max(100, "Metadeck name must be 100 characters or less");
+
+export { loginUser, registerUser, deck, metadeck }

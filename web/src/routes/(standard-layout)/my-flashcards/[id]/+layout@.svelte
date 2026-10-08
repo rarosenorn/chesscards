@@ -7,7 +7,7 @@
 	import { page } from "$app/state"
 	import { beforeNavigate, goto, preloadCode } from "$app/navigation"
 	import { setContext } from "svelte"
-	import { zenHidden } from "$lib/zen-state.svelte.js"
+	import DeckNavBar from "$lib/components/DeckNavBar.svelte"
 	import { sideHasContent, syncTextBlocks } from "$lib/card-utils.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
 	import { subdeckTrail } from "$lib/subdecks.js"
@@ -113,20 +113,6 @@
 			goto(to);
 		});
 	});
-	// A crumb says its name in full on hover, but only while it is cut short:
-	// the app's own tooltip (GlobalTooltip reads data-tip), kept in step with
-	// whether the name fits as the bar is resized.
-	const fullNameWhenCut = name => node => {
-		const sync = () => {
-			if (node.scrollWidth > node.clientWidth) node.dataset.tip = name;
-			else delete node.dataset.tip;
-		}
-		const observer = new ResizeObserver(sync);
-		observer.observe(node);
-		sync();
-		return () => observer.disconnect();
-	}
-
 	let studiedSubdeck = $derived(
 		page.url.pathname.endsWith("/study")
 			? deck.subdecks.find(subdeck => subdeck.id === page.url.searchParams.get("subdeck"))
@@ -144,167 +130,29 @@
 		? ["Study", "Cards", "Deck", "Settings"]
 		: ["Study", "Cards", "Add cards", "Deck", "Settings"];
 
-	// s/c/a/d/i jump between the deck's tabs. Bare letters, so they stand down
-	// wherever the keyboard is already spoken for — a text field, a card
-	// editor, or any modifier combo — the way study's own e/h/1-4 do. Settings
-	// takes i, not its own t: a focused board answers t by turning itself over.
+	// s/c/a/d/i jump between the deck's tabs (the bar listens for them).
+	// Settings takes i, not its own t: a focused board answers t by turning
+	// itself over.
 	const TAB_KEYS = { s: "study", c: "browse", a: "add-cards", d: "deck", i: "settings" };
 	const shortcutFor = path => Object.keys(TAB_KEYS).find(key => TAB_KEYS[key] === path);
-	const handleKeyDown = e => {
-		if (e.ctrlKey || e.metaKey || e.altKey) return;
-		const path = TAB_KEYS[e.key.toLowerCase()];
-		if (!path || !paths.includes(path)) return;
-		const target = e.target;
-		if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable) return;
-		const to = `/my-flashcards/${page.params.id}/${path}`;
-		if (page.url.pathname === to) return;
-		e.preventDefault();
-		goto(to);
-	}
 </script>
 
-<svelte:window onkeydown={handleKeyDown} />
-
-<div class="deck-nav-container" class:zen-hidden={zenHidden()}>
-	<div class="breadcrumbs">
-		<a href="/my-flashcards">My flashcards</a>
-		<span>{"->"}</span>
-		<!-- Studying one subdeck on its own (study's ?subdeck=): it is named
-		     here, after the deck, which is then the way back to the whole of
-		     it. Each name is a crumb of its own, cut short with an ellipsis
-		     when it is long or the bar is tight, and then said in full on
-		     hover. -->
-		{#if studiedSubdeck}
-			<a class="crumb" href="/my-flashcards/{page.params.id}/study" {@attach fullNameWhenCut(deck.name)}>{deck.name}</a>
-			{#each subdeckTrail(deck.subdecks, studiedSubdeck.id) as name, index}
-				<span>{index === 0 ? "->" : "›"}</span>
-				<span class="crumb" {@attach fullNameWhenCut(name)}>{name}</span>
-			{/each}
-		{:else}
-			<span class="crumb" {@attach fullNameWhenCut(deck.name)}>{deck.name}</span>
-		{/if}
-	</div>
-	<div class="tabs">
-		{#each paths as path, i}
-			<a
-				href="/my-flashcards/{page.params.id}/{path}"
-				aria-current={page.url.pathname === `/my-flashcards/${page.params.id}/${path}`
-					|| page.url.pathname.startsWith(`/my-flashcards/${page.params.id}/${path}/`)}
-			>
-				{names[i]}
-				<!-- the app's own tooltip, not a title: the browser places
-				     those itself and they land off the mark -->
-				{#if shortcutFor(path)}
-					<span class="tooltip" aria-hidden="true">Shortcut key: {shortcutFor(path)}</span>
-				{/if}
-			</a>
-		{/each}
-	</div>
-</div>
+<!-- Studying one subdeck on its own (study's ?subdeck=): it is named after
+     the deck, which is then the way back to the whole of it. -->
+<DeckNavBar
+	crumbs={studiedSubdeck
+		? [
+			{ name: deck.name, href: `/my-flashcards/${page.params.id}/study` },
+			...subdeckTrail(deck.subdecks, studiedSubdeck.id).map((name, index) => ({ name, separator: index === 0 ? "->" : "›" }))
+		]
+		: [{ name: deck.name }]}
+	tabs={paths.map((path, index) => ({
+		name: names[index],
+		href: `/my-flashcards/${page.params.id}/${path}`,
+		current: page.url.pathname === `/my-flashcards/${page.params.id}/${path}`
+			|| page.url.pathname.startsWith(`/my-flashcards/${page.params.id}/${path}/`),
+		shortcut: shortcutFor(path)
+	}))}
+/>
 
 {@render children()}
-
-<style>
-	/* zen mode: the bar goes with the site bar above it, out of the flow
-	   entirely — and comes back in it, so the card keeps its usual distance
-	   from the chrome whenever the chrome is showing */
-	.deck-nav-container.zen-hidden {
-		display: none;
-	}
-	.deck-nav-container {
-		display: flex;
-		box-shadow: inset 0 -4px 6px -4px rgba(0, 0, 0, 0.2);
-		align-items: center;
-		padding-top: 8px;
-		padding-left: 30px;
-		gap: 20px;
-	}
-	.tabs {
-		align-self: end;
-		flex: none;
-	}
-	.tabs > a {
-		display: inline-block;
-		text-decoration: none;
-		position: relative;
-		color: black;
-		background-color: white;
-		border-radius: 4px 4px 0 0;
-		cursor: pointer;
-		margin-left: 5px;
-		border: 1px solid #e3e1e1;
-		border-bottom: none;
-		padding: 0 16px;
-		padding-top: 6px;
-		padding-bottom: 3px;
-	}
-	.tabs [aria-current]:not([aria-current="false"]) {
-		color: var(--accent-text) !important;
-		background-color: var(--accent) !important;
-	}
-	.tabs > a:hover {
-		background-color: rgba(0, 0, 0, 0.05);
-	}
-	/* the card type pills' tooltip, hung under the tab */
-	.tabs .tooltip {
-		position: absolute;
-		top: calc(100% + 6px);
-		left: 0;
-		width: max-content;
-		background-color: black;
-		color: white;
-		font-size: 13px;
-		font-weight: 500;
-		padding: 5px 10px;
-		border-radius: 4px;
-		opacity: 0;
-		visibility: hidden;
-		pointer-events: none;
-		transition: opacity 100ms ease 300ms, visibility 0ms 300ms;
-		z-index: 30;
-	}
-	.tabs > a:hover .tooltip {
-		opacity: 1;
-		visibility: visible;
-	}
-	/* the :active transform below makes the tab a stacking context, which
-	   would trap the tooltip beneath the page — lift it while it can show */
-	.tabs > a:hover,
-	.tabs > a:active {
-		z-index: 30;
-	}
-	/* the std-btn key press: the tab dips into its bottom edge while held */
-	.tabs > a:active {
-		transform: translateY(1px);
-		padding-bottom: 2px;
-		background-color: rgba(0, 0, 0, 0.08);
-	}
-	.tabs [aria-current]:not([aria-current="false"]):active {
-		background-color: var(--accent-hover) !important;
-	}
-	/* the crumbs give way before the tabs do: each name shrinks to an
-	   ellipsis, the arrows between them and the way home never */
-	.breadcrumbs {
-		display: flex;
-		align-items: baseline;
-		gap: 0.3em;
-		min-width: 0;
-		white-space: nowrap;
-	}
-	.breadcrumbs > * {
-		flex: none;
-	}
-	.breadcrumbs .crumb {
-		flex: 0 1 auto;
-		min-width: 2.5em;
-		max-width: 26ch;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.breadcrumbs a {
-		color: black;
-	}
-	.breadcrumbs a:hover {
-		color: blue;
-	}
-</style>

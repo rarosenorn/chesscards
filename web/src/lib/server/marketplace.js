@@ -307,6 +307,16 @@ const getInstancesWithoutCards = async (userId, { timeZone, rolloverHour }) => {
 	return withListing(decks, subdecks, counted);
 }
 
+// the marketplace decks the user has taken, by name and in their order, for
+// the pickers that choose among them
+const getInstanceNames = async userId => {
+	const { rows } = await pool.query(`
+		select i.id, md.name from marketplace_deck_instances i
+		join marketplace_decks md on md.id = i.marketplace_deck_id
+		where i.user_id = $1 order by i.position`, [userId]);
+	return rows;
+}
+
 // the user's marketplace decks in the order given (see decks.reorder)
 const reorderInstances = async (userId, ids) => {
 	const { rowCount } = await pool.query(`
@@ -561,4 +571,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceProgressionDepth, resetInstanceSchedule, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, getInstanceNames, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceProgressionDepth, resetInstanceSchedule, createInstanceReviewLog }

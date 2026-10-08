@@ -603,10 +603,10 @@
 	   it than the lists sit to each other, and keeps their distance from
 	   what comes next. */
 	table.creatable {
-		margin-bottom: 14px;
+		margin-bottom: 8px;
 	}
 	.create {
-		margin: 6px 0 32px;
+		margin: 4px 0 32px;
 	}
 	/* the app's standard button, at the size of a note under a list */
 	.create button {

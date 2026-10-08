@@ -403,9 +403,12 @@
 			// for this event already and is left alone — anywhere else in
 			// there (past the last row, in the padding beside them) is still
 			// a drop, taken against the nearest row rather than a departure.
+			// The slot itself is left alone too: the cursor resting on it is
+			// the drop it shows, and in an empty subdeck it is the only row
+			// there is — the nearest card would be another subdeck's.
 			if (!tableContainer?.contains(e.target)) {
 				setDragOver(reorderDrag.initial.subdeckId, reorderDrag.initial.index);
-			} else if (!e.target?.closest?.("tr[data-card-row], tr.subdeck-row")) {
+			} else if (!e.target?.closest?.("tr[data-card-row], tr.subdeck-row, tr.placeholder-row")) {
 				reslotUnderCursor();
 			}
 			return;
@@ -651,13 +654,10 @@
 		applyFresh(await renameSubdeck({ deckId: deck.id, subdeckId: rename.subdeckId, name: rename.value.trim() }));
 	}
 
-	// a deck keeps at least one subdeck, so the one whose going would leave
-	// none is not offered for deletion
-	const canDeleteSubdeck = subdeck =>
-		subdeckSubtree(deck.subdecks, subdeck.id).size < deck.subdecks.length;
-
 	// A subdeck goes with everything in it. That is asked about first when
 	// there is something to lose: the cards under it, with their history.
+	// (The deck's last one can go as well: the server leaves a fresh, empty
+	// subdeck in its place, as a new deck has.)
 	const removeSubdeck = async subdeck => {
 		const inside = subdeckSubtree(deck.subdecks, subdeck.id).size - 1;
 		const cards = cardsUnder(deck.subdecks, deck.cards, subdeck.id);
@@ -1013,18 +1013,16 @@
 		>
 			Add subdeck inside
 		</button>
-		{#if canDeleteSubdeck(subdeckMenu.subdeck)}
-			<button
-				class="danger"
-				onclick={() => {
-					const subdeck = subdeckMenu.subdeck;
-					subdeckMenu = null;
-					removeSubdeck(subdeck);
-				}}
-			>
-				Delete subdeck
-			</button>
-		{/if}
+		<button
+			class="danger"
+			onclick={() => {
+				const subdeck = subdeckMenu.subdeck;
+				subdeckMenu = null;
+				removeSubdeck(subdeck);
+			}}
+		>
+			Delete subdeck
+		</button>
 	</div>
 {/if}
 

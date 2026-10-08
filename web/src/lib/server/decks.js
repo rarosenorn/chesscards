@@ -4,13 +4,15 @@ import { childrenByParent, subdeckOrder, leafSubdecks, subdeckSubtree } from "..
 // a deck is born with its Subdeck 1: every card belongs to a subdeck, so there is
 // always one to put the first card in. Subdecks are named, so the first one
 // carries the name the user would have typed anyway.
+const FIRST_SUBDECK_NAME = "Subdeck 1";
+
 const create = async (userId, name) => {
 	const { rows } = await pool.query(`
 		with d as (insert into decks(user_id, name, position)
 			values($1, $2, (select coalesce(max(position), 0) + 1 from decks where user_id = $1))
 			returning id, user_id, name),
-		s as (insert into subdecks(deck_id, name, position) select id, 'Subdeck 1', 1 from d)
-		select id, user_id "userId", name from d`, [userId, name]);
+		s as (insert into subdecks(deck_id, name, position) select id, $3, 1 from d)
+		select id, user_id "userId", name from d`, [userId, name, FIRST_SUBDECK_NAME]);
 
 	return rows[0]
 }
@@ -436,7 +438,8 @@ const moveSubdeck = async (userId, deckId, subdeckId, parentId, index) => {
 
 // A subdeck goes with everything inside it: its subdecks, and every card
 // under it with its review history (the caller has asked the user first).
-// A deck keeps at least one subdeck, so the last one standing stays.
+// A deck keeps at least one subdeck for its cards to go into, so when the
+// last goes a fresh, empty one takes its place, as a new deck is born with.
 const deleteSubdeck = async (userId, subdeckId) => {
 	const client = await pool.connect();
 	try {
@@ -447,7 +450,6 @@ const deleteSubdeck = async (userId, subdeckId) => {
 		if (!found) throw new Error("Unauthorized");
 		const subdecks = await lockSubdecks(client, userId, found.deck_id);
 		const going = subdeckSubtree(subdecks, subdeckId);
-		if (subdecks.every(subdeck => going.has(subdeck.id))) throw new Error("A deck keeps at least one subdeck");
 		const { rows: cards } = await client.query(
 			"delete from cards where subdeck_id = any($1::uuid[]) returning id", [[...going]]);
 		await client.query(`
@@ -460,6 +462,10 @@ const deleteSubdeck = async (userId, subdeckId) => {
 		const deleted = subdecks.find(subdeck => subdeck.id === subdeckId);
 		await numberSubdecks(client, (childrenByParent(subdecks).get(deleted.parent_id ?? null) ?? [])
 			.filter(subdeck => subdeck.id !== subdeckId));
+		if (subdecks.every(subdeck => going.has(subdeck.id))) {
+			await client.query(
+				"insert into subdecks(deck_id, name, position) values ($1, $2, 1)", [found.deck_id, FIRST_SUBDECK_NAME]);
+		}
 		await client.query("commit");
 	} catch (err) {
 		await client.query("rollback");

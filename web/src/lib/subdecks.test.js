@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { unlockedSubdeckIds, firstLockedSubdeck, subdeckPath, subdeckLevels, subdeckOutline, subdeckOrder, leafSubdecks, subdeckSubtree, cardsUnder, gatingDepth } from "./subdecks.js"
+import { unlockedSubdeckIds, firstLockedSubdeck, subdeckPath, subdeckTrail, subdeckLevels, deckListing, subdeckOutline, subdeckOrder, leafSubdecks, subdeckSubtree, cardsUnder, gatingDepth } from "./subdecks.js"
 
 const subdeck = (id, position, parent_id = null) => ({ id, name: id, position, parent_id });
 const fresh = subdeck_id => ({ subdeck_id, card_type: "basic", state: 0 });
@@ -142,12 +142,51 @@ describe("a subdeck studied on its own", () => {
 	})
 })
 
+describe("the My flashcards list's numbers", () => {
+	// a: a1, a2 · b
+	const subdecks = [subdeck("a", 1), subdeck("a1", 1, "a"), subdeck("a2", 2, "a"), subdeck("b", 2)];
+	// each subdeck's own counts: a1 is learned bar one review due, a2 and b are all new
+	const stats = new Map([
+		["a1", { total: 4, seen: 4, graduated: 4, new: 0, learn: 0, review: 1 }],
+		["a2", { total: 3, seen: 1, graduated: 0, new: 2, learn: 1, review: 0 }],
+		["b", { total: 5, seen: 0, graduated: 0, new: 5, learn: 0, review: 0 }]
+	]);
+	const deck = progressionDepth => ({ subdecks, usesSubdecks: true, progressionDepth });
+	const row = (listing, id) => listing.subdecks.find(entry => entry.id === id);
+
+	it("counts for the deck what its progression leaves open", () => {
+		expect(deckListing(deck(null), stats)).toMatchObject({ new: 2, learn: 1, review: 1 });
+		expect(deckListing(deck(0), stats)).toMatchObject({ new: 7, learn: 1, review: 1 });
+	})
+
+	it("lists the subdecks as an outline, saying which the deck has locked", () => {
+		const listing = deckListing(deck(null), stats);
+		expect(listing.subdecks.map(entry => [entry.name, entry.level, entry.locked])).toEqual([
+			["a", 1, false], ["a1", 2, false], ["a2", 2, false], ["b", 1, true]
+		]);
+	})
+
+	it("counts for a subdeck what studying it alone would bring, locked or not", () => {
+		const listing = deckListing(deck(null), stats);
+		expect(row(listing, "a")).toMatchObject({ new: 2, learn: 1, review: 1 });
+		expect(row(listing, "a1")).toMatchObject({ new: 0, learn: 0, review: 1 });
+		expect(row(listing, "b")).toMatchObject({ new: 5, learn: 0, review: 0, locked: true });
+	})
+
+	it("lists no subdecks for a deck that uses none, and gates nothing", () => {
+		const plain = deckListing({ subdecks: [subdeck("only", 1)], usesSubdecks: false, progressionDepth: null },
+			new Map([["only", { total: 2, seen: 0, graduated: 0, new: 2, learn: 0, review: 0 }]]));
+		expect(plain).toEqual({ new: 2, learn: 0, review: 0, subdecks: [] });
+	})
+})
+
 describe("a subdeck's place in words", () => {
 	const subdecks = [subdeck("a", 1), subdeck("a1", 1, "a"), subdeck("a1x", 1, "a1"), subdeck("b", 2)];
 
 	it("is the names down to it", () => {
 		expect(subdeckPath(subdecks, "a1x")).toBe("a › a1 › a1x");
 		expect(subdeckPath(subdecks, "b")).toBe("b");
+		expect(subdeckTrail(subdecks, "a1x")).toEqual(["a", "a1", "a1x"]);
 	})
 
 	it("counts the deck's levels of subdecks", () => {

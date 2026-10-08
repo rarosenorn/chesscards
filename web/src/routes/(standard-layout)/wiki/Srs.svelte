@@ -42,7 +42,7 @@
 	before it has passed. So a subdeck is locked while any earlier one is
 	still short of the bar, and study says which one is holding it and how far
 	along that one is. A locked subdeck can still be studied on its own:
-	right-click it in <strong>Cards</strong> and choose Study subdeck.
+	open its deck in <strong>My flashcards</strong> and click it.
 </p>
 
 <p>

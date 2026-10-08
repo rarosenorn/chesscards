@@ -33,8 +33,17 @@ const isGraduated = card => card.card_type === "tactic"
 	? card.finished_at != null || (card.reps ?? 0) > 0
 	: card.state === 2 || card.state === 3;
 
-const subdeckPasses = cards =>
-	cards.every(isSeen) && cards.filter(isGraduated).length >= GRADUATED_SHARE * cards.length;
+// what progression needs to know of a set of cards, and its verdict on them.
+// (The My flashcards list has only such counts, per subdeck, to go on.)
+const cardStats = cards => ({
+	total: cards.length,
+	seen: cards.filter(isSeen).length,
+	graduated: cards.filter(isGraduated).length
+});
+
+const statsPass = ({ total, seen, graduated }) => seen === total && graduated >= GRADUATED_SHARE * total;
+
+const subdeckPasses = cards => statsPass(cardStats(cards));
 
 // each subdeck's children in order, the deck's top level under null
 const childrenByParent = subdecks => {
@@ -71,12 +80,14 @@ const subdeckOutline = (subdecks, descending = false) => {
 
 // A subdeck said in full, where it stands alone and its name would not say
 // which one it is: the names down to it, "Rook endgames › Lucena".
-const subdeckPath = (subdecks, subdeckId) => {
+const subdeckTrail = (subdecks, subdeckId) => {
 	const byId = new Map(subdecks.map(subdeck => [subdeck.id, subdeck]));
 	const names = [];
 	for (let subdeck = byId.get(subdeckId); subdeck; subdeck = byId.get(subdeck.parent_id)) names.unshift(subdeck.name);
-	return names.join(" › ");
+	return names;
 }
+
+const subdeckPath = (subdecks, subdeckId) => subdeckTrail(subdecks, subdeckId).join(" › ");
 
 // how many levels of subdecks the deck has, for offering progression depths
 const subdeckLevels = subdecks => Math.max(0, ...subdeckOutline(subdecks).map(entry => entry.level));
@@ -130,15 +141,15 @@ const gatingDepth = deck => deck.usesSubdecks ? deck.progressionDepth ?? Infinit
 // open whatever stands before it in the deck — asking for it is the
 // studier's say — and progression holds among the subdecks inside it, at the
 // levels they sit at in the deck.
-const walkProgression = (subdecks, cards, depth, rootId = null) => {
+// It goes by each subdeck's own counts (stats: subdeck id -> cardStats of the
+// cards in it), which is all it needs of the cards.
+const walkProgression = (subdecks, stats, depth, rootId = null) => {
 	const children = childrenByParent(subdecks);
-	const own = new Map();
-	for (const card of cards) {
-		if (!own.has(card.subdeck_id)) own.set(card.subdeck_id, []);
-		own.get(card.subdeck_id).push(card);
-	}
-	const under = id =>
-		(children.get(id) ?? []).reduce((all, child) => all.concat(under(child.id)), own.get(id) ?? []);
+	const none = { total: 0, seen: 0, graduated: 0 };
+	const under = id => (children.get(id) ?? []).reduce((sum, child) => {
+		const inside = under(child.id);
+		return { total: sum.total + inside.total, seen: sum.seen + inside.seen, graduated: sum.graduated + inside.graduated };
+	}, stats.get(id) ?? none);
 
 	const unlocked = new Set();
 	let firstLocked = null;
@@ -149,7 +160,7 @@ const walkProgression = (subdecks, cards, depth, rootId = null) => {
 		for (const [index, subdeck] of siblings.entries()) {
 			unlocked.add(subdeck.id);
 			open(subdeck.id, level + 1);
-			if (level <= depth && !subdeckPasses(under(subdeck.id))) {
+			if (level <= depth && !statsPass(under(subdeck.id))) {
 				const next = siblings[index + 1];
 				if (next && !firstLocked) firstLocked = { locked: next, before: subdeck };
 				break;
@@ -160,11 +171,51 @@ const walkProgression = (subdecks, cards, depth, rootId = null) => {
 	return { unlocked, firstLocked };
 }
 
+// each subdeck's own counts, from the cards themselves
+const statsBySubdeck = cards => {
+	const own = new Map();
+	for (const card of cards) {
+		if (!own.has(card.subdeck_id)) own.set(card.subdeck_id, []);
+		own.get(card.subdeck_id).push(card);
+	}
+	return new Map([...own].map(([id, list]) => [id, cardStats(list)]));
+}
+
 const unlockedSubdeckIds = (subdecks, cards, depth = Infinity, rootId = null) =>
-	walkProgression(subdecks, cards, depth, rootId).unlocked;
+	walkProgression(subdecks, statsBySubdeck(cards), depth, rootId).unlocked;
 
 const firstLockedSubdeck = (subdecks, cards, depth = Infinity, rootId = null) =>
-	walkProgression(subdecks, cards, depth, rootId).firstLocked;
+	walkProgression(subdecks, statsBySubdeck(cards), depth, rootId).firstLocked;
+
+// The My flashcards list's numbers for a deck and, when it uses subdecks, for
+// each of them. A row's counts are what studying that row would put in front
+// of you: the learning and review cards due under it, and the new ones in
+// the subdecks progression leaves open — for the deck as a whole, or for a
+// subdeck studied on its own (which is open itself, whatever the deck holds
+// shut before it). A subdeck's row also says whether the deck has it locked.
+// stats: subdeck id -> its own cardStats and its due counts, { new, learn,
+// review }.
+const deckListing = ({ subdecks, usesSubdecks, progressionDepth }, stats) => {
+	const depth = gatingDepth({ usesSubdecks, progressionDepth });
+	const counts = (rootId = null) => {
+		const open = walkProgression(subdecks, stats, depth, rootId).unlocked;
+		const inside = rootId ? subdeckSubtree(subdecks, rootId) : null;
+		const sum = { new: 0, learn: 0, review: 0 };
+		for (const [id, own] of stats) {
+			if (inside && !inside.has(id)) continue;
+			sum.learn += own.learn;
+			sum.review += own.review;
+			if (open.has(id)) sum.new += own.new;
+		}
+		return sum;
+	}
+	const open = walkProgression(subdecks, stats, depth).unlocked;
+	return {
+		...counts(),
+		subdecks: !usesSubdecks ? [] : subdeckOutline(subdecks).map(({ subdeck, level }) =>
+			({ id: subdeck.id, name: subdeck.name, level, locked: !open.has(subdeck.id), ...counts(subdeck.id) }))
+	};
+}
 
 // how far along a subdeck is toward passing, for the "unlocks at" note
 const subdeckProgress = cards => ({
@@ -174,4 +225,4 @@ const subdeckProgress = cards => ({
 	total: cards.length
 });
 
-export { GRADUATED_SHARE, subdeckName, subdeckPath, subdeckLevels, isSeen, isGraduated, subdeckPasses, childrenByParent, subdeckOutline, subdeckOrder, leafSubdecks, subdeckChoices, subdeckSubtree, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress }
+export { GRADUATED_SHARE, subdeckName, subdeckTrail, subdeckPath, subdeckLevels, deckListing, isSeen, isGraduated, subdeckPasses, childrenByParent, subdeckOutline, subdeckOrder, leafSubdecks, subdeckChoices, subdeckSubtree, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress }

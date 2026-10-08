@@ -1,5 +1,5 @@
 import { pool } from "./pool.js"
-import { BOUNDS, inDeckOrder } from "./decks.js"
+import { BOUNDS, listCounts, withListing, inDeckOrder } from "./decks.js"
 import { createEmptyCard } from "ts-fsrs"
 
 const themes = ["openings", "endgames", "tactics", "strategy", "checkmates"];
@@ -267,25 +267,28 @@ const DUE = `ci.finished_at is null and (
 )`;
 
 const getInstancesWithoutCards = async (userId, { timeZone, rolloverHour }) => {
-	const { rows } = await pool.query(`
-		with bounds as (${BOUNDS})
-		select i.id, md.name,
-			count(ci.id) filter (where ${DUE}) due_cards,
-			-- the deck list's anki columns (see decks.getMineWithoutCards)
-			count(ci.id) filter (where ${DUE} and (ci.state = 0 or (ci.state is null and ci.last_review is null))) new_cards,
-			count(ci.id) filter (where ${DUE} and ci.state in (1, 3)) learn_cards,
-			count(ci.id) filter (where ${DUE} and (ci.state = 2 or (ci.state is null and ci.last_review is not null))) review_cards
+	const { rows: decks } = await pool.query(`
+		select i.id, md.name, md.uses_subdecks "usesSubdecks", i.progression_depth "progressionDepth"
 		from marketplace_deck_instances i
 		join marketplace_decks md on md.id = i.marketplace_deck_id
-		left join marketplace_card_instances ci on ci.marketplace_deck_instance_id = i.id
+		where i.user_id = $1 order by i.position`, [userId]);
+	// the subdecks are the marketplace deck's, said once for each copy of it
+	const { rows: subdecks } = await pool.query(`
+		select ms.id, i.id deck_id, ms.parent_id, ms.name, ms.position
+		from marketplace_subdecks ms
+		join marketplace_deck_instances i on i.marketplace_deck_id = ms.marketplace_deck_id
+		where i.user_id = $1`, [userId]);
+	const { rows: counted } = await pool.query(`
+		with bounds as (${BOUNDS})
+		select i.id deck_id, mc.subdeck_id, ${listCounts("ci", DUE)}
+		from marketplace_card_instances ci
+		join marketplace_cards mc on mc.id = ci.marketplace_card_id
+		join marketplace_deck_instances i on i.id = ci.marketplace_deck_instance_id
 		cross join bounds
 		where i.user_id = $1
-		group by i.id, md.name
-		order by i.position`,
-		[userId, timeZone, rolloverHour]
-	);
+		group by i.id, mc.subdeck_id`, [userId, timeZone, rolloverHour]);
 
-	return rows;
+	return withListing(decks, subdecks, counted);
 }
 
 // the user's marketplace decks in the order given (see decks.reorder)

@@ -1,6 +1,7 @@
 <script>
 	import { enhance } from "$app/forms"
 	import { flip } from "svelte/animate"
+	import { SvelteSet } from "svelte/reactivity"
 	import FormErrors from "$lib/components/FormErrors.svelte"
 	import { reorderDecks } from "./decks.remote.js"
 	let { data, form } = $props();
@@ -77,16 +78,45 @@
 		}
 	}
 
-	// what a table shows: while its row is lifted, the others with a
-	// placeholder at the slot it would drop into
+	// A deck that uses subdecks opens to show them, each with its own counts:
+	// which decks are open is the reader's own business, kept in this
+	// browser from one visit to the next.
+	const EXPANDED_KEY = "chesscards:expanded-decks";
+	const storedExpanded = () => {
+		try { return JSON.parse(localStorage.getItem(EXPANDED_KEY) ?? "[]"); } catch { return []; }
+	}
+	let expanded = $state(new SvelteSet());
+	// read after mount: the server renders every deck closed
+	$effect(() => { expanded = new SvelteSet(storedExpanded()); });
+	const toggleExpanded = deck => {
+		if (!expanded.delete(deck.id)) expanded.add(deck.id);
+		try { localStorage.setItem(EXPANDED_KEY, JSON.stringify([...expanded])); } catch {}
+	}
+
+	// What a table shows, row by row: each deck, with its subdecks under it
+	// when it is open. While a deck is lifted, the others with a placeholder
+	// at the slot it would drop into — and no subdecks, which would be rows
+	// that are not the lifted kind standing between the slots.
 	const rowsOf = list => {
-		if (drag?.list !== list || !drag.started) return lists[list];
-		const rest = lists[list].filter(deck => deck !== drag.deck);
-		return [...rest.slice(0, drag.over), { id: "__placeholder__", placeholder: true }, ...rest.slice(drag.over)];
+		if (drag?.list === list && drag.started) {
+			const rest = lists[list].filter(deck => deck !== drag.deck);
+			return [...rest.slice(0, drag.over), { id: "__placeholder__", placeholder: true }, ...rest.slice(drag.over)];
+		}
+		return lists[list].flatMap(deck => [
+			deck,
+			...(expanded.has(deck.id) ? deck.subdecks.map(subdeck => ({ id: `${deck.id}:${subdeck.id}`, deck, subdeck })) : [])
+		]);
 	}
 </script>
 
 <svelte:window onmousemove={handleWindowMouseMove} onmouseup={handleWindowMouseUp} />
+
+<!-- anki's three columns, for a deck or a subdeck -->
+{#snippet counts(of)}
+	<td class="count new" class:none={of.new == 0}>{of.new}</td>
+	<td class="count learn" class:none={of.learn == 0}>{of.learn}</td>
+	<td class="count review" class:none={of.review == 0}>{of.review}</td>
+{/snippet}
 
 {#snippet deckTable(firstTableHeader, list)}
 	<table data-list={list} class:reordering={drag?.started && drag.list === list}>
@@ -99,29 +129,57 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each rowsOf(list) as deck (deck.id)}
-				<!-- one tr for deck and placeholder alike: the animate directive
-				     must sit directly under the keyed each -->
+			{#each rowsOf(list) as row (row.id)}
+				<!-- one tr for deck, subdeck and placeholder alike: the animate
+				     directive must sit directly under the keyed each -->
 				<tr
-					data-deck-row={deck.placeholder ? undefined : deck.id}
-					class:placeholder-row={deck.placeholder}
-					style:height={deck.placeholder ? `${drag.rowHeight}px` : undefined}
+					data-deck-row={row.placeholder || row.subdeck ? undefined : row.id}
+					class:placeholder-row={row.placeholder}
+					class:subdeck-row={row.subdeck}
+					style:height={row.placeholder ? `${drag.rowHeight}px` : undefined}
 					animate:flip={{ duration: drag?.started ? 150 : 0 }}
-					onmousedown={deck.placeholder ? undefined : e => handleRowMouseDown(e, list, deck)}
+					onmousedown={row.placeholder || row.subdeck ? undefined : e => handleRowMouseDown(e, list, row)}
 				>
-					{#if deck.placeholder}
+					{#if row.placeholder}
 						<td colspan="4"></td>
+					{:else if row.subdeck}
+						<!-- a subdeck is studied on its own from here, locked or
+						     not; its numbers are what that would bring -->
+						<td style:padding-left="{36 + (row.subdeck.level - 1) * 16}px">
+							<a href={`my-flashcards/${row.deck.id}/study?subdeck=${row.subdeck.id}`} draggable="false">
+								{row.subdeck.name}
+							</a>
+							{#if row.subdeck.locked}
+								<svg class="lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
+									<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
+									<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+								</svg>
+							{/if}
+						</td>
+						{@render counts(row.subdeck)}
 					{:else}
-						<td><a
-							href={`my-flashcards/${deck.id}/study`}
-							draggable="false"
-							onclick={e => { if (justDragged) e.preventDefault() }}
-						>
-								{deck.name}
-						</a></td>
-						<td class="count new" class:none={deck.new_cards == 0}>{deck.new_cards}</td>
-						<td class="count learn" class:none={deck.learn_cards == 0}>{deck.learn_cards}</td>
-						<td class="count review" class:none={deck.review_cards == 0}>{deck.review_cards}</td>
+						<td>
+							<!-- the arrow is there only for a deck with subdecks to
+							     show; the name keeps its place either way -->
+							<button
+								class="expander"
+								class:open={expanded.has(row.id)}
+								class:empty={row.subdecks.length === 0}
+								aria-label={expanded.has(row.id) ? "Hide subdecks" : "Show subdecks"}
+								aria-expanded={expanded.has(row.id)}
+								tabindex={row.subdecks.length === 0 ? -1 : 0}
+								onmousedown={e => e.stopPropagation()}
+								onclick={() => toggleExpanded(row)}
+							></button>
+							<a
+								href={`my-flashcards/${row.id}/study`}
+								draggable="false"
+								onclick={e => { if (justDragged) e.preventDefault() }}
+							>
+								{row.name}
+							</a>
+						</td>
+						{@render counts(row)}
 					{/if}
 				</tr>
 			{/each}
@@ -170,6 +228,53 @@
 	}
 	tbody td:first-child {
 		padding-left: 4px;
+	}
+	/* The arrow that opens a deck onto its subdecks: above the row-filling
+	   link, so it takes its own click. A deck with none keeps the arrow's
+	   room, unseen, so every name starts at the same place. */
+	.expander {
+		position: relative;
+		z-index: 1;
+		width: 16px;
+		height: 16px;
+		padding: 0;
+		border: none;
+		background: none;
+		cursor: pointer;
+		vertical-align: middle;
+	}
+	.expander::before {
+		content: "";
+		display: block;
+		width: 9px;
+		height: 9px;
+		margin: auto;
+		background-color: rgba(0, 0, 0, 0.5);
+		clip-path: polygon(17% 0, 83% 50%, 17% 100%);
+	}
+	.expander.open::before {
+		transform: rotate(90deg);
+	}
+	.expander:hover::before {
+		background-color: black;
+	}
+	.expander.empty {
+		visibility: hidden;
+	}
+	/* a subdeck's row: lighter than the deck it belongs to */
+	tr.subdeck-row a {
+		font-weight: 400;
+	}
+	tr.subdeck-row .count {
+		font-weight: 400;
+	}
+	.lock {
+		display: inline-block;
+		width: 12px;
+		height: 12px;
+		margin-left: 4px;
+		vertical-align: -1px;
+		color: rgba(0, 0, 0, 0.45);
 	}
 	/* the row-filling link overlay (table a::after) anchors here, making the
 	   whole row one click target to match the full-row hover affordance */

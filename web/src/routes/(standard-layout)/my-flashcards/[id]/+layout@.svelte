@@ -10,7 +10,7 @@
 	import { zenHidden } from "$lib/zen-state.svelte.js"
 	import { sideHasContent, syncTextBlocks } from "$lib/card-utils.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
-	import { subdeckPath } from "$lib/subdecks.js"
+	import { subdeckTrail } from "$lib/subdecks.js"
 
 	let { data, children } = $props();
 
@@ -155,14 +155,18 @@
 	<div class="breadcrumbs">
 		<a href="/my-flashcards">My flashcards</a>
 		<span>{"->"}</span>
-		<!-- studying one subdeck on its own (study's ?subdeck=): it is named
-		     here, after the deck, which is then the way back to the whole of it -->
+		<!-- Studying one subdeck on its own (study's ?subdeck=): it is named
+		     here, after the deck, which is then the way back to the whole of
+		     it. Each name is a crumb of its own, cut short with an ellipsis
+		     when it is long or the bar is tight. -->
 		{#if studiedSubdeck}
-			<a href="/my-flashcards/{page.params.id}/study">{deck.name}</a>
-			<span>{"->"}</span>
-			<span>{subdeckPath(deck.subdecks, studiedSubdeck.id)}</span>
+			<a class="crumb" href="/my-flashcards/{page.params.id}/study">{deck.name}</a>
+			{#each subdeckTrail(deck.subdecks, studiedSubdeck.id) as name, index}
+				<span>{index === 0 ? "->" : "›"}</span>
+				<span class="crumb">{name}</span>
+			{/each}
 		{:else}
-			<span>{deck.name}</span>
+			<span class="crumb">{deck.name}</span>
 		{/if}
 	</div>
 	<div class="tabs">
@@ -202,6 +206,7 @@
 	}
 	.tabs {
 		align-self: end;
+		flex: none;
 	}
 	.tabs > a {
 		display: inline-block;
@@ -261,6 +266,25 @@
 	}
 	.tabs [aria-current]:not([aria-current="false"]):active {
 		background-color: var(--accent-hover) !important;
+	}
+	/* the crumbs give way before the tabs do: each name shrinks to an
+	   ellipsis, the arrows between them and the way home never */
+	.breadcrumbs {
+		display: flex;
+		align-items: baseline;
+		gap: 0.3em;
+		min-width: 0;
+		white-space: nowrap;
+	}
+	.breadcrumbs > * {
+		flex: none;
+	}
+	.breadcrumbs .crumb {
+		flex: 0 1 auto;
+		min-width: 2.5em;
+		max-width: 26ch;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.breadcrumbs a {
 		color: black;

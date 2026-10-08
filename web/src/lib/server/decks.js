@@ -1,5 +1,5 @@
 import { pool } from "./pool.js"
-import { childrenByParent, subdeckOrder, leafSubdecks, subdeckSubtree } from "../subdecks.js"
+import { childrenByParent, subdeckOrder, leafSubdecks, subdeckSubtree, deckListing } from "../subdecks.js"
 
 // a deck is born with its Subdeck 1: every card belongs to a subdeck, so there is
 // always one to put the first card in. Subdecks are named, so the first one
@@ -62,23 +62,47 @@ const BOUNDS = `select ((
 		+ make_interval(hours => $3) + interval '1 day'
 ) at time zone $2) day_end`;
 
-const getMineWithoutCards = async (userId, { timeZone, rolloverHour }) => {
-	const { rows } =
-		await pool.query(`with bounds as (${BOUNDS})
-			select d.id, d.name,
-			count(c.id) filter (where ${DUE}) due_cards,
-			-- the deck list's anki columns. A tactic card carries no FSRS
-			-- state, so its last_review stands in: never answered is new,
-			-- otherwise it is a card coming round again (no learning step)
-			count(c.id) filter (where ${DUE} and (c.state = 0 or (c.state is null and c.last_review is null))) new_cards,
-			count(c.id) filter (where ${DUE} and c.state in (1, 3)) learn_cards,
-			count(c.id) filter (where ${DUE} and (c.state = 2 or (c.state is null and c.last_review is not null))) review_cards
-			from decks d left join cards c on d.id = c.deck_id cross join bounds
-			where d.user_id = $1 group by d.id, d.name order by d.position`,
-			[userId, timeZone, rolloverHour]
-		);
+// The list's raw numbers for a group of cards (alias c): what progression
+// goes by — the SQL twins of isSeen and isGraduated (lib/subdecks.js) — and
+// what is due, in anki's three columns. A tactic card carries no FSRS state,
+// so its last_review stands in: never answered is new, otherwise it is a
+// card coming round again (no learning step).
+const listCounts = (c, due) => `
+	count(*)::int total,
+	count(*) filter (where case when ${c}.card_type = 'tactic'
+		then ${c}.finished_at is not null or ${c}.last_review is not null
+		else ${c}.state <> 0 end)::int seen,
+	count(*) filter (where case when ${c}.card_type = 'tactic'
+		then ${c}.finished_at is not null or coalesce(${c}.reps, 0) > 0
+		else ${c}.state in (2, 3) end)::int graduated,
+	count(*) filter (where ${due} and (${c}.state = 0 or (${c}.state is null and ${c}.last_review is null)))::int "new",
+	count(*) filter (where ${due} and ${c}.state in (1, 3))::int learn,
+	count(*) filter (where ${due} and (${c}.state = 2 or (${c}.state is null and ${c}.last_review is not null)))::int review`;
 
-	return rows;
+// The list's decks, each with its numbers and its subdecks' (deckListing).
+// subdecks and counted carry the deck_id they belong to; counted is one
+// listCounts row per subdeck that holds cards.
+const withListing = (decks, subdecks, counted) => decks.map(deck => {
+	const stats = new Map(counted.filter(row => row.deck_id === deck.id).map(row => [row.subdeck_id, row]));
+	const own = subdecks.filter(subdeck => subdeck.deck_id === deck.id);
+	return { id: deck.id, name: deck.name, ...deckListing({ ...deck, subdecks: own }, stats) };
+});
+
+const getMineWithoutCards = async (userId, { timeZone, rolloverHour }) => {
+	const { rows: decks } = await pool.query(`
+		select id, name, uses_subdecks "usesSubdecks", progression_depth "progressionDepth"
+		from decks where user_id = $1 order by position`, [userId]);
+	const { rows: subdecks } = await pool.query(`
+		select s.id, s.deck_id, s.parent_id, s.name, s.position
+		from subdecks s join decks d on d.id = s.deck_id where d.user_id = $1`, [userId]);
+	const { rows: counted } = await pool.query(`
+		with bounds as (${BOUNDS})
+		select c.deck_id, c.subdeck_id, ${listCounts("c", DUE)}
+		from cards c join decks d on d.id = c.deck_id cross join bounds
+		where d.user_id = $1
+		group by c.deck_id, c.subdeck_id`, [userId, timeZone, rolloverHour]);
+
+	return withListing(decks, subdecks, counted);
 }
 
 // The user's decks in the order given: ids must be exactly their decks, or
@@ -722,4 +746,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, moveSubdeck, flattenSubdecks, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }
+export { BOUNDS, listCounts, withListing, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, moveSubdeck, flattenSubdecks, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }

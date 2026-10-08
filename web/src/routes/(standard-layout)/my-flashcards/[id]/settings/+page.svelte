@@ -74,25 +74,6 @@
 	</section>
 	{/if}
 
-	<!-- a marketplace deck's subdecks are its author's: the studier gets the
-	     progression switch below, not the choice of whether subdecks exist -->
-	{#if !data.deck.isMarketplace}
-	<section>
-		<h3>Subdecks</h3>
-		<p class="section-note">
-			Group the deck's cards into subdecks. Off, the deck is one flat list.
-			Subdecks you have made are kept while this is off, so turning it back
-			on brings them back as they were.
-		</p>
-		<form method="POST" action="?/usesSubdecks" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
-			<label class="progression-toggle">
-				<input type="checkbox" name="value" value="true" checked={data.deck.usesSubdecks} />
-				Use subdecks
-			</label>
-		</form>
-	</section>
-	{/if}
-
 	<!-- nothing to gate without subdecks, so the switch only appears with them -->
 	{#if data.deck.usesSubdecks}
 	<section>

@@ -367,14 +367,47 @@ const numberSubdecks = (client, siblings) => client.query(`
 	from unnest($1::uuid[]) with ordinality u(id, n)
 	where s.id = u.id and s.position <> u.n`, [siblings.map(subdeck => subdeck.id)]);
 
+// A plain deck takes its first subdeck, and from here on uses them. Its
+// cards have been sitting in the one subdeck every deck keeps, unseen. With
+// cards in it, that one comes into view beside the new subdeck, as Temp
+// unless it carries a name of its own (cards and subdecks never share a
+// level, the deck's own included); empty, it simply becomes the new subdeck.
+// A deck whose subdecks were hidden rather than never made has them come
+// back as they were.
+const firstSubdeck = async (client, deckId, subdecks, name) => {
+	await client.query("update decks set uses_subdecks = true where id = $1", [deckId]);
+	if (subdecks.length === 1) {
+		const [unseen] = subdecks;
+		const { rowCount: holdsCards } = await client.query(
+			"select 1 from cards where subdeck_id = $1 limit 1", [unseen.id]);
+		if (!holdsCards || unseen.name === FIRST_SUBDECK_NAME) {
+			await client.query("update subdecks set name = $2 where id = $1", [unseen.id, holdsCards ? TEMP_NAME : name]);
+		}
+		if (!holdsCards) return { ...unseen, name };
+	}
+	const { rows } = await client.query(`
+		insert into subdecks(deck_id, name, position) values ($1, $2, $3)
+		returning id, parent_id, name, position`,
+		[deckId, name, (childrenByParent(subdecks).get(null) ?? []).length + 1]);
+	return rows[0];
+}
+
 // A new subdeck at the end of the deck's top level, or of the subdeck named
-// as its parent (whose cards, if it holds any, are rehoused first).
+// as its parent (whose cards, if it holds any, are rehoused first). On a
+// deck that has not used subdecks so far, it is the deck's first.
 const createSubdeck = async (userId, deckId, name, parentId = null) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
 		const subdecks = await lockSubdecks(client, userId, deckId);
 		if (parentId && !subdecks.some(subdeck => subdeck.id === parentId)) throw new Error("Unauthorized");
+		const { rows: [deck] } = await client.query("select uses_subdecks from decks where id = $1", [deckId]);
+		if (!deck.uses_subdecks) {
+			if (parentId) throw new Error("Unauthorized");
+			const first = await firstSubdeck(client, deckId, subdecks, name);
+			await client.query("commit");
+			return first;
+		}
 		const siblings = childrenByParent(subdecks).get(parentId) ?? [];
 		const temp = parentId && siblings.length === 0 ? await rehouseCards(client, deckId, parentId) : null;
 		const { rows } = await client.query(`
@@ -427,6 +460,48 @@ const moveSubdeck = async (userId, deckId, subdeckId, parentId, index) => {
 		await client.query("update subdecks set parent_id = $2 where id = $1", [subdeckId, parentId]);
 		await numberSubdecks(client, joined);
 		if (from !== parentId) await numberSubdecks(client, left);
+		await client.query("commit");
+	} catch (err) {
+		await client.query("rollback");
+		throw err;
+	} finally {
+		client.release();
+	}
+}
+
+// A subdeck is taken away and what was in it stays, one level up: the way
+// back from a grouping that is not wanted. Its subdecks take its place among
+// its siblings. Its cards go to the subdeck it sat in — which can only take
+// them when nothing else sits there (cards and subdecks never share a level),
+// so a subdeck of cards has to be the only one at its level. The deck's only
+// subdeck handing its cards up is the deck becoming a plain list again: it
+// stays on, unseen, as the one the cards sit in.
+const dissolveSubdeck = async (userId, subdeckId) => {
+	const client = await pool.connect();
+	try {
+		await client.query("begin");
+		const { rows: [found] } = await client.query(`
+			select s.deck_id from subdecks s join decks d on d.id = s.deck_id
+			where s.id = $2 and d.user_id = $1`, [userId, subdeckId]);
+		if (!found) throw new Error("Unauthorized");
+		const subdecks = await lockSubdecks(client, userId, found.deck_id);
+		const children = childrenByParent(subdecks);
+		const target = subdecks.find(subdeck => subdeck.id === subdeckId);
+		const parentId = target.parent_id ?? null;
+		const inside = children.get(subdeckId) ?? [];
+		const siblings = children.get(parentId) ?? [];
+		if (inside.length > 0) {
+			await client.query("update subdecks set parent_id = $2 where parent_id = $1", [subdeckId, parentId]);
+			await client.query("delete from subdecks where id = $1", [subdeckId]);
+			await numberSubdecks(client, siblings.flatMap(sibling => sibling.id === subdeckId ? inside : [sibling]));
+		} else if (siblings.length > 1) {
+			throw new Error("Its cards have nowhere to go while other subdecks sit beside it");
+		} else if (parentId === null) {
+			await client.query("update decks set uses_subdecks = false where id = $1", [found.deck_id]);
+		} else {
+			await client.query("update cards set subdeck_id = $2 where subdeck_id = $1", [subdeckId, parentId]);
+			await client.query("delete from subdecks where id = $1", [subdeckId]);
+		}
 		await client.query("commit");
 	} catch (err) {
 		await client.query("rollback");
@@ -611,18 +686,6 @@ const copyCards = async (userId, deckId, cardIds, targetDeckId, targetSubdeckId,
 	}
 }
 
-// Subdecks on or off for one deck. Nothing moves: the deck's subdecks stay as
-// they are, so switching back on finds the grouping where it was left. A deck
-// switched on that has only ever had its birth subdeck simply shows that one
-// until the user makes another.
-const updateUsesSubdecks = async (userId, deckId, value) => {
-	const { rowCount } = await pool.query(
-		"update decks set uses_subdecks = $3 where id = $2 and user_id = $1",
-		[userId, deckId, value]);
-
-	return rowCount === 1;
-}
-
 // How deep the deck's progression runs (0 = none, null = every level; see
 // decks.progression_depth). Touching a single deck's setting also puts the
 // profile's three-way back to "per deck" — the bulk modes only mean anything
@@ -663,4 +726,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, moveSubdeck, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateUsesSubdecks, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }
+export { BOUNDS, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, moveSubdeck, dissolveSubdeck, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }

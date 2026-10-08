@@ -3,12 +3,14 @@
 <h3>Subdecks</h3>
 
 <p>
-	<em>Claude:</em> a deck starts out as one flat list. Turn <strong>Use
-	subdecks</strong> on under the deck's <strong>Settings</strong> to group its
-	cards, and the subdeck picker, the subdeck headers in Cards and the
-	<code>2.17</code> card numbering appear. Switching it back off hides all of
-	that again without touching the subdecks themselves, so turning it on later
-	finds them as they were.
+	<em>Claude:</em> a deck starts out as one flat list. Add a subdeck from
+	the bottom of the deck's <strong>Cards</strong> tab to group its cards,
+	and the subdeck picker, the subdeck headers in Cards and the
+	<code>2.17</code> card numbering appear. Subdecks can sit inside one
+	another: right-click a subdeck to add one inside it, or drag it by its
+	grip into another. A subdeck holds either cards or subdecks, so cards that
+	are in the way move into a subdeck named Temp. Deleting the last subdeck
+	makes the deck a flat list again.
 </p>
 
 <h3>Subdeck progression</h3>

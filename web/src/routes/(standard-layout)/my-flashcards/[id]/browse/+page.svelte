@@ -19,7 +19,7 @@
 	import { canonicalSideJson } from "$lib/card-utils.js"
 	import { gatingDepth, unlockedSubdeckIds, subdeckName, childrenByParent, subdeckOutline, subdeckSubtree, cardsUnder } from "$lib/subdecks.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
-	import { updateCardContent, updateCardType, deleteCards, createSubdeck, renameSubdeck, deleteSubdeck, moveSubdeck, moveCards, listDecks, moveCardsToDeck, copyCards } from "./browse.remote.js"
+	import { updateCardContent, updateCardType, deleteCards, createSubdeck, renameSubdeck, deleteSubdeck, dissolveSubdeck, moveSubdeck, moveCards, listDecks, moveCardsToDeck, copyCards } from "./browse.remote.js"
 
 	let deck = getContext("deck");
 	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
@@ -627,6 +627,15 @@
 		subdeckMenu = { x: e.clientX, y: e.clientY, subdeck };
 	}
 
+	// Off every row — the space under the list — the menu is the deck's own,
+	// with the one thing to do there: add a subdeck at its top level.
+	const handleListContextMenu = e => {
+		if (readonly || e.target.closest?.("tbody tr")) return;
+		e.preventDefault();
+		contextMenu = null;
+		subdeckMenu = { x: e.clientX, y: e.clientY, subdeck: null };
+	}
+
 	// A subdeck is named at birth: the button opens a field rather than
 	// creating one, so there is never an unnamed subdeck to go back and fix.
 	// Blank is a cancel in both directions — creating and renaming — since
@@ -653,6 +662,19 @@
 		if (!rename?.value.trim()) return;
 		applyFresh(await renameSubdeck({ deckId: deck.id, subdeckId: rename.subdeckId, name: rename.value.trim() }));
 	}
+
+	// A subdeck can be taken away with what was in it kept, one level up: its
+	// subdecks take its place. Its cards can only go up when it is the only
+	// subdeck at its level, since cards and subdecks never share one — and the
+	// deck's only subdeck handing its cards up is the deck becoming a plain
+	// list again.
+	const canDissolveSubdeck = subdeck => {
+		const children = childrenByParent(deck.subdecks);
+		return children.has(subdeck.id) || children.get(subdeck.parent_id ?? null).length === 1;
+	}
+
+	const dissolve = async subdeck =>
+		applyFresh(await dissolveSubdeck({ deckId: deck.id, subdeckId: subdeck.id }));
 
 	// A subdeck goes with everything in it. That is asked about first when
 	// there is something to lose: the cards under it, with their history.
@@ -976,6 +998,17 @@
 		{#if deckNames.length > 0}
 			{@render list("copy-deck", `Copy ${cardsNoun} to deck`, deckNames, copySelected)}
 		{/if}
+		<!-- a deck with no subdecks has no header to ask this of -->
+		{#if !deck.usesSubdecks}
+			<button
+				onclick={() => {
+					contextMenu = null;
+					startAddSubdeck();
+				}}
+			>
+				Add subdeck
+			</button>
+		{/if}
 		<button
 			class="danger"
 			onclick={() => {
@@ -996,33 +1029,55 @@
 		style="left: {subdeckMenu.x}px; top: {subdeckMenu.y}px"
 		onmousedown={e => e.stopPropagation()}
 	>
-		<button
-			onclick={() => {
-				subdeckRename = { subdeckId: subdeckMenu.subdeck.id, value: subdeckMenu.subdeck.name };
-				subdeckMenu = null;
-			}}
-		>
-			Rename subdeck
-		</button>
-		<button
-			onclick={() => {
-				const id = subdeckMenu.subdeck.id;
-				subdeckMenu = null;
-				startAddSubdeck(id);
-			}}
-		>
-			Add subdeck inside
-		</button>
-		<button
-			class="danger"
-			onclick={() => {
-				const subdeck = subdeckMenu.subdeck;
-				subdeckMenu = null;
-				removeSubdeck(subdeck);
-			}}
-		>
-			Delete subdeck
-		</button>
+		{#if !subdeckMenu.subdeck}
+			<button
+				onclick={() => {
+					subdeckMenu = null;
+					startAddSubdeck();
+				}}
+			>
+				Add subdeck
+			</button>
+		{:else}
+			<button
+				onclick={() => {
+					subdeckRename = { subdeckId: subdeckMenu.subdeck.id, value: subdeckMenu.subdeck.name };
+					subdeckMenu = null;
+				}}
+			>
+				Rename subdeck
+			</button>
+			<button
+				onclick={() => {
+					const id = subdeckMenu.subdeck.id;
+					subdeckMenu = null;
+					startAddSubdeck(id);
+				}}
+			>
+				Add subdeck inside
+			</button>
+			{#if canDissolveSubdeck(subdeckMenu.subdeck)}
+				<button
+					onclick={() => {
+						const subdeck = subdeckMenu.subdeck;
+						subdeckMenu = null;
+						dissolve(subdeck);
+					}}
+				>
+					Remove subdeck, keep contents
+				</button>
+			{/if}
+			<button
+				class="danger"
+				onclick={() => {
+					const subdeck = subdeckMenu.subdeck;
+					subdeckMenu = null;
+					removeSubdeck(subdeck);
+				}}
+			>
+				Delete subdeck
+			</button>
+		{/if}
 	</div>
 {/if}
 
@@ -1068,7 +1123,7 @@
 				</button>
 			{/if}
 		</div>
-		<div class="table-container" bind:this={tableContainer}>
+		<div class="table-container" role="presentation" bind:this={tableContainer} oncontextmenu={handleListContextMenu}>
 		<!-- svelte-ignore a11y_autofocus -- table is the page's primary interaction target; focus enables arrow-key nav immediately -->
 		<table
 			role="grid"
@@ -1300,7 +1355,7 @@
 							{/each}
 						{/if}
 					{/each}
-					{#if !readonly && deck.usesSubdecks}
+					{#if !readonly}
 						<tr class="add-subdeck-row">
 							<td colspan="6">
 								{#if subdeckAdd && !subdeckAdd.parentId}

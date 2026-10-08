@@ -80,6 +80,16 @@ export const deleteSubdeck =
 		return freshDeck(locals, deckId);
 	})
 
+// a subdeck is taken away and what was in it stays, one level up
+export const dissolveSubdeck =
+	command("unchecked", async ({ deckId, subdeckId }) => {
+		const { locals } = getRequestEvent();
+		checkIds(deckId, subdeckId);
+		try { await decks.dissolveSubdeck(locals.userId, subdeckId); }
+		catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
+		return freshDeck(locals, deckId);
+	})
+
 // a subdeck moves, with what is inside it, to index among the subdecks of
 // parentId (the deck's top level without one; the end without an index)
 export const moveSubdeck =

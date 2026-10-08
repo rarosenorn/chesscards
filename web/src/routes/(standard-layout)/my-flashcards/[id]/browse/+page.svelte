@@ -656,8 +656,8 @@
 
 	// A subdeck goes with everything in it. That is asked about first when
 	// there is something to lose: the cards under it, with their history.
-	// (The deck's last one can go as well: the server leaves a fresh, empty
-	// subdeck in its place, as a new deck has.)
+	// (The deck's last one can go as well: the deck then stops using subdecks
+	// and is a plain list again.)
 	const removeSubdeck = async subdeck => {
 		const inside = subdeckSubtree(deck.subdecks, subdeck.id).size - 1;
 		const cards = cardsUnder(deck.subdecks, deck.cards, subdeck.id);

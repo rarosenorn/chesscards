@@ -438,8 +438,9 @@ const moveSubdeck = async (userId, deckId, subdeckId, parentId, index) => {
 
 // A subdeck goes with everything inside it: its subdecks, and every card
 // under it with its review history (the caller has asked the user first).
-// A deck keeps at least one subdeck for its cards to go into, so when the
-// last goes a fresh, empty one takes its place, as a new deck is born with.
+// When the last one goes the deck stops using subdecks: it is a plain list
+// again, with the one unseen subdeck every deck keeps for its cards to sit
+// in (fresh and empty, as a new deck is born with).
 const deleteSubdeck = async (userId, subdeckId) => {
 	const client = await pool.connect();
 	try {
@@ -465,6 +466,7 @@ const deleteSubdeck = async (userId, subdeckId) => {
 		if (subdecks.every(subdeck => going.has(subdeck.id))) {
 			await client.query(
 				"insert into subdecks(deck_id, name, position) values ($1, $2, 1)", [found.deck_id, FIRST_SUBDECK_NAME]);
+			await client.query("update decks set uses_subdecks = false where id = $1", [found.deck_id]);
 		}
 		await client.query("commit");
 	} catch (err) {

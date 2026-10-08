@@ -480,22 +480,23 @@
 	tbody td:first-child {
 		padding-left: 4px;
 	}
-	/* the small "i" beside a section's title that explains it on hover */
+	/* the small "i" beside a section's title that explains it on hover: the
+	   old sign-board kind, a solid disc with a bold serif letter cut out */
 	.info {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 14px;
-		height: 14px;
+		width: 15px;
+		height: 15px;
 		margin-left: 4px;
-		border: 1px solid rgba(0, 0, 0, 0.45);
 		border-radius: 50%;
-		font-family: Georgia, serif;
-		font-size: 10px;
-		font-weight: 400;
-		font-style: italic;
+		background-color: rgba(0, 0, 0, 0.6);
+		font-family: Georgia, "Times New Roman", serif;
+		font-size: 11px;
+		font-weight: 700;
+		font-style: normal;
 		line-height: 1;
-		color: rgba(0, 0, 0, 0.6);
+		color: white;
 		vertical-align: 2px;
 		cursor: help;
 	}

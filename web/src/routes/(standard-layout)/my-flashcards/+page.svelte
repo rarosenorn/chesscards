@@ -205,7 +205,7 @@
 {/snippet}
 
 {#snippet deckTable(firstTableHeader, list)}
-	<table data-list={list} class:reordering={drag?.started && drag.list === list}>
+	<table data-list={list} class:creatable={list !== "market"} class:reordering={drag?.started && drag.list === list}>
 		<thead>
 			<tr>
 				<th>{firstTableHeader}</th>
@@ -257,25 +257,29 @@
 	<div class="drag-ghost" style="left: {drag.x + 14}px; top: {drag.y + 10}px">{drag.deck.name}</div>
 {/if}
 
-{#if lists.meta.length}
-	{@render deckTable("Metadecks", "meta")}
-{/if}
+<!-- the field under a list that adds to it; `metadeck` says which of the two
+     a failed create came from, so its errors and its name go back there -->
+{#snippet createForm(action, metadeck)}
+	{@const mine = !!form?.metadeck === metadeck}
+	{#if mine}<FormErrors form={form} />{/if}
+	<form method="POST" action={action} use:enhance>
+		<input
+			name="name"
+			value={mine ? form?.name ?? "" : ""}
+			required
+			minlength="4"
+			maxlength="100"
+			autocomplete="off"
+		/>
+		<button>Create</button>
+	</form>
+{/snippet}
+
 {@render deckTable("Marketplace decks", "market")}
 {@render deckTable("My decks", "mine")}
-<FormErrors form={form} />
-<!-- one name field for both: a deck holds cards, a metadeck holds decks -->
-<form method="POST" action="?/create" use:enhance>
-	<input
-		name="name"
-		value={form?.name ?? ""}
-		required
-		minlength="4"
-		maxlength="100"
-		autocomplete="off"
-	/>
-	<button>Create deck</button>
-	<button formaction="?/createMetadeck">Create metadeck</button>
-</form>
+{@render createForm("?/create", false)}
+{@render deckTable("Metadecks", "meta")}
+{@render createForm("?/createMetadeck", true)}
 
 <style>
 	/* fixed shared column widths so both tables' columns line up */
@@ -401,13 +405,18 @@
 	th:first-child {
 		font-size: 1.05rem;
 	}
-	/* the create field belongs to the deck list it adds to, so it sits
-	   closer to it than the two tables sit to each other */
-	table:last-of-type {
+	/* a create field belongs to the list it adds to, so it sits closer to it
+	   than the tables sit to each other, and keeps their distance from the
+	   next one */
+	table.creatable {
 		margin-bottom: 14px;
 	}
 	form {
 		margin-top: 6px;
+		margin-bottom: 32px;
+	}
+	form:last-of-type {
+		margin-bottom: 0;
 	}
 	/* mid-drag the rows stand still under the cursor: no hover tint, and the
 	   hand is the grab for the whole page */

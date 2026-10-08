@@ -49,6 +49,7 @@ const actions = {
 		const result = zod.metadeck.safeParse(data.get("name"));
 		if (!result.success) {
 			return fail(400, {
+				metadeck: true,
 				name: data.get("name"),
 				errors: result.error.flatten().formErrors
 			});
@@ -59,6 +60,7 @@ const actions = {
 		} catch (err) {
 			if (err.code === "23505") {
 				return fail(409, {
+					metadeck: true,
 					name: data.get("name"),
 					errors: ["You already have a metadeck with this name"]
 				})

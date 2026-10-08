@@ -4,10 +4,11 @@
 	// Study day by day, a square each: today in the middle, half a year
 	// behind it and half a year ahead (see lib/heatmap.js).
 	// days: every day anything was answered, each { day, count }.
+	// forecast: every day ahead that cards fall due on, each { day, count }.
 	// today: the study day it is now.
-	let { days, today } = $props();
+	let { days, forecast = [], today } = $props();
 
-	let weeks = $derived(heatmapWeeks(days, today));
+	let weeks = $derived(heatmapWeeks(days, today, 26, 26, forecast));
 	let months = $derived(monthLabels(weeks));
 	let summary = $derived(streaks(days, today));
 
@@ -27,7 +28,10 @@
 				{#each weeks as week}
 					{#each week as cell}
 						{#if cell.future}
-							<span class="day"></span>
+							<span
+								class="day due-{cell.level}"
+								data-tip="{cell.count ? `${plural(cell.count, "card")} due` : "No cards due"} on {sayDay(cell.day)}"
+							></span>
 						{:else}
 							<span
 								class="day level-{cell.level}"
@@ -108,24 +112,38 @@
 		background-color: rgba(0, 0, 0, 0.07);
 	}
 	/* today, and the day under the pointer: an outline, so the square keeps
-	   its size and its neighbours their places. The days still to come say
-	   nothing yet, and take none. */
+	   its size and its neighbours their places */
 	.day.today,
-	.day[data-tip]:hover {
+	.day:hover {
 		outline: 1px solid black;
 	}
-	/* the greens of Anki's review heatmap, light to dark */
+	/* Anki's Review Heatmap add-on, as it colours them: what was studied in
+	   the greens of its lime theme, light to dark... */
 	.day.level-1 {
-		background-color: #dae289;
+		background-color: #d6e685;
 	}
 	.day.level-2 {
-		background-color: #9cc069;
+		background-color: #8cc665;
 	}
 	.day.level-3 {
-		background-color: #669d45;
+		background-color: #44a340;
 	}
 	.day.level-4 {
-		background-color: #3b6427;
+		background-color: #1e6823;
+	}
+	/* ...and what falls due on the days ahead in its greys, the more cards
+	   the darker */
+	.day.due-1 {
+		background-color: #d9d9d9;
+	}
+	.day.due-2 {
+		background-color: #acacac;
+	}
+	.day.due-3 {
+		background-color: #7f7f7f;
+	}
+	.day.due-4 {
+		background-color: #525252;
 	}
 	.summary {
 		display: flex;
@@ -137,6 +155,6 @@
 	}
 	.summary strong {
 		font-weight: 600;
-		color: #558b2f;
+		color: #378f36;
 	}
 </style>

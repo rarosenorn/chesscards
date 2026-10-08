@@ -1,6 +1,6 @@
 // The activity heatmap: a square for each study day, half a year back and
-// half a year ahead, in columns of weeks, shaded by how much was answered
-// that day. Days are
+// half a year ahead, in columns of weeks. A day gone by is shaded by how
+// much was answered on it, a day to come by how many cards fall due on it. Days are
 // 'YYYY-MM-DD' strings throughout (the server says which day an answer and
 // "today" fall in), reckoned here as plain calendar dates.
 
@@ -19,18 +19,26 @@ const levelOf = (count, average) =>
 
 // Weeks as columns of seven days, Monday first, with the week `today` is in
 // in the middle: `before` weeks behind it and `after` weeks ahead, as Anki's
-// heatmap stands. A day is { day, count, level, today }; a day still to
-// come is { day, future: true }.
-const heatmapWeeks = (counts, today, before = 26, after = 26) => {
-	const byDay = new Map(counts.map(({ day, count }) => [day, count]));
+// heatmap stands. A day is { day, count, level, today }, its count the
+// answers given on it (`counts`). A day still to come is
+// { day, count, level, future: true }, its count the cards due on it
+// (`forecast`), shaded against the average of the days ahead that have any.
+const heatmapWeeks = (counts, today, before = 26, after = 26, forecast = []) => {
 	const start = addDays(today, -weekday(today) - before * 7);
-	const shown = counts.filter(({ day, count }) => day >= start && day <= today && count > 0);
-	const average = shown.length ? shown.reduce((sum, { count }) => sum + count, 0) / shown.length : 0;
+	const end = addDays(start, (before + 1 + after) * 7 - 1);
+	const average = days => days.length ? days.reduce((sum, { count }) => sum + count, 0) / days.length : 0;
+	const done = new Map(counts.map(({ day, count }) => [day, count]));
+	const usual = average(counts.filter(({ day, count }) => day >= start && day <= today && count > 0));
+	const due = new Map(forecast.map(({ day, count }) => [day, count]));
+	const usualDue = average(forecast.filter(({ day, count }) => day > today && day <= end && count > 0));
 	return Array.from({ length: before + 1 + after }, (_, week) => Array.from({ length: 7 }, (_, index) => {
 		const day = addDays(start, week * 7 + index);
-		if (day > today) return { day, future: true };
-		const count = byDay.get(day) ?? 0;
-		return { day, count, level: levelOf(count, average), today: day === today };
+		if (day > today) {
+			const count = due.get(day) ?? 0;
+			return { day, count, level: levelOf(count, usualDue), future: true };
+		}
+		const count = done.get(day) ?? 0;
+		return { day, count, level: levelOf(count, usual), today: day === today };
 	}));
 }
 

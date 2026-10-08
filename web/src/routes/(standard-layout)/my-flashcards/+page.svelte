@@ -454,7 +454,7 @@
 
 <!-- the year's study, a square a day, under everything there is to study -->
 <div class="activity">
-	<Heatmap days={data.activity.days} today={data.activity.today} />
+	<Heatmap days={data.activity.days} forecast={data.activity.forecast} today={data.activity.today} />
 </div>
 
 <style>

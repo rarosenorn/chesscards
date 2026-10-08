@@ -17,9 +17,20 @@ describe("the weeks shown", () => {
 
 	it("show the days still to come as such", () => {
 		expect(weeks[2].slice(4)).toEqual([
-			{ day: "2026-10-09", future: true }, { day: "2026-10-10", future: true }, { day: "2026-10-11", future: true }
+			{ day: "2026-10-09", count: 0, level: 0, future: true },
+			{ day: "2026-10-10", count: 0, level: 0, future: true },
+			{ day: "2026-10-11", count: 0, level: 0, future: true }
 		]);
 		expect(weeks[3].every(cell => cell.future)).toBe(true);
+	})
+
+	it("give a day to come the cards due on it, shaded against the average of the days ahead", () => {
+		const forecast = [{ day: "2026-10-09", count: 5 }, { day: "2026-10-12", count: 35 }, { day: TODAY, count: 99 }, { day: "2027-06-01", count: 500 }];
+		const ahead = heatmapWeeks([], TODAY, 2, 2, forecast);
+		expect(ahead[2][4]).toEqual({ day: "2026-10-09", count: 5, level: 1, future: true });
+		expect(ahead[3][0]).toEqual({ day: "2026-10-12", count: 35, level: 4, future: true });
+		// today is a day gone by here: what was answered, not what is due
+		expect(ahead[2][3]).toEqual({ day: TODAY, count: 0, level: 0, today: true });
 	})
 
 	it("carry each day's count, shaded against the average of the active days shown, and mark today", () => {

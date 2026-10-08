@@ -8,7 +8,12 @@
 	// crumbs: what follows "My flashcards", each { name, href?, separator? }
 	// (the separator stands before it; "->" unless it says otherwise).
 	// tabs: each { name, href, current, shortcut? }.
-	let { crumbs, tabs } = $props();
+	// switcher: when the page shown can be turned to something else of the
+	// same kind (a deck's Study, to one of its subdecks), an arrow after the
+	// crumbs that opens the choice: { label, options }, each option
+	// { name, href, depth, current, locked? }.
+	let { crumbs, tabs, switcher = null } = $props();
+	let switcherOpen = $state(false);
 
 	// A tab's shortcut is a bare letter that jumps to it. It stands down
 	// wherever the keyboard is already spoken for — a field that takes
@@ -19,9 +24,11 @@
 		target?.tagName === "TEXTAREA" || target?.isContentEditable
 		|| (target?.tagName === "INPUT" && target.type !== "checkbox" && target.type !== "radio");
 	const handleKeyDown = e => {
+		if (e.key === "Escape") switcherOpen = false;
 		if (e.ctrlKey || e.metaKey || e.altKey) return;
 		const tab = tabs.find(tab => tab.shortcut === e.key.toLowerCase());
-		if (!tab || takesTyping(e.target) || page.url.pathname === tab.href) return;
+		// already there, whatever else its link carries (Study's, a subdeck)
+		if (!tab || takesTyping(e.target) || page.url.pathname === tab.href.split("?")[0]) return;
 		e.preventDefault();
 		goto(tab.href);
 	}
@@ -41,7 +48,10 @@
 	}
 </script>
 
-<svelte:window onkeydown={handleKeyDown} />
+<svelte:window
+	onkeydown={handleKeyDown}
+	onmousedown={e => { if (!e.target.closest?.(".switcher")) switcherOpen = false }}
+/>
 
 <div class="deck-nav-container" class:zen-hidden={zenHidden()}>
 	<!-- Each name is a crumb of its own, cut short with an ellipsis when it
@@ -56,6 +66,39 @@
 				<span class="crumb" {@attach fullNameWhenCut(crumb.name)}>{crumb.name}</span>
 			{/if}
 		{/each}
+		{#if switcher}
+			<span class="switcher">
+				<button
+					class="switcher-toggle"
+					class:open={switcherOpen}
+					aria-label={switcher.label}
+					aria-haspopup="menu"
+					aria-expanded={switcherOpen}
+					onclick={() => switcherOpen = !switcherOpen}
+				></button>
+				{#if switcherOpen}
+					<div class="switcher-menu" role="menu">
+						{#each switcher.options as option (option.href)}
+							<a
+								role="menuitem"
+								href={option.href}
+								aria-current={option.current ? "true" : undefined}
+								style:padding-left="{12 + option.depth * 14}px"
+								onclick={() => switcherOpen = false}
+							>
+								<span class="option-name">{option.name}</span>
+								{#if option.locked}
+									<svg class="lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
+										<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
+										<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+									</svg>
+								{/if}
+							</a>
+						{/each}
+					</div>
+				{/if}
+			</span>
+		{/if}
 	</div>
 	<div class="tabs">
 		{#each tabs as tab}
@@ -173,5 +216,73 @@
 	}
 	.breadcrumbs a:hover {
 		color: blue;
+	}
+	/* The arrow after the crumbs that opens the choice of what the page is
+	   turned to, and the list it opens: hung under the arrow and as long as
+	   it needs to be, the page scrolling for it. */
+	.switcher {
+		position: relative;
+		align-self: center;
+	}
+	.switcher-toggle {
+		display: block;
+		width: 18px;
+		height: 18px;
+		padding: 0;
+		border: none;
+		background: none;
+		cursor: pointer;
+	}
+	.switcher-toggle::before {
+		content: "";
+		display: block;
+		width: 9px;
+		height: 9px;
+		margin: auto;
+		background-color: rgba(0, 0, 0, 0.5);
+		clip-path: polygon(0 17%, 100% 17%, 50% 83%);
+	}
+	.switcher-toggle:hover::before,
+	.switcher-toggle.open::before {
+		background-color: black;
+	}
+	.switcher-menu {
+		position: absolute;
+		top: calc(100% + 4px);
+		left: 0;
+		z-index: 30;
+		min-width: 180px;
+		max-width: 420px;
+		background-color: white;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		box-shadow: rgba(0, 0, 0, 0.15) 0 2px 8px;
+		padding: 4px;
+	}
+	.breadcrumbs .switcher-menu a {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 12px;
+		color: #404040;
+		text-decoration: none;
+	}
+	.breadcrumbs .switcher-menu a:hover {
+		color: #404040;
+		background-color: #f0f0f0;
+	}
+	/* the one being studied now */
+	.switcher-menu a[aria-current="true"] {
+		font-weight: 600;
+	}
+	.option-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.lock {
+		flex: none;
+		width: 12px;
+		height: 12px;
+		color: rgba(0, 0, 0, 0.45);
 	}
 </style>

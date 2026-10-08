@@ -246,6 +246,17 @@
 	// svelte-ignore state_referenced_locally
 	let isCardTurned = $state(currentCard != null && studyState.turnedCardId === currentCard.id);
 	$effect(() => { studyState.turnedCardId = isCardTurned ? currentCard?.id ?? null : null; });
+	// A revealed answer is that card's alone: when another card takes its
+	// place by some other way than a grade (the breadcrumb turning Study to
+	// another subdeck), it comes front up.
+	// svelte-ignore state_referenced_locally
+	let shownCardId = currentCard?.id;
+	$effect(() => {
+		const id = currentCard?.id;
+		if (id === shownCardId) return;
+		shownCardId = id;
+		isCardTurned = false;
+	});
 
 	let isTactic = $derived(currentCard?.card_type === "tactic");
 	// which of the three the card on screen came out of

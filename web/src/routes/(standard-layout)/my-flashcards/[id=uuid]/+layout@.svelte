@@ -10,7 +10,7 @@
 	import DeckNavBar from "$lib/components/DeckNavBar.svelte"
 	import { sideHasContent, syncTextBlocks } from "$lib/card-utils.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
-	import { subdeckTrail } from "$lib/subdecks.js"
+	import { subdeckTrail, subdeckOutline, gatingDepth, unlockedSubdeckIds } from "$lib/subdecks.js"
 
 	let { data, children } = $props();
 
@@ -113,11 +113,39 @@
 			goto(to);
 		});
 	});
-	let studiedSubdeck = $derived(
-		page.url.pathname.endsWith("/study")
-			? deck.subdecks.find(subdeck => subdeck.id === page.url.searchParams.get("subdeck"))
-			: undefined
-	);
+	// A subdeck can be studied on its own (study's ?subdeck=). Which one is
+	// remembered while the deck's other tabs are visited, so going back to
+	// Study goes back to it; leaving the deck forgets it.
+	let base = $derived(`/my-flashcards/${page.params.id}`);
+	let onStudy = $derived(page.url.pathname === `${base}/study`);
+	let remembered = $state(null);
+	$effect(() => { if (onStudy) remembered = page.url.searchParams.get("subdeck"); });
+	let chosenSubdeck = $derived(deck.subdecks.find(subdeck =>
+		subdeck.id === (onStudy ? page.url.searchParams.get("subdeck") : remembered)));
+	let studyHref = $derived(`${base}/study${chosenSubdeck ? `?subdeck=${chosenSubdeck.id}` : ""}`);
+	// on Study the breadcrumb says which, and is where it is changed
+	let studiedSubdeck = $derived(onStudy ? chosenSubdeck : undefined);
+
+	// What Study can be turned to: the whole deck, or any one of its
+	// subdecks, as the deck's outline. A subdeck the deck's progression still
+	// holds shut is marked, and can be studied all the same.
+	let switcher = $derived.by(() => {
+		if (!onStudy || !deck.usesSubdecks) return null;
+		const open = unlockedSubdeckIds(deck.subdecks, deck.cards, gatingDepth(deck));
+		return {
+			label: "Choose what to study",
+			options: [
+				{ name: "Whole deck", href: `${base}/study`, depth: 0, current: !chosenSubdeck },
+				...subdeckOutline(deck.subdecks).map(({ subdeck, level }) => ({
+					name: subdeck.name,
+					href: `${base}/study?subdeck=${subdeck.id}`,
+					depth: level,
+					current: subdeck.id === chosenSubdeck?.id,
+					locked: !open.has(subdeck.id)
+				}))
+			]
+		};
+	});
 
 	// marketplace deck instances are readonly, so no editing tabs; settings is
 	// there for the one thing that is theirs, resetting their study progress.
@@ -142,17 +170,18 @@
 <DeckNavBar
 	crumbs={studiedSubdeck
 		? [
-			{ name: deck.name, href: `/my-flashcards/${page.params.id}/study` },
+			{ name: deck.name, href: `${base}/study` },
 			...subdeckTrail(deck.subdecks, studiedSubdeck.id).map((name, index) => ({ name, separator: index === 0 ? "->" : "›" }))
 		]
 		: [{ name: deck.name }]}
 	tabs={paths.map((path, index) => ({
 		name: names[index],
-		href: `/my-flashcards/${page.params.id}/${path}`,
+		href: path === "study" ? studyHref : `${base}/${path}`,
 		current: page.url.pathname === `/my-flashcards/${page.params.id}/${path}`
 			|| page.url.pathname.startsWith(`/my-flashcards/${page.params.id}/${path}/`),
 		shortcut: shortcutFor(path)
 	}))}
+	{switcher}
 />
 
 {@render children()}

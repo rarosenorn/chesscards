@@ -257,8 +257,9 @@
 	onkeydown={e => { if (e.key === "Escape") menu = null }}
 />
 
-<!-- The arrow that opens a row onto what is inside it. It is there only for
-     a row that holds something; the name keeps its place either way. -->
+<!-- The plus that opens a row onto what is inside it, a minus once it is
+     open (as Anki has them). It is there only for a row that holds
+     something; the name keeps its place either way. -->
 {#snippet expander(row)}
 	{@const id = row.id}
 	<button
@@ -299,7 +300,6 @@
 					data-row-id={row.placeholder ? undefined : row.id}
 					data-metadeck={row.metadeck?.id}
 					class:placeholder-row={row.placeholder}
-					class:inner-row={row.depth > 0}
 					class:drop-inside={drag?.started && drag.targetRowId === row.id}
 					class:lifted={drag?.started && drag.row.id === row.id}
 					style:height={row.placeholder ? `${drag.rowHeight}px` : undefined}
@@ -310,7 +310,7 @@
 					{#if row.placeholder}
 						<td colspan="4"></td>
 					{:else}
-						<td style:padding-left={row.depth ? `${4 + row.depth * 16}px` : undefined}>
+						<td style:padding-left={row.depth ? `${4 + row.depth * 26}px` : undefined}>
 							{@render expander(row)}
 							<a
 								href={row.href}
@@ -432,9 +432,10 @@
 	tbody td:first-child {
 		padding-left: 4px;
 	}
-	/* The arrow that opens a row onto what is inside it: above the
-	   row-filling link, so it takes its own click. A row that holds nothing
-	   keeps the arrow's room, unseen, so the names of a level line up. */
+	/* The plus that opens a row onto what is inside it, and the minus that
+	   closes it: above the row-filling link, so it takes its own click. A row
+	   that holds nothing keeps the sign's room, unseen, so the names of a
+	   level line up. */
 	.expander {
 		position: relative;
 		z-index: 1;
@@ -444,32 +445,22 @@
 		border: none;
 		background: none;
 		cursor: pointer;
-		vertical-align: middle;
+		vertical-align: baseline;
+		font: inherit;
+		line-height: 16px;
+		color: #404040;
 	}
 	.expander::before {
-		content: "";
-		display: block;
-		width: 9px;
-		height: 9px;
-		margin: auto;
-		background-color: rgba(0, 0, 0, 0.5);
-		clip-path: polygon(17% 0, 83% 50%, 17% 100%);
+		content: "+";
 	}
 	.expander.open::before {
-		transform: rotate(90deg);
+		content: "\2212";
 	}
-	.expander:hover::before {
-		background-color: black;
+	.expander:hover {
+		color: black;
 	}
 	.expander.empty {
 		visibility: hidden;
-	}
-	/* a row under another: lighter than the rows of the list itself */
-	tr.inner-row a {
-		font-weight: 400;
-	}
-	tr.inner-row .count {
-		font-weight: 400;
 	}
 	.lock {
 		display: inline-block;

@@ -4,8 +4,8 @@
 	import { SvelteSet } from "svelte/reactivity"
 	import FormErrors from "$lib/components/FormErrors.svelte"
 	import { invalidateAll } from "$app/navigation"
-	import { resolveDecks } from "$lib/metadecks.js"
-	import { reorderDecks, reorderMetadecks } from "./decks.remote.js"
+	import { resolveDecks, holders } from "$lib/metadecks.js"
+	import { reorderDecks, reorderMetadecks, addToMetadeck, removeFromMetadeck } from "./decks.remote.js"
 	let { data, form } = $props();
 
 	// the three lists as shown: a drop reorders them here at once, and a
@@ -14,23 +14,45 @@
 	let lists = $state({ meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks });
 	$effect(() => { lists = { meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks } });
 
-	// A row is dragged to reorder its own list. A press only becomes a drag
-	// once the pointer has moved, so a click still opens the deck; while it
-	// is on, the row is lifted out and a placeholder holds the slot it would
-	// drop into.
+	// A row is dragged to reorder its own list, or onto a metadeck to go
+	// inside it; a row inside a metadeck is dragged out of it to leave it, or
+	// onto another metadeck to move there. A press only becomes a drag once
+	// the pointer has moved, so a click still opens the deck. While a row of
+	// a list is carried it is lifted out, and a placeholder holds the slot it
+	// would drop into.
 	let drag = $state(null);
 	let justDragged = false;
 
-	const handleRowMouseDown = (e, list, deck) => {
+	// The metadecks a deck, a marketplace deck or a metadeck can still go
+	// into: not one that holds it already, and for a metadeck never itself
+	// or one it holds, which would close a loop.
+	const canHold = (metadeck, kind, ref) =>
+		!metadeck.items.some(item => item.id === ref)
+		&& !(kind === "metadeck" && holders(data.metadecks, metadeck.id).has(ref));
+
+	const addTo = async (metadeck, row, from = null) => {
+		await addToMetadeck({ metadeckId: metadeck.id, kind: row.kind, id: row.ref, fromMetadeckId: from?.id });
+		await invalidateAll();
+	}
+	const removeFrom = async (metadeck, row) => {
+		await removeFromMetadeck({ metadeckId: metadeck.id, kind: row.kind, id: row.ref });
+		await invalidateAll();
+	}
+
+	const handleRowMouseDown = (e, row) => {
 		if (e.button !== 0) return;
 		// no native link drag or text selection; the click still lands
 		e.preventDefault();
-		const index = lists[list].indexOf(deck);
+		const index = row.list ? lists[row.list].indexOf(row.item) : -1;
 		drag = {
-			list, deck, started: false,
+			row, list: row.list ?? null, deck: row.item, started: false,
 			startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY,
 			rowHeight: e.currentTarget.getBoundingClientRect().height,
-			from: index, over: index
+			from: index, over: index,
+			// the metadeck it would go into and the row of it under the pointer
+			target: null, targetRowId: null,
+			// a row inside a metadeck, carried clear of it: let go, it leaves
+			out: false
 		};
 	}
 
@@ -42,6 +64,32 @@
 			if (Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) <= 5) return;
 			drag.started = true;
 		}
+
+		// The metadeck under the pointer, when the row can go into it. Among
+		// the metadecks themselves a drag also reorders, so there only the
+		// middle of a row means inside (as a subdeck is dropped in Cards).
+		const under = document.elementFromPoint(e.clientX, e.clientY)?.closest("tr[data-row-id]");
+		const metadeck = under?.dataset.metadeck && lists.meta.find(candidate => candidate.id === under.dataset.metadeck);
+		let target = metadeck && canHold(metadeck, drag.row.kind, drag.row.ref) ? metadeck : null;
+		if (target && drag.list === "meta") {
+			const rect = under.getBoundingClientRect();
+			const part = (e.clientY - rect.top) / rect.height;
+			if (part < 0.25 || part > 0.75) target = null;
+		}
+		drag.target = target;
+		drag.targetRowId = target ? under.dataset.rowId : null;
+		// The slot stays where it was while a metadeck is aimed at: moving it
+		// would shift the rows under the pointer and the aim with them.
+		if (target) return;
+
+		if (!drag.list) {
+			// clear of its metadeck: not over that metadeck's row or anything under it
+			const home = drag.row.parentRowId;
+			const at = under?.dataset.rowId;
+			drag.out = !(at && (at === home || at.startsWith(home + "/")));
+			return;
+		}
+
 		// the slot is read against the rows still standing, from their
 		// layout positions (a row mid-flip is translated): before the first
 		// row whose middle is below the cursor. Off the table, it goes home.
@@ -68,6 +116,11 @@
 		// the mouseup can still turn into a click on the row it ends over
 		justDragged = true;
 		setTimeout(() => justDragged = false);
+		if (d.target) return addTo(d.target, d.row, d.row.parent);
+		if (!d.list) {
+			if (d.out) await removeFrom(d.row.parent, d.row);
+			return;
+		}
 		if (d.over === d.from) return;
 		const before = lists[d.list];
 		const rest = before.filter(deck => deck !== d.deck);
@@ -81,6 +134,18 @@
 		}
 		// what a metadeck holds stands in the order of these lists
 		if (lists.meta.length) await invalidateAll();
+	}
+
+	// The same two acts without a drag, from a right-click on the row: the
+	// metadecks it can go into, and for a row inside one the way out of it.
+	// A row with neither to offer keeps the browser's own menu.
+	let menu = $state(null);
+	const handleRowContextMenu = (e, row) => {
+		if (!row.kind) return;
+		const targets = lists.meta.filter(metadeck => canHold(metadeck, row.kind, row.ref));
+		if (!targets.length && !row.parent) return;
+		e.preventDefault();
+		menu = { x: e.clientX, y: e.clientY, row, targets };
 	}
 
 	// A deck that uses subdecks opens to show them, each with its own counts,
@@ -126,9 +191,14 @@
 		return rows;
 	}
 
-	const deckRow = (deck, id, depth) => ({
+	// `kind` and `ref` say what a row is of (a subdeck's row has neither);
+	// `parent` and `parentRowId` are the metadeck a row stands inside and
+	// that metadeck's row.
+	let instanceIds = $derived(new Set(data.marketplaceDecks.map(deck => deck.id)));
+	const deckRow = (deck, id, depth, parent = null, parentRowId = null) => ({
 		id, depth, name: deck.name, href: `my-flashcards/${deck.id}/study`,
 		counts: deck, opens: deck.subdecks.length > 0, holds: "subdecks",
+		kind: instanceIds.has(deck.id) ? "instance" : "deck", ref: deck.id, parent, parentRowId,
 		inside: () => subdeckRows(deck, id, depth)
 	});
 
@@ -149,13 +219,14 @@
 		return sum;
 	}
 
-	const metadeckRow = (metadeck, id, depth) => ({
+	const metadeckRow = (metadeck, id, depth, parent = null, parentRowId = null) => ({
 		id, depth, name: metadeck.name, href: `my-flashcards/metadecks/${metadeck.id}/study`,
 		counts: totals(metadeck), opens: metadeck.items.length > 0, holds: "decks",
+		kind: "metadeck", ref: metadeck.id, metadeck, parent, parentRowId,
 		inside: () => metadeck.items.flatMap(item => {
 			const held = item.kind === "metadeck" ? metadecksById.get(item.id) : decksById.get(item.id);
 			if (!held) return [];
-			return opened((item.kind === "metadeck" ? metadeckRow : deckRow)(held, `${id}/${item.id}`, depth + 1));
+			return opened((item.kind === "metadeck" ? metadeckRow : deckRow)(held, `${id}/${item.id}`, depth + 1, metadeck, id));
 		})
 	});
 
@@ -163,7 +234,7 @@
 	const opened = row => [row, ...(expanded.has(row.id) ? row.inside() : [])];
 
 	// a row of a list itself: the one that is dragged to reorder it
-	const listRow = (list, item) => ({ ...(list === "meta" ? metadeckRow : deckRow)(item, item.id, 0), item });
+	const listRow = (list, item) => ({ ...(list === "meta" ? metadeckRow : deckRow)(item, item.id, 0), item, list });
 
 	// What a table shows, row by row: each of its list, with what it holds
 	// under it when it is open. While one is lifted, the others with a
@@ -179,7 +250,12 @@
 	}
 </script>
 
-<svelte:window onmousemove={handleWindowMouseMove} onmouseup={handleWindowMouseUp} />
+<svelte:window
+	onmousemove={handleWindowMouseMove}
+	onmouseup={handleWindowMouseUp}
+	onmousedown={() => { menu = null }}
+	onkeydown={e => { if (e.key === "Escape") menu = null }}
+/>
 
 <!-- The arrow that opens a row onto what is inside it. It is there only for
      a row that holds something; the name keeps its place either way. -->
@@ -205,7 +281,7 @@
 {/snippet}
 
 {#snippet deckTable(firstTableHeader, list)}
-	<table data-list={list} class:creatable={list !== "market"} class:reordering={drag?.started && drag.list === list}>
+	<table data-list={list} class:creatable={list !== "market"} class:dragging={drag?.started}>
 		<thead>
 			<tr>
 				<th>{firstTableHeader}</th>
@@ -220,11 +296,16 @@
 				     animate directive must sit directly under the keyed each -->
 				<tr
 					data-deck-row={row.item ? row.id : undefined}
+					data-row-id={row.placeholder ? undefined : row.id}
+					data-metadeck={row.metadeck?.id}
 					class:placeholder-row={row.placeholder}
 					class:inner-row={row.depth > 0}
+					class:drop-inside={drag?.started && drag.targetRowId === row.id}
+					class:lifted={drag?.started && drag.row.id === row.id}
 					style:height={row.placeholder ? `${drag.rowHeight}px` : undefined}
-					animate:flip={{ duration: drag?.started ? 150 : 0 }}
-					onmousedown={row.item ? e => handleRowMouseDown(e, list, row.item) : undefined}
+					animate:flip={{ duration: drag?.started && drag.list === list ? 150 : 0 }}
+					onmousedown={row.item || row.parent ? e => handleRowMouseDown(e, row) : undefined}
+					oncontextmenu={row.placeholder ? undefined : e => handleRowContextMenu(e, row)}
 				>
 					{#if row.placeholder}
 						<td colspan="4"></td>
@@ -253,8 +334,55 @@
 	</table>
 {/snippet}
 
+<!-- the row in hand, saying what letting go would do when that is more
+     than putting it down -->
 {#if drag?.started}
-	<div class="drag-ghost" style="left: {drag.x + 14}px; top: {drag.y + 10}px">{drag.deck.name}</div>
+	<div class="drag-ghost" style="left: {drag.x + 14}px; top: {drag.y + 10}px">
+		{#if drag.target}
+			{drag.row.name} → {drag.target.name}
+		{:else if drag.out}
+			Remove {drag.row.name} from {drag.row.parent.name}
+		{:else}
+			{drag.row.name}
+		{/if}
+	</div>
+{/if}
+
+{#if menu}
+	<div
+		class="context-menu"
+		role="menu"
+		tabindex="-1"
+		style="left: {menu.x}px; top: {menu.y}px"
+		onmousedown={e => e.stopPropagation()}
+	>
+		{#if menu.targets.length}
+			<span class="menu-heading">Add to metadeck</span>
+			{#each menu.targets as metadeck (metadeck.id)}
+				<button
+					class="menu-item"
+					onclick={() => {
+						const { row } = menu;
+						menu = null;
+						addTo(metadeck, row);
+					}}
+				>
+					{metadeck.name}
+				</button>
+			{/each}
+		{/if}
+		{#if menu.row.parent}
+			<button
+				onclick={() => {
+					const { row } = menu;
+					menu = null;
+					removeFrom(row.parent, row);
+				}}
+			>
+				Remove from {menu.row.parent.name}
+			</button>
+		{/if}
+	</div>
 {/if}
 
 <!-- the field under a list that adds to it; `metadeck` says which of the two
@@ -420,12 +548,21 @@
 	}
 	/* mid-drag the rows stand still under the cursor: no hover tint, and the
 	   hand is the grab for the whole page */
-	table.reordering tbody > tr:hover {
+	table.dragging tbody > tr:hover {
 		background-color: transparent;
 	}
-	:global(body:has(table.reordering)),
-	:global(body:has(table.reordering) *) {
+	:global(body:has(table.dragging)),
+	:global(body:has(table.dragging) *) {
 		cursor: grabbing;
+	}
+	/* the metadeck the row in hand would go into */
+	table.dragging tbody > tr.drop-inside,
+	table.dragging tbody > tr.drop-inside:hover {
+		background-color: var(--accent-subtle-strong);
+	}
+	/* a row carried out of its metadeck steps back where it stood */
+	tbody tr.lifted td {
+		opacity: 0.45;
 	}
 	/* the slot the deck would drop into, a hole in the table's own ground */
 	tr.placeholder-row td {
@@ -436,7 +573,7 @@
 		position: fixed;
 		z-index: 20;
 		pointer-events: none;
-		max-width: 260px;
+		max-width: 420px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -447,6 +584,41 @@
 		font-size: 0.875rem;
 		color: #333;
 		opacity: 0.85;
+	}
+	/* the right-click menu, as in Cards */
+	.context-menu {
+		position: fixed;
+		z-index: 10;
+		background-color: white;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		box-shadow: rgba(0, 0, 0, 0.15) 0 2px 8px;
+		padding: 4px;
+	}
+	.context-menu button {
+		display: block;
+		width: 100%;
+		text-align: left;
+		padding: 4px 12px;
+		border: none;
+		background: none;
+		cursor: pointer;
+	}
+	.context-menu button:hover {
+		background-color: #f0f0f0;
+	}
+	/* the metadecks to choose among, under the words that say what for */
+	.context-menu button.menu-item {
+		padding-left: 26px;
+		color: #404040;
+	}
+	.menu-heading {
+		display: block;
+		padding: 4px 12px 2px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: rgba(0, 0, 0, 0.5);
+		cursor: default;
 	}
 </style>
 

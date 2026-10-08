@@ -88,10 +88,19 @@ const reorder = async (userId, ids) => {
 	return rowCount === ids.length;
 }
 
-// What a metadeck holds, said whole: the given decks, marketplace decks and
-// metadecks, all of them the user's, replace whatever it held. A metadeck
-// never goes inside itself or inside one it holds, by whatever way.
-const setItems = async (userId, id, { deckIds, instanceIds, metadeckIds }) => {
+// The three kinds of thing a metadeck holds: the column that names one in
+// metadeck_items, and the table in which it is the user's.
+const KINDS = {
+	deck: { column: "deck_id", table: "decks" },
+	instance: { column: "marketplace_deck_instance_id", table: "marketplace_deck_instances" },
+	metadeck: { column: "child_metadeck_id", table: "metadecks" }
+};
+
+// One thing of the user's goes into a metadeck of theirs, and with `fromId`
+// leaves that metadeck for it. A metadeck never goes inside itself or inside
+// one it holds, by whatever way. Something already inside stays as it is.
+const addItem = async (userId, id, kind, itemId, fromId = null) => {
+	const { column, table } = KINDS[kind];
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
@@ -99,29 +108,20 @@ const setItems = async (userId, id, { deckIds, instanceIds, metadeckIds }) => {
 		// at once could otherwise each put the other's metadeck inside its own
 		const { rows: locked } = await client.query(
 			"select id from metadecks where user_id = $1 for update", [userId]);
-		if (!locked.some(metadeck => metadeck.id === id)) throw new Error("Unauthorized");
-		const closed = holders(await getMine(userId), id);
-		if (metadeckIds.some(metadeckId => closed.has(metadeckId))) throw new Error("A metadeck cannot go inside itself");
+		const mine = new Set(locked.map(metadeck => metadeck.id));
+		if (!mine.has(id) || (fromId && !mine.has(fromId))) throw new Error("Unauthorized");
+		if (kind === "metadeck" && holders(await getMine(userId), id).has(itemId)) {
+			throw new Error("A metadeck cannot go inside itself");
+		}
+		const { rowCount: owned } = await client.query(
+			`select 1 from ${table} where id = $2 and user_id = $1`, [userId, itemId]);
+		if (owned !== 1) throw new Error("Unauthorized");
 
-		await client.query("delete from metadeck_items where metadeck_id = $1", [id]);
-		// each insert takes only what is the user's, so a stray id adds nothing
-		const { rowCount } = await client.query(`
-			with added_decks as (
-				insert into metadeck_items(metadeck_id, deck_id)
-				select $2, d.id from decks d where d.user_id = $1 and d.id = any($3::uuid[])
-				returning 1
-			), added_instances as (
-				insert into metadeck_items(metadeck_id, marketplace_deck_instance_id)
-				select $2, i.id from marketplace_deck_instances i where i.user_id = $1 and i.id = any($4::uuid[])
-				returning 1
-			), added_metadecks as (
-				insert into metadeck_items(metadeck_id, child_metadeck_id)
-				select $2, m.id from metadecks m where m.user_id = $1 and m.id = any($5::uuid[])
-				returning 1
-			)
-			select 1 from added_decks union all select 1 from added_instances union all select 1 from added_metadecks`,
-			[userId, id, deckIds, instanceIds, metadeckIds]);
-		if (rowCount !== deckIds.length + instanceIds.length + metadeckIds.length) throw new Error("Unauthorized");
+		await client.query(
+			`insert into metadeck_items(metadeck_id, ${column}) values ($1, $2) on conflict do nothing`, [id, itemId]);
+		if (fromId && fromId !== id) {
+			await client.query(`delete from metadeck_items where metadeck_id = $1 and ${column} = $2`, [fromId, itemId]);
+		}
 		await client.query("commit");
 	} catch (err) {
 		await client.query("rollback");
@@ -129,6 +129,16 @@ const setItems = async (userId, id, { deckIds, instanceIds, metadeckIds }) => {
 	} finally {
 		client.release();
 	}
+}
+
+// it leaves the metadeck; the thing itself is untouched
+const removeItem = async (userId, id, kind, itemId) => {
+	const { rowCount } = await pool.query(`
+		delete from metadeck_items i using metadecks m
+		where m.id = i.metadeck_id and m.user_id = $1 and i.metadeck_id = $2 and i.${KINDS[kind].column} = $3`,
+		[userId, id, itemId]);
+
+	return rowCount === 1;
 }
 
 // A metadeck as study takes it: shaped like a deck (see decks.getById), its
@@ -162,4 +172,4 @@ const getForStudy = async (userId, id) => {
 	};
 }
 
-export { getMine, create, rename, remove, setStudyOrder, setReviewsFirst, reorder, setItems, getForStudy }
+export { KINDS, getMine, create, rename, remove, setStudyOrder, setReviewsFirst, reorder, addItem, removeItem, getForStudy }

@@ -1,4 +1,4 @@
-import { fail, redirect } from "@sveltejs/kit"
+import { fail } from "@sveltejs/kit"
 import * as decks from "$lib/server/decks.js"
 import * as marketplace from "$lib/server/marketplace.js"
 import * as metadecks from "$lib/server/metadecks.js"
@@ -43,7 +43,6 @@ const actions = {
 			throw err;
 		}
 	},
-	// a new metadeck holds nothing yet, so it opens on the page that fills it
 	createMetadeck: async ({ request, locals }) => {
 		const data = await request.formData();
 		const result = zod.metadeck.safeParse(data.get("name"));
@@ -54,9 +53,8 @@ const actions = {
 				errors: result.error.flatten().formErrors
 			});
 		}
-		let metadeck;
 		try {
-			metadeck = await metadecks.create(locals.userId, result.data);
+			await metadecks.create(locals.userId, result.data);
 		} catch (err) {
 			if (err.code === "23505") {
 				return fail(409, {
@@ -67,7 +65,6 @@ const actions = {
 			}
 			throw err;
 		}
-		redirect(303, `/my-flashcards/metadecks/${metadeck.id}/decks`);
 	}
 }
 

@@ -6,7 +6,7 @@
 	let { data, children } = $props();
 
 	// As in a deck's layout: study grades this copy in place, so a fresh load
-	// (a deck ticked in or out, the metadeck renamed) lands in the same
+	// (the metadeck renamed, its study order changed) lands in the same
 	// object rather than replacing the one the pages took out of context.
 	// svelte-ignore state_referenced_locally
 	let deck = $state(data.deck);
@@ -18,11 +18,11 @@
 	setContext("studyState", studyState);
 
 	const base = $derived(`/my-flashcards/metadecks/${page.params.id}`);
-	const paths = ["study", "decks", "settings"];
-	const names = ["Study", "Decks", "Settings"];
+	const paths = ["study", "settings"];
+	const names = ["Study", "Settings"];
 
 	// the letters a deck's tabs answer to (the bar listens for them)
-	const TAB_KEYS = { s: "study", d: "decks", i: "settings" };
+	const TAB_KEYS = { s: "study", i: "settings" };
 	const shortcutFor = path => Object.keys(TAB_KEYS).find(key => TAB_KEYS[key] === path);
 </script>
 

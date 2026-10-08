@@ -469,38 +469,34 @@ const moveSubdeck = async (userId, deckId, subdeckId, parentId, index) => {
 	}
 }
 
-// A subdeck is taken away and what was in it stays, one level up: the way
-// back from a grouping that is not wanted. Its subdecks take its place among
-// its siblings. Its cards go to the subdeck it sat in — which can only take
-// them when nothing else sits there (cards and subdecks never share a level),
-// so a subdeck of cards has to be the only one at its level. The deck's only
-// subdeck handing its cards up is the deck becoming a plain list again: it
-// stays on, unseen, as the one the cards sit in.
-const dissolveSubdeck = async (userId, subdeckId) => {
+// The subdecks inside a subdeck are taken away and their cards stay: every
+// card under it, in reading order, becomes a card of the subdeck itself.
+// Without a subdeck named it is the whole deck that is flattened, into the
+// plain list a deck without subdecks is: the cards gather in its first
+// subdeck, which stays on unseen as the one every deck keeps (under the name
+// a new deck's has, so a later first subdeck finds them in Temp).
+const flattenSubdecks = async (userId, deckId, subdeckId = null) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
-		const { rows: [found] } = await client.query(`
-			select s.deck_id from subdecks s join decks d on d.id = s.deck_id
-			where s.id = $2 and d.user_id = $1`, [userId, subdeckId]);
-		if (!found) throw new Error("Unauthorized");
-		const subdecks = await lockSubdecks(client, userId, found.deck_id);
-		const children = childrenByParent(subdecks);
-		const target = subdecks.find(subdeck => subdeck.id === subdeckId);
-		const parentId = target.parent_id ?? null;
-		const inside = children.get(subdeckId) ?? [];
-		const siblings = children.get(parentId) ?? [];
-		if (inside.length > 0) {
-			await client.query("update subdecks set parent_id = $2 where parent_id = $1", [subdeckId, parentId]);
-			await client.query("delete from subdecks where id = $1", [subdeckId]);
-			await numberSubdecks(client, siblings.flatMap(sibling => sibling.id === subdeckId ? inside : [sibling]));
-		} else if (siblings.length > 1) {
-			throw new Error("Its cards have nowhere to go while other subdecks sit beside it");
-		} else if (parentId === null) {
-			await client.query("update decks set uses_subdecks = false where id = $1", [found.deck_id]);
-		} else {
-			await client.query("update cards set subdeck_id = $2 where subdeck_id = $1", [subdeckId, parentId]);
-			await client.query("delete from subdecks where id = $1", [subdeckId]);
+		const subdecks = await lockSubdecks(client, userId, deckId);
+		const keeper = subdeckId
+			? subdecks.find(subdeck => subdeck.id === subdeckId)
+			: (childrenByParent(subdecks).get(null) ?? [])[0];
+		if (!keeper) throw new Error("Unauthorized");
+		const going = subdeckId ? subdeckSubtree(subdecks, subdeckId) : new Set(subdecks.map(subdeck => subdeck.id));
+		going.delete(keeper.id);
+		const { rows: cards } = await client.query(
+			"select id, subdeck_id, position from cards where subdeck_id = any($1::uuid[])", [[keeper.id, ...going]]);
+		inDeckOrder({ subdecks, cards });
+		await client.query(`
+			update cards c set subdeck_id = $1, position = u.n
+			from unnest($2::uuid[]) with ordinality u(id, n)
+			where c.id = u.id`, [keeper.id, cards.map(card => card.id)]);
+		await client.query("delete from subdecks where id = any($1::uuid[])", [[...going]]);
+		if (!subdeckId) {
+			await client.query("update subdecks set name = $2, position = 1 where id = $1", [keeper.id, FIRST_SUBDECK_NAME]);
+			await client.query("update decks set uses_subdecks = false where id = $1", [deckId]);
 		}
 		await client.query("commit");
 	} catch (err) {
@@ -726,4 +722,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, moveSubdeck, dissolveSubdeck, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }
+export { BOUNDS, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, moveSubdeck, flattenSubdecks, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }

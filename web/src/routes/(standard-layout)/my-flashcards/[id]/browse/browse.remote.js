@@ -80,12 +80,13 @@ export const deleteSubdeck =
 		return freshDeck(locals, deckId);
 	})
 
-// a subdeck is taken away and what was in it stays, one level up
-export const dissolveSubdeck =
+// the subdecks inside a subdeck — or, with none named, all the deck's — are
+// taken away and their cards stay, in order
+export const flattenSubdecks =
 	command("unchecked", async ({ deckId, subdeckId }) => {
 		const { locals } = getRequestEvent();
-		checkIds(deckId, subdeckId);
-		try { await decks.dissolveSubdeck(locals.userId, subdeckId); }
+		checkIds(deckId, subdeckId ?? []);
+		try { await decks.flattenSubdecks(locals.userId, deckId, subdeckId ?? null); }
 		catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
 		return freshDeck(locals, deckId);
 	})

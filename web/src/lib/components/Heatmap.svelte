@@ -102,7 +102,6 @@
 		grid-auto-columns: var(--cell);
 	}
 	.day {
-		border-radius: 2px;
 		background-color: rgba(0, 0, 0, 0.07);
 	}
 	/* the greens of Anki's review heatmap, light to dark */

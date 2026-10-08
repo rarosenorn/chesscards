@@ -299,3 +299,32 @@ create table marketplace_review_votes (
 	value smallint not null check (value in (-1, 1)),
 	primary key (review_id, user_id)
 );
+
+-- A metadeck is its owner's own grouping of decks, for studying them
+-- together: it holds no cards, only decks (their own, or marketplace decks
+-- they have taken) and other metadecks, nested as deep as they like. A deck
+-- can be in several. Its decks' cards come mixed, as if they were one deck's,
+-- or deck after deck in the order the decks stand in My flashcards.
+create table metadecks (
+	id uuid primary key default gen_random_uuid(),
+	user_id uuid references "user" ("id") on delete cascade not null,
+	name text not null,
+	-- its place among the user's metadecks, as decks.position
+	position integer not null default 0,
+	study_order text not null default 'mix' check (study_order in ('mix', 'in-order')),
+	unique (user_id, name)
+);
+
+-- what a metadeck holds: each row is one deck, one marketplace deck taken, or
+-- one other metadeck (never one that holds this one in turn: the server
+-- refuses the loop)
+create table metadeck_items (
+	metadeck_id uuid references metadecks(id) on delete cascade not null,
+	deck_id uuid references decks(id) on delete cascade,
+	marketplace_deck_instance_id uuid references marketplace_deck_instances(id) on delete cascade,
+	child_metadeck_id uuid references metadecks(id) on delete cascade,
+	check (num_nonnulls(deck_id, marketplace_deck_instance_id, child_metadeck_id) = 1),
+	unique (metadeck_id, deck_id),
+	unique (metadeck_id, marketplace_deck_instance_id),
+	unique (metadeck_id, child_metadeck_id)
+);

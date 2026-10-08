@@ -286,7 +286,17 @@
 	<table data-list={list} class:creatable={list !== "market"} class:dragging={drag?.started}>
 		<thead>
 			<tr>
-				<th>{firstTableHeader}</th>
+				<th>
+					{firstTableHeader}
+					<!-- what a metadeck is and how one is filled, for whoever meets
+					     the word here first (the app's own tooltip) -->
+					{#if list === "meta"}
+						<span
+							class="info"
+							data-tip="A metadeck groups decks so you can study them together. Drag a deck onto one, or right-click a deck and choose Add to metadeck. The decks stay in their own lists; drag one out of a metadeck to take it out."
+						>i</span>
+					{/if}
+				</th>
 				<th>New</th>
 				<th>Learn</th>
 				<th>Due</th>
@@ -435,6 +445,25 @@
 	}
 	tbody td:first-child {
 		padding-left: 4px;
+	}
+	/* the small "i" beside a section's title that explains it on hover */
+	.info {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 14px;
+		height: 14px;
+		margin-left: 4px;
+		border: 1px solid rgba(0, 0, 0, 0.45);
+		border-radius: 50%;
+		font-family: Georgia, serif;
+		font-size: 10px;
+		font-weight: 400;
+		font-style: italic;
+		line-height: 1;
+		color: rgba(0, 0, 0, 0.6);
+		vertical-align: 2px;
+		cursor: help;
 	}
 	/* The plus that opens a row onto what is inside it, and the minus that
 	   closes it: above the row-filling link, so it takes its own click. A row

@@ -30,6 +30,11 @@ export const deleteCards =
 		}
 	})
 
+const UUID = /^[0-9a-f-]{36}$/i;
+const checkIds = (...ids) => {
+	if (!ids.flat().every(id => typeof id === "string" && UUID.test(id))) error(400, "Bad request");
+}
+
 // The subdeck ops renumber positions across the deck, so each returns the
 // fresh deck for the client to assign into the shared context — mirroring
 // the renumbering locally would just re-implement the server.
@@ -41,14 +46,16 @@ const freshDeck = async (locals, deckId) => {
 
 // A subdeck always has a name: the callers only offer to create or rename
 // one through a field, and a blank one is a cancelled edit, not an erasure.
+// parentId names the subdeck the new one goes inside; without it the new one
+// joins the deck's top level
 export const createSubdeck =
-	command("unchecked", async ({ deckId, name }) => {
+	command("unchecked", async ({ deckId, name, parentId }) => {
 		const { locals } = getRequestEvent();
 		const trimmed = name?.trim();
 		if (!trimmed) error(400, "A subdeck needs a name");
-		if (!await decks.createSubdeck(locals.userId, deckId, trimmed)) {
-			error(403, "Unauthorized");
-		}
+		checkIds(deckId, parentId ?? []);
+		try { await decks.createSubdeck(locals.userId, deckId, trimmed, parentId ?? null); }
+		catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
 		return freshDeck(locals, deckId);
 	})
 
@@ -63,10 +70,24 @@ export const renameSubdeck =
 		return freshDeck(locals, deckId);
 	})
 
+// a subdeck goes with the subdecks and cards inside it
 export const deleteSubdeck =
 	command("unchecked", async ({ deckId, subdeckId }) => {
 		const { locals } = getRequestEvent();
-		await decks.deleteSubdeck(locals.userId, subdeckId);
+		checkIds(deckId, subdeckId);
+		try { await decks.deleteSubdeck(locals.userId, subdeckId); }
+		catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
+		return freshDeck(locals, deckId);
+	})
+
+// a subdeck moves, with what is inside it, to index among the subdecks of
+// parentId (the deck's top level without one; the end without an index)
+export const moveSubdeck =
+	command("unchecked", async ({ deckId, subdeckId, parentId, index }) => {
+		const { locals } = getRequestEvent();
+		checkIds(deckId, subdeckId, parentId ?? []);
+		try { await decks.moveSubdeck(locals.userId, deckId, subdeckId, parentId ?? null, index ?? null); }
+		catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
 		return freshDeck(locals, deckId);
 	})
 
@@ -83,11 +104,6 @@ export const listDecks =
 		const { locals } = getRequestEvent();
 		return decks.getNames(locals.userId);
 	})
-
-const UUID = /^[0-9a-f-]{36}$/i;
-const checkIds = (...ids) => {
-	if (!ids.flat().every(id => typeof id === "string" && UUID.test(id))) error(400, "Bad request");
-}
 
 // both answer with this deck afresh: a move empties it of the cards, and a
 // copy into the deck itself adds to it

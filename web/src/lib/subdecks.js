@@ -54,23 +54,38 @@ const childrenByParent = subdecks => {
 	return children;
 }
 
-// The deck's reading order: each subdeck followed by everything inside it.
-// Where every subdeck falls in it, for sorting cards into deck order.
-const subdeckOrder = subdecks => {
+// The deck written out as an outline, in reading order: each subdeck followed
+// by everything inside it. level is how deep it sits (1 = the deck's top
+// level); number is its place said the way the cards' numbers say it, "2.3"
+// for the third subdeck of the second; leaf is whether it holds cards (it has
+// no subdecks inside). Descending runs every level backwards, each subdeck
+// still ahead of what is inside it; the numbers stay the ascending ones.
+const subdeckOutline = (subdecks, descending = false) => {
 	const children = childrenByParent(subdecks);
-	const order = new Map();
-	const walk = parent => {
-		for (const subdeck of children.get(parent) ?? []) {
-			order.set(subdeck.id, order.size);
-			walk(subdeck.id);
+	const outline = [];
+	const walk = (parent, level, prefix) => {
+		const siblings = (children.get(parent) ?? []).map((subdeck, index) => ({ subdeck, place: index + 1 }));
+		for (const { subdeck, place } of descending ? siblings.reverse() : siblings) {
+			const number = `${prefix}${place}`;
+			outline.push({ subdeck, level, number, leaf: !children.has(subdeck.id) });
+			walk(subdeck.id, level + 1, `${number}.`);
 		}
 	}
-	walk(null);
-	return order;
+	walk(null, 1, "");
+	return outline;
 }
 
-// the cards of a subdeck and of everything inside it
-const cardsUnder = (subdecks, cards, subdeckId) => {
+// where every subdeck falls in the reading order, for sorting cards into
+// deck order
+const subdeckOrder = subdecks =>
+	new Map(subdeckOutline(subdecks).map(({ subdeck }, index) => [subdeck.id, index]));
+
+// the subdecks that hold the cards, in reading order
+const leafSubdecks = subdecks =>
+	subdeckOutline(subdecks).filter(entry => entry.leaf).map(entry => entry.subdeck);
+
+// the ids of a subdeck and of everything inside it
+const subdeckSubtree = (subdecks, subdeckId) => {
 	const children = childrenByParent(subdecks);
 	const inside = new Set();
 	const collect = id => {
@@ -78,6 +93,12 @@ const cardsUnder = (subdecks, cards, subdeckId) => {
 		for (const child of children.get(id) ?? []) collect(child.id);
 	}
 	collect(subdeckId);
+	return inside;
+}
+
+// the cards of a subdeck and of everything inside it
+const cardsUnder = (subdecks, cards, subdeckId) => {
+	const inside = subdeckSubtree(subdecks, subdeckId);
 	return cards.filter(card => inside.has(card.subdeck_id));
 }
 
@@ -133,4 +154,4 @@ const subdeckProgress = cards => ({
 	total: cards.length
 });
 
-export { GRADUATED_SHARE, subdeckLabel, subdeckName, isSeen, isGraduated, subdeckPasses, subdeckOrder, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress }
+export { GRADUATED_SHARE, subdeckLabel, subdeckName, isSeen, isGraduated, subdeckPasses, childrenByParent, subdeckOutline, subdeckOrder, leafSubdecks, subdeckSubtree, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress }

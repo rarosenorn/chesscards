@@ -1,5 +1,5 @@
 import { pool } from "./pool.js"
-import { subdeckOrder } from "../subdecks.js"
+import { childrenByParent, subdeckOrder, leafSubdecks, subdeckSubtree } from "../subdecks.js"
 
 // a deck is born with its Subdeck 1: every card belongs to a subdeck, so there is
 // always one to put the first card in. Subdecks are named, so the first one
@@ -200,23 +200,25 @@ const scheduleValues = (cardType, FSRSValues) => cardType === "tactic"
 
 // the card lands at the end of the given subdeck — or of the deck's last subdeck
 // when none is named (the trial editors have no picker)
+// One card, at the end of the named subdeck — or of the deck's last one that
+// holds cards, when none is named or the named one cannot take it.
 const addCard = async (userId, deckId, front, back, cardType, FSRSValues, subdeckId = null) => {
-	if (!await userIdOwnsDeckId(userId, deckId)) {
-		throw new Error("Unauthorized");
+	const client = await pool.connect();
+	try {
+		await client.query("begin");
+		const subdeck = await landingSubdeck(client, userId, deckId, subdeckId);
+		const { rows } = await client.query(`insert into cards(
+				deck_id, subdeck_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
+			) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+			returning *`, [deckId, subdeck.id, subdeck.last + 1, front, back, cardType, ...scheduleValues(cardType, FSRSValues)]);
+		await client.query("commit");
+		return normalizeCard(rows[0]);
+	} catch (err) {
+		await client.query("rollback");
+		throw err;
+	} finally {
+		client.release();
 	}
-
-	const { rows } = await pool.query(`insert into cards(
-			deck_id, subdeck_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
-		)
-		select $1, s.id, coalesce((select max(position) from cards where subdeck_id = s.id), 0) + 1,
-			$3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
-		from subdecks s
-		where s.deck_id = $1 and ($2::uuid is null or s.id = $2)
-		order by s.position desc limit 1
-		returning *`, [deckId, subdeckId, front, back, cardType, ...scheduleValues(cardType, FSRSValues)]);
-
-	if (!rows[0]) throw new Error("Unauthorized");
-	return normalizeCard(rows[0]);
 }
 
 // Several basic cards at once, in the order given, at the end of the named
@@ -330,23 +332,61 @@ const updateCardStudyState = async (userId, card) => {
 // the client can show "2.17" straight off the stored numbers. Every op ends
 // by renumbering what it disturbed.
 
-const renumberCards = (client, deckId) => client.query(`
-	with numbered as (
-		select c.id, row_number() over (partition by c.subdeck_id order by c.position) rn
-		from cards c where c.deck_id = $1
-	)
-	update cards c set position = n.rn from numbered n where c.id = n.id and c.position <> n.rn`,
-	[deckId]
-);
+// The deck's subdecks, locked for the write that follows. Throws unless the
+// deck is the user's (a deck always has at least one subdeck).
+const lockSubdecks = async (client, userId, deckId) => {
+	const { rows } = await client.query(`
+		select s.id, s.parent_id, s.name, s.position
+		from subdecks s join decks d on d.id = s.deck_id
+		where d.id = $2 and d.user_id = $1
+		order by s.position for update of s`, [userId, deckId]);
+	if (rows.length === 0) throw new Error("Unauthorized");
+	return rows;
+}
 
-const createSubdeck = async (userId, deckId, name) => {
-	const { rows } = await pool.query(`
-		insert into subdecks(deck_id, name, position)
-		select d.id, $3, coalesce((select max(position) from subdecks where deck_id = d.id), 0) + 1
-		from decks d where d.id = $2 and d.user_id = $1
-		returning id, name, position`, [userId, deckId, name]);
+// A subdeck holds cards or subdecks, never both. So before one that holds
+// cards takes its first subdeck, the cards move into a subdeck of their own
+// inside it, named Temp for the user to rename or empty. Answers with that
+// subdeck, or null when there were no cards to rehouse.
+const TEMP_NAME = "Temp";
+const rehouseCards = async (client, deckId, subdeckId) => {
+	const { rowCount } = await client.query("select 1 from cards where subdeck_id = $1 limit 1", [subdeckId]);
+	if (rowCount === 0) return null;
+	const { rows: [temp] } = await client.query(`
+		insert into subdecks(deck_id, parent_id, name, position) values ($1, $2, $3, 1)
+		returning id, parent_id, name, position`, [deckId, subdeckId, TEMP_NAME]);
+	await client.query("update cards set subdeck_id = $2 where subdeck_id = $1", [subdeckId, temp.id]);
+	return temp;
+}
 
-	return rows[0];
+// siblings numbered 1..n in the order given
+const numberSubdecks = (client, siblings) => client.query(`
+	update subdecks s set position = u.n
+	from unnest($1::uuid[]) with ordinality u(id, n)
+	where s.id = u.id and s.position <> u.n`, [siblings.map(subdeck => subdeck.id)]);
+
+// A new subdeck at the end of the deck's top level, or of the subdeck named
+// as its parent (whose cards, if it holds any, are rehoused first).
+const createSubdeck = async (userId, deckId, name, parentId = null) => {
+	const client = await pool.connect();
+	try {
+		await client.query("begin");
+		const subdecks = await lockSubdecks(client, userId, deckId);
+		if (parentId && !subdecks.some(subdeck => subdeck.id === parentId)) throw new Error("Unauthorized");
+		const siblings = childrenByParent(subdecks).get(parentId) ?? [];
+		const temp = parentId && siblings.length === 0 ? await rehouseCards(client, deckId, parentId) : null;
+		const { rows } = await client.query(`
+			insert into subdecks(deck_id, parent_id, name, position) values ($1, $2, $3, $4)
+			returning id, parent_id, name, position`,
+			[deckId, parentId, name, siblings.length + (temp ? 1 : 0) + 1]);
+		await client.query("commit");
+		return rows[0];
+	} catch (err) {
+		await client.query("rollback");
+		throw err;
+	} finally {
+		client.release();
+	}
 }
 
 const renameSubdeck = async (userId, subdeckId, name) => {
@@ -358,34 +398,68 @@ const renameSubdeck = async (userId, subdeckId, name) => {
 	return rowCount === 1;
 }
 
-// A deck keeps at least one subdeck. Deleting one hands its cards, in order, to
-// the end of the previous subdeck (the next one, for the first subdeck): the
-// cards' progress is theirs, only the grouping goes.
+// A subdeck moves, with everything inside it, to sit at index (0-based; null
+// appends) among the subdecks of parentId — the deck's top level when that
+// is null. Never into itself or anything inside it. A parent that holds
+// cards has them rehoused first, as when a subdeck is created in it.
+const moveSubdeck = async (userId, deckId, subdeckId, parentId, index) => {
+	const client = await pool.connect();
+	try {
+		await client.query("begin");
+		const subdecks = await lockSubdecks(client, userId, deckId);
+		const moving = subdecks.find(subdeck => subdeck.id === subdeckId);
+		if (!moving) throw new Error("Unauthorized");
+		if (parentId && !subdecks.some(subdeck => subdeck.id === parentId)) throw new Error("Unauthorized");
+		if (parentId && subdeckSubtree(subdecks, subdeckId).has(parentId)) throw new Error("A subdeck cannot go inside itself");
+
+		const children = childrenByParent(subdecks);
+		const from = moving.parent_id ?? null;
+		const left = (children.get(from) ?? []).filter(subdeck => subdeck.id !== subdeckId);
+		const joined = from === parentId ? left : [...(children.get(parentId) ?? [])];
+		if (parentId && joined.length === 0 && from !== parentId) {
+			const temp = await rehouseCards(client, deckId, parentId);
+			if (temp) joined.push(temp);
+		}
+		joined.splice(Math.max(0, Math.min(index ?? joined.length, joined.length)), 0, moving);
+
+		await client.query("update subdecks set parent_id = $2 where id = $1", [subdeckId, parentId]);
+		await numberSubdecks(client, joined);
+		if (from !== parentId) await numberSubdecks(client, left);
+		await client.query("commit");
+	} catch (err) {
+		await client.query("rollback");
+		throw err;
+	} finally {
+		client.release();
+	}
+}
+
+// A subdeck goes with everything inside it: its subdecks, and every card
+// under it with its review history (the caller has asked the user first).
+// A deck keeps at least one subdeck, so the last one standing stays.
 const deleteSubdeck = async (userId, subdeckId) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
-		const { rows: [subdeck] } = await client.query(`
-			select s.id, s.deck_id, s.position from subdecks s
-			join decks d on d.id = s.deck_id
-			where s.id = $2 and d.user_id = $1 for update`, [userId, subdeckId]);
-		if (!subdeck) throw new Error("Unauthorized");
-		const { rows: [neighbor] } = await client.query(`
-			select id from subdecks where deck_id = $1 and id <> $2
-			order by (position < $3) desc, abs(position - $3) limit 1`,
-			[subdeck.deck_id, subdeckId, subdeck.position]);
-		if (!neighbor) throw new Error("A deck keeps at least one subdeck");
-		// the update's snapshot holds max() still while rows move in under it
+		const { rows: [found] } = await client.query(`
+			select s.deck_id from subdecks s join decks d on d.id = s.deck_id
+			where s.id = $2 and d.user_id = $1`, [userId, subdeckId]);
+		if (!found) throw new Error("Unauthorized");
+		const subdecks = await lockSubdecks(client, userId, found.deck_id);
+		const going = subdeckSubtree(subdecks, subdeckId);
+		if (subdecks.every(subdeck => going.has(subdeck.id))) throw new Error("A deck keeps at least one subdeck");
+		const { rows: cards } = await client.query(
+			"delete from cards where subdeck_id = any($1::uuid[]) returning id", [[...going]]);
 		await client.query(`
-			update cards set subdeck_id = $2,
-				position = position + coalesce((select max(position) from cards where subdeck_id = $2), 0)
-			where subdeck_id = $1`, [subdeckId, neighbor.id]);
+			update decks set preview_card_ids = array(
+				select id from unnest(preview_card_ids) with ordinality p(id, n)
+				where id <> all($2::uuid[]) order by n)
+			where id = $1`, [found.deck_id, cards.map(card => card.id)]);
+		// its subdecks go with it (parent_id cascades)
 		await client.query("delete from subdecks where id = $1", [subdeckId]);
-		await client.query(`
-			with numbered as (select id, row_number() over (order by position) rn from subdecks where deck_id = $1)
-			update subdecks s set position = n.rn from numbered n where s.id = n.id and s.position <> n.rn`,
-			[subdeck.deck_id]);
-		await renumberCards(client, subdeck.deck_id);
+		const deleted = subdecks.find(subdeck => subdeck.id === subdeckId);
+		await numberSubdecks(client, (childrenByParent(subdecks).get(deleted.parent_id ?? null) ?? [])
+			.filter(subdeck => subdeck.id !== subdeckId));
 		await client.query("commit");
 	} catch (err) {
 		await client.query("rollback");
@@ -397,17 +471,15 @@ const deleteSubdeck = async (userId, subdeckId) => {
 
 // The one write behind every reordering gesture — a drag, a typed "3.3", a
 // context-menu move: the given cards leave where they were and sit down, in
-// the given order, at index (0-based; null appends) of the target subdeck. The
-// whole deck's layout is recomputed here and written in one statement.
+// the given order, at index (0-based; null appends) of the target subdeck,
+// which has to be one that holds cards. The whole deck's layout is recomputed
+// here and written in one statement.
 const moveCards = async (userId, deckId, cardIds, targetSubdeckId, targetIndex) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
-		const { rows: subdecks } = await client.query(`
-			select s.id from subdecks s join decks d on d.id = s.deck_id
-			where d.id = $2 and d.user_id = $1 order by s.position for update`,
-			[userId, deckId]);
-		if (!subdecks.some(s => s.id === targetSubdeckId)) throw new Error("Unauthorized");
+		const subdecks = await lockSubdecks(client, userId, deckId);
+		if (!leafSubdecks(subdecks).some(s => s.id === targetSubdeckId)) throw new Error("Unauthorized");
 		const { rows: cards } = await client.query(
 			"select id, subdeck_id from cards where deck_id = $1 order by position", [deckId]);
 		const deckCardIds = new Set(cards.map(c => c.id));
@@ -446,28 +518,29 @@ const getNames = async userId => {
 	return rows;
 }
 
-// the subdeck cards sent to a deck land in: the one named, when it is that
-// deck's, else its last. Locked, so two arrivals cannot take the same places.
+// The subdeck cards sent to a deck land in: the one named, when it is that
+// deck's and holds cards, else the last of the deck's that does. Locked, so
+// two arrivals cannot take the same places. `last` is the place of its last
+// card.
 const landingSubdeck = async (client, userId, deckId, subdeckId) => {
-	const { rows: [subdeck] } = await client.query(`
-		select s.id, coalesce((select max(position) from cards where subdeck_id = s.id), 0) last
-		from subdecks s join decks d on d.id = s.deck_id
-		where d.user_id = $1 and s.deck_id = $2
-		order by (s.id = $3::uuid) desc nulls last, s.position desc limit 1
-		for update of s`, [userId, deckId, subdeckId]);
-	if (!subdeck) throw new Error("Unauthorized");
-	return subdeck;
+	const leaves = leafSubdecks(await lockSubdecks(client, userId, deckId));
+	const subdeck = leaves.find(leaf => leaf.id === subdeckId) ?? leaves[leaves.length - 1];
+	const { rows: [{ last }] } = await client.query(
+		"select coalesce(max(position), 0)::int last from cards where subdeck_id = $1", [subdeck.id]);
+	return { id: subdeck.id, last };
 }
 
 // the cards among `cardIds` that are in this deck of the user's, in deck order
 const cardsOfDeck = async (client, userId, deckId, cardIds) => {
-	const { rows } = await client.query(`
-		select c.id, c.front, c.back, c.card_type
-		from cards c join decks d on d.id = c.deck_id join subdecks s on s.id = c.subdeck_id
-		where d.user_id = $1 and c.deck_id = $2 and c.id = any($3::uuid[])
-		order by s.position, c.position`, [userId, deckId, cardIds]);
-	if (rows.length !== new Set(cardIds).size) throw new Error("Unauthorized");
-	return rows;
+	const { rows: cards } = await client.query(`
+		select c.id, c.subdeck_id, c.position, c.front, c.back, c.card_type
+		from cards c join decks d on d.id = c.deck_id
+		where d.user_id = $1 and c.deck_id = $2 and c.id = any($3::uuid[])`, [userId, deckId, cardIds]);
+	if (cards.length !== new Set(cardIds).size) throw new Error("Unauthorized");
+	const { rows: subdecks } = await client.query(
+		"select id, parent_id, position from subdecks where deck_id = $1", [deckId]);
+	inDeckOrder({ subdecks, cards });
+	return cards;
 }
 
 // Cards leave one deck for another, to the end of its last subdeck, in the
@@ -582,4 +655,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateUsesSubdecks, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }
+export { BOUNDS, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, moveSubdeck, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateUsesSubdecks, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }

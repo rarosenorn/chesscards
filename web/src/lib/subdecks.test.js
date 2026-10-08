@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { unlockedSubdeckIds, firstLockedSubdeck, subdeckOrder, cardsUnder, gatingDepth } from "./subdecks.js"
+import { unlockedSubdeckIds, firstLockedSubdeck, subdeckOutline, subdeckOrder, leafSubdecks, subdeckSubtree, cardsUnder, gatingDepth } from "./subdecks.js"
 
 const subdeck = (id, position, parent_id = null) => ({ id, name: id, position, parent_id });
 const fresh = subdeck_id => ({ subdeck_id, card_type: "basic", state: 0 });
@@ -117,6 +117,34 @@ describe("a deck's reading order", () => {
 		const order = subdeckOrder(subdecks);
 		expect(["b1", "a2", "b", "a1", "a"].sort((x, y) => order.get(x) - order.get(y)))
 			.toEqual(["a", "a1", "a2", "b", "b1"]);
+	})
+
+	it("is an outline with each subdeck's depth, number and whether it holds cards", () => {
+		expect(subdeckOutline(subdecks).map(({ subdeck, level, number, leaf }) => [subdeck.id, level, number, leaf])).toEqual([
+			["a", 1, "1", false], ["a1", 2, "1.1", true], ["a2", 2, "1.2", true],
+			["b", 1, "2", false], ["b1", 2, "2.1", true]
+		]);
+	})
+
+	it("runs every level backwards when descending, each subdeck still ahead of its own", () => {
+		expect(subdeckOutline(subdecks, true).map(({ subdeck, number }) => [subdeck.id, number])).toEqual([
+			["b", "2"], ["b1", "2.1"], ["a", "1"], ["a2", "1.2"], ["a1", "1.1"]
+		]);
+	})
+
+	it("numbers by place among siblings, not by the stored position", () => {
+		const gapped = [subdeck("x", 3), subdeck("y", 7), subdeck("y1", 4, "y")];
+		expect(subdeckOutline(gapped).map(entry => entry.number)).toEqual(["1", "2", "2.1"]);
+	})
+
+	it("names the subdecks that hold the cards, in order", () => {
+		expect(leafSubdecks(subdecks).map(leaf => leaf.id)).toEqual(["a1", "a2", "b1"]);
+		expect(leafSubdecks([subdeck("only", 1)]).map(leaf => leaf.id)).toEqual(["only"]);
+	})
+
+	it("gathers a subdeck with everything inside it", () => {
+		expect([...subdeckSubtree(subdecks, "a")].sort()).toEqual(["a", "a1", "a2"]);
+		expect([...subdeckSubtree(subdecks, "b1")]).toEqual(["b1"]);
 	})
 
 	it("gathers the cards of a subdeck and of everything inside it", () => {

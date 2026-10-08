@@ -15,7 +15,7 @@
 	let lists = $state({ meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks });
 	$effect(() => { lists = { meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks } });
 
-	// The Add button beside a list's title asks for a name and makes a deck (or a
+	// The Create button under a list asks for a name and makes a deck (or a
 	// metadeck) of it. A name the server refuses is asked for again, with
 	// what was wrong said under the field and what was typed still in it.
 	let naming = $state({ value: "", error: null });
@@ -303,7 +303,7 @@
 {/snippet}
 
 {#snippet deckTable(firstTableHeader, list)}
-	<table data-list={list} class:dragging={drag?.started}>
+	<table data-list={list} class:creatable={list !== "market"} class:dragging={drag?.started}>
 		<thead>
 			<tr>
 				<th>
@@ -315,9 +315,6 @@
 							class="info"
 							data-tip="A metadeck groups decks so you can study them together. Drag a deck onto one, or right-click a deck and choose Add to metadeck. The decks stay in their own lists; drag one out of a metadeck to take it out."
 						>i</span>
-					{/if}
-					{#if list !== "market"}
-						<button class="std-btn new-btn" aria-label={list === "meta" ? "Add metadeck" : "Add deck"} onclick={() => createNew(list)}>Add</button>
 					{/if}
 				</th>
 				<th>New</th>
@@ -442,12 +439,23 @@
 	</div>
 {/snippet}
 
+<!-- under a list, the button that adds to it: it asks for the name -->
+{#snippet createButton(list)}
+	<div class="create">
+		<button class="std-btn" aria-label={list === "meta" ? "Create metadeck" : "Create deck"} onclick={() => createNew(list)}>Create</button>
+	</div>
+{/snippet}
+
 {@render deckTable("Marketplace decks", "market")}
 {@render deckTable("My decks", "mine")}
+{@render createButton("mine")}
 {@render deckTable("Metadecks", "meta")}
+{@render createButton("meta")}
 
 <!-- the year's study, a square a day, under everything there is to study -->
-<Heatmap days={data.activity.days} today={data.activity.today} />
+<div class="activity">
+	<Heatmap days={data.activity.days} today={data.activity.today} />
+</div>
 
 <style>
 	/* fixed shared column widths so both tables' columns line up */
@@ -591,21 +599,23 @@
 	th:first-child {
 		font-size: 1.05rem;
 	}
-	/* the heatmap stands as far under the last list as the lists do under
-	   each other */
-	table:last-of-type {
-		margin-bottom: 44px;
+	/* The create button belongs to the list it adds to, so it sits closer to
+	   it than the lists sit to each other, and keeps their distance from
+	   what comes next. */
+	table.creatable {
+		margin-bottom: 14px;
 	}
-	/* the button beside a list's title that adds to it: the app's standard
-	   button, at the size of a note beside a heading */
-	.new-btn {
-		margin-left: 8px;
-		padding: 2px 10px;
-		border-radius: 4px;
-		font-size: 0.8rem;
-		font-weight: 400;
-		vertical-align: 2px;
+	.create {
+		margin: 6px 0 32px;
+	}
+	/* the app's standard button, at the size of a note under a list */
+	.create button {
+		padding: 4px 12px;
+		font-size: 0.9rem;
 		cursor: pointer;
+	}
+	.activity {
+		margin-top: 12px;
 	}
 	/* the name field in the modal that follows */
 	.name-prompt {

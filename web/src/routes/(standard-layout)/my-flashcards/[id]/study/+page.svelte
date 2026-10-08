@@ -742,13 +742,12 @@
 	.zen-btn:active {
 		transform: translateY(1px);
 	}
-	/* The floor is what a question holds — its board, one line of prompt, the
-	   move line and the grade row (--card-stack) — so a card reserves no room
-	   for something it is not showing. The answer grows it from there, into
-	   room the BOARD was already sized around (--card-furniture, in app.css,
-	   which counts the answer as well): the board is small enough that a
-	   revealed card still ends where it should. Layout inside the card comes
-	   from app.css ("card board layout"), shared with browse. */
+	/* The floor is the whole card, answer included (--card-furniture, in
+	   app.css), less the air the page keeps under it (--card-under): a
+	   question stands down to the window's bottom instead of leaving the
+	   answer's room empty below itself. Zen keeps the old floor, the
+	   question alone, since its lift places the card by that. Layout inside
+	   the card comes from app.css ("card board layout"), shared with browse. */
 	/* zen: with the bars gone the card would sit against the window's edge, so
 	   it takes twice its usual air above. The mode keeps it through a peek —
 	   the bars sliding in is movement enough without the card shifting too */
@@ -763,6 +762,7 @@
 		   evenly, and the bias below is the only thing that moves it down */
 		--card-margin: 0px;
 		--card-lead: 0px;
+		--card-under: var(--card-answer);
 		--page-bottom: 0px;
 		/* The air the card may never eat into: it is taken out of the board's
 		   height budget, so a short window shrinks the board rather than
@@ -847,7 +847,8 @@
 		   whole furniture, the answer's room included. A question therefore
 		   opens at the size it will keep, and the reveal fills room the card
 		   was already holding instead of growing into the page. */
-		min-height: calc(var(--solo-board-size) + var(--card-stack));
+		--card-under: 30px;
+		min-height: calc(var(--solo-board-size) + var(--card-furniture) - var(--card-under));
 		/* No ceiling: a card with more in it than the budget holds grows
 		   downwards and the page scrolls, as the reveal does. The height
 		   above is a floor, so the cards that fit all stand alike. */

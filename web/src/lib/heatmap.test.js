@@ -5,17 +5,21 @@ import { levelOf, heatmapWeeks, monthLabels, sayDay, streaks } from "./heatmap.j
 const TODAY = "2026-10-08";
 
 describe("the weeks shown", () => {
-	const weeks = heatmapWeeks([{ day: "2026-10-05", count: 10 }, { day: "2026-10-08", count: 30 }, { day: "2020-01-01", count: 999 }], TODAY, 3);
+	const weeks = heatmapWeeks([{ day: "2026-10-05", count: 10 }, { day: "2026-10-08", count: 30 }, { day: "2020-01-01", count: 999 }], TODAY, 2, 2);
 
-	it("are columns of seven days from Monday, ending with this week", () => {
-		expect(weeks.length).toBe(3);
+	it("are columns of seven days from Monday, this week in the middle", () => {
+		expect(weeks.length).toBe(5);
 		expect(weeks[0][0].day).toBe("2026-09-21");
 		expect(weeks[2][0].day).toBe("2026-10-05");
 		expect(weeks[2][3].day).toBe(TODAY);
+		expect(weeks[4][6].day).toBe("2026-10-25");
 	})
 
-	it("leave out the days still to come", () => {
-		expect(weeks[2].slice(4)).toEqual([null, null, null]);
+	it("show the days still to come as such", () => {
+		expect(weeks[2].slice(4)).toEqual([
+			{ day: "2026-10-09", future: true }, { day: "2026-10-10", future: true }, { day: "2026-10-11", future: true }
+		]);
+		expect(weeks[3].every(cell => cell.future)).toBe(true);
 	})
 
 	it("carry each day's count, shaded against the average of the active days shown, and mark today", () => {
@@ -27,8 +31,8 @@ describe("the weeks shown", () => {
 
 describe("the months named at the columns", () => {
 	it("stand where each begins, with the year", () => {
-		expect(monthLabels(heatmapWeeks([], TODAY, 8))).toEqual(["", "", "Sep '26", "", "", "", "Oct '26", ""]);
-		expect(monthLabels(heatmapWeeks([], "2026-01-10", 3))).toEqual(["", "Jan '26", ""]);
+		expect(monthLabels(heatmapWeeks([], TODAY, 6, 1))).toEqual(["", "Sep '26", "", "", "", "Oct '26", "", ""]);
+		expect(monthLabels(heatmapWeeks([], "2026-01-10", 2, 0))).toEqual(["", "Jan '26", ""]);
 	})
 })
 

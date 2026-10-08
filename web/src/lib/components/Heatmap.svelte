@@ -1,7 +1,8 @@
 <script>
 	import { heatmapWeeks, monthLabels, sayDay, streaks } from "$lib/heatmap.js"
 
-	// The year's study, a square a day (see lib/heatmap.js).
+	// Study day by day, a square each: today in the middle, half a year
+	// behind it and half a year ahead (see lib/heatmap.js).
 	// days: every day anything was answered, each { day, count }.
 	// today: the study day it is now.
 	let { days, today } = $props();
@@ -25,14 +26,14 @@
 			<div class="weeks">
 				{#each weeks as week}
 					{#each week as cell}
-						{#if cell}
+						{#if cell.future}
+							<span class="day"></span>
+						{:else}
 							<span
 								class="day level-{cell.level}"
 								class:today={cell.today}
 								data-tip="{cell.count ? plural(cell.count, "review") : "No reviews"} on {sayDay(cell.day)}"
 							></span>
-						{:else}
-							<span></span>
 						{/if}
 					{/each}
 				{/each}
@@ -107,9 +108,10 @@
 		background-color: rgba(0, 0, 0, 0.07);
 	}
 	/* today, and the day under the pointer: an outline, so the square keeps
-	   its size and its neighbours their places */
+	   its size and its neighbours their places. The days still to come say
+	   nothing yet, and take none. */
 	.day.today,
-	.day:hover {
+	.day[data-tip]:hover {
 		outline: 1px solid black;
 	}
 	/* the greens of Anki's review heatmap, light to dark */

@@ -1,5 +1,6 @@
-// The activity heatmap: a square for each study day of the last year, in
-// columns of weeks, shaded by how much was answered that day. Days are
+// The activity heatmap: a square for each study day, half a year back and
+// half a year ahead, in columns of weeks, shaded by how much was answered
+// that day. Days are
 // 'YYYY-MM-DD' strings throughout (the server says which day an answer and
 // "today" fall in), reckoned here as plain calendar dates.
 
@@ -16,17 +17,18 @@ const weekday = day => (new Date(parse(day)).getUTCDay() + 6) % 7;
 const levelOf = (count, average) =>
 	count <= 0 ? 0 : count <= average * 0.5 ? 1 : count <= average ? 2 : count <= average * 1.5 ? 3 : 4;
 
-// The last `weeks` weeks as columns of seven days, Monday first, the last
-// column the week `today` is in. Each day is { day, count, level, today };
-// the days of that week still to come are null.
-const heatmapWeeks = (counts, today, weeks = 53) => {
+// Weeks as columns of seven days, Monday first, with the week `today` is in
+// in the middle: `before` weeks behind it and `after` weeks ahead, as Anki's
+// heatmap stands. A day is { day, count, level, today }; a day still to
+// come is { day, future: true }.
+const heatmapWeeks = (counts, today, before = 26, after = 26) => {
 	const byDay = new Map(counts.map(({ day, count }) => [day, count]));
-	const start = addDays(today, -weekday(today) - (weeks - 1) * 7);
+	const start = addDays(today, -weekday(today) - before * 7);
 	const shown = counts.filter(({ day, count }) => day >= start && day <= today && count > 0);
 	const average = shown.length ? shown.reduce((sum, { count }) => sum + count, 0) / shown.length : 0;
-	return Array.from({ length: weeks }, (_, week) => Array.from({ length: 7 }, (_, index) => {
+	return Array.from({ length: before + 1 + after }, (_, week) => Array.from({ length: 7 }, (_, index) => {
 		const day = addDays(start, week * 7 + index);
-		if (day > today) return null;
+		if (day > today) return { day, future: true };
 		const count = byDay.get(day) ?? 0;
 		return { day, count, level: levelOf(count, average), today: day === today };
 	}));

@@ -1,13 +1,13 @@
 <script>
-	import { enhance } from "$app/forms"
+	import { deserialize } from "$app/forms"
 	import { flip } from "svelte/animate"
 	import { SvelteSet } from "svelte/reactivity"
-	import FormErrors from "$lib/components/FormErrors.svelte"
+	import { confirmModal, settleModal } from "$lib/modals.svelte.js"
 	import Heatmap from "$lib/components/Heatmap.svelte"
 	import { invalidateAll } from "$app/navigation"
 	import { resolveDecks, holders } from "$lib/metadecks.js"
 	import { reorderDecks, reorderMetadecks, addToMetadeck, removeFromMetadeck } from "./decks.remote.js"
-	let { data, form } = $props();
+	let { data } = $props();
 
 	// the three lists as shown: a drop reorders them here at once, and a
 	// fresh load (a deck created) replaces them
@@ -15,20 +15,24 @@
 	let lists = $state({ meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks });
 	$effect(() => { lists = { meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks } });
 
-	// The row at the foot of a list that adds to it: "+ New deck" until it
-	// is clicked, then a field for the name in its place (Enter creates,
-	// Escape gives up). `adding` is the list whose field is open; `failure`
-	// what the server said of the last try ({ list, errors, name }), shown at
-	// that field until it is tried again or given up.
-	// svelte-ignore state_referenced_locally -- a create that failed without scripting comes back in `form`
-	let failure = $state(form?.errors ? { list: form.metadeck ? "meta" : "mine", errors: form.errors, name: form.name } : null);
-	// svelte-ignore state_referenced_locally
-	let adding = $state(failure?.list ?? null);
-	const stopAdding = () => { adding = null; failure = null; }
-	const create = list => () => async ({ result, update }) => {
-		await update();
-		if (result.type === "success") stopAdding();
-		else if (result.type === "failure") failure = { list, errors: result.data?.errors, name: result.data?.name };
+	// The plus beside a list's title asks for a name and makes a deck (or a
+	// metadeck) of it. A name the server refuses is asked for again, with
+	// what was wrong said under the field and what was typed still in it.
+	let naming = $state({ value: "", error: null });
+	const createNew = async list => {
+		const isMeta = list === "meta";
+		naming.value = "";
+		naming.error = null;
+		while (await confirmModal({ title: isMeta ? "New metadeck" : "New deck", body: nameField, confirmLabel: "Create" })) {
+			const body = new FormData();
+			body.set("name", naming.value);
+			const response = await fetch(isMeta ? "?/createMetadeck" : "?/create", {
+				method: "POST", body, headers: { "x-sveltekit-action": "true" }
+			});
+			const result = deserialize(await response.text());
+			if (result.type === "success") return invalidateAll();
+			naming.error = (result.type === "failure" && result.data?.errors?.[0]) || "That did not work. Try again.";
+		}
 	}
 
 	// A row is dragged to reorder its own list, or onto a metadeck to go
@@ -312,6 +316,9 @@
 							data-tip="A metadeck groups decks so you can study them together. Drag a deck onto one, or right-click a deck and choose Add to metadeck. The decks stay in their own lists; drag one out of a metadeck to take it out."
 						>i</span>
 					{/if}
+					{#if list !== "market"}
+						<button class="new-btn" aria-label={list === "meta" ? "New metadeck" : "New deck"} onclick={() => createNew(list)}>+</button>
+					{/if}
 				</th>
 				<th>New</th>
 				<th>Learn</th>
@@ -357,37 +364,6 @@
 					{/if}
 				</tr>
 			{/each}
-			{#if list !== "market"}
-				{@const isMeta = list === "meta"}
-				{@const failed = failure?.list === list ? failure : null}
-				<tr class="add-row" class:open={adding === list}>
-					<td colspan="4">
-						{#if adding === list}
-							<FormErrors form={failed} />
-							<form method="POST" action={isMeta ? "?/createMetadeck" : "?/create"} use:enhance={create(list)}>
-								<!-- svelte-ignore a11y_autofocus -- the field is there because the user just asked for it -->
-								<input
-									name="name"
-									class="add-input"
-									autofocus
-									placeholder={isMeta ? "Metadeck name" : "Deck name"}
-									value={failed?.name ?? ""}
-									required
-									minlength="4"
-									maxlength="100"
-									autocomplete="off"
-									onkeydown={e => { if (e.key === "Escape") stopAdding(); }}
-									onblur={e => { if (!e.currentTarget.value.trim()) stopAdding(); }}
-								/>
-							</form>
-						{:else}
-							<button class="add-btn" onclick={() => { failure = null; adding = list; }}>
-								+ New {isMeta ? "metadeck" : "deck"}
-							</button>
-						{/if}
-					</td>
-				</tr>
-			{/if}
 		</tbody>
 	</table>
 {/snippet}
@@ -442,6 +418,29 @@
 		{/if}
 	</div>
 {/if}
+
+<!-- the name asked for in the modal that makes a deck or a metadeck; Enter
+     in the field creates -->
+{#snippet nameField()}
+	<div class="name-prompt">
+		<!-- svelte-ignore a11y_autofocus -- the modal is there to ask for this -->
+		<input
+			bind:value={naming.value}
+			autofocus
+			maxlength="100"
+			autocomplete="off"
+			placeholder="Name"
+			onkeydown={e => {
+				if (e.key !== "Enter") return;
+				e.preventDefault();
+				settleModal(true);
+			}}
+		/>
+		{#if naming.error}
+			<p class="name-error">{naming.error}</p>
+		{/if}
+	</div>
+{/snippet}
 
 {@render deckTable("Marketplace decks", "market")}
 {@render deckTable("My decks", "mine")}
@@ -597,42 +596,50 @@
 	table:last-of-type {
 		margin-bottom: 44px;
 	}
-	/* The row at the foot of a list that adds to it: quiet until it is
-	   wanted, its words standing where the names above it do. */
-	tr.add-row td {
-		padding-left: 24px;
-	}
-	.add-btn {
-		width: 100%;
-		padding: 0;
-		border: none;
+	/* the plus beside a list's title that adds to it */
+	.new-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
+		margin-left: 6px;
+		padding: 0 0 1px;
+		border: 1px solid rgba(0, 0, 0, 0.45);
+		border-radius: 50%;
 		background: none;
-		text-align: left;
 		font: inherit;
-		font-size: 0.9rem;
-		color: rgba(0, 0, 0, 0.45);
+		font-weight: 400;
+		font-size: 0.95rem;
+		line-height: 1;
+		color: rgba(0, 0, 0, 0.6);
+		vertical-align: 2px;
 		cursor: pointer;
 	}
-	tr.add-row:hover .add-btn {
+	.new-btn:hover {
+		border-color: black;
 		color: black;
 	}
-	/* with the field open the row is a place to type, not a thing to click */
-	tbody > tr.add-row.open,
-	tbody > tr.add-row.open:hover {
-		background-color: transparent;
-		cursor: default;
+	/* the name field in the modal that follows */
+	.name-prompt {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
 	}
-	tr.add-row form {
+	.name-prompt input {
+		border: 1px solid rgba(0, 0, 0, 0.25);
+		border-radius: 6px;
+		padding: 8px 10px;
+		font-size: 1rem;
+	}
+	.name-prompt input:focus {
+		outline: 2px solid var(--accent);
+		outline-offset: -1px;
+	}
+	.name-error {
 		margin: 0;
-	}
-	.add-input {
-		width: 280px;
-		padding: 2px 6px;
-		border: 1px solid var(--accent);
-		font: inherit;
-	}
-	.add-input:focus {
-		outline: none;
+		font-size: 0.9rem;
+		color: #c62828;
 	}
 	/* mid-drag the rows stand still under the cursor: no hover tint, and the
 	   hand is the grab for the whole page */

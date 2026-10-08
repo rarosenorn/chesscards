@@ -192,7 +192,8 @@ const firstLockedSubdeck = (subdecks, cards, depth = Infinity, rootId = null) =>
 // of you: the learning and review cards due under it, and the new ones in
 // the subdecks progression leaves open — for the deck as a whole, or for a
 // subdeck studied on its own (which is open itself, whatever the deck holds
-// shut before it). A subdeck's row also says whether the deck has it locked.
+// shut before it). A subdeck's row also says whether the deck has it locked,
+// and whether it has subdecks of its own to open onto.
 // stats: subdeck id -> its own cardStats and its due counts, { new, learn,
 // review }.
 const deckListing = ({ subdecks, usesSubdecks, progressionDepth }, stats) => {
@@ -212,8 +213,8 @@ const deckListing = ({ subdecks, usesSubdecks, progressionDepth }, stats) => {
 	const open = walkProgression(subdecks, stats, depth).unlocked;
 	return {
 		...counts(),
-		subdecks: !usesSubdecks ? [] : subdeckOutline(subdecks).map(({ subdeck, level }) =>
-			({ id: subdeck.id, name: subdeck.name, level, locked: !open.has(subdeck.id), ...counts(subdeck.id) }))
+		subdecks: !usesSubdecks ? [] : subdeckOutline(subdecks).map(({ subdeck, level, leaf }) =>
+			({ id: subdeck.id, name: subdeck.name, level, holdsSubdecks: !leaf, locked: !open.has(subdeck.id), ...counts(subdeck.id) }))
 	};
 }
 

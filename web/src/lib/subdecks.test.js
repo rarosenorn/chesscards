@@ -164,6 +164,7 @@ describe("the My flashcards list's numbers", () => {
 		expect(listing.subdecks.map(entry => [entry.name, entry.level, entry.locked])).toEqual([
 			["a", 1, false], ["a1", 2, false], ["a2", 2, false], ["b", 1, true]
 		]);
+		expect(listing.subdecks.filter(entry => entry.holdsSubdecks).map(entry => entry.name)).toEqual(["a"]);
 	})
 
 	it("counts for a subdeck what studying it alone would bring, locked or not", () => {

@@ -113,6 +113,20 @@
 			goto(to);
 		});
 	});
+	// A crumb says its name in full on hover, but only while it is cut short:
+	// the app's own tooltip (GlobalTooltip reads data-tip), kept in step with
+	// whether the name fits as the bar is resized.
+	const fullNameWhenCut = name => node => {
+		const sync = () => {
+			if (node.scrollWidth > node.clientWidth) node.dataset.tip = name;
+			else delete node.dataset.tip;
+		}
+		const observer = new ResizeObserver(sync);
+		observer.observe(node);
+		sync();
+		return () => observer.disconnect();
+	}
+
 	let studiedSubdeck = $derived(
 		page.url.pathname.endsWith("/study")
 			? deck.subdecks.find(subdeck => subdeck.id === page.url.searchParams.get("subdeck"))
@@ -158,15 +172,16 @@
 		<!-- Studying one subdeck on its own (study's ?subdeck=): it is named
 		     here, after the deck, which is then the way back to the whole of
 		     it. Each name is a crumb of its own, cut short with an ellipsis
-		     when it is long or the bar is tight. -->
+		     when it is long or the bar is tight, and then said in full on
+		     hover. -->
 		{#if studiedSubdeck}
-			<a class="crumb" href="/my-flashcards/{page.params.id}/study">{deck.name}</a>
+			<a class="crumb" href="/my-flashcards/{page.params.id}/study" {@attach fullNameWhenCut(deck.name)}>{deck.name}</a>
 			{#each subdeckTrail(deck.subdecks, studiedSubdeck.id) as name, index}
 				<span>{index === 0 ? "->" : "›"}</span>
-				<span class="crumb">{name}</span>
+				<span class="crumb" {@attach fullNameWhenCut(name)}>{name}</span>
 			{/each}
 		{:else}
-			<span class="crumb">{deck.name}</span>
+			<span class="crumb" {@attach fullNameWhenCut(deck.name)}>{deck.name}</span>
 		{/if}
 	</div>
 	<div class="tabs">

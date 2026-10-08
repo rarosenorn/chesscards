@@ -78,9 +78,11 @@
 		}
 	}
 
-	// A deck that uses subdecks opens to show them, each with its own counts:
-	// which decks are open is the reader's own business, kept in this
-	// browser from one visit to the next.
+	// A deck that uses subdecks opens to show them, each with its own counts,
+	// and a subdeck that holds subdecks opens the same way, level by level.
+	// Which ones are open is the reader's own business, kept in this browser
+	// from one visit to the next (by the row's id: the deck's, or the deck's
+	// and the subdeck's together).
 	const EXPANDED_KEY = "chesscards:expanded-decks";
 	const storedExpanded = () => {
 		try { return JSON.parse(localStorage.getItem(EXPANDED_KEY) ?? "[]"); } catch { return []; }
@@ -88,9 +90,24 @@
 	let expanded = $state(new SvelteSet());
 	// read after mount: the server renders every deck closed
 	$effect(() => { expanded = new SvelteSet(storedExpanded()); });
-	const toggleExpanded = deck => {
-		if (!expanded.delete(deck.id)) expanded.add(deck.id);
+	const toggleExpanded = id => {
+		if (!expanded.delete(id)) expanded.add(id);
 		try { localStorage.setItem(EXPANDED_KEY, JSON.stringify([...expanded])); } catch {}
+	}
+
+	// the subdecks of an open deck that show: each level only under an open
+	// row, so a closed subdeck keeps everything inside it out of the list
+	const subdeckRows = deck => {
+		const rows = [];
+		// the level of the closed subdeck the walk is inside, if any
+		let closedAt = null;
+		for (const subdeck of deck.subdecks) {
+			if (closedAt !== null && subdeck.level > closedAt) continue;
+			const id = `${deck.id}:${subdeck.id}`;
+			closedAt = subdeck.holdsSubdecks && !expanded.has(id) ? subdeck.level : null;
+			rows.push({ id, deck, subdeck });
+		}
+		return rows;
 	}
 
 	// What a table shows, row by row: each deck, with its subdecks under it
@@ -102,14 +119,26 @@
 			const rest = lists[list].filter(deck => deck !== drag.deck);
 			return [...rest.slice(0, drag.over), { id: "__placeholder__", placeholder: true }, ...rest.slice(drag.over)];
 		}
-		return lists[list].flatMap(deck => [
-			deck,
-			...(expanded.has(deck.id) ? deck.subdecks.map(subdeck => ({ id: `${deck.id}:${subdeck.id}`, deck, subdeck })) : [])
-		]);
+		return lists[list].flatMap(deck => [deck, ...(expanded.has(deck.id) ? subdeckRows(deck) : [])]);
 	}
 </script>
 
 <svelte:window onmousemove={handleWindowMouseMove} onmouseup={handleWindowMouseUp} />
+
+<!-- The arrow that opens a row onto the subdecks inside it. It is there only
+     for a row that has some; the name keeps its place either way. -->
+{#snippet expander(id, hasSubdecks)}
+	<button
+		class="expander"
+		class:open={expanded.has(id)}
+		class:empty={!hasSubdecks}
+		aria-label={expanded.has(id) ? "Hide subdecks" : "Show subdecks"}
+		aria-expanded={expanded.has(id)}
+		tabindex={hasSubdecks ? 0 : -1}
+		onmousedown={e => e.stopPropagation()}
+		onclick={() => toggleExpanded(id)}
+	></button>
+{/snippet}
 
 <!-- anki's three columns, for a deck or a subdeck -->
 {#snippet counts(of)}
@@ -145,7 +174,8 @@
 					{:else if row.subdeck}
 						<!-- a subdeck is studied on its own from here, locked or
 						     not; its numbers are what that would bring -->
-						<td style:padding-left="{36 + (row.subdeck.level - 1) * 16}px">
+						<td style:padding-left="{20 + (row.subdeck.level - 1) * 16}px">
+							{@render expander(row.id, row.subdeck.holdsSubdecks)}
 							<a href={`my-flashcards/${row.deck.id}/study?subdeck=${row.subdeck.id}`} draggable="false">
 								{row.subdeck.name}
 							</a>
@@ -159,18 +189,7 @@
 						{@render counts(row.subdeck)}
 					{:else}
 						<td>
-							<!-- the arrow is there only for a deck with subdecks to
-							     show; the name keeps its place either way -->
-							<button
-								class="expander"
-								class:open={expanded.has(row.id)}
-								class:empty={row.subdecks.length === 0}
-								aria-label={expanded.has(row.id) ? "Hide subdecks" : "Show subdecks"}
-								aria-expanded={expanded.has(row.id)}
-								tabindex={row.subdecks.length === 0 ? -1 : 0}
-								onmousedown={e => e.stopPropagation()}
-								onclick={() => toggleExpanded(row)}
-							></button>
+							{@render expander(row.id, row.subdecks.length > 0)}
 							<a
 								href={`my-flashcards/${row.id}/study`}
 								draggable="false"
@@ -229,9 +248,9 @@
 	tbody td:first-child {
 		padding-left: 4px;
 	}
-	/* The arrow that opens a deck onto its subdecks: above the row-filling
-	   link, so it takes its own click. A deck with none keeps the arrow's
-	   room, unseen, so every name starts at the same place. */
+	/* The arrow that opens a deck or a subdeck onto the subdecks inside it:
+	   above the row-filling link, so it takes its own click. A row with none
+	   keeps the arrow's room, unseen, so the names of a level line up. */
 	.expander {
 		position: relative;
 		z-index: 1;

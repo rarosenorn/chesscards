@@ -16,8 +16,8 @@
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import ChessboardNode from "$lib/components/ChessboardNode.svelte"
 	import { newBoard, boardForJson, docSideJson, docHasContent } from "$lib/card-utils.js"
-	import { stageLabel } from "$lib/stages.js"
-	import { loadStageId, saveStageId, loadCardType, saveCardType, DEFAULT_CARD_TYPE } from "$lib/add-cards-draft.js"
+	import { subdeckLabel } from "$lib/subdecks.js"
+	import { loadSubdeckId, saveSubdeckId, loadCardType, saveCardType, DEFAULT_CARD_TYPE } from "$lib/add-cards-draft.js"
 
 	const startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -26,23 +26,23 @@
 	const deck = getContext("deck");
 	const deckId = page.params.id;
 
-	// Anki-style modes shared with the main editor: type and chapter stick
+	// Anki-style modes shared with the main editor: type and subdeck stick
 	// per deck
 	let cardType = $state(browser ? loadCardType(deckId) : DEFAULT_CARD_TYPE);
 	const chooseCardType = value => {
 		cardType = value;
 		saveCardType(deckId, value);
 	}
-	let stagesSorted = $derived([...deck.stages].sort((a, b) => a.position - b.position));
-	let stageId = $state(browser ? loadStageId(deckId) : null);
-	let validStageId = $derived(
-		stagesSorted.some(stage => stage.id === stageId)
-			? stageId
-			: stagesSorted[stagesSorted.length - 1]?.id
+	let subdecksSorted = $derived([...deck.subdecks].sort((a, b) => a.position - b.position));
+	let subdeckId = $state(browser ? loadSubdeckId(deckId) : null);
+	let validSubdeckId = $derived(
+		subdecksSorted.some(subdeck => subdeck.id === subdeckId)
+			? subdeckId
+			: subdecksSorted[subdecksSorted.length - 1]?.id
 	);
-	const chooseStage = value => {
-		stageId = value;
-		saveStageId(deckId, value);
+	const chooseSubdeck = value => {
+		subdeckId = value;
+		saveSubdeckId(deckId, value);
 	}
 
 	// shared board-editing state (see ChessboardNode.svelte): one bag serves
@@ -176,12 +176,12 @@
 {/snippet}
 
 <div class="type-row">
-	{#if stagesSorted.length > 1}
-		<label class="stage-picker">
-			Chapter
-			<select value={validStageId} onchange={e => chooseStage(e.currentTarget.value)}>
-				{#each stagesSorted as stage (stage.id)}
-					<option value={stage.id}>{stageLabel(stage)}</option>
+	{#if subdecksSorted.length > 1}
+		<label class="subdeck-picker">
+			Subdeck
+			<select value={validSubdeckId} onchange={e => chooseSubdeck(e.currentTarget.value)}>
+				{#each subdecksSorted as subdeck (subdeck.id)}
+					<option value={subdeck.id}>{subdeckLabel(subdeck)}</option>
 				{/each}
 			</select>
 		</label>
@@ -261,7 +261,7 @@
 			formData.set("front", sideJson(front, frontBoards));
 			formData.set("back", sideJson(back, backBoards));
 			formData.set("cardType", cardType);
-			formData.set("stageId", validStageId ?? "");
+			formData.set("subdeckId", validSubdeckId ?? "");
 
 			return async ({ result, update }) => {
 				// no invalidation: the deck context is updated by the push
@@ -296,7 +296,7 @@
 		   boards with real room */
 		max-width: 1240px;
 	}
-	/* chapter/type bar above the card, sharing its column width */
+	/* subdeck/type bar above the card, sharing its column width */
 	.type-row {
 		width: 100%;
 		max-width: 1240px;
@@ -307,13 +307,13 @@
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
 	}
-	.stage-picker {
+	.subdeck-picker {
 		display: flex;
 		align-items: center;
 		gap: 8px;
 		margin-right: 12px;
 	}
-	.stage-picker select {
+	.subdeck-picker select {
 		font-size: 0.85rem;
 		padding: 3px 6px;
 		border: 1px solid rgba(0, 0, 0, 0.25);

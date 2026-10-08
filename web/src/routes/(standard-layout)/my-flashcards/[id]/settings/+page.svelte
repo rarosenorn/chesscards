@@ -74,37 +74,37 @@
 	</section>
 	{/if}
 
-	<!-- a marketplace deck's chapters are its author's: the studier gets the
-	     progression switch below, not the choice of whether chapters exist -->
+	<!-- a marketplace deck's subdecks are its author's: the studier gets the
+	     progression switch below, not the choice of whether subdecks exist -->
 	{#if !data.deck.isMarketplace}
 	<section>
-		<h3>Chapters</h3>
+		<h3>Subdecks</h3>
 		<p class="section-note">
-			Group the deck's cards into chapters. Off, the deck is one flat list.
-			Chapters you have made are kept while this is off, so turning it back
+			Group the deck's cards into subdecks. Off, the deck is one flat list.
+			Subdecks you have made are kept while this is off, so turning it back
 			on brings them back as they were.
 		</p>
-		<form method="POST" action="?/chapters" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
+		<form method="POST" action="?/usesSubdecks" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
 			<label class="progression-toggle">
-				<input type="checkbox" name="value" value="true" checked={data.deck.chapters} />
-				Use chapters
+				<input type="checkbox" name="value" value="true" checked={data.deck.usesSubdecks} />
+				Use subdecks
 			</label>
 		</form>
 	</section>
 	{/if}
 
-	<!-- nothing to gate without chapters, so the switch only appears with them -->
-	{#if data.deck.chapters}
+	<!-- nothing to gate without subdecks, so the switch only appears with them -->
+	{#if data.deck.usesSubdecks}
 	<section>
-		<h3>Chapter progression</h3>
+		<h3>Subdeck progression</h3>
 		<p class="section-note">
-			New cards arrive chapter by chapter — the next chapter unlocks once
+			New cards arrive subdeck by subdeck — the next subdeck unlocks once
 			the one before is learned. Off, every card is available from the start.
 		</p>
 		<form method="POST" action="?/progression" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
 			<label class="progression-toggle">
 				<input type="checkbox" name="value" value="true" checked={data.deck.progressionDepth !== 0} />
-				Follow chapter progression
+				Follow subdeck progression
 			</label>
 		</form>
 	</section>

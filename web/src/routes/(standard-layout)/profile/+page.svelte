@@ -12,7 +12,7 @@
 
 	let displayName = $state(data.user.displayName ?? "");
 	let prefs = $state({ ...data.boardPrefs });
-	let stageProgressionMode = $state(data.stageProgressionMode ?? "all");
+	let subdeckProgressionMode = $state(data.subdeckProgressionMode ?? "all");
 	let rolloverHour = $state(data.rolloverHour ?? DEFAULT_ROLLOVER_HOUR);
 	// 4 -> "4am", for the pills below
 	const hourLabel = hour => `${hour}am`;
@@ -208,25 +208,25 @@
 	</form>
 	<form
 		method="POST"
-		action="?/stageProgression"
+		action="?/subdeckProgression"
 		use:enhance={keepState}
 		onchange={e => e.currentTarget.requestSubmit()}
 	>
 		<fieldset>
-			<legend>Chapter progression</legend>
+			<legend>Subdeck progression</legend>
 			<div class="pills">
 				{#each ["per-deck", "all", "none"] as mode}
-					<label class="pill" class:selected={stageProgressionMode === mode}>
-						<input type="radio" name="stage-progression-mode" value={mode} bind:group={stageProgressionMode} />
+					<label class="pill" class:selected={subdeckProgressionMode === mode}>
+						<input type="radio" name="subdeck-progression-mode" value={mode} bind:group={subdeckProgressionMode} />
 						{modeLabels[mode]}
 					</label>
 				{/each}
 			</div>
 			<p class="hint">
-				With chapter progression a deck's new cards arrive chapter by
-				chapter. "All decks" and "No decks" set every deck at once;
+				With subdeck progression a deck's new cards arrive subdeck by
+				subdeck. "All decks" and "No decks" set every deck at once;
 				changing one deck's own setting afterwards puts this back to
-				per deck. Only decks that use chapters are affected — a flat
+				per deck. Only decks that use subdecks are affected — a flat
 				deck has nothing to unlock.
 			</p>
 		</fieldset>

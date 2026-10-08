@@ -180,21 +180,21 @@ try {
 	const { rows: [user] } = await client.query('select id from "user" where email = $1', [email])
 	if (!user) throw new Error(`no user with email ${email}`)
 
-	// deck: reuse by name, else create (with its implicit first stage)
+	// deck: reuse by name, else create (with its implicit first subdeck)
 	let { rows: [deck] } = await client.query(
 		"select id from decks where user_id = $1 and name = $2", [user.id, spec.deck])
 	const deckExisted = Boolean(deck)
 	if (!deck) {
-		// the implicit first stage is named for the spec's first chapter:
-		// stages.name is NOT NULL, and the app names its own "Chapter 1"
+		// the implicit first subdeck is named for the spec's first chapter:
+		// subdecks.name is NOT NULL, and the app names its own "Subdeck 1"
 		({ rows: [deck] } = await client.query(`
 			with d as (insert into decks(user_id, name) values($1, $2) returning id),
-			s as (insert into stages(deck_id, name, position) select id, $3, 1 from d)
+			s as (insert into subdecks(deck_id, name, position) select id, $3, 1 from d)
 			select id from d`, [user.id, spec.deck, chapters[0].name]))
 	}
 
 	const { rows: existingCards } = await client.query(
-		"select id, stage_id, position, front, back, card_type, reps from cards where deck_id = $1", [deck.id])
+		"select id, subdeck_id, position, front, back, card_type, reps from cards where deck_id = $1", [deck.id])
 	const byId = new Map(existingCards.map(c => [c.id, c]))
 	// fallback match for cards that predate ids, or were added in the app
 	const byFront = new Map()
@@ -205,30 +205,31 @@ try {
 	}
 	const claimed = new Set()
 
-	const { rows: existingStages } = await client.query(
-		"select id, name, position from stages where deck_id = $1 order by position", [deck.id])
-	const stageByName = new Map(existingStages.filter(s => s.name).map(s => [s.name, s]))
-	// legacy decks may still carry an unnamed stage; adopt it for the first
+	// a spec chapter is a top-level subdeck of the deck
+	const { rows: existingSubdecks } = await client.query(
+		"select id, name, position from subdecks where deck_id = $1 and parent_id is null order by position", [deck.id])
+	const subdeckByName = new Map(existingSubdecks.filter(s => s.name).map(s => [s.name, s]))
+	// legacy decks may still carry an unnamed subdeck; adopt it for the first
 	// chapter (new decks get their first chapter's name at creation above)
-	let unnamed = existingStages.find(s => !s.name) ?? null
+	let unnamed = existingSubdecks.find(s => !s.name) ?? null
 
 	for (const chapter of chapters) {
-		let stage = stageByName.get(chapter.name)
-		if (!stage && unnamed) {
-			await client.query("update stages set name = $2 where id = $1", [unnamed.id, chapter.name])
-			stage = unnamed
+		let subdeck = subdeckByName.get(chapter.name)
+		if (!subdeck && unnamed) {
+			await client.query("update subdecks set name = $2 where id = $1", [unnamed.id, chapter.name])
+			subdeck = unnamed
 			unnamed = null
 			console.log(`  chapter "${chapter.name}" (named the deck's first chapter)`)
-		} else if (!stage) {
-			({ rows: [stage] } = await client.query(`
-				insert into stages(deck_id, name, position)
-				select $1, $2, coalesce((select max(position) from stages where deck_id = $1), 0) + 1
+		} else if (!subdeck) {
+			({ rows: [subdeck] } = await client.query(`
+				insert into subdecks(deck_id, name, position)
+				select $1, $2, coalesce((select max(position) from subdecks where deck_id = $1 and parent_id is null), 0) + 1
 				returning id, name, position`, [deck.id, chapter.name]))
 			console.log(`  chapter "${chapter.name}" (new)`)
 		} else {
 			console.log(`  chapter "${chapter.name}" (existing)`)
 		}
-		stageByName.set(chapter.name, stage)
+		subdeckByName.set(chapter.name, subdeck)
 
 		for (const [index, card] of chapter.cards.entries()) {
 			const frontKey = canonical(card.front)
@@ -248,7 +249,7 @@ try {
 				const same = canonical(row.front) === frontKey
 					&& canonical(row.back) === canonical(card.back)
 					&& row.card_type === card.type
-					&& row.stage_id === stage.id
+					&& row.subdeck_id === subdeck.id
 					&& row.position === position
 				if (same) { unchanged++; continue }
 				// a type flip must satisfy tactic_cards_have_no_fsrs_state, which
@@ -258,18 +259,18 @@ try {
 					const fsrs = card.type === "tactic"
 						? [new Date(), null, null, null, null, null, null, null, null, null]
 						: Object.values(createEmptyCard())
-					await client.query(`update cards set front=$2, back=$3, card_type=$4, stage_id=$5, position=$6,
+					await client.query(`update cards set front=$2, back=$3, card_type=$4, subdeck_id=$5, position=$6,
 						due=$7, stability=$8, difficulty=$9, elapsed_days=$10, scheduled_days=$11,
 						reps=$12, lapses=$13, learning_steps=$14, state=$15, last_review=$16 where id=$1`,
 						[row.id, JSON.stringify(card.front), card.back ? JSON.stringify(card.back) : null,
-							card.type, stage.id, position, ...fsrs])
+							card.type, subdeck.id, position, ...fsrs])
 				} else {
 					// content only: the FSRS columns are untouched, so the card
 					// keeps its due date, stability and review history
 					await client.query(
-						"update cards set front=$2, back=$3, stage_id=$4, position=$5 where id=$1",
+						"update cards set front=$2, back=$3, subdeck_id=$4, position=$5 where id=$1",
 						[row.id, JSON.stringify(card.front), card.back ? JSON.stringify(card.back) : null,
-							stage.id, position])
+							subdeck.id, position])
 				}
 				updated++
 				continue
@@ -279,11 +280,11 @@ try {
 				? [new Date(), null, null, null, null, null, null, null, null, null]
 				: Object.values(createEmptyCard())
 			const { rows: [made] } = await client.query(`insert into cards(
-					deck_id, stage_id, position, front, back, card_type,
+					deck_id, subdeck_id, position, front, back, card_type,
 					due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review)
 				values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 				returning id`,
-				[deck.id, stage.id, position, JSON.stringify(card.front),
+				[deck.id, subdeck.id, position, JSON.stringify(card.front),
 					card.back ? JSON.stringify(card.back) : null, card.type, ...fsrs])
 			claimed.add(made.id)
 			if (card.id) nextLock.cards[card.id] = made.id

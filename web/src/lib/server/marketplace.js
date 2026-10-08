@@ -144,29 +144,29 @@ const approveUploadRequest = async requestId => {
 		if (!request) throw new Error("Request not found or not pending");
 
 		const { rows: [mpDeck] } = await client.query(
-			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, chapters, progression_depth)
-			 select $1, $2, $3, $4, $5, $6, $7, d.chapters, d.progression_depth from decks d where d.id = $8 returning id`,
+			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, uses_subdecks, progression_depth)
+			 select $1, $2, $3, $4, $5, $6, $7, d.uses_subdecks, d.progression_depth from decks d where d.id = $8 returning id`,
 			[request.user_id, request.name, request.description, request.price, request.theme, request.image, request.image_type, request.deck_id]
 		);
-		// The stage tree travels with the cards. Every stage gets its new id
+		// The subdeck tree travels with the cards. Every subdeck gets its new id
 		// up front (copies), so a copy can name its parent's copy and each
-		// card its stage's, all in the one statement. array_position gives
+		// card its subdeck's, all in the one statement. array_position gives
 		// the preview cards their requested order and leaves non-preview
 		// cards (and since-deleted preview ids) at null.
 		await client.query(`
 			with copies as (
 				select s.id source_id, gen_random_uuid() id, s.parent_id, s.name, s.position
-				from stages s where s.deck_id = $2
-			), copied_stages as (
-				insert into marketplace_stages(id, marketplace_deck_id, parent_id, name, position)
+				from subdecks s where s.deck_id = $2
+			), copied_subdecks as (
+				insert into marketplace_subdecks(id, marketplace_deck_id, parent_id, name, position)
 				select copy.id, $1, parent.id, copy.name, copy.position
 				from copies copy
 				left join copies parent on parent.source_id = copy.parent_id
 			)
-			insert into marketplace_cards(marketplace_deck_id, stage_id, position, front, back, preview_order, card_type)
+			insert into marketplace_cards(marketplace_deck_id, subdeck_id, position, front, back, preview_order, card_type)
 			select $1, copy.id, c.position, c.front, c.back, array_position($3::uuid[], c.id), c.card_type
 			from cards c
-			join copies copy on copy.source_id = c.stage_id
+			join copies copy on copy.source_id = c.subdeck_id
 			where c.deck_id = $2`,
 			[mpDeck.id, request.deck_id, request.preview_card_ids]
 		);
@@ -305,13 +305,13 @@ const reorderInstances = async (userId, ids) => {
 // render them unchanged
 const getInstanceById = async (userId, instanceId) => {
 	const { rows } = await pool.query(`
-		select i.id, md.name, md.chapters, i.progression_depth "progressionDepth",
+		select i.id, md.name, md.uses_subdecks "usesSubdecks", i.progression_depth "progressionDepth",
 			coalesce((select json_agg(json_build_object('id', ms.id, 'parent_id', ms.parent_id, 'name', ms.name, 'position', ms.position) order by ms.position)
-				from marketplace_stages ms where ms.marketplace_deck_id = md.id), '[]'::json) stages,
+				from marketplace_subdecks ms where ms.marketplace_deck_id = md.id), '[]'::json) subdecks,
 			coalesce(json_agg(json_build_object(
 				'id', ci.id,
 				'marketplace_deck_instance_id', ci.marketplace_deck_instance_id,
-				'stage_id', mc.stage_id, 'position', mc.position,
+				'subdeck_id', mc.subdeck_id, 'position', mc.position,
 				'front', mc.front, 'back', mc.back,
 				'due', ci.due, 'stability', ci.stability, 'difficulty', ci.difficulty,
 				'elapsed_days', ci.elapsed_days, 'scheduled_days', ci.scheduled_days,
@@ -324,7 +324,7 @@ const getInstanceById = async (userId, instanceId) => {
 		left join marketplace_card_instances ci on ci.marketplace_deck_instance_id = i.id
 		left join marketplace_cards mc on mc.id = ci.marketplace_card_id
 		where i.user_id = $1 and i.id = $2
-		group by i.id, md.id, md.name, md.chapters`,
+		group by i.id, md.id, md.name, md.uses_subdecks`,
 		[userId, instanceId]
 	);
 	if (rows[0]) inDeckOrder(rows[0]);
@@ -357,7 +357,7 @@ const updateInstanceProgressionDepth = async (userId, instanceId, depth) => {
 		"update marketplace_deck_instances set progression_depth = $3 where id = $2 and user_id = $1",
 		[userId, instanceId, depth]);
 	if (rowCount === 1) {
-		await pool.query(`update "user" set "stageProgressionMode" = 'per-deck' where id = $1`, [userId]);
+		await pool.query(`update "user" set "subdeckProgressionMode" = 'per-deck' where id = $1`, [userId]);
 	}
 
 	return rowCount === 1;

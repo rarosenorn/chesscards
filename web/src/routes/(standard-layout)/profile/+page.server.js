@@ -7,7 +7,7 @@ import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 
 export const load = async ({ locals }) => ({
 	pageTitle: "Settings",
-	stageProgressionMode: await decks.getStageProgressionMode(locals.userId),
+	subdeckProgressionMode: await decks.getSubdeckProgressionMode(locals.userId),
 	rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR
 });
 
@@ -66,13 +66,13 @@ export const actions = {
 	},
 	// "all"/"none" write every deck's flag right away; "per deck" leaves the
 	// decks as they are and just hands the say back to their own toggles
-	stageProgression: async ({ request, locals }) => {
+	subdeckProgression: async ({ request, locals }) => {
 		const data = await request.formData();
-		const mode = data.get("stage-progression-mode");
+		const mode = data.get("subdeck-progression-mode");
 		if (!["per-deck", "all", "none"].includes(mode)) {
-			return fail(400, { errors: ["Invalid chapter progression setting"] });
+			return fail(400, { errors: ["Invalid subdeck progression setting"] });
 		}
-		await decks.setStageProgressionMode(locals.userId, mode);
-		return { saved: "stage-progression" };
+		await decks.setSubdeckProgressionMode(locals.userId, mode);
+		return { saved: "subdeck-progression" };
 	}
 }

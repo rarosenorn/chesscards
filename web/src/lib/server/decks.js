@@ -1,28 +1,28 @@
 import { pool } from "./pool.js"
-import { stageOrder } from "../stages.js"
+import { subdeckOrder } from "../subdecks.js"
 
-// a deck is born with its Stage 1: every card belongs to a stage, so there is
-// always one to put the first card in. Stages are named, so the first one
+// a deck is born with its Subdeck 1: every card belongs to a subdeck, so there is
+// always one to put the first card in. Subdecks are named, so the first one
 // carries the name the user would have typed anyway.
 const create = async (userId, name) => {
 	const { rows } = await pool.query(`
 		with d as (insert into decks(user_id, name, position)
 			values($1, $2, (select coalesce(max(position), 0) + 1 from decks where user_id = $1))
 			returning id, user_id, name),
-		s as (insert into stages(deck_id, name, position) select id, 'Chapter 1', 1 from d)
+		s as (insert into subdecks(deck_id, name, position) select id, 'Subdeck 1', 1 from d)
 		select id, user_id "userId", name from d`, [userId, name]);
 
 	return rows[0]
 }
 
-// A deck with its stages (a tree: see lib/stages.js) and its cards, the
+// A deck with its subdecks (a tree: see lib/subdecks.js) and its cards, the
 // cards in the deck's reading order
 const getById = async (userId, id) => {
 	const { rows } =
 		await pool.query(`
-			select d.id, d.name, d.chapters, d.progression_depth "progressionDepth",
+			select d.id, d.name, d.uses_subdecks "usesSubdecks", d.progression_depth "progressionDepth",
 				coalesce((select json_agg(json_build_object('id', s.id, 'parent_id', s.parent_id, 'name', s.name, 'position', s.position) order by s.position)
-					from stages s where s.deck_id = d.id), '[]'::json) stages,
+					from subdecks s where s.deck_id = d.id), '[]'::json) subdecks,
 				coalesce((select json_agg(to_jsonb(c)) from cards c where c.deck_id = d.id), '[]'::json) cards
 			from decks d
 			where d.user_id = $1 and d.id = $2`, [userId, id]
@@ -32,11 +32,11 @@ const getById = async (userId, id) => {
 	return rows[0];
 }
 
-// a deck's cards put in its reading order: stage by stage as the tree reads,
-// then by their place in the stage
+// a deck's cards put in its reading order: subdeck by subdeck as the tree reads,
+// then by their place in the subdeck
 const inDeckOrder = deck => {
-	const order = stageOrder(deck.stages);
-	deck.cards.sort((a, b) => order.get(a.stage_id) - order.get(b.stage_id) || a.position - b.position);
+	const order = subdeckOrder(deck.subdecks);
+	deck.cards.sort((a, b) => order.get(a.subdeck_id) - order.get(b.subdeck_id) || a.position - b.position);
 }
 
 // Due and still in play — the shared condition behind every count below, and
@@ -198,42 +198,42 @@ const scheduleValues = (cardType, FSRSValues) => cardType === "tactic"
 	? [new Date(), null, null, null, null, null, null, null, null, null]
 	: FSRSValues;
 
-// the card lands at the end of the given stage — or of the deck's last stage
+// the card lands at the end of the given subdeck — or of the deck's last subdeck
 // when none is named (the trial editors have no picker)
-const addCard = async (userId, deckId, front, back, cardType, FSRSValues, stageId = null) => {
+const addCard = async (userId, deckId, front, back, cardType, FSRSValues, subdeckId = null) => {
 	if (!await userIdOwnsDeckId(userId, deckId)) {
 		throw new Error("Unauthorized");
 	}
 
 	const { rows } = await pool.query(`insert into cards(
-			deck_id, stage_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
+			deck_id, subdeck_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
 		)
-		select $1, s.id, coalesce((select max(position) from cards where stage_id = s.id), 0) + 1,
+		select $1, s.id, coalesce((select max(position) from cards where subdeck_id = s.id), 0) + 1,
 			$3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
-		from stages s
+		from subdecks s
 		where s.deck_id = $1 and ($2::uuid is null or s.id = $2)
 		order by s.position desc limit 1
-		returning *`, [deckId, stageId, front, back, cardType, ...scheduleValues(cardType, FSRSValues)]);
+		returning *`, [deckId, subdeckId, front, back, cardType, ...scheduleValues(cardType, FSRSValues)]);
 
 	if (!rows[0]) throw new Error("Unauthorized");
 	return normalizeCard(rows[0]);
 }
 
 // Several basic cards at once, in the order given, at the end of the named
-// stage — or of the deck's last one, when none is named or the named one has
+// subdeck — or of the deck's last one, when none is named or the named one has
 // gone since. All of them or none.
-const addCards = async (userId, deckId, stageId, cards, FSRSValues) => {
+const addCards = async (userId, deckId, subdeckId, cards, FSRSValues) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
-		const stage = await landingStage(client, userId, deckId, stageId);
+		const subdeck = await landingSubdeck(client, userId, deckId, subdeckId);
 		const ids = [];
 		for (const [index, card] of cards.entries()) {
 			const { rows } = await client.query(`insert into cards(
-					deck_id, stage_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
+					deck_id, subdeck_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
 				) values ($1, $2, $3, $4, $5, 'basic', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 				returning id`,
-				[deckId, stage.id, stage.last + index + 1, JSON.stringify(card.front), JSON.stringify(card.back), ...FSRSValues]);
+				[deckId, subdeck.id, subdeck.last + index + 1, JSON.stringify(card.front), JSON.stringify(card.back), ...FSRSValues]);
 			ids.push(rows[0].id);
 		}
 		await client.query("commit");
@@ -325,67 +325,67 @@ const updateCardStudyState = async (userId, card) => {
 	);
 }
 
-// --- stages ---
-// Positions (stages in a deck, cards in a stage) are kept dense 1..n here, so
+// --- subdecks ---
+// Positions (subdecks in a deck, cards in a subdeck) are kept dense 1..n here, so
 // the client can show "2.17" straight off the stored numbers. Every op ends
 // by renumbering what it disturbed.
 
 const renumberCards = (client, deckId) => client.query(`
 	with numbered as (
-		select c.id, row_number() over (partition by c.stage_id order by c.position) rn
+		select c.id, row_number() over (partition by c.subdeck_id order by c.position) rn
 		from cards c where c.deck_id = $1
 	)
 	update cards c set position = n.rn from numbered n where c.id = n.id and c.position <> n.rn`,
 	[deckId]
 );
 
-const createStage = async (userId, deckId, name) => {
+const createSubdeck = async (userId, deckId, name) => {
 	const { rows } = await pool.query(`
-		insert into stages(deck_id, name, position)
-		select d.id, $3, coalesce((select max(position) from stages where deck_id = d.id), 0) + 1
+		insert into subdecks(deck_id, name, position)
+		select d.id, $3, coalesce((select max(position) from subdecks where deck_id = d.id), 0) + 1
 		from decks d where d.id = $2 and d.user_id = $1
 		returning id, name, position`, [userId, deckId, name]);
 
 	return rows[0];
 }
 
-const renameStage = async (userId, stageId, name) => {
+const renameSubdeck = async (userId, subdeckId, name) => {
 	const { rowCount } = await pool.query(`
-		update stages s set name = $3
+		update subdecks s set name = $3
 		from decks d where s.id = $2 and s.deck_id = d.id and d.user_id = $1`,
-		[userId, stageId, name]);
+		[userId, subdeckId, name]);
 
 	return rowCount === 1;
 }
 
-// A deck keeps at least one stage. Deleting one hands its cards, in order, to
-// the end of the previous stage (the next one, for the first stage): the
+// A deck keeps at least one subdeck. Deleting one hands its cards, in order, to
+// the end of the previous subdeck (the next one, for the first subdeck): the
 // cards' progress is theirs, only the grouping goes.
-const deleteStage = async (userId, stageId) => {
+const deleteSubdeck = async (userId, subdeckId) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
-		const { rows: [stage] } = await client.query(`
-			select s.id, s.deck_id, s.position from stages s
+		const { rows: [subdeck] } = await client.query(`
+			select s.id, s.deck_id, s.position from subdecks s
 			join decks d on d.id = s.deck_id
-			where s.id = $2 and d.user_id = $1 for update`, [userId, stageId]);
-		if (!stage) throw new Error("Unauthorized");
+			where s.id = $2 and d.user_id = $1 for update`, [userId, subdeckId]);
+		if (!subdeck) throw new Error("Unauthorized");
 		const { rows: [neighbor] } = await client.query(`
-			select id from stages where deck_id = $1 and id <> $2
+			select id from subdecks where deck_id = $1 and id <> $2
 			order by (position < $3) desc, abs(position - $3) limit 1`,
-			[stage.deck_id, stageId, stage.position]);
-		if (!neighbor) throw new Error("A deck keeps at least one stage");
+			[subdeck.deck_id, subdeckId, subdeck.position]);
+		if (!neighbor) throw new Error("A deck keeps at least one subdeck");
 		// the update's snapshot holds max() still while rows move in under it
 		await client.query(`
-			update cards set stage_id = $2,
-				position = position + coalesce((select max(position) from cards where stage_id = $2), 0)
-			where stage_id = $1`, [stageId, neighbor.id]);
-		await client.query("delete from stages where id = $1", [stageId]);
+			update cards set subdeck_id = $2,
+				position = position + coalesce((select max(position) from cards where subdeck_id = $2), 0)
+			where subdeck_id = $1`, [subdeckId, neighbor.id]);
+		await client.query("delete from subdecks where id = $1", [subdeckId]);
 		await client.query(`
-			with numbered as (select id, row_number() over (order by position) rn from stages where deck_id = $1)
-			update stages s set position = n.rn from numbered n where s.id = n.id and s.position <> n.rn`,
-			[stage.deck_id]);
-		await renumberCards(client, stage.deck_id);
+			with numbered as (select id, row_number() over (order by position) rn from subdecks where deck_id = $1)
+			update subdecks s set position = n.rn from numbered n where s.id = n.id and s.position <> n.rn`,
+			[subdeck.deck_id]);
+		await renumberCards(client, subdeck.deck_id);
 		await client.query("commit");
 	} catch (err) {
 		await client.query("rollback");
@@ -397,39 +397,39 @@ const deleteStage = async (userId, stageId) => {
 
 // The one write behind every reordering gesture — a drag, a typed "3.3", a
 // context-menu move: the given cards leave where they were and sit down, in
-// the given order, at index (0-based; null appends) of the target stage. The
+// the given order, at index (0-based; null appends) of the target subdeck. The
 // whole deck's layout is recomputed here and written in one statement.
-const moveCards = async (userId, deckId, cardIds, targetStageId, targetIndex) => {
+const moveCards = async (userId, deckId, cardIds, targetSubdeckId, targetIndex) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
-		const { rows: stages } = await client.query(`
-			select s.id from stages s join decks d on d.id = s.deck_id
+		const { rows: subdecks } = await client.query(`
+			select s.id from subdecks s join decks d on d.id = s.deck_id
 			where d.id = $2 and d.user_id = $1 order by s.position for update`,
 			[userId, deckId]);
-		if (!stages.some(s => s.id === targetStageId)) throw new Error("Unauthorized");
+		if (!subdecks.some(s => s.id === targetSubdeckId)) throw new Error("Unauthorized");
 		const { rows: cards } = await client.query(
-			"select id, stage_id from cards where deck_id = $1 order by position", [deckId]);
+			"select id, subdeck_id from cards where deck_id = $1 order by position", [deckId]);
 		const deckCardIds = new Set(cards.map(c => c.id));
 		if (!cardIds.every(id => deckCardIds.has(id))) throw new Error("Unauthorized");
 
 		const moving = new Set(cardIds);
-		const byStage = new Map(stages.map(s => [s.id, []]));
+		const bySubdeck = new Map(subdecks.map(s => [s.id, []]));
 		for (const card of cards) {
-			if (!moving.has(card.id)) byStage.get(card.stage_id).push(card.id);
+			if (!moving.has(card.id)) bySubdeck.get(card.subdeck_id).push(card.id);
 		}
-		const target = byStage.get(targetStageId);
+		const target = bySubdeck.get(targetSubdeckId);
 		const index = Math.max(0, Math.min(targetIndex ?? target.length, target.length));
 		target.splice(index, 0, ...cardIds);
 
-		const ids = [], stageIds = [], positions = [];
-		for (const [stageId, list] of byStage) {
-			list.forEach((id, i) => { ids.push(id); stageIds.push(stageId); positions.push(i + 1); });
+		const ids = [], subdeckIds = [], positions = [];
+		for (const [subdeckId, list] of bySubdeck) {
+			list.forEach((id, i) => { ids.push(id); subdeckIds.push(subdeckId); positions.push(i + 1); });
 		}
 		await client.query(`
-			update cards c set stage_id = u.stage_id, position = u.position
-			from unnest($1::uuid[], $2::uuid[], $3::smallint[]) u(id, stage_id, position)
-			where c.id = u.id`, [ids, stageIds, positions]);
+			update cards c set subdeck_id = u.subdeck_id, position = u.position
+			from unnest($1::uuid[], $2::uuid[], $3::smallint[]) u(id, subdeck_id, position)
+			where c.id = u.id`, [ids, subdeckIds, positions]);
 		await client.query("commit");
 	} catch (err) {
 		await client.query("rollback");
@@ -446,31 +446,31 @@ const getNames = async userId => {
 	return rows;
 }
 
-// the stage cards sent to a deck land in: the one named, when it is that
+// the subdeck cards sent to a deck land in: the one named, when it is that
 // deck's, else its last. Locked, so two arrivals cannot take the same places.
-const landingStage = async (client, userId, deckId, stageId) => {
-	const { rows: [stage] } = await client.query(`
-		select s.id, coalesce((select max(position) from cards where stage_id = s.id), 0) last
-		from stages s join decks d on d.id = s.deck_id
+const landingSubdeck = async (client, userId, deckId, subdeckId) => {
+	const { rows: [subdeck] } = await client.query(`
+		select s.id, coalesce((select max(position) from cards where subdeck_id = s.id), 0) last
+		from subdecks s join decks d on d.id = s.deck_id
 		where d.user_id = $1 and s.deck_id = $2
 		order by (s.id = $3::uuid) desc nulls last, s.position desc limit 1
-		for update of s`, [userId, deckId, stageId]);
-	if (!stage) throw new Error("Unauthorized");
-	return stage;
+		for update of s`, [userId, deckId, subdeckId]);
+	if (!subdeck) throw new Error("Unauthorized");
+	return subdeck;
 }
 
 // the cards among `cardIds` that are in this deck of the user's, in deck order
 const cardsOfDeck = async (client, userId, deckId, cardIds) => {
 	const { rows } = await client.query(`
 		select c.id, c.front, c.back, c.card_type
-		from cards c join decks d on d.id = c.deck_id join stages s on s.id = c.stage_id
+		from cards c join decks d on d.id = c.deck_id join subdecks s on s.id = c.subdeck_id
 		where d.user_id = $1 and c.deck_id = $2 and c.id = any($3::uuid[])
 		order by s.position, c.position`, [userId, deckId, cardIds]);
 	if (rows.length !== new Set(cardIds).size) throw new Error("Unauthorized");
 	return rows;
 }
 
-// Cards leave one deck for another, to the end of its last chapter, in the
+// Cards leave one deck for another, to the end of its last subdeck, in the
 // order they stood in. They are the same cards — schedule and review history
 // go with them — so the deck they left closes ranks behind them, and stops
 // listing any of them among its sample cards.
@@ -480,15 +480,15 @@ const moveCardsToDeck = async (userId, deckId, cardIds, targetDeckId) => {
 	try {
 		await client.query("begin");
 		const cards = await cardsOfDeck(client, userId, deckId, cardIds);
-		const stage = await landingStage(client, userId, targetDeckId, null);
+		const subdeck = await landingSubdeck(client, userId, targetDeckId, null);
 		const ids = cards.map(card => card.id);
 		await client.query(`
-			update cards c set deck_id = $1, stage_id = $2, position = $3 + u.n
+			update cards c set deck_id = $1, subdeck_id = $2, position = $3 + u.n
 			from unnest($4::uuid[]) with ordinality u(id, n)
-			where c.id = u.id`, [targetDeckId, stage.id, stage.last, ids]);
+			where c.id = u.id`, [targetDeckId, subdeck.id, subdeck.last, ids]);
 		await client.query(`
 			update cards c set position = r.position
-			from (select id, row_number() over (partition by stage_id order by position) position
+			from (select id, row_number() over (partition by subdeck_id order by position) position
 				from cards where deck_id = $1) r
 			where c.id = r.id and c.position <> r.position`, [deckId]);
 		await client.query(`
@@ -506,19 +506,19 @@ const moveCardsToDeck = async (userId, deckId, cardIds, targetDeckId) => {
 }
 
 // Copies of cards, as new cards: the content and the type, none of the
-// progress. They go to the end of the named chapter of the target deck, or
+// progress. They go to the end of the named subdeck of the target deck, or
 // of its last one, in the order the originals stand in.
-const copyCards = async (userId, deckId, cardIds, targetDeckId, targetStageId, FSRSValues) => {
+const copyCards = async (userId, deckId, cardIds, targetDeckId, targetSubdeckId, FSRSValues) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
 		const cards = await cardsOfDeck(client, userId, deckId, cardIds);
-		const stage = await landingStage(client, userId, targetDeckId, targetStageId);
+		const subdeck = await landingSubdeck(client, userId, targetDeckId, targetSubdeckId);
 		for (const [index, card] of cards.entries()) {
 			await client.query(`insert into cards(
-					deck_id, stage_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
+					deck_id, subdeck_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
 				) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
-				[targetDeckId, stage.id, stage.last + index + 1, JSON.stringify(card.front), card.back == null ? null : JSON.stringify(card.back),
+				[targetDeckId, subdeck.id, subdeck.last + index + 1, JSON.stringify(card.front), card.back == null ? null : JSON.stringify(card.back),
 					card.card_type, ...scheduleValues(card.card_type, FSRSValues)]);
 		}
 		await client.query("commit");
@@ -530,13 +530,13 @@ const copyCards = async (userId, deckId, cardIds, targetDeckId, targetStageId, F
 	}
 }
 
-// Chapters on or off for one deck. Nothing moves: the deck's stages stay as
+// Subdecks on or off for one deck. Nothing moves: the deck's subdecks stay as
 // they are, so switching back on finds the grouping where it was left. A deck
-// switched on that has only ever had its birth stage simply shows that one
+// switched on that has only ever had its birth subdeck simply shows that one
 // until the user makes another.
-const updateChapters = async (userId, deckId, value) => {
+const updateUsesSubdecks = async (userId, deckId, value) => {
 	const { rowCount } = await pool.query(
-		"update decks set chapters = $3 where id = $2 and user_id = $1",
+		"update decks set uses_subdecks = $3 where id = $2 and user_id = $1",
 		[userId, deckId, value]);
 
 	return rowCount === 1;
@@ -551,23 +551,23 @@ const updateProgressionDepth = async (userId, deckId, depth) => {
 		"update decks set progression_depth = $3 where id = $2 and user_id = $1",
 		[userId, deckId, depth]);
 	if (rowCount === 1) {
-		await pool.query(`update "user" set "stageProgressionMode" = 'per-deck' where id = $1`, [userId]);
+		await pool.query(`update "user" set "subdeckProgressionMode" = 'per-deck' where id = $1`, [userId]);
 	}
 
 	return rowCount === 1;
 }
 
-const getStageProgressionMode = async userId => {
+const getSubdeckProgressionMode = async userId => {
 	const { rows } = await pool.query(
-		'select "stageProgressionMode" mode from "user" where id = $1', [userId]);
+		'select "subdeckProgressionMode" mode from "user" where id = $1', [userId]);
 
 	return rows[0]?.mode;
 }
 
 // 'all'/'none' are bulk writes over every deck and instance the user studies;
 // 'per-deck' just hands control back to the decks' own flags as they stand
-const setStageProgressionMode = async (userId, mode) => {
-	await pool.query('update "user" set "stageProgressionMode" = $2 where id = $1', [userId, mode]);
+const setSubdeckProgressionMode = async (userId, mode) => {
+	await pool.query('update "user" set "subdeckProgressionMode" = $2 where id = $1', [userId, mode]);
 	if (mode === "per-deck") return;
 	// every level, or none
 	const depth = mode === "all" ? null : 0;
@@ -582,4 +582,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, getNames, moveCardsToDeck, copyCards, updateChapters, updateProgressionDepth, getStageProgressionMode, setStageProgressionMode }
+export { BOUNDS, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateUsesSubdecks, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }

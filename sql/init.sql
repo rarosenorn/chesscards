@@ -26,10 +26,10 @@ create table "user" (
 	-- position it opens on; with this, of every move it is stepped to as well.
 	"highlightEveryMove" boolean default false not null,
 	"animationDuration" integer default 150 not null,
-	-- what the profile's stage-progression control shows: 'all'/'none' were
+	-- what the profile's subdeck-progression control shows: 'all'/'none' were
 	-- bulk-applied to every deck; touching one deck's own toggle puts this
 	-- back to 'per-deck' (decks keep their own flags either way)
-	"stageProgressionMode" text default 'all' not null check ("stageProgressionMode" in ('per-deck', 'all', 'none')),
+	"subdeckProgressionMode" text default 'all' not null check ("subdeckProgressionMode" in ('per-deck', 'all', 'none')),
 	-- the hour a new study day begins ("next day starts at", Anki's 4am): a
 	-- card scheduled a day or more out waits for this boundary rather than
 	-- for the clock time it was graded at, so studying past midnight is still
@@ -95,17 +95,17 @@ create table decks (
 	-- the deck's place in My flashcards, 1..n per user; the user drags to
 	-- reorder, and a new deck joins at the end
 	position integer not null default 0,
-	-- Whether the deck is organised into chapters at all. Off (the default) it
-	-- is one flat list: the chapter picker, the headers and the "2.17" order
-	-- numbering all go, and the deck's single stage is an implementation
-	-- detail nothing shows. The stages survive being switched off, so turning
-	-- chapters back on restores the grouping instead of rebuilding it.
-	chapters boolean not null default false,
-	-- How many levels down new cards are introduced stage by stage (all seen
+	-- Whether the deck is organised into subdecks at all. Off (the default) it
+	-- is one flat list: the subdeck picker, the headers and the "2.17" order
+	-- numbering all go, and the deck's single subdeck is an implementation
+	-- detail nothing shows. The subdecks survive being switched off, so turning
+	-- subdecks back on restores the grouping instead of rebuilding it.
+	uses_subdecks boolean not null default false,
+	-- How many levels down new cards are introduced subdeck by subdeck (all seen
 	-- + most graduated unlocks the next): 0 = none, every card is open from
-	-- the start, Anki style; 1 = the top-level stages in order, everything
+	-- the start, Anki style; 1 = the top-level subdecks in order, everything
 	-- inside one mixed; 2 = theirs in order as well; null = every level there
-	-- is. Only bites while chapters is on — a deck with no chapters has
+	-- is. Only bites while subdecks is on — a deck with no subdecks has
 	-- nothing to gate.
 	progression_depth smallint check (progression_depth >= 0),
 	-- the deck's own listing (its Deck tab): an upload request starts from
@@ -120,18 +120,18 @@ create table decks (
 	unique(user_id, name)
 );
 
--- Every card belongs to a stage and every deck has at least one; a deck that
--- wants no progression is simply a deck of one stage. Every stage is named:
+-- Every card belongs to a subdeck and every deck has at least one; a deck that
+-- wants no progression is simply a deck of one subdeck. Every subdeck is named:
 -- the Cards table shows the name alone, and the order is read off the rows.
--- The stages of a deck form a tree (the interface's subdecks): parent_id is
--- the stage one sits inside, null at the deck's top level. A stage holds
--- either cards or stages, never both, so the cards all sit at the leaves.
--- Positions (stage among its siblings, card in stage) are kept dense 1..n by
+-- The subdecks of a deck form a tree (the interface's subdecks): parent_id is
+-- the subdeck one sits inside, null at the deck's top level. A subdeck holds
+-- either cards or subdecks, never both, so the cards all sit at the leaves.
+-- Positions (subdeck among its siblings, card in subdeck) are kept dense 1..n by
 -- the server ops that move things.
-create table stages (
+create table subdecks (
 	id uuid primary key default gen_random_uuid(),
 	deck_id uuid references decks(id) on delete cascade not null,
-	parent_id uuid references stages(id) on delete cascade,
+	parent_id uuid references subdecks(id) on delete cascade,
 	name text not null,
 	position smallint not null
 );
@@ -143,8 +143,8 @@ create table stages (
 create table cards (
 	id uuid primary key default gen_random_uuid(),
 	deck_id uuid references decks(id) on delete cascade not null,
-	-- no cascade: deleting a stage first moves its cards elsewhere
-	stage_id uuid references stages(id) not null,
+	-- no cascade: deleting a subdeck first moves its cards elsewhere
+	subdeck_id uuid references subdecks(id) not null,
 	position smallint not null,
 	front jsonb not null,
 	back jsonb,
@@ -172,20 +172,20 @@ create table marketplace_decks (
 	theme deck_theme not null,
 	image bytea not null,
 	image_type text not null,
-	-- the author's chapter choice, copied from the source deck at approval: a
-	-- deck published without chapters reads as one list for everyone who takes it
-	chapters boolean not null default false,
+	-- the author's subdeck choice, copied from the source deck at approval: a
+	-- deck published without subdecks reads as one list for everyone who takes it
+	uses_subdecks boolean not null default false,
 	-- the author's progression depth (as decks.progression_depth), which
 	-- each copy of the deck starts at
 	progression_depth smallint check (progression_depth >= 0)
 );
 
--- the deck's stage structure, tree and all, copied from the source deck at
+-- the deck's subdeck structure, tree and all, copied from the source deck at
 -- upload approval
-create table marketplace_stages (
+create table marketplace_subdecks (
 	id uuid primary key default gen_random_uuid(),
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
-	parent_id uuid references marketplace_stages(id) on delete cascade,
+	parent_id uuid references marketplace_subdecks(id) on delete cascade,
 	name text not null,
 	position smallint not null
 );
@@ -193,7 +193,7 @@ create table marketplace_stages (
 create table marketplace_cards (
 	id uuid default gen_random_uuid() primary key,
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
-	stage_id uuid references marketplace_stages(id) not null,
+	subdeck_id uuid references marketplace_subdecks(id) not null,
 	position smallint not null,
 	front jsonb not null,
 	back jsonb,
@@ -208,7 +208,7 @@ create table marketplace_deck_instances (
 	marketplace_deck_id uuid references marketplace_decks(id) not null,
 	-- its place among the user's marketplace decks, as decks.position
 	position integer not null default 0,
-	-- each studier follows the deck's stages as deep as they choose (as
+	-- each studier follows the deck's subdecks as deep as they choose (as
 	-- decks.progression_depth); it starts at the author's own depth
 	progression_depth smallint check (progression_depth >= 0)
 );

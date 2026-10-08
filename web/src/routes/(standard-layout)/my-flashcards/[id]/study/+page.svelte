@@ -6,7 +6,7 @@
 	import { boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
-	import { isSeen, stageOrder, cardsUnder, gatingDepth, unlockedStageIds, firstLockedStage, stageProgress, stageLabel } from "$lib/stages.js"
+	import { isSeen, subdeckOrder, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress, subdeckLabel } from "$lib/subdecks.js"
 	import { crossesDay, isDueAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
@@ -88,7 +88,7 @@
 	// --- the queue ---
 	// Due reviews come first, shuffled once per visit (the keys live for the
 	// component, so grading doesn't reshuffle what's left); new and learning
-	// cards follow in the deck's stage/card order — a failed card's earlier
+	// cards follow in the deck's subdeck/card order — a failed card's earlier
 	// position brings it back before the news that come after it. A tactic
 	// has no FSRS state: unseen it queues as new, seen-but-unfinished it
 	// queues with the reviews.
@@ -101,18 +101,18 @@
 		? isSeen(card)
 		: card.state === 2 || card.state === 3;
 
-	let stageIndex = $derived(stageOrder(deck.stages));
+	let subdeckIndex = $derived(subdeckOrder(deck.subdecks));
 	const byDeckOrder = (a, b) =>
-		stageIndex.get(a.stage_id) - stageIndex.get(b.stage_id) || a.position - b.position;
+		subdeckIndex.get(a.subdeck_id) - subdeckIndex.get(b.subdeck_id) || a.position - b.position;
 
 	// Progression gates only the introduction of unseen cards: anything
-	// already met keeps its reviews coming even if its stage has fallen
-	// back behind the bar (cards moved, stages regrouped). How many levels
-	// of the deck's stages it runs through is the deck's own setting, and
+	// already met keeps its reviews coming even if its subdeck has fallen
+	// back behind the bar (cards moved, subdecks regrouped). How many levels
+	// of the deck's subdecks it runs through is the deck's own setting, and
 	// none at all where it gates nothing (gatingDepth).
 	let depth = $derived(gatingDepth(deck));
-	let unlockedStages = $derived(unlockedStageIds(deck.stages, deck.cards, depth));
-	const gated = card => !isSeen(card) && !unlockedStages.has(card.stage_id);
+	let unlockedSubdecks = $derived(unlockedSubdeckIds(deck.subdecks, deck.cards, depth));
+	const gated = card => !isSeen(card) && !unlockedSubdecks.has(card.subdeck_id);
 
 	// The clock the queue is measured against. It ticks only while nothing is
 	// on screen (see below), so a card that comes due mid-review can never
@@ -296,7 +296,7 @@
 			reps: correct ? rung + 1 : Math.max(0, rung - 1),
 			finished_at: finished ? now.toISOString() : null,
 			// the tactic's "seen" mark: with no FSRS state, last_review is what
-			// tells an attempted card from an untouched one (stage progression
+			// tells an attempted card from an untouched one (subdeck progression
 			// reads it)
 			last_review: now.toISOString()
 		};
@@ -364,7 +364,7 @@
 
 	// earliest upcoming due among the deck's unfinished, ungated cards (null
 	// when empty or all finished); only meaningful when no card is currently
-	// due — a locked stage's cards have no date to promise, its unlock note
+	// due — a locked subdeck's cards have no date to promise, its unlock note
 	// below speaks for them
 	let nextDue = $derived.by(() => {
 		const unfinished = deck.cards.filter(card => !card.finished_at && !gated(card));
@@ -375,16 +375,16 @@
 			: null;
 	});
 
-	// when the queue runs dry against a locked stage, say what unlocks it:
-	// the first locked stage and how far the one before it, with everything
+	// when the queue runs dry against a locked subdeck, say what unlocks it:
+	// the first locked subdeck and how far the one before it, with everything
 	// inside it, has to go
 	let lockedNote = $derived.by(() => {
-		const first = firstLockedStage(deck.stages, deck.cards, depth);
+		const first = firstLockedSubdeck(deck.subdecks, deck.cards, depth);
 		if (!first) return null;
 		return {
-			locked: stageLabel(first.locked),
-			before: stageLabel(first.before),
-			progress: stageProgress(cardsUnder(deck.stages, deck.cards, first.before.id))
+			locked: subdeckLabel(first.locked),
+			before: subdeckLabel(first.before),
+			progress: subdeckProgress(cardsUnder(deck.subdecks, deck.cards, first.before.id))
 		};
 	});
 

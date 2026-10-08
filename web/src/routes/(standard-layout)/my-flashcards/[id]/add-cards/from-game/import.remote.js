@@ -6,10 +6,10 @@ import * as gameImport from "$lib/server/game-import.js"
 
 // the game goes into the line; the page asks after it with importStatus
 export const startImport =
-	command("unchecked", async ({ deckId, stageId, pgn, color, kinds, url }) => {
+	command("unchecked", async ({ deckId, subdeckId, pgn, color, kinds, url }) => {
 		const { locals } = getRequestEvent();
 		try {
-			return { jobId: await gameImport.start(locals.userId, { deckId, stageId, pgn, color, kinds, url }) };
+			return { jobId: await gameImport.start(locals.userId, { deckId, subdeckId, pgn, color, kinds, url }) };
 		} catch (err) {
 			error(400, err.message);
 		}

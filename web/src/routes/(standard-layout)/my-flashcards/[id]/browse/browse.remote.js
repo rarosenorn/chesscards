@@ -30,7 +30,7 @@ export const deleteCards =
 		}
 	})
 
-// The stage ops renumber positions across the deck, so each returns the
+// The subdeck ops renumber positions across the deck, so each returns the
 // fresh deck for the client to assign into the shared context — mirroring
 // the renumbering locally would just re-implement the server.
 const freshDeck = async (locals, deckId) => {
@@ -39,41 +39,41 @@ const freshDeck = async (locals, deckId) => {
 	return deck;
 }
 
-// A chapter always has a name: the callers only offer to create or rename
+// A subdeck always has a name: the callers only offer to create or rename
 // one through a field, and a blank one is a cancelled edit, not an erasure.
-export const createStage =
+export const createSubdeck =
 	command("unchecked", async ({ deckId, name }) => {
 		const { locals } = getRequestEvent();
 		const trimmed = name?.trim();
-		if (!trimmed) error(400, "A chapter needs a name");
-		if (!await decks.createStage(locals.userId, deckId, trimmed)) {
+		if (!trimmed) error(400, "A subdeck needs a name");
+		if (!await decks.createSubdeck(locals.userId, deckId, trimmed)) {
 			error(403, "Unauthorized");
 		}
 		return freshDeck(locals, deckId);
 	})
 
-export const renameStage =
-	command("unchecked", async ({ deckId, stageId, name }) => {
+export const renameSubdeck =
+	command("unchecked", async ({ deckId, subdeckId, name }) => {
 		const { locals } = getRequestEvent();
 		const trimmed = name?.trim();
-		if (!trimmed) error(400, "A chapter needs a name");
-		if (!await decks.renameStage(locals.userId, stageId, trimmed)) {
+		if (!trimmed) error(400, "A subdeck needs a name");
+		if (!await decks.renameSubdeck(locals.userId, subdeckId, trimmed)) {
 			error(403, "Unauthorized");
 		}
 		return freshDeck(locals, deckId);
 	})
 
-export const deleteStage =
-	command("unchecked", async ({ deckId, stageId }) => {
+export const deleteSubdeck =
+	command("unchecked", async ({ deckId, subdeckId }) => {
 		const { locals } = getRequestEvent();
-		await decks.deleteStage(locals.userId, stageId);
+		await decks.deleteSubdeck(locals.userId, subdeckId);
 		return freshDeck(locals, deckId);
 	})
 
 export const moveCards =
-	command("unchecked", async ({ deckId, cardIds, stageId, index }) => {
+	command("unchecked", async ({ deckId, cardIds, subdeckId, index }) => {
 		const { locals } = getRequestEvent();
-		await decks.moveCards(locals.userId, deckId, cardIds, stageId, index ?? null);
+		await decks.moveCards(locals.userId, deckId, cardIds, subdeckId, index ?? null);
 		return freshDeck(locals, deckId);
 	})
 
@@ -101,11 +101,11 @@ export const moveCardsToDeck =
 	})
 
 export const copyCards =
-	command("unchecked", async ({ deckId, cardIds, targetDeckId, stageId }) => {
+	command("unchecked", async ({ deckId, cardIds, targetDeckId, subdeckId }) => {
 		const { locals } = getRequestEvent();
-		checkIds(deckId, cardIds, targetDeckId, stageId ?? []);
+		checkIds(deckId, cardIds, targetDeckId, subdeckId ?? []);
 		try {
-			await decks.copyCards(locals.userId, deckId, cardIds, targetDeckId, stageId ?? null, Object.values(createEmptyCard()));
+			await decks.copyCards(locals.userId, deckId, cardIds, targetDeckId, subdeckId ?? null, Object.values(createEmptyCard()));
 		} catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
 		return freshDeck(locals, deckId);
 	})

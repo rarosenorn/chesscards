@@ -17,9 +17,9 @@
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
 	import { canonicalSideJson } from "$lib/card-utils.js"
-	import { gatingDepth, unlockedStageIds, stageName } from "$lib/stages.js"
+	import { gatingDepth, unlockedSubdeckIds, subdeckName } from "$lib/subdecks.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
-	import { updateCardContent, updateCardType, deleteCards, createStage, renameStage, deleteStage, moveCards, listDecks, moveCardsToDeck, copyCards } from "./browse.remote.js"
+	import { updateCardContent, updateCardType, deleteCards, createSubdeck, renameSubdeck, deleteSubdeck, moveCards, listDecks, moveCardsToDeck, copyCards } from "./browse.remote.js"
 
 	let deck = getContext("deck");
 	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
@@ -45,7 +45,7 @@
 	// a draft written before sorting existed carries neither field
 	draft.sortColumn ??= "order";
 	draft.sortDescending ??= false;
-	// collapsed stage ids, kept across tab visits like the sort
+	// collapsed subdeck ids, kept across tab visits like the sort
 	draft.collapsed ??= {};
 
 	// returning to the tab reselects where it was left — the card being
@@ -105,36 +105,36 @@
 				: deck.cards
 	);
 
-	// --- stages ---
-	// The deck's stages carry the order: the Order column reads
-	// stage.position-in-stage ("2.17"), and with the table sorted by Order
-	// and unfiltered, the rows sit grouped under collapsible stage headers.
-	let stagesSorted = $derived([...deck.stages].sort((a, b) => a.position - b.position));
-	let stagePositions = $derived(new Map(deck.stages.map(stage => [stage.id, stage.position])));
-	let unlockedStages = $derived(unlockedStageIds(deck.stages, deck.cards, gatingDepth(deck)));
+	// --- subdecks ---
+	// The deck's subdecks carry the order: the Order column reads
+	// subdeck.position-in-subdeck ("2.17"), and with the table sorted by Order
+	// and unfiltered, the rows sit grouped under collapsible subdeck headers.
+	let subdecksSorted = $derived([...deck.subdecks].sort((a, b) => a.position - b.position));
+	let subdeckPositions = $derived(new Map(deck.subdecks.map(subdeck => [subdeck.id, subdeck.position])));
+	let unlockedSubdecks = $derived(unlockedSubdeckIds(deck.subdecks, deck.cards, gatingDepth(deck)));
 
-	let stageCards = $derived.by(() => {
-		const map = new Map(stagesSorted.map(stage => [stage.id, []]));
+	let subdeckCards = $derived.by(() => {
+		const map = new Map(subdecksSorted.map(subdeck => [subdeck.id, []]));
 		for (const card of [...deck.cards].sort((a, b) => a.position - b.position)) {
-			map.get(card.stage_id)?.push(card);
+			map.get(card.subdeck_id)?.push(card);
 		}
 		return map;
 	});
 	// "2.17" per card — from the sorted index, not the stored position, so a
 	// gap the server has not renumbered yet cannot show through. Without
-	// chapters there is no first half to write: the deck is one run of
-	// numbers, counted across the stages it still has in the order they sit.
+	// subdecks there is no first half to write: the deck is one run of
+	// numbers, counted across the subdecks it still has in the order they sit.
 	let orderLabels = $derived.by(() => {
 		const labels = new Map();
 		let flat = 0;
-		for (const stage of stagesSorted) {
-			stageCards.get(stage.id).forEach((card, index) =>
-				labels.set(card.id, deck.chapters ? `${stage.position}.${index + 1}` : `${++flat}`));
+		for (const subdeck of subdecksSorted) {
+			subdeckCards.get(subdeck.id).forEach((card, index) =>
+				labels.set(card.id, deck.usesSubdecks ? `${subdeck.position}.${index + 1}` : `${++flat}`));
 		}
 		return labels;
 	});
 
-	// Stage ops renumber across the deck, so they answer with the fresh deck;
+	// Subdeck ops renumber across the deck, so they answer with the fresh deck;
 	// land it in the shared context and re-find the selection among the new
 	// card objects.
 	const applyFresh = fresh => {
@@ -149,7 +149,7 @@
 	// column runs: those rows show a dash, and a blank belongs at the end rather
 	// than crowding whichever end is being read.
 	const sortValues = {
-		order: card => stagePositions.get(card.stage_id) * 100000 + card.position,
+		order: card => subdeckPositions.get(card.subdeck_id) * 100000 + card.position,
 		front: card => getFrontIndicator(card.front)?.toLowerCase() ?? null,
 		type: card => (card.card_type === "tactic" ? 1 : 0),
 		// the due date itself, so ascending is soonest-due first — the order
@@ -168,17 +168,17 @@
 		return (x < y ? -1 : 1) * (descending ? -1 : 1);
 	}
 
-	// The stage headers only frame the table when it shows the deck's own
+	// The subdeck headers only frame the table when it shows the deck's own
 	// order, whole: a search result or another column's sort is a flat list.
 	let groupedRows = $derived.by(() => {
 		if (draft.sortColumn !== "order" || searchFilter || dupFilter) return null;
-		const stages = draft.sortDescending ? [...stagesSorted].reverse() : stagesSorted;
-		return stages.map(stage => ({
-			stage,
-			cards: draft.sortDescending ? [...stageCards.get(stage.id)].reverse() : stageCards.get(stage.id),
-			// a chapter collapsed before chapters were switched off would take
+		const subdecks = draft.sortDescending ? [...subdecksSorted].reverse() : subdecksSorted;
+		return subdecks.map(subdeck => ({
+			subdeck,
+			cards: draft.sortDescending ? [...subdeckCards.get(subdeck.id)].reverse() : subdeckCards.get(subdeck.id),
+			// a subdeck collapsed before subdecks were switched off would take
 			// its cards out of a table that no longer has a header to open it
-			collapsed: deck.chapters && !!draft.collapsed[stage.id]
+			collapsed: deck.usesSubdecks && !!draft.collapsed[subdeck.id]
 		}));
 	});
 
@@ -193,7 +193,7 @@
 		const placeholder = { id: "__placeholder__", placeholder: true };
 		return groupedRows.map(group => {
 			let cards = group.cards.filter(c => !drag.cardIds.includes(c.id));
-			if (group.stage.id === drag.over.stageId) {
+			if (group.subdeck.id === drag.over.subdeckId) {
 				cards = [...cards.slice(0, drag.over.index), placeholder, ...cards.slice(drag.over.index)];
 			}
 			return { ...group, cards };
@@ -202,7 +202,7 @@
 
 	// A column is always sorted — Order ascending is the deck's own order, the
 	// table's default. Sort is stable, so that order still decides ties.
-	// Grouped, this is the visible rows: a collapsed stage's cards drop out of
+	// Grouped, this is the visible rows: a collapsed subdeck's cards drop out of
 	// arrow navigation and range selection with their rows.
 	let filteredCards = $derived(
 		groupedRows
@@ -328,7 +328,7 @@
 	// own row) out of the table — a ghost chip rides the cursor, a placeholder
 	// row holds the slot the cards would drop into, and the other rows slide
 	// around it live. A plain click on it opens the order for typing ("3.3" —
-	// stage, then place in stage). A drop is a move in the deck's own order,
+	// subdeck, then place in subdeck). A drop is a move in the deck's own order,
 	// so the table has to be showing that order, whole and the way it runs:
 	// the grouped view (Order, unfiltered), ascending, where the slots read
 	// the way the numbers do. The grip goes by the same rule — a table that
@@ -387,8 +387,8 @@
 			// there (past the last row, in the padding beside them) is still
 			// a drop, taken against the nearest row rather than a departure.
 			if (!tableContainer?.contains(e.target)) {
-				setDragOver(reorderDrag.initial.stageId, reorderDrag.initial.index);
-			} else if (!e.target?.closest?.("tr[data-card-row], tr.stage-row")) {
+				setDragOver(reorderDrag.initial.subdeckId, reorderDrag.initial.index);
+			} else if (!e.target?.closest?.("tr[data-card-row], tr.subdeck-row")) {
 				reslotUnderCursor();
 			}
 			return;
@@ -396,21 +396,21 @@
 		if (Math.abs(e.clientX - reorderDrag.startX) + Math.abs(e.clientY - reorderDrag.startY) > 5) {
 			// the placeholder opens at the dragged card's own slot, so the
 			// table holds still until the cursor actually moves somewhere
-			const stageList = stageCards.get(reorderDrag.card.stage_id);
-			const index = stageList
-				.slice(0, stageList.findIndex(c => c.id === reorderDrag.card.id))
+			const subdeckList = subdeckCards.get(reorderDrag.card.subdeck_id);
+			const index = subdeckList
+				.slice(0, subdeckList.findIndex(c => c.id === reorderDrag.card.id))
 				.filter(c => !reorderDrag.cardIds.includes(c.id)).length;
-			reorderDrag.initial = { stageId: reorderDrag.card.stage_id, index };
+			reorderDrag.initial = { subdeckId: reorderDrag.card.subdeck_id, index };
 			reorderDrag.over = { ...reorderDrag.initial };
 			reorderDrag.started = true;
 			autoScrollFrame ??= requestAnimationFrame(autoScrollStep);
 		}
 	}
 
-	const setDragOver = (stageId, index) => {
+	const setDragOver = (subdeckId, index) => {
 		const over = reorderDrag.over;
-		if (over && over.stageId === stageId && over.index === index) return;
-		reorderDrag.over = { stageId, index };
+		if (over && over.subdeckId === subdeckId && over.index === index) return;
+		reorderDrag.over = { subdeckId, index };
 	}
 
 	const slotForRow = (rowEl, card, clientY) => {
@@ -420,8 +420,8 @@
 		const transform = new DOMMatrixReadOnly(getComputedStyle(rowEl).transform);
 		const top = rect.top - transform.m42;
 		const before = clientY < top + rect.height / 2;
-		const list = stageCards.get(card.stage_id).filter(c => !reorderDrag.cardIds.includes(c.id));
-		setDragOver(card.stage_id, list.findIndex(c => c.id === card.id) + (before ? 0 : 1));
+		const list = subdeckCards.get(card.subdeck_id).filter(c => !reorderDrag.cardIds.includes(c.id));
+		setDragOver(card.subdeck_id, list.findIndex(c => c.id === card.id) + (before ? 0 : 1));
 	}
 
 	const handleRowDragOver = (e, card) => {
@@ -445,7 +445,7 @@
 
 	// Held near the top or bottom edge, the list scrolls itself: without this
 	// a card cannot be dragged past the rows the window happens to show, and
-	// a long chapter can only be reordered by typing the numbers. Speed rises
+	// a long subdeck can only be reordered by typing the numbers. Speed rises
 	// with how far into the edge band the cursor is.
 	const EDGE_BAND = 48;
 	const EDGE_SPEED = 16;
@@ -473,9 +473,9 @@
 
 
 
-	const handleStageDragOver = stage => {
+	const handleSubdeckDragOver = subdeck => {
 		if (!reorderDrag?.started) return;
-		setDragOver(stage.id, 0);
+		setDragOver(subdeck.id, 0);
 	}
 
 	const finishReorderDrag = async () => {
@@ -488,7 +488,7 @@
 		}
 		// dropped back where it was lifted from: nothing to commit
 		const unmoved = !drag.over
-			|| (drag.over.stageId === drag.initial.stageId && drag.over.index === drag.initial.index);
+			|| (drag.over.subdeckId === drag.initial.subdeckId && drag.over.index === drag.initial.index);
 		if (unmoved) {
 			reorderDrag = null;
 			return;
@@ -502,36 +502,36 @@
 		// where every card stood before the optimistic move, so a refused
 		// request can put them all back: the table snapping to the old order
 		// is the only honest answer to a move the server did not make
-		const before = deck.cards.map(card => ({ card, stage_id: card.stage_id, position: card.position }));
+		const before = deck.cards.map(card => ({ card, subdeck_id: card.subdeck_id, position: card.position }));
 		applyLocalMove(drag);
 		reorderDrag = null;
 		try {
 			applyFresh(await moveCards({
-				deckId: deck.id, cardIds: drag.cardIds, stageId: drag.over.stageId, index: drag.over.index
+				deckId: deck.id, cardIds: drag.cardIds, subdeckId: drag.over.subdeckId, index: drag.over.index
 			}));
 		} catch (err) {
 			for (const was of before) {
-				was.card.stage_id = was.stage_id;
+				was.card.subdeck_id = was.subdeck_id;
 				was.card.position = was.position;
 			}
 			throw err;
 		}
 	}
 
-	// the preview's order, written into the cards themselves: each stage
+	// the preview's order, written into the cards themselves: each subdeck
 	// renumbered 1..n the way the server will, so the table settles into the
 	// dropped order without waiting to be told
 	const applyLocalMove = drag => {
 		const carried = deck.cards.filter(card => drag.cardIds.includes(card.id));
-		for (const stage of deck.stages) {
+		for (const subdeck of deck.subdecks) {
 			let cards = deck.cards
-				.filter(card => card.stage_id === stage.id && !drag.cardIds.includes(card.id))
+				.filter(card => card.subdeck_id === subdeck.id && !drag.cardIds.includes(card.id))
 				.sort((a, b) => a.position - b.position);
-			if (stage.id === drag.over.stageId) {
+			if (subdeck.id === drag.over.subdeckId) {
 				cards = [...cards.slice(0, drag.over.index), ...carried, ...cards.slice(drag.over.index)];
 			}
 			cards.forEach((card, i) => {
-				card.stage_id = stage.id;
+				card.subdeck_id = subdeck.id;
 				card.position = i + 1;
 			});
 		}
@@ -541,98 +541,98 @@
 		orderEdit = { cardId: card.id, value: orderLabels.get(card.id) };
 	}
 
-	// "3.3" makes the card the third of stage 3, pushing the rest along;
-	// anything unparsable, an unknown stage, or an out-of-range place falls
-	// back to the order as it stands. Without chapters the label is a plain
-	// "17", so that is what the field takes: the deck's stages are still what
-	// the move is expressed in, so the flat place is walked back to the stage
+	// "3.3" makes the card the third of subdeck 3, pushing the rest along;
+	// anything unparsable, an unknown subdeck, or an out-of-range place falls
+	// back to the order as it stands. Without subdecks the label is a plain
+	// "17", so that is what the field takes: the deck's subdecks are still what
+	// the move is expressed in, so the flat place is walked back to the subdeck
 	// it lands in and the index within it.
 	const commitOrderEdit = async () => {
 		const edit = orderEdit;
 		orderEdit = null;
 		if (!edit || edit.value === orderLabels.get(edit.cardId)) return;
-		const target = deck.chapters
-			? chapterPlace(edit.value, edit.cardId)
+		const target = deck.usesSubdecks
+			? subdeckPlace(edit.value, edit.cardId)
 			: flatPlace(edit.value, edit.cardId);
 		if (!target) return;
 		applyFresh(await moveCards({
-			deckId: deck.id, cardIds: [edit.cardId], stageId: target.stageId, index: target.index
+			deckId: deck.id, cardIds: [edit.cardId], subdeckId: target.subdeckId, index: target.index
 		}));
 	}
 
-	const chapterPlace = (value, cardId) => {
+	const subdeckPlace = (value, cardId) => {
 		const match = value.trim().match(/^(\d+)\.(\d+)$/);
 		if (!match) return null;
-		const stage = stagesSorted.find(s => s.position === Number(match[1]));
-		if (!stage) return null;
+		const subdeck = subdecksSorted.find(s => s.position === Number(match[1]));
+		if (!subdeck) return null;
 		const place = Number(match[2]);
-		const others = stageCards.get(stage.id).filter(c => c.id !== cardId);
+		const others = subdeckCards.get(subdeck.id).filter(c => c.id !== cardId);
 		if (place < 1 || place > others.length + 1) return null;
-		return { stageId: stage.id, index: place - 1 };
+		return { subdeckId: subdeck.id, index: place - 1 };
 	}
 
 	// The same move, said flatly: place p means "sit where the deck's p-th
-	// card sits", so the card the flat count lands on names both the stage to
-	// move into and the index within it. Past the end, the last stage's end.
+	// card sits", so the card the flat count lands on names both the subdeck to
+	// move into and the index within it. Past the end, the last subdeck's end.
 	const flatPlace = (value, cardId) => {
 		if (!/^\d+$/.test(value.trim())) return null;
 		const place = Number(value.trim());
-		const others = stagesSorted.flatMap(stage =>
-			stageCards.get(stage.id).filter(c => c.id !== cardId));
+		const others = subdecksSorted.flatMap(subdeck =>
+			subdeckCards.get(subdeck.id).filter(c => c.id !== cardId));
 		if (place < 1 || place > others.length + 1) return null;
 		if (place === others.length + 1) {
-			const last = stagesSorted[stagesSorted.length - 1];
-			return { stageId: last.id, index: stageCards.get(last.id).filter(c => c.id !== cardId).length };
+			const last = subdecksSorted[subdecksSorted.length - 1];
+			return { subdeckId: last.id, index: subdeckCards.get(last.id).filter(c => c.id !== cardId).length };
 		}
 		const target = others[place - 1];
-		const within = stageCards.get(target.stage_id).filter(c => c.id !== cardId);
-		return { stageId: target.stage_id, index: within.findIndex(c => c.id === target.id) };
+		const within = subdeckCards.get(target.subdeck_id).filter(c => c.id !== cardId);
+		return { subdeckId: target.subdeck_id, index: within.findIndex(c => c.id === target.id) };
 	}
 
-	// --- stage management ---
+	// --- subdeck management ---
 	// the header's own context menu: rename inline, delete (its cards join the
-	// neighbouring stage), with new stages appended from the row under the table
-	let stageMenu = $state(null);
-	let stageRename = $state(null);
+	// neighbouring subdeck), with new subdecks appended from the row under the table
+	let subdeckMenu = $state(null);
+	let subdeckRename = $state(null);
 
-	const handleStageContextMenu = (e, stage) => {
+	const handleSubdeckContextMenu = (e, subdeck) => {
 		if (readonly) return;
 		e.preventDefault();
 		e.stopPropagation();
-		stageMenu = { x: e.clientX, y: e.clientY, stage };
+		subdeckMenu = { x: e.clientX, y: e.clientY, subdeck };
 	}
 
-	// A chapter is named at birth: the button opens a field rather than
-	// creating one, so there is never an unnamed chapter to go back and fix.
+	// A subdeck is named at birth: the button opens a field rather than
+	// creating one, so there is never an unnamed subdeck to go back and fix.
 	// Blank is a cancel in both directions — creating and renaming — since
 	// there is no name to fall back to.
-	let stageAdd = $state(null);
+	let subdeckAdd = $state(null);
 
-	const startAddStage = () => { stageAdd = { value: "" } };
+	const startAddSubdeck = () => { subdeckAdd = { value: "" } };
 
-	const commitAddStage = async () => {
-		const add = stageAdd;
-		stageAdd = null;
+	const commitAddSubdeck = async () => {
+		const add = subdeckAdd;
+		subdeckAdd = null;
 		if (!add?.value.trim()) return;
-		applyFresh(await createStage({ deckId: deck.id, name: add.value.trim() }));
+		applyFresh(await createSubdeck({ deckId: deck.id, name: add.value.trim() }));
 	}
 
-	const commitStageRename = async () => {
-		const rename = stageRename;
-		stageRename = null;
+	const commitSubdeckRename = async () => {
+		const rename = subdeckRename;
+		subdeckRename = null;
 		if (!rename?.value.trim()) return;
-		applyFresh(await renameStage({ deckId: deck.id, stageId: rename.stageId, name: rename.value.trim() }));
+		applyFresh(await renameSubdeck({ deckId: deck.id, subdeckId: rename.subdeckId, name: rename.value.trim() }));
 	}
 
-	const removeStage = async stageId =>
-		applyFresh(await deleteStage({ deckId: deck.id, stageId }));
+	const removeSubdeck = async subdeckId =>
+		applyFresh(await deleteSubdeck({ deckId: deck.id, subdeckId }));
 
 	const selectedIds = () => filteredCards.filter(c => multiSelected.has(c.id)).map(c => c.id);
 
-	const moveSelectedToStage = async stageId => {
+	const moveSelectedToSubdeck = async subdeckId => {
 		const cardIds = selectedIds();
 		if (cardIds.length === 0) return;
-		applyFresh(await moveCards({ deckId: deck.id, cardIds, stageId, index: null }));
+		applyFresh(await moveCards({ deckId: deck.id, cardIds, subdeckId, index: null }));
 	}
 
 	// to another deck: the cards themselves go, progress and history with them
@@ -643,12 +643,12 @@
 		applyFresh(await moveCardsToDeck({ deckId: deck.id, cardIds, targetDeckId }));
 	}
 
-	// copies are new cards; `stageId` names a chapter of this deck, and is
+	// copies are new cards; `subdeckId` names a subdeck of this deck, and is
 	// left out when the copies go to a deck as a whole
-	const copySelected = async (targetDeckId, stageId = null) => {
+	const copySelected = async (targetDeckId, subdeckId = null) => {
 		const cardIds = selectedIds();
 		if (cardIds.length === 0) return;
-		applyFresh(await copyCards({ deckId: deck.id, cardIds, targetDeckId, stageId }));
+		applyFresh(await copyCards({ deckId: deck.id, cardIds, targetDeckId, subdeckId }));
 	}
 
 	let cardPane = $state(null);
@@ -670,7 +670,7 @@
 	});
 
 	// { x, y } where the context menu is open, or null. Its lists — the
-	// chapters and decks to move or copy to — open folded, one at a time, and
+	// subdecks and decks to move or copy to — open folded, one at a time, and
 	// fold again with the menu: `openList` names the one showing.
 	let contextMenu = $state(null);
 	let openList = $state(null);
@@ -770,11 +770,11 @@
 <svelte:window
 	onmouseup={() => { dragging = false; finishReorderDrag(); }}
 	onmousemove={handleWindowMouseMove}
-	onmousedown={() => { contextMenu = null; stageMenu = null; commitOrderEdit(); }}
+	onmousedown={() => { contextMenu = null; subdeckMenu = null; commitOrderEdit(); }}
 	onkeydown={e => {
 		if (e.key === "Escape") {
 			contextMenu = null;
-			stageMenu = null;
+			subdeckMenu = null;
 			reorderDrag = null;
 			orderEdit = null;
 		} else if (
@@ -818,8 +818,8 @@
 			</button>
 		{/if}
 		<!-- the lists stay folded away until asked for: a deck with many
-		     chapters used to bury Delete under the whole list. A deck with
-		     chapters off has no chapter to move a card to that it can name -->
+		     subdecks used to bury Delete under the whole list. A deck with
+		     subdecks off has no subdeck to move a card to that it can name -->
 		{#snippet list(key, label, items, pick)}
 			<button
 				class="submenu-toggle"
@@ -844,14 +844,14 @@
 				{/each}
 			{/if}
 		{/snippet}
-		{#if deck.chapters && stagesSorted.length > 1}
-			{@render list("move-chapter", `Move ${cardsNoun} to chapter`, stagesSorted, moveSelectedToStage)}
+		{#if deck.usesSubdecks && subdecksSorted.length > 1}
+			{@render list("move-subdeck", `Move ${cardsNoun} to subdeck`, subdecksSorted, moveSelectedToSubdeck)}
 		{/if}
 		{#if otherDecks.length > 0}
 			{@render list("move-deck", `Move ${cardsNoun} to deck`, otherDecks, moveSelectedToDeck)}
 		{/if}
-		{#if deck.chapters}
-			{@render list("copy-chapter", `Copy ${cardsNoun} to chapter`, stagesSorted, stageId => copySelected(deck.id, stageId))}
+		{#if deck.usesSubdecks}
+			{@render list("copy-subdeck", `Copy ${cardsNoun} to subdeck`, subdecksSorted, subdeckId => copySelected(deck.id, subdeckId))}
 		{/if}
 		<!-- this deck is among them: a copy into it is a duplicate -->
 		{#if deckNames.length > 0}
@@ -869,32 +869,32 @@
 	</div>
 {/if}
 
-{#if stageMenu}
+{#if subdeckMenu}
 	<div
 		class="context-menu"
 		role="menu"
 		tabindex="-1"
-		style="left: {stageMenu.x}px; top: {stageMenu.y}px"
+		style="left: {subdeckMenu.x}px; top: {subdeckMenu.y}px"
 		onmousedown={e => e.stopPropagation()}
 	>
 		<button
 			onclick={() => {
-				stageRename = { stageId: stageMenu.stage.id, value: stageMenu.stage.name };
-				stageMenu = null;
+				subdeckRename = { subdeckId: subdeckMenu.subdeck.id, value: subdeckMenu.subdeck.name };
+				subdeckMenu = null;
 			}}
 		>
-			Rename chapter
+			Rename subdeck
 		</button>
-		{#if stagesSorted.length > 1}
+		{#if subdecksSorted.length > 1}
 			<button
 				class="danger"
 				onclick={() => {
-					const id = stageMenu.stage.id;
-					stageMenu = null;
-					removeStage(id);
+					const id = subdeckMenu.subdeck.id;
+					subdeckMenu = null;
+					removeSubdeck(id);
 				}}
 			>
-				Delete chapter
+				Delete subdeck
 			</button>
 		{/if}
 	</div>
@@ -1054,39 +1054,39 @@
 			{/snippet}
 			<tbody>
 				{#if displayGroups}
-					{#each displayGroups as group (group.stage.id)}
-						<!-- without chapters the groups are still what the rows are
+					{#each displayGroups as group (group.subdeck.id)}
+						<!-- without subdecks the groups are still what the rows are
 						     built from (and what a reorder drops into), but nothing
 						     frames them: the deck reads as one list -->
-						{#if deck.chapters}
+						{#if deck.usesSubdecks}
 						<tr
-							class="stage-row"
-							class:drop-into={reorderDrag?.started && reorderDrag.over?.stageId === group.stage.id && group.collapsed}
-							onmousemove={() => handleStageDragOver(group.stage)}
-							oncontextmenu={e => handleStageContextMenu(e, group.stage)}
+							class="subdeck-row"
+							class:drop-into={reorderDrag?.started && reorderDrag.over?.subdeckId === group.subdeck.id && group.collapsed}
+							onmousemove={() => handleSubdeckDragOver(group.subdeck)}
+							oncontextmenu={e => handleSubdeckContextMenu(e, group.subdeck)}
 						>
 							<td colspan="6">
-								{#if stageRename?.stageId === group.stage.id}
+								{#if subdeckRename?.subdeckId === group.subdeck.id}
 									<!-- svelte-ignore a11y_autofocus -- the input exists because the user just asked to rename -->
 									<input
-										class="stage-rename-input"
+										class="subdeck-rename-input"
 										autofocus
-										placeholder={group.stage.name}
-										bind:value={stageRename.value}
-										onblur={commitStageRename}
+										placeholder={group.subdeck.name}
+										bind:value={subdeckRename.value}
+										onblur={commitSubdeckRename}
 										onmousedown={e => e.stopPropagation()}
 										onkeydown={e => {
-											if (e.key === "Enter") commitStageRename();
-											if (e.key === "Escape") { stageRename = null; e.stopPropagation(); }
+											if (e.key === "Enter") commitSubdeckRename();
+											if (e.key === "Escape") { subdeckRename = null; e.stopPropagation(); }
 											e.stopPropagation();
 										}}
 									/>
 								{:else}
-									<button class="stage-toggle" onmousedown={e => e.stopPropagation()} onclick={() => draft.collapsed[group.stage.id] = !group.collapsed}>
+									<button class="subdeck-toggle" onmousedown={e => e.stopPropagation()} onclick={() => draft.collapsed[group.subdeck.id] = !group.collapsed}>
 										<span class="collapse-arrow" class:collapsed={group.collapsed}></span>
-										<span class="stage-name">{stageName(group.stage)}</span>
-										{#if !unlockedStages.has(group.stage.id)}
-											<svg class="stage-lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
+										<span class="subdeck-name">{subdeckName(group.subdeck)}</span>
+										{#if !unlockedSubdecks.has(group.subdeck.id)}
+											<svg class="subdeck-lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
 												<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
 												<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
 											</svg>
@@ -1120,26 +1120,26 @@
 							{/each}
 						{/if}
 					{/each}
-					{#if !readonly && deck.chapters}
-						<tr class="add-stage-row">
+					{#if !readonly && deck.usesSubdecks}
+						<tr class="add-subdeck-row">
 							<td colspan="6">
-								{#if stageAdd}
+								{#if subdeckAdd}
 									<!-- svelte-ignore a11y_autofocus -- the input exists because the user just asked to add -->
 									<input
-										class="stage-rename-input"
+										class="subdeck-rename-input"
 										autofocus
-										placeholder="Chapter name"
-										bind:value={stageAdd.value}
-										onblur={commitAddStage}
+										placeholder="Subdeck name"
+										bind:value={subdeckAdd.value}
+										onblur={commitAddSubdeck}
 										onmousedown={e => e.stopPropagation()}
 										onkeydown={e => {
-											if (e.key === "Enter") commitAddStage();
-											if (e.key === "Escape") { stageAdd = null; e.stopPropagation(); }
+											if (e.key === "Enter") commitAddSubdeck();
+											if (e.key === "Escape") { subdeckAdd = null; e.stopPropagation(); }
 											e.stopPropagation();
 										}}
 									/>
 								{:else}
-									<button class="add-stage-btn" onmousedown={e => e.stopPropagation()} onclick={startAddStage}>+ Add chapter</button>
+									<button class="add-subdeck-btn" onmousedown={e => e.stopPropagation()} onclick={startAddSubdeck}>+ Add subdeck</button>
 								{/if}
 							</td>
 						</tr>
@@ -1510,18 +1510,18 @@
 		   edges — and the editor is exactly as wide as the card it replaces */
 		max-width: var(--flashcard-width);
 	}
-	/* --- stage rows --- */
+	/* --- subdeck rows --- */
 	/* a band between the card rows, greyer than the zebra so it reads as
 	   structure rather than another card (the selector out-weighs the zebra
 	   and hover rules, which would otherwise repaint it as a card row) */
-	tbody tr.stage-row td,
-	tbody tr.stage-row:hover td {
+	tbody tr.subdeck-row td,
+	tbody tr.subdeck-row:hover td {
 		background-color: #e9e9e9;
 		border-right: none;
 		padding: 0;
 		cursor: default;
 	}
-	.stage-toggle {
+	.subdeck-toggle {
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -1549,12 +1549,12 @@
 	.collapse-arrow.collapsed {
 		transform: none;
 	}
-	.stage-lock {
+	.subdeck-lock {
 		width: 13px;
 		height: 13px;
 		color: rgba(0, 0, 0, 0.55);
 	}
-	.stage-rename-input {
+	.subdeck-rename-input {
 		width: 280px;
 		margin: 1px 8px;
 		padding: 2px 6px;
@@ -1563,10 +1563,10 @@
 		font-size: 0.8rem;
 		font-weight: 600;
 	}
-	.stage-rename-input:focus {
+	.subdeck-rename-input:focus {
 		outline: none;
 	}
-	.add-stage-btn {
+	.add-subdeck-btn {
 		width: 100%;
 		padding: 4px 8px;
 		border: none;
@@ -1576,11 +1576,11 @@
 		color: rgba(0, 0, 0, 0.45);
 		cursor: pointer;
 	}
-	.add-stage-btn:hover {
+	.add-subdeck-btn:hover {
 		color: black;
 	}
-	tbody tr.add-stage-row td,
-	tbody tr.add-stage-row:hover td {
+	tbody tr.add-subdeck-row td,
+	tbody tr.add-subdeck-row:hover td {
 		background-color: white;
 		border-right: none;
 		padding: 0;
@@ -1589,19 +1589,19 @@
 	/* --- reordering --- */
 	/* What a card row is painted while a drag is in flight. These out-weigh
 	   the zebra, the hover and the selection rules all at once, so the whole
-	   set has to be restated here — but only for CARD rows: the chapter
-	   bands and the add-chapter row keep their own colours, which is what
+	   set has to be restated here — but only for CARD rows: the subdeck
+	   bands and the add-subdeck row keep their own colours, which is what
 	   the :not()s are for (they also lift these above the plain hover rule,
 	   so hovering paints nothing while the pointer is in a gesture).
 	   No stripes: the stripe belongs to a row's PLACE, so a row re-slotting
 	   took its new grey while it was still sliding out of the old one. */
-	.reordering tbody tr:not(.stage-row):not(.add-stage-row) td {
+	.reordering tbody tr:not(.subdeck-row):not(.add-subdeck-row) td {
 		background-color: transparent;
 	}
-	.reordering tbody tr.multi-selected:not(.stage-row):not(.add-stage-row) td {
+	.reordering tbody tr.multi-selected:not(.subdeck-row):not(.add-subdeck-row) td {
 		background-color: var(--accent-subtle-strong);
 	}
-	.reordering tbody tr.active:not(.stage-row):not(.add-stage-row) td {
+	.reordering tbody tr.active:not(.subdeck-row):not(.add-subdeck-row) td {
 		background-color: var(--accent-subtle-strong);
 	}
 	.reordering tbody tr:hover .grip {
@@ -1630,9 +1630,9 @@
 		border-bottom: none;
 		padding: 0;
 	}
-	/* a collapsed chapter can't show the placeholder between its rows, so the
+	/* a collapsed subdeck can't show the placeholder between its rows, so the
 	   header keeps the accent rule as its drop cue */
-	tr.stage-row.drop-into td {
+	tr.subdeck-row.drop-into td {
 		box-shadow: inset 0 -2px 0 var(--accent);
 	}
 	/* the dragged cards, riding the cursor as a chip */
@@ -1664,7 +1664,7 @@
 	.order-input:focus {
 		outline: none;
 	}
-	/* the disclosure that holds the chapter list, and the list itself */
+	/* the disclosure that holds the subdeck list, and the list itself */
 	.context-menu button.submenu-toggle {
 		display: flex;
 		align-items: center;

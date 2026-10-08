@@ -27,11 +27,11 @@ export const actions = {
 
 		return { cards };
 	},
-	// no personal/instance split: a marketplace deck's chapters are its
+	// no personal/instance split: a marketplace deck's subdecks are its
 	// author's, so only the owner of a deck decides whether it has them
-	chapters: async ({ params, request, locals }) => {
+	usesSubdecks: async ({ params, request, locals }) => {
 		const data = await request.formData();
-		await decks.updateChapters(locals.userId, params.id, data.get("value") === "true");
+		await decks.updateUsesSubdecks(locals.userId, params.id, data.get("value") === "true");
 	},
 	// the same personal/instance split as reset; either way the change is a
 	// per-deck exception that puts the profile's bulk mode back to "per deck"

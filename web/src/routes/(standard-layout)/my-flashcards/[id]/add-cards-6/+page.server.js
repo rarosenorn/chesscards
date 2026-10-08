@@ -17,7 +17,7 @@ const actions = {
 		// it visible in browse/study without a reload
 		const card = await decks.addCard(
 			locals.userId, params.id, data.get("front"), data.get("back"), cardType, FSRSValues,
-			data.get("stageId") || null
+			data.get("subdeckId") || null
 		)
 		return { card };
 	}

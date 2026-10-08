@@ -1,7 +1,7 @@
 <script>
 	import { getContext, onMount } from "svelte"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
-	import { stageName } from "$lib/stages.js"
+	import { subdeckName } from "$lib/subdecks.js"
 	import { startImport, saveUsername } from "./import.remote.js"
 	import { current, follow, resume, cancel } from "./import-state.svelte.js"
 	import { SPEED_ICON_PATHS } from "$lib/lichess-speed-icons.js"
@@ -14,10 +14,10 @@
 	const KINDS = [["blunder", "Blunders"], ["mistake", "Mistakes"], ["inaccuracy", "Inaccuracies"]];
 	let kinds = $state({ blunder: true, mistake: true, inaccuracy: true });
 
-	let stagesSorted = $derived([...deck.stages].sort((a, b) => a.position - b.position));
-	let stageId = $state(null);
-	let validStageId = $derived(
-		stagesSorted.some(stage => stage.id === stageId) ? stageId : stagesSorted.at(-1)?.id
+	let subdecksSorted = $derived([...deck.subdecks].sort((a, b) => a.position - b.position));
+	let subdeckId = $state(null);
+	let validSubdeckId = $derived(
+		subdecksSorted.some(subdeck => subdeck.id === subdeckId) ? subdeckId : subdecksSorted.at(-1)?.id
 	);
 
 	// a busy month is hundreds of games: the list opens on the newest few —
@@ -230,7 +230,7 @@
 		try {
 			const { jobId } = await startImport({
 				deckId: deck.id,
-				stageId: deck.chapters ? validStageId : null,
+				subdeckId: deck.usesSubdecks ? validSubdeckId : null,
 				pgn: game.pgn,
 				color: game.color,
 				kinds: KINDS.map(([kind]) => kind).filter(kind => kinds[kind]),
@@ -263,12 +263,12 @@
 		{#each KINDS as [kind, label]}
 			<label><input type="checkbox" bind:checked={kinds[kind]} /> {label}</label>
 		{/each}
-		{#if deck.chapters}
-			<label class="chapter">
-				Chapter
-				<select value={validStageId} onchange={e => stageId = e.currentTarget.value}>
-					{#each stagesSorted as stage (stage.id)}
-						<option value={stage.id}>{stageName(stage)}</option>
+		{#if deck.usesSubdecks}
+			<label class="subdeck">
+				Subdeck
+				<select value={validSubdeckId} onchange={e => subdeckId = e.currentTarget.value}>
+					{#each subdecksSorted as subdeck (subdeck.id)}
+						<option value={subdeck.id}>{subdeckName(subdeck)}</option>
 					{/each}
 				</select>
 			</label>
@@ -465,7 +465,7 @@
 		align-items: center;
 		gap: 6px;
 	}
-	.game-options .chapter {
+	.game-options .subdeck {
 		margin-top: 4px;
 	}
 	.status {

@@ -9,6 +9,11 @@
 		{ value: "mix", label: "Mix" },
 		{ value: "in-order", label: "In order" }
 	];
+	const reviews = [
+		{ value: "all-first", label: "From all decks first" },
+		{ value: "deck-by-deck", label: "Deck by deck" }
+	];
+	let chosenReviews = $derived(data.deck.reviewsFirst ? "all-first" : "deck-by-deck");
 </script>
 
 <StandardLayout>
@@ -32,9 +37,8 @@
 		<h3>Study order</h3>
 		<p class="section-note">
 			Mix studies its decks as one deck: reviews shuffled together, new
-			cards taken from each deck in turn. In order finishes what one deck
-			has waiting before the next, in the order they stand in My
-			flashcards.
+			cards taken from each deck in turn. In order takes the new cards
+			deck by deck, in the order the decks stand in My flashcards.
 		</p>
 		<form method="POST" action="?/order" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
 			<div class="pills">
@@ -47,6 +51,27 @@
 			</div>
 		</form>
 	</section>
+
+	{#if data.deck.studyOrder === "in-order"}
+	<section>
+		<h3>Due reviews</h3>
+		<p class="section-note">
+			From all decks first keeps every review on time: none waits behind
+			another deck's new cards. Deck by deck holds a deck's reviews back
+			until the decks before it have nothing left.
+		</p>
+		<form method="POST" action="?/reviews" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
+			<div class="pills">
+				{#each reviews as option}
+					<label class="pill" class:selected={chosenReviews === option.value}>
+						<input type="radio" name="value" value={option.value} checked={chosenReviews === option.value} />
+						{option.label}
+					</label>
+				{/each}
+			</div>
+		</form>
+	</section>
+	{/if}
 
 	<section>
 		<h3>Delete metadeck</h3>

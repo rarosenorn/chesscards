@@ -125,9 +125,13 @@
 	// How a metadeck's decks take turns. Mixed (the default), everything
 	// under it is one deck: the reviews shuffle together, and the new cards
 	// come one from each deck in rotation, each deck's in its own order. In
-	// order, one deck's cards are done with before the next deck's begin.
+	// order, one deck's new cards are done with before the next deck's begin.
 	let mixed = $derived(parts.length > 1 && deck.studyOrder !== "in-order");
-	let sequential = $derived(parts.length > 1 && deck.studyOrder === "in-order");
+	// In order, the new cards go deck by deck either way: the reading order
+	// above already runs one deck after another. What is a choice is the due
+	// reviews: from all the decks first (the default, so none is late for
+	// another deck's new cards), or strictly deck by deck as well.
+	let strict = $derived(parts.length > 1 && deck.studyOrder === "in-order" && deck.reviewsFirst === false);
 
 	// A new card's turn in the rotation: its place among its deck's new cards
 	// as the visit met them. Kept for the visit, like the shuffle keys, so
@@ -210,8 +214,8 @@
 
 	let currentCard = $derived.by(() => {
 		let due = studyCards.filter(isDue);
-		// in order: only the first deck with anything due is in play
-		if (sequential && due.length) {
+		// strictly in order: only the first deck with anything due is in play
+		if (strict && due.length) {
 			const first = Math.min(...due.map(partOf));
 			due = due.filter(card => partOf(card) === first);
 		}
@@ -432,6 +436,14 @@
 			? new Date(Math.min(...unfinished.map(card => availableAt(card, rolloverHour())))).toISOString()
 			: null;
 	});
+
+	// nothing to study because nothing is there, which is not being done
+	let emptyNote = $derived(
+		studyCards.length > 0 ? null
+			: scope ? "This subdeck has no cards yet."
+			: !deck.isMetadeck ? "This deck has no cards yet."
+			: parts.length === 0 ? "This metadeck holds no decks yet."
+			: "The decks in this metadeck have no cards yet.");
 
 	// when the queue runs dry against a locked subdeck, say what unlocks it:
 	// the first locked subdeck and how far the one before it, with everything
@@ -749,7 +761,9 @@
 	</div>
 {:else}
 	<div class="deck-done" class:zen={zenActive()}>
-		{#if lockedNote}
+		{#if emptyNote}
+			<p>{emptyNote}</p>
+		{:else if lockedNote}
 			<p>All caught up here for now.</p>
 			<p class="next-review">
 				{lockedNote.locked} unlocks when {lockedNote.before} passes:

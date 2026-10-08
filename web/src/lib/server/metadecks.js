@@ -13,7 +13,7 @@ import { resolveDecks, holders } from "../metadecks.js"
 // the metadeck's own: what "in order" study follows.
 const getMine = async userId => {
 	const { rows: metadecks } = await pool.query(`
-		select id, name, study_order "studyOrder" from metadecks
+		select id, name, study_order "studyOrder", reviews_first "reviewsFirst" from metadecks
 		where user_id = $1 order by position, name`, [userId]);
 	const { rows: items } = await pool.query(`
 		select i.metadeck_id, 'metadeck' kind, 0 kind_order, c.id, c.position
@@ -63,6 +63,15 @@ const remove = async (userId, id) => {
 const setStudyOrder = async (userId, id, studyOrder) => {
 	const { rowCount } = await pool.query(
 		"update metadecks set study_order = $3 where id = $2 and user_id = $1", [userId, id, studyOrder]);
+
+	return rowCount === 1;
+}
+
+// In order only: whether due reviews come from all its decks before the new
+// cards, or wait their deck's turn as the new cards do.
+const setReviewsFirst = async (userId, id, reviewsFirst) => {
+	const { rowCount } = await pool.query(
+		"update metadecks set reviews_first = $3 where id = $2 and user_id = $1", [userId, id, reviewsFirst]);
 
 	return rowCount === 1;
 }
@@ -144,6 +153,7 @@ const getForStudy = async (userId, id) => {
 		id: metadeck.id,
 		name: metadeck.name,
 		studyOrder: metadeck.studyOrder,
+		reviewsFirst: metadeck.reviewsFirst,
 		isMetadeck: true,
 		parts: parts.map(({ id, name, subdecks, usesSubdecks, progressionDepth }) =>
 			({ id, name, subdecks, usesSubdecks, progressionDepth })),
@@ -152,4 +162,4 @@ const getForStudy = async (userId, id) => {
 	};
 }
 
-export { getMine, create, rename, remove, setStudyOrder, reorder, setItems, getForStudy }
+export { getMine, create, rename, remove, setStudyOrder, setReviewsFirst, reorder, setItems, getForStudy }

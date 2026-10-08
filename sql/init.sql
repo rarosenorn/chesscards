@@ -312,6 +312,9 @@ create table metadecks (
 	-- its place among the user's metadecks, as decks.position
 	position integer not null default 0,
 	study_order text not null default 'mix' check (study_order in ('mix', 'in-order')),
+	-- in order only: due reviews come from all its decks before the new cards
+	-- (true), or wait their deck's turn as the new cards do (false)
+	reviews_first boolean not null default true,
 	unique (user_id, name)
 );
 
@@ -328,3 +331,31 @@ create table metadeck_items (
 	unique (metadeck_id, marketplace_deck_instance_id),
 	unique (metadeck_id, child_metadeck_id)
 );
+
+-- An index behind every foreign key that has none of its own (a primary key
+-- or a unique constraint leading with it): Postgres makes none for the
+-- referencing side, and without one each "the cards of this deck" is a scan
+-- of the whole table, as is each cascade when a row above goes.
+create index cards_deck_id_idx on cards (deck_id);
+create index cards_subdeck_id_idx on cards (subdeck_id);
+create index subdecks_deck_id_idx on subdecks (deck_id);
+create index subdecks_parent_id_idx on subdecks (parent_id);
+create index marketplace_decks_user_id_idx on marketplace_decks (user_id);
+create index marketplace_subdecks_marketplace_deck_id_idx on marketplace_subdecks (marketplace_deck_id);
+create index marketplace_subdecks_parent_id_idx on marketplace_subdecks (parent_id);
+create index marketplace_cards_marketplace_deck_id_idx on marketplace_cards (marketplace_deck_id);
+create index marketplace_cards_subdeck_id_idx on marketplace_cards (subdeck_id);
+create index marketplace_deck_instances_user_id_idx on marketplace_deck_instances (user_id);
+create index marketplace_deck_instances_marketplace_deck_id_idx on marketplace_deck_instances (marketplace_deck_id);
+create index marketplace_card_instances_marketplace_deck_instance_id_idx on marketplace_card_instances (marketplace_deck_instance_id);
+create index marketplace_card_instances_marketplace_card_id_idx on marketplace_card_instances (marketplace_card_id);
+create index review_logs_user_id_idx on review_logs (user_id);
+create index review_logs_card_id_idx on review_logs (card_id);
+create index review_logs_marketplace_card_instance_id_idx on review_logs (marketplace_card_instance_id);
+create index marketplace_upload_requests_user_id_idx on marketplace_upload_requests (user_id);
+create index marketplace_upload_requests_deck_id_idx on marketplace_upload_requests (deck_id);
+create index marketplace_reviews_user_id_idx on marketplace_reviews (user_id);
+create index marketplace_review_votes_user_id_idx on marketplace_review_votes (user_id);
+create index metadeck_items_deck_id_idx on metadeck_items (deck_id);
+create index metadeck_items_marketplace_deck_instance_id_idx on metadeck_items (marketplace_deck_instance_id);
+create index metadeck_items_child_metadeck_id_idx on metadeck_items (child_metadeck_id);

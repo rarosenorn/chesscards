@@ -29,6 +29,12 @@ export const actions = {
 		if (order !== "mix" && order !== "in-order") return fail(400, { errors: ["Invalid study order"] });
 		await metadecks.setStudyOrder(locals.userId, params.id, order);
 	},
+	reviews: async ({ params, request, locals }) => {
+		const data = await request.formData();
+		const value = data.get("value");
+		if (value !== "all-first" && value !== "deck-by-deck") return fail(400, { errors: ["Invalid choice"] });
+		await metadecks.setReviewsFirst(locals.userId, params.id, value === "all-first");
+	},
 	delete: async ({ params, locals }) => {
 		await metadecks.remove(locals.userId, params.id);
 		redirect(303, "/my-flashcards");

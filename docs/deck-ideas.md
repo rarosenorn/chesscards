@@ -1,7 +1,13 @@
 How should deck be?
 - an idea is atomized so you can pick exactly what you want and then offer bundles of related decks. Like Unix package philosophy. So instead of "learn chess basics" its 1 deck specifically for weak squares, 1 deck specifically for "space", 1 deck specifically for overprotection etc.
 
-Currently doing:
+# 3 decks for launch
+[ ] Named checkmate patterns
+[ ] Tactics (double attack, pin, skewer, discovered attack)
+[ ] Caro-Kann opening
+[ ] Must know endgames
+
+# deck ideas
 [ ] Named Checkmate Patterns
 For tactics cards, like find the checkmate here and name it, we should probably make a card type that only comes back if wrong.
 For each of the common checkmate patterns create
@@ -28,6 +34,7 @@ Do synthesizing, e.g.
 [ ] CCT practice deck
 
 - Endgame
+[ ] Deck on common positions/structures where one can force draw by repetition with pracitce puzzles
 [ ] theoretical endgames from Silmans complete endgame course
 
 [ ] Deck on practicing defense. E.g. theory cards on the 3 things you can do when king is

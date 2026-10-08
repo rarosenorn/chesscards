@@ -1,8 +1,141 @@
+# Things to test/check metadecks and subdecks
+## Subdecks: Cards tab and Add cards
+[ ] "+ Add subdeck" under the cards makes the deck's first subdeck (existing cards land in "Temp")
+[ ] right-click a subdeck: rename, add subdeck inside, flatten subdecks, delete subdeck
+[ ] drag a subdeck by its grip before / after / into another subdeck
+[ ] drag cards between subdecks, also into an empty one
+[ ] delete subdeck asks first and takes its subdecks and cards; deleting the last one makes the deck a plain list again
+[ ] flatten subdecks (on a subdeck, and for the whole deck from the bottom row) asks first and keeps the cards in order
+[ ] card numbers follow the path (2.3.17) and typing an order moves the card
+[ ] Add cards: the subdeck picker shows the outline; a new subdeck can be made from it
+[ ] subdeck names are trimmed and stop at 100 characters
+
+## Subdecks: progression and study
+[ ] deck Settings: Subdeck progression (None, 1 level, ..., All levels; Off / On with one level)
+[ ] study follows it: new cards from locked subdecks do not come, and the "unlocks when ... passes" note names the subdeck
+[ ] breadcrumb shows the subdeck path; long names are cut with an ellipsis and shown in full on hover
+[ ] arrow after the breadcrumb on Study: switch between Whole deck and any subdeck (locks shown, current one bold)
+[ ] the chosen subdeck is kept when going to Cards / Settings and back to Study, and forgotten when leaving the deck
+[ ] switching subdeck while an answer is showing: the next card comes front up
+[ ] an empty deck / subdeck says it has no cards instead of "Congratulations"
+
+## Subdecks: My flashcards
+[ ] a deck with subdecks opens with + / - level by level, and stays open after a reload
+[ ] pressing just beside the + / - still opens or closes the row, and does not open the deck
+[ ] nested rows look like the top-level ones (same weight and colour), only indented
+[ ] each subdeck row has its own New / Learn / Due and a lock if locked
+[ ] clicking a subdeck studies that subdeck on its own
+
+## Subdecks: marketplace
+[ ] approving an upload request copies the subdeck tree and the author's progression setting
+[ ] Contents card on the marketplace deck page and on the Deck tab
+[ ] a deck taken from the marketplace: own progression setting works, cards cannot be edited
+
+## Metadecks: My flashcards
+[ ] Metadecks is the last list and is there even when empty
+[ ] the "Create" button under Metadecks asks for a name in a dialog (Enter or Create makes it, Escape or Cancel leaves; stays on My flashcards); same under My decks
+[ ] a refused name (too short, already taken) is asked for again with the reason under the field
+[ ] the "i" beside Metadecks explains what one is on hover
+[ ] drag a deck, a marketplace deck or a metadeck onto a metadeck: it goes inside and stays in its own list
+[ ] drag a row out of a metadeck: it is removed; drag it onto another metadeck: it moves
+[ ] metadeck onto metadeck: middle of the row puts it inside, edges reorder; it cannot go inside itself
+[ ] right-click a row: "Add to metadeck" and, inside a metadeck, "Remove from ..."
+[ ] a metadeck's counts are the sum of its decks, each deck counted once
+[ ] a metadeck opens with + / - onto its decks and metadecks, down to their subdecks
+[ ] reorder decks, marketplace decks and metadecks by dragging still works
+
+## Metadecks: study and settings
+[ ] Mix: reviews shuffled together, new cards one from each deck in turn
+[ ] In order: new cards deck by deck
+[ ] In order, Due reviews: "From all decks first" (default) vs "Deck by deck"
+[ ] each deck keeps its own subdeck progression inside a metadeck
+[ ] marketplace cards in a metadeck have no Edit; own cards do
+[ ] an empty metadeck says it holds no decks yet
+[ ] Settings: rename, delete (its decks and their progress stay)
+[ ] Cards tab: each deck is a heading with its subdecks and cards under it; search, sort and preview work
+[ ] Cards tab is read-only (no edit, no drag, no right-click menu); "Open deck" goes to that deck's own Cards tab
+
+## Other things changed on the way
+[ ] deck and metadeck names: trimmed, 4 to 100 characters; a too-short or duplicate name reopens the create dialog with the reason
+[ ] renaming a deck in Settings is validated the same way
+[ ] a deck URL that is not a real id gives a 404
+[ ] tab shortcuts (s / c / a / d / i) work right after clicking a checkbox or a pill
+[ ] editing and deleting a card from Study and from Cards still work (their server code moved)
+
+# Things to test/check cram mode
+[ ] "Cram" button beside "Zen mode" on Study; the prompt asks for the order and "Answers count"
+[ ] defaults are In order and ticked; the last choice is remembered; Enter starts, Escape cancels
+[ ] works on a whole deck, on one subdeck (chosen from the breadcrumb) and on a metadeck
+[ ] every card comes up, due or not, also from locked subdecks
+[ ] In order follows the deck; Shuffled is random; By due date takes the soonest due first, then never-studied cards
+[ ] with "Answers count": new, learning and due cards show Again / Hard / Good / Easy and are saved like normal study
+[ ] with "Answers count": review cards not yet due show Again / Got it and the card is untouched (due date and reps unchanged)
+[ ] without "Answers count": every card shows Again / Got it and no card is touched
+[ ] practice answers (Again / Got it) still count in the activity heatmap for that day
+[ ] Again brings the card back after about a minute, or straight away when nothing else is left
+[ ] a new card stays in the session until it has graduated (comes back for its 10 minute step)
+[ ] tactic cards: Incorrect / Correct when they count, Again / Got it when not
+[ ] the counter reads "Cram · N left" and goes down as cards are got right
+[ ] done screen "Cram finished: N cards" with "Go again"; "End cram" leaves at any time
+[ ] keys: Space shows, 1 = Again, Space or 2 = Got it; 1-4 on counted cards
+[ ] editing (e) and deleting (Delete) the card on screen work during a session
+[ ] the session survives Cards / Settings and back, going to the marketplace or wiki and back, and a reload
+[ ] a session from an earlier study day (before the rollover hour) is gone; one in progress as the hour passes carries on
+[ ] switching to another subdeck leaves the session; switching back the same day resumes it
+[ ] after cramming, normal study shows the right cards (those graded in cram are not asked again)
+[ ] Zen mode works while cramming
+[ ] while the Cram prompt (or any dialog) is open, Space / 1-4 and the tab shortcuts do nothing to the page behind
+
+# Things to test/check heatmap
+[ ] it sits at the bottom of My flashcards, centred, under the Metadecks Create button
+[ ] one grid, a column a week, with today in the middle: 26 weeks back and 26 weeks ahead; month names under the column each month starts in ("Oct '26")
+[ ] rows are M T W T F S S, Monday at the top
+[ ] today is outlined in black
+[ ] days ahead are grey, darker the more cards fall due that day; hovering says "N cards due on <date>"
+[ ] days ahead count only cards already studied (own and marketplace decks); new cards are not in it
+[ ] grading a card moves it onto the right future day (after going back to My flashcards)
+[ ] grey for a day with nothing, four greens for more; a normal day is mid-green, a very long one the darkest
+[ ] hovering a square outlines it and says the date and count ("12 reviews on 8 Oct 2026")
+[ ] a normal review adds 1 to today's square after going back to My flashcards
+[ ] cram: counted answers and practice answers (Again / Got it) both add to today
+[ ] reviews of marketplace decks count too
+[ ] a review after midnight but before the rollover hour lands on the previous day
+[ ] line under it: "Reviews in the last year", "Current streak", "Longest streak", values in green
+[ ] "Reviews in the last year" covers 12 months, though only the last 26 weeks are drawn
+[ ] current streak still counts yesterday's run while today is not studied yet, and drops to 0 after a missed day
+[ ] deleting a card removes its saved reviews from the heatmap (practice answers stay)
+[ ] a new account shows an all-grey heatmap and zeros
+
+# Needed before launch
+[ ] Landing page
+[ ] why flashcards page
+[ ] Wiki page better
+[ ] db migrations
+[ ] reporting reviews / decks
+[ ] claude: Legal pages: terms of service, a privacy policy (GDPR), and a copyright and takedown policy. The last one matters because decks can be built from books and paid courses.
+[ ] refunds by EU law
+[ ] payment processing for buying decks
+[ ] payment system for importing decks
+[ ] paying authors of decks, what split etc.
+[ ] better request upload to marketplace UI
+[~] cram mode
+[ ] how to handle updating marketplace deck with what people alrdy have, if it all? (versioning)
+[ ] lichess, chess.com and google login / signup
+[ ] claude api insteado f my own for importing bad moves from games
+[~] subdecks and metadecks
+[ ] responsive
+[ ] phone app
+
 # Currently working on
-- center Show duplicates text on input and increase font size slightly
+
+## check backend code correctness of
+- Card fsrs logic
+- payment logic
+- deck / card ownership logic
 
 ## others
-- interactive puzzle cards / boards
+- maybe do puzzle type where you have to move for both Black and White? e.g. "what are the first 2 moves of Phillidor's Defense?"
+- better prompt/popup design wise, e.g. confirm delete
 - Since there are many settings, maybe once they become relevant show popup so user can read and make decision. e.g. for chapters first time they hit chapter limit explain why chapters and let them decide the config. Same with: study ahead 20 min incl. explanation,
 - ?allow images in flashcard for e.g. easily inserting image of your blunder instead of copying fen and creating board and inserting fen?
 - Live engine on the board: Stockfish running in the browser while you step through a card's position, like Lichess's local engine, with its settings (engine build, search time, multiple lines, threads, memory). Separate from the server analysis that makes blunder cards, which stays fixed at Lichess's setting.
@@ -22,16 +155,65 @@
 
 Subdecks is good because if you have a large deck on 1 opening for example, its better to gain some mastery of the most popular lines and not too deep (like quickstart in chessable), rather than getting cards for the basics and then more obscure before you even have a level of internalization of the basics. Same for endgames, want to master basics before knight and bishop mate.
 
+## Subdecks and metadecks: the plan (agreed 2026-10-07, to build next)
+The model:
+- A deck holds cards. Inside it the author can make subdecks, nested to any depth (today's chapters, given a parent). They travel with the deck to the marketplace.
+- A metadeck holds no cards: it is the owner's private grouping of decks and other metadecks, nested to any depth, for studying them mixed. A deck can be in several metadecks. No loops. A card reachable twice is studied and counted once.
+- Progression depth replaces the on/off switch: 0 = mix everything, 1 = top-level subdecks unlock in order and mix inside, 2 = one level deeper, ... or all levels. The author sets the default; each studier can change it for their own copy.
+- Unlock rule: down to the chosen depth, sibling subdecks open in order, each when the one before passes. A subdeck passes on today's rule (all seen, 80% graduated), counted over every card under it. Below the depth everything is open.
+- Metadecks never gate, they only mix. Progression lives inside each deck.
+
+Screens:
+- My flashcards: decks with subdecks expand; each subdeck row has its own new / learn / review counts and a lock if locked; clicking one studies just that subdeck. Metadecks in their own section above, expanding the same way.
+- Cards tab: the chapter bars become an indented, collapsible outline; drag a subdeck to reorder or nest it; drag cards between subdecks; numbers follow the path ("2.3.17").
+- Add cards: the chapter picker becomes an indented picker of the outline.
+- Deck settings: "Progression: None · 1 level · 2 levels · All", only as many levels as the deck has.
+- Study: the unlock note names the locked subdeck by its path ("Rook endgames › Lucena").
+- Metadeck page: Study (mixes everything under it) · Decks (a checklist of all decks and metadecks to tick in or out) · Settings (rename, delete). "New metadeck" beside "New deck".
+- Marketplace deck page: a contents outline of the subdecks with card counts.
+
+Build order, each step usable on its own:
+1. Tree storage, depth setting and the unlock rule (lib/subdecks.js), with tests first.
+2. Cards tab and the editor's picker handle the tree.
+3. Depth control in settings; study follows it; study a single subdeck.
+4. Expandable decks in My flashcards.
+5. Marketplace: copy the tree on approval, studier's own depth, contents outline.
+6. Metadecks.
+
+Decided (2026-10-08):
+- A subdeck holds either cards or subdecks, never both. Adding a subdeck inside something that has cards moves those cards into a first subdeck automatically (which can be renamed).
+- Clicking a locked subdeck studies it.
+- The interface says "subdeck" everywhere, in place of "chapter".
+- A metadeck has a setting: "Mix" (the default) treats everything under it as one deck: reviews shuffled together, new cards taken one from each deck in rotation, each in its own order. "In order" finishes each deck's cards before the next, in the metadeck's own order.
+- Inside a metadeck each deck's own subdeck progression still decides which of its new cards are unlocked.
+
+Progress:
+- [x] 1. Tree storage (subdecks.parent_id), progression depth (0 / n / null = every level) and the unlock rule with tests; approval copies the tree and the author's depth; a taken copy starts at that depth.
+- [x] Renamed in the database, the code and the interface: stages / chapters are subdecks (tables `subdecks`, `marketplace_subdecks`; `cards.subdeck_id`; `decks.uses_subdecks`).
+- [x] 2. Cards tab and editor: indented outline; add a subdeck inside another (right-click); drag a subdeck by its grip before, after or into another; delete takes its subdecks and cards (asks when there are cards); cards only go into subdecks that hold cards; numbers and typed orders follow the path; menus and pickers show the outline.
+- [x] No "Use subdecks" setting: a deck is a plain list until its first subdeck is added ("+ Add subdeck" under the cards), and plain again when the last is deleted. The way back that keeps the cards is "Flatten subdecks": on a subdeck that holds subdecks (right-click) it takes away the subdecks inside and keeps their cards in it; at the bottom of the Cards tab it does so for the whole deck. Flattening and deleting a subdeck always ask first.
+- [x] 3. Settings and study: the depth choice in Settings (None · 1 level · … · All levels; Off / On on a deck with one level), study follows it, the unlock note names subdecks by their path, and a subdeck can be studied on its own (study?subdeck=<id>; named in the breadcrumb, with the deck's name as the way back; long names there are cut with an ellipsis). On Study an arrow after the breadcrumb opens the deck's outline to switch between the whole deck and any subdeck; the choice is kept while the deck's other tabs are visited.
+- [x] 4. My flashcards: a deck with subdecks opens (arrow, remembered per browser) to show them as an outline, each with its own counts and a lock if the deck has it locked; clicking one studies it on its own. A row's counts are what studying it would bring: the deck's follow its progression (new cards in locked subdecks are not counted), as Study's do.
+- [x] 5. Marketplace: a Contents card on the deck's page and on the Deck tab (the outline of its subdecks, with how many cards sit under each); the taker's own depth setting works on their copy. (Fixed on the way: approving an upload request with a description failed.)
+- [x] 6. Metadecks: listed in their own section at the bottom of My flashcards (always there, with its own create field under it), with the summed counts of the decks they come to (each deck once), opening onto what they hold, level by level, and reordered by dragging. They are filled there too: drag a deck, a marketplace deck or a metadeck onto a metadeck to put it inside (the deck stays in its own list), drag a row out of a metadeck to take it out, or onto another metadeck to move it; a right-click on a row offers the same ("Add to metadeck", "Remove from …"). A metadeck that would close a loop is not a target. A metadeck's pages: Study (the deck study page, each deck keeping its own progression; marketplace cards stay read-only) Cards (read-only: each deck a heading with its subdecks and cards under it, "Open deck" leading to that deck's own cards page) and Settings (rename, Mix / In order, delete: only the grouping goes). In order takes the new cards deck by deck; its due reviews come from all decks first unless set to go deck by deck too. Every metadeck is listed at the top level, also when another holds it.
+
 # Study features:
 ## Setting on customizing fsrs (also somehow see personal optimization)
 
 ## restart deck (delete all progress of deck and do such that its a fresh deck from fsrs perspective)
 
 ## Cram mode
+Need to figure out how cram mode should work before deciding if cram mode only available after completing due cards or always available
 Study all cards in the chosen deck by getting cards from the deck contiuously. How can we do it? 
    - Look at Brainscape model for still evaluating and getting cards based on their relative "Mastery"
    - Getting all cards in order (cards that are due are still evaluated and count towards fsrs, cards that are not due just have "next" and doesnt do anything towards fsrs. Then just get them in order continuously
    - Maybe look at how others do them
+
+Built 2026-10-08 (decided the Anki way):
+- "Cram" at the bottom left of Study (always available) asks for the order (In order, Shuffled, By due date) and whether answers count; the last choice is remembered. It crams whatever Study is on: the deck, one subdeck, or a metadeck, every card, due or not, locked subdecks included.
+- Answers count: new and learning cards always, review cards when due. Those get the four usual buttons and are saved and scheduled as in ordinary study. Everything else is practice: Again / Got it, the card untouched (the answer is only noted as study done that day, for the heatmap).
+- Again brings the card back after a minute (a counted card at its own learning step), sooner when nothing else is left. A new card stays in the session until it graduates, as in an Anki filtered deck.
+- Ends on "Cram finished" with "Go again"; "End cram" leaves at any time. The session is saved in the browser per deck / subdeck, so it survives the deck's other tabs, a break elsewhere on the site and a reload; it lasts the study day (until the rollover hour) and is then dropped. A session being studied as the hour passes carries on into the new day.
 
 ## Metadecks
 - Metadecks because sometimes you want to study more than one deck at the same time (ties into interleaving different but related subjects). For example if i want to study a deck on basic endgames together with a seperate deck on intermediate endgames. (should still adhere to subdeck progression)
@@ -51,7 +233,7 @@ Study all cards in the chosen deck by getting cards from the deck contiuously. H
 # Versioning of marketplace decks? If you improve it, request to update?
 # Statistics
 # if its your deck, do such that if you press e in study mode the editor comes up and youcan change stuff
-# evaluation of deck: dont do stars theyre reductive. do recommend / do not recommend like steam and do comments with upvote / downvote buttons.
+[y] evaluation of deck: dont do stars theyre reductive. do recommend / do not recommend like steam and do comments with upvote / downvote buttons.
 # heatmap in myflashcards like anki heatmap and github heatmap
 
 # Chessboard editor

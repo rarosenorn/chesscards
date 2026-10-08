@@ -610,8 +610,8 @@
 	}
 	/* the app's standard button, at the size of a note under a list */
 	.create button {
-		padding: 4px 12px;
-		font-size: 0.9rem;
+		padding: 5px 14px;
+		font-size: 0.95rem;
 		cursor: pointer;
 	}
 	.activity {

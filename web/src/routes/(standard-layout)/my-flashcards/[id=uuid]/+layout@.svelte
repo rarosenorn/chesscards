@@ -39,7 +39,7 @@
 	// coming back does not put a revealed answer back behind its question:
 	// you have seen it, and the grade should say so. Keyed by card id, so it
 	// lapses the moment the card does.
-	const studyState = $state({ turnedCardId: null });
+	const studyState = $state({ turnedCardId: null, cram: null });
 	setContext("studyState", studyState);
 
 	// v1-style drafts (block arrays with lazy text editors) needing a flush

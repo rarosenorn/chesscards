@@ -12,7 +12,8 @@
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
-	import { confirmModal, modalState } from "$lib/modals.svelte.js"
+	import { confirmModal, modalState, settleModal } from "$lib/modals.svelte.js"
+	import { PRACTICE_AGAIN_MS, startCram, answerCounts, backAt, takeNext, settle, forget, cardsLeft } from "$lib/cram.js"
 	import { zen, zenActive, resetZen, setZen } from "$lib/zen-state.svelte.js"
 	import { updateCardStudyStateAndAddLog, updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
 
@@ -79,6 +80,10 @@
 		await deleteCards({ cardIds: [id] });
 		deck.cards = deck.cards.filter(card => card.id !== id);
 		isCardTurned = false;
+		if (cram) {
+			forget(cram, id);
+			cramAdvance();
+		}
 	}
 
 	// Fuzz, as Anki does it: a little randomness on each interval so cards
@@ -212,7 +217,7 @@
 
 	const byDueTime = (min, card) => Date.parse(card.due) < Date.parse(min.due) ? card : min;
 
-	let currentCard = $derived.by(() => {
+	let queuedCard = $derived.by(() => {
 		let due = studyCards.filter(isDue);
 		// strictly in order: only the first deck with anything due is in play
 		if (strict && due.length) {
@@ -237,12 +242,76 @@
 		return soon.length ? soon.reduce(byDueTime) : undefined;
 	});
 
+	// What the layout keeps for this page while its other tabs are visited:
+	// the card showing its answer (below), and a cram session under way.
+	const studyState = getContext("studyState");
+
+	// --- cram ---
+	// Every card of what is being studied, due or not, gone through once in
+	// an order chosen at the start (see lib/cram.js). The session belongs to
+	// what it was started on: turn Study to another subdeck and it is over.
+	let scopeKey = $derived(`${deck.id}:${scope?.id ?? ""}`);
+	let cram = $derived(studyState.cram?.scopeKey === scopeKey ? studyState.cram : null);
+	$effect(() => { if (studyState.cram && studyState.cram.scopeKey !== scopeKey) studyState.cram = null; });
+
+	let currentCard = $derived(cram ? deck.cards.find(card => card.id === cram.currentId) : queuedCard);
+	// Whether the answer to the card on screen is a review like any other
+	// (the usual buttons, saved and scheduled from) or practice (Again / Got
+	// it, nothing saved). Read against the queue's clock, which stands still
+	// while a card is up.
+	let cramCounts = $derived(!!cram?.counts && currentCard != null && answerCounts(currentCard, now, rolloverHour()));
+
+	// the choices a session starts from, as last made in this browser
+	const CRAM_KEY = "chesscards:cram-options";
+	const CRAM_ORDERS = [
+		{ value: "in-order", label: "In order" },
+		{ value: "shuffled", label: "Shuffled" },
+		{ value: "due", label: "By due date" }
+	];
+	let cramChoice = $state({ order: "in-order", counts: true });
+	const chooseCram = async () => {
+		try {
+			const last = JSON.parse(localStorage.getItem(CRAM_KEY) ?? "{}");
+			if (CRAM_ORDERS.some(option => option.value === last.order)) cramChoice.order = last.order;
+			if (typeof last.counts === "boolean") cramChoice.counts = last.counts;
+		} catch {}
+		const start = await confirmModal({
+			title: "Cram",
+			message: "Go through every card here once, whether it is due or not.",
+			body: cramOptions,
+			confirmLabel: "Start"
+		});
+		if (!start) return;
+		try { localStorage.setItem(CRAM_KEY, JSON.stringify(cramChoice)); } catch {}
+		beginCram(cramChoice);
+	}
+	const beginCram = ({ order, counts }) => {
+		studyState.cram = { scopeKey, ...startCram([...studyCards].sort(byDeckOrder), { order, counts }) };
+		cramAdvance();
+	}
+	// the next card of the session, read against a fresh clock
+	const cramAdvance = () => {
+		isCardTurned = false;
+		advanceQueueClock();
+		takeNext(studyState.cram, now);
+	}
+	const endCram = () => {
+		studyState.cram = null;
+		isCardTurned = false;
+		advanceQueueClock();
+	}
+	// a practice answer: Again brings the card back in a minute, and nothing
+	// of either is saved
+	const cramPractice = gotIt => {
+		settle(cram, gotIt ? null : Date.now() + PRACTICE_AGAIN_MS);
+		cramAdvance();
+	}
+
 	// A revealed answer belongs to the deck layout, not to this page, so
 	// switching tabs and coming back does not hide it again — you have seen
 	// it, and the grade should say so. Read once for the initial value, then
 	// mirrored back on every change; the id keeps it from carrying over to
 	// whichever card comes next.
-	const studyState = getContext("studyState");
 	// svelte-ignore state_referenced_locally
 	let isCardTurned = $state(currentCard != null && studyState.turnedCardId === currentCard.id);
 	$effect(() => { studyState.turnedCardId = isCardTurned ? currentCard?.id ?? null : null; });
@@ -339,6 +408,10 @@
 		isCardTurned = false;
 		advanceQueueClock();
 		deck.cards[deck.cards.indexOf(card)] = cardAndLog.card;
+		if (cram) {
+			settle(cram, backAt(cardAndLog.card));
+			cramAdvance();
+		}
 		await updateCardStudyStateAndAddLog(cardAndLog);
 	}
 
@@ -382,6 +455,12 @@
 		isCardTurned = false;
 		deck.cards[deck.cards.indexOf(currentCard)] = card;
 		advanceQueueClock();
+		// missed, it is due tomorrow: within the session it comes back as
+		// practice, the way Again does
+		if (cram) {
+			settle(cram, correct ? null : Date.now() + PRACTICE_AGAIN_MS);
+			cramAdvance();
+		}
 		await updateCardStudyStateAndAddLog({ card, log });
 	}
 
@@ -516,8 +595,9 @@
 	}
 
 	const handleKeyDown = e => {
-		// while editing, the card editor owns the keyboard (Ctrl+Enter saves)
-		if (editingCard) return;
+		// while editing, the card editor owns the keyboard (Ctrl+Enter saves),
+		// and a modal owns it while it is up
+		if (editingCard || modalState.current) return;
 		const typing = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA"
 			|| e.target.isContentEditable;
 		if (e.key === "z" && !e.ctrlKey && !e.metaKey && !e.altKey && !typing) {
@@ -558,6 +638,15 @@
 			}
 		} else if (e.key === "h" || e.key === "H") {
 			isCardTurned = false;
+		} else if (cram && !cramCounts) {
+			switch (e.key) {
+				case "1": cramPractice(false); break;
+				case " ":
+				case "2":
+					e.preventDefault();
+					cramPractice(true);
+					break;
+			}
 		} else if (isTactic) {
 			switch (e.key) {
 				case "1": evaluateTactic(false); break;
@@ -689,7 +778,11 @@
 				{/each}
 			</span>
 		{/if}
+		{#if cram}
+			<p class="deck-counts cram">Cram · {cardsLeft(cram)} left</p>
+		{:else}
 		<p class="deck-counts"><span class="count new" class:current={currentQueue === "new"}><span class="hair">{"\u200a"}</span>{counts.new}<span class="hair">{"\u200a"}</span></span><span class="plus">+</span><span class="count learn" class:current={currentQueue === "learn"}><span class="hair">{"\u200a"}</span>{counts.learn}<span class="hair">{"\u200a"}</span></span><span class="plus">+</span><span class="count review" class:current={currentQueue === "review"}><span class="hair">{"\u200a"}</span>{counts.review}<span class="hair">{"\u200a"}</span></span></p>
+		{/if}
 		<div class="flashcard-btn-row">
 			{#if !isCardTurned}
 				<!-- carried in the same shape as a grade button, label and all,
@@ -719,7 +812,30 @@
 							</button>
 						</div>
 					{/snippet}
-					{#if isTactic}
+					{#if cram && !cramCounts}
+						<!-- practice: nothing is saved, so there is only right
+						     and not yet -->
+						<div class="eval-btn">
+							<p>1m</p>
+							<button
+								onclick={() => cramPractice(false)}
+								class="std-btn"
+								title="Shortcut key: 1"
+							>
+								Again
+							</button>
+						</div>
+						<div class="eval-btn">
+							<p aria-hidden="true">&nbsp;</p>
+							<button
+								onclick={() => cramPractice(true)}
+								class="std-btn"
+								title="Shortcut key: Space or 2"
+							>
+								Got it
+							</button>
+						</div>
+					{:else if isTactic}
 						<div class="eval-btn">
 							<p>1d</p>
 							<button
@@ -772,7 +888,10 @@
 	</div>
 {:else}
 	<div class="deck-done" class:zen={zenActive()}>
-		{#if emptyNote}
+		{#if cram}
+			<p>Cram finished: {cram.total} card{cram.total === 1 ? "" : "s"}.</p>
+			<button class="std-btn again-btn" onclick={() => beginCram(cram)}>Go again</button>
+		{:else if emptyNote}
 			<p>{emptyNote}</p>
 		{:else if lockedNote}
 			<p>All caught up here for now.</p>
@@ -784,7 +903,7 @@
 		{:else}
 			<p>Congratulations you finished this {scope ? "subdeck" : deck.isMetadeck ? "metadeck" : "deck"} for now! <span class="party"><PartyPopper /></span></p>
 		{/if}
-		{#if nextDue}
+		{#if nextDue && !cram}
 			<p class="next-review">Next review: {formatNextReview(nextDue)}</p>
 		{/if}
 	</div>
@@ -794,21 +913,66 @@
      is a mode nobody finds. It shows only while the chrome does, and once zen
      is on the top-edge peek and Escape are the ways back. -->
 {#if !zen.on}
-	<button
-		class="zen-btn"
-		title="Shortcut key: z"
-		onclick={() => setZen(true)}
-	>Zen mode</button>
+	<div class="page-btns">
+		<button
+			class="page-btn"
+			title="Shortcut key: z"
+			onclick={() => setZen(true)}
+		>Zen mode</button>
+		<!-- cramming: every card here, due or not; the same button ends it -->
+		{#if cram}
+			<button class="page-btn" onclick={endCram}>End cram</button>
+		{:else if studyCards.length}
+			<button class="page-btn" onclick={chooseCram}>Cram</button>
+		{/if}
+	</div>
 {/if}
 
+<!-- What a cram session is started with, in the modal that asks. Enter
+     starts it from anywhere among the choices. -->
+{#snippet cramOptions()}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		class="cram-options"
+		onkeydown={e => {
+			if (e.key !== "Enter") return;
+			e.preventDefault();
+			settleModal(true);
+		}}
+	>
+		{#each CRAM_ORDERS as option}
+			<label>
+				<input type="radio" name="cram-order" value={option.value} bind:group={cramChoice.order} />
+				{option.label}
+			</label>
+		{/each}
+		<label class="counts">
+			<input type="checkbox" bind:checked={cramChoice.counts} />
+			Answers count
+		</label>
+		<p class="cram-note">
+			{#if cramChoice.counts}
+				New, learning and due cards are graded and scheduled as in ordinary
+				study. Cards not yet due are practice only.
+			{:else}
+				Practice only: nothing is saved and no card's schedule changes.
+			{/if}
+		</p>
+	</div>
+{/snippet}
+
 <style>
-	/* bottom left of the window, out of the card's way: it belongs to the page
-	   rather than to the card, and the card is centred */
-	.zen-btn {
+	/* bottom left of the window, out of the card's way: they belong to the
+	   page rather than to the card, and the card is centred */
+	.page-btns {
 		position: fixed;
 		left: 16px;
 		bottom: 16px;
 		z-index: 30;
+		display: flex;
+		gap: 8px;
+	}
+	.page-btn {
 		border: 1px solid lightgrey;
 		border-bottom: 1px solid darkgrey;
 		background-color: #f5f5f5;
@@ -819,12 +983,38 @@
 		cursor: pointer;
 		transition: color 110ms ease, background-color 110ms ease;
 	}
-	.zen-btn:hover {
+	.page-btn:hover {
 		color: black;
 		background-color: #f8f8f8;
 	}
-	.zen-btn:active {
+	.page-btn:active {
 		transform: translateY(1px);
+	}
+	/* the choices in the modal that starts a cram session */
+	.cram-options {
+		display: flex;
+		flex-direction: column;
+		align-items: start;
+		gap: 8px;
+		font-size: 0.95rem;
+	}
+	.cram-options label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		cursor: pointer;
+	}
+	.cram-options input {
+		accent-color: var(--accent);
+	}
+	.cram-options .counts {
+		margin-top: 6px;
+	}
+	.cram-note {
+		margin: 0;
+		font-size: 0.85rem;
+		line-height: 1.4;
+		color: rgba(0, 0, 0, 0.6);
 	}
 	/* The floor is the whole card, answer included (--card-furniture, in
 	   app.css), less the air the page keeps under it (--card-under): a
@@ -1108,5 +1298,13 @@
 	.next-review {
 		font-size: 0.9rem;
 		color: rgba(0, 0, 0, 0.6);
+	}
+	/* a cram session's own count, where the deck's three stand: plain, since
+	   it is one number and not three queues */
+	.deck-counts.cram {
+		color: rgba(0, 0, 0, 0.6);
+	}
+	.again-btn {
+		margin-top: 8px;
 	}
 </style>

@@ -2,6 +2,7 @@
 	import { page } from "$app/state"
 	import { goto } from "$app/navigation"
 	import { zenHidden } from "$lib/zen-state.svelte.js"
+	import { modalState } from "$lib/modals.svelte.js"
 
 	// The bar under the site's, on the pages of a deck and of a metadeck: the
 	// way back to My flashcards and where you are, then the page's tabs.
@@ -25,7 +26,8 @@
 		|| (target?.tagName === "INPUT" && target.type !== "checkbox" && target.type !== "radio");
 	const handleKeyDown = e => {
 		if (e.key === "Escape") switcherOpen = false;
-		if (e.ctrlKey || e.metaKey || e.altKey) return;
+		// a modal owns the keyboard while it is up
+		if (modalState.current || e.ctrlKey || e.metaKey || e.altKey) return;
 		const tab = tabs.find(tab => tab.shortcut === e.key.toLowerCase());
 		// already there, whatever else its link carries (Study's, a subdeck)
 		if (!tab || takesTyping(e.target) || page.url.pathname === tab.href.split("?")[0]) return;

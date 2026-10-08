@@ -14,7 +14,7 @@
 	$effect(() => { Object.assign(deck, data.deck) });
 
 	// which card is showing its answer in study (see the deck's layout)
-	const studyState = $state({ turnedCardId: null });
+	const studyState = $state({ turnedCardId: null, cram: null });
 	setContext("studyState", studyState);
 
 	const base = $derived(`/my-flashcards/metadecks/${page.params.id}`);

@@ -86,9 +86,11 @@ const setItems = async (userId, id, { deckIds, instanceIds, metadeckIds }) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
-		const { rowCount: owned } = await client.query(
-			"select 1 from metadecks where id = $2 and user_id = $1 for update", [userId, id]);
-		if (owned !== 1) throw new Error("Unauthorized");
+		// all of the user's metadecks are held, not this one alone: two changes
+		// at once could otherwise each put the other's metadeck inside its own
+		const { rows: locked } = await client.query(
+			"select id from metadecks where user_id = $1 for update", [userId]);
+		if (!locked.some(metadeck => metadeck.id === id)) throw new Error("Unauthorized");
 		const closed = holders(await getMine(userId), id);
 		if (metadeckIds.some(metadeckId => closed.has(metadeckId))) throw new Error("A metadeck cannot go inside itself");
 

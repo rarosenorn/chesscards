@@ -16,9 +16,8 @@ export const updateCardStudyStateAndAddLog =
 			return;
 		}
 
-		if (!await decks.userIdOwnsDeckId(locals.userId, card.deck_id)) {
+		if (!await decks.updateCardStudyState(locals.userId, card)) {
 			error(403, "Unauthorized");
 		}
-		await decks.updateCardStudyState(locals.userId, card);
 		await decks.createReviewLog(locals.userId, card.id, log);
 	})

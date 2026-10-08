@@ -344,13 +344,18 @@ const resetDeckSchedule = async (userId, deckId, FSRSValues) => {
 	return basic.rowCount + tactic.rowCount;
 }
 
+// Only a card in a deck of the user's own: which deck that is comes from the
+// card's row, never from what the caller says of it.
 const updateCardStudyState = async (userId, card) => {
-	const { rows } = await pool.query(`
-		update cards
+	const { rowCount } = await pool.query(`
+		update cards c
 		set due = $1, stability = $2, difficulty = $3, elapsed_days = $4, scheduled_days = $5, reps = $6, lapses = $7, learning_steps = $8, state = $9, last_review = $10, finished_at = $11
-		where id = $12
-	`, [card.due, card.stability, card.difficulty, card.elapsed_days, card.scheduled_days, card.reps, card.lapses, card.learning_steps, card.state, card.last_review, card.finished_at ?? null, card.id]
+		from decks d
+		where c.id = $12 and c.deck_id = d.id and d.user_id = $13
+	`, [card.due, card.stability, card.difficulty, card.elapsed_days, card.scheduled_days, card.reps, card.lapses, card.learning_steps, card.state, card.last_review, card.finished_at ?? null, card.id, userId]
 	);
+
+	return rowCount === 1;
 }
 
 // --- subdecks ---

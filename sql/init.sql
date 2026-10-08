@@ -332,6 +332,19 @@ create table metadeck_items (
 	unique (metadeck_id, child_metadeck_id)
 );
 
+-- Answers given as practice in a cram session. They change no schedule and
+-- are no part of a card's review history (review_logs is what scheduling
+-- reads), but they are study done, and the activity heatmap counts them. A
+-- log outlives its card: the day's work was done whatever became of it.
+create table practice_logs (
+	id uuid primary key default gen_random_uuid(),
+	user_id uuid references "user" ("id") on delete cascade not null,
+	card_id uuid references cards(id) on delete set null,
+	marketplace_card_instance_id uuid references marketplace_card_instances(id) on delete set null,
+	got_it boolean not null,
+	answered timestamptz not null default now()
+);
+
 -- An index behind every foreign key that has none of its own (a primary key
 -- or a unique constraint leading with it): Postgres makes none for the
 -- referencing side, and without one each "the cards of this deck" is a scan
@@ -359,3 +372,6 @@ create index marketplace_review_votes_user_id_idx on marketplace_review_votes (u
 create index metadeck_items_deck_id_idx on metadeck_items (deck_id);
 create index metadeck_items_marketplace_deck_instance_id_idx on metadeck_items (marketplace_deck_instance_id);
 create index metadeck_items_child_metadeck_id_idx on metadeck_items (child_metadeck_id);
+create index practice_logs_user_id_idx on practice_logs (user_id);
+create index practice_logs_card_id_idx on practice_logs (card_id);
+create index practice_logs_marketplace_card_instance_id_idx on practice_logs (marketplace_card_instance_id);

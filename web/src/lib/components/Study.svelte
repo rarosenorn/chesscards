@@ -15,7 +15,7 @@
 	import { confirmModal, modalState, settleModal } from "$lib/modals.svelte.js"
 	import { PRACTICE_AGAIN_MS, startCram, answerCounts, backAt, takeNext, settle, forget, cardsLeft, resumeCram } from "$lib/cram.js"
 	import { zen, zenActive, resetZen, setZen } from "$lib/zen-state.svelte.js"
-	import { updateCardStudyStateAndAddLog, updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
+	import { updateCardStudyStateAndAddLog, logPractice, updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
 
 	let deck = getContext("deck");
 	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
@@ -356,11 +356,14 @@
 		isCardTurned = false;
 		advanceQueueClock();
 	}
-	// a practice answer: Again brings the card back in a minute, and nothing
-	// of either is saved
-	const cramPractice = gotIt => {
+	// A practice answer: Again brings the card back in a minute, and the
+	// card is left exactly as it was. The answer is noted only as study done
+	// that day, for the activity heatmap.
+	const cramPractice = async gotIt => {
+		const card = currentCard;
 		settle(cram, gotIt ? null : Date.now() + PRACTICE_AGAIN_MS);
 		cramAdvance();
+		await logPractice({ cardId: card.id, instance: !!card.marketplace_deck_instance_id, gotIt });
 	}
 
 	// A revealed answer belongs to the deck layout, not to this page, so
@@ -869,7 +872,7 @@
 						</div>
 					{/snippet}
 					{#if cram && !cramCounts}
-						<!-- practice: nothing is saved, so there is only right
+						<!-- practice: the card is not scheduled from it, so there is only right
 						     and not yet -->
 						<div class="eval-btn">
 							<p>1m</p>
@@ -1011,7 +1014,7 @@
 				New, learning and due cards are graded and scheduled as in ordinary
 				study. Cards not yet due are practice only.
 			{:else}
-				Practice only: nothing is saved and no card's schedule changes.
+				Practice only: no card's schedule changes.
 			{/if}
 		</p>
 	</div>

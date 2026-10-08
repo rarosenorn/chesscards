@@ -3,6 +3,7 @@ import { error } from "@sveltejs/kit"
 import { createEmptyCard } from "ts-fsrs"
 import * as decks from "$lib/server/decks.js"
 import * as marketplace from "$lib/server/marketplace.js"
+import * as activity from "$lib/server/activity.js"
 import { checkIds, checkIdList } from "$lib/server/ids.js"
 
 // What is done to a card from wherever it is shown: study grades it, and
@@ -27,6 +28,17 @@ export const updateCardStudyStateAndAddLog =
 			error(403, "Unauthorized");
 		}
 		await decks.createReviewLog(locals.userId, card.id, log);
+	})
+
+// an answer given as practice in a cram session: it changes nothing about
+// the card, and is kept only as study done that day
+export const logPractice =
+	command("unchecked", async ({ cardId, instance, gotIt }) => {
+		const { locals } = getRequestEvent();
+		checkIds(cardId);
+		if (!await activity.logPractice(locals.userId, cardId, !!instance, !!gotIt)) {
+			error(403, "Unauthorized");
+		}
 	})
 
 export const updateCardContent =

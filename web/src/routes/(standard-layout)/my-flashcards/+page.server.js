@@ -2,6 +2,7 @@ import { fail } from "@sveltejs/kit"
 import * as decks from "$lib/server/decks.js"
 import * as marketplace from "$lib/server/marketplace.js"
 import * as metadecks from "$lib/server/metadecks.js"
+import * as activity from "$lib/server/activity.js"
 import * as zod from "$lib/zod-schemas.js"
 import { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE } from "$lib/rollover.js"
 
@@ -17,6 +18,7 @@ const load = async ({ locals, cookies }) => {
 		decks: await decks.getMineWithoutCards(locals.userId, when),
 		marketplaceDecks: await marketplace.getInstancesWithoutCards(locals.userId, when),
 		metadecks: await metadecks.getMine(locals.userId),
+		activity: await activity.getDailyCounts(locals.userId, when),
 		pageTitle: "My flashcards"
 	}
 }

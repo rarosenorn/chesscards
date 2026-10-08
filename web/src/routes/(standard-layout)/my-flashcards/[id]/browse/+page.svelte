@@ -620,8 +620,9 @@
 	let subdeckMenu = $state(null);
 	let subdeckRename = $state(null);
 
+	// (on a deck that is not yours to edit, the menu is only its first item:
+	// studying the subdeck)
 	const handleSubdeckContextMenu = (e, subdeck) => {
-		if (readonly) return;
 		e.preventDefault();
 		e.stopPropagation();
 		subdeckMenu = { x: e.clientX, y: e.clientY, subdeck };
@@ -1021,44 +1022,48 @@
 		style="left: {subdeckMenu.x}px; top: {subdeckMenu.y}px"
 		onmousedown={e => e.stopPropagation()}
 	>
-		<button
-			onclick={() => {
-				subdeckRename = { subdeckId: subdeckMenu.subdeck.id, value: subdeckMenu.subdeck.name };
-				subdeckMenu = null;
-			}}
-		>
-			Rename subdeck
-		</button>
-		<button
-			onclick={() => {
-				const id = subdeckMenu.subdeck.id;
-				subdeckMenu = null;
-				startAddSubdeck(id);
-			}}
-		>
-			Add subdeck inside
-		</button>
-		{#if holdsSubdecks(subdeckMenu.subdeck)}
+		<!-- study this subdeck on its own, locked or not -->
+		<a class="menu-link" href="/my-flashcards/{deck.id}/study?subdeck={subdeckMenu.subdeck.id}">Study subdeck</a>
+		{#if !readonly}
 			<button
+				onclick={() => {
+					subdeckRename = { subdeckId: subdeckMenu.subdeck.id, value: subdeckMenu.subdeck.name };
+					subdeckMenu = null;
+				}}
+			>
+				Rename subdeck
+			</button>
+			<button
+				onclick={() => {
+					const id = subdeckMenu.subdeck.id;
+					subdeckMenu = null;
+					startAddSubdeck(id);
+				}}
+			>
+				Add subdeck inside
+			</button>
+			{#if holdsSubdecks(subdeckMenu.subdeck)}
+				<button
+					onclick={() => {
+						const subdeck = subdeckMenu.subdeck;
+						subdeckMenu = null;
+						flatten(subdeck);
+					}}
+				>
+					Flatten subdecks
+				</button>
+			{/if}
+			<button
+				class="danger"
 				onclick={() => {
 					const subdeck = subdeckMenu.subdeck;
 					subdeckMenu = null;
-					flatten(subdeck);
+					removeSubdeck(subdeck);
 				}}
 			>
-				Flatten subdecks
+				Delete subdeck
 			</button>
 		{/if}
-		<button
-			class="danger"
-			onclick={() => {
-				const subdeck = subdeckMenu.subdeck;
-				subdeckMenu = null;
-				removeSubdeck(subdeck);
-			}}
-		>
-			Delete subdeck
-		</button>
 	</div>
 {/if}
 
@@ -1954,7 +1959,8 @@
 		box-shadow: rgba(0, 0, 0, 0.15) 0 2px 8px;
 		padding: 4px;
 	}
-	.context-menu button {
+	.context-menu button,
+	.context-menu .menu-link {
 		display: block;
 		width: 100%;
 		text-align: left;
@@ -1963,10 +1969,16 @@
 		background: none;
 		cursor: pointer;
 	}
+	/* an item that goes somewhere, looking like the ones that do something */
+	.context-menu .menu-link {
+		color: inherit;
+		text-decoration: none;
+	}
 	.context-menu button.danger {
 		color: #c00;
 	}
-	.context-menu button:hover {
+	.context-menu button:hover,
+	.context-menu .menu-link:hover {
 		background-color: #f0f0f0;
 	}
 </style>

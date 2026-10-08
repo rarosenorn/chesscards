@@ -31,8 +31,12 @@ export const actions = {
 	// per-deck exception that puts the profile's bulk mode back to "per deck"
 	progression: async ({ params, request, locals }) => {
 		const data = await request.formData();
-		// the switch is all or nothing: every level deep (null), or none (0)
-		const depth = data.get("value") === "true" ? null : 0;
+		// none (0), every level there is (null), or a number of levels
+		const value = data.get("value");
+		const depth = value === "none" ? 0 : value === "all" ? null : Number(value);
+		if (depth !== null && !(Number.isInteger(depth) && depth >= 0 && depth <= 100)) {
+			return fail(400, { errors: ["Invalid progression depth"] });
+		}
 		await decks.userIdOwnsDeckId(locals.userId, params.id)
 			? await decks.updateProgressionDepth(locals.userId, params.id, depth)
 			: await marketplace.updateInstanceProgressionDepth(locals.userId, params.id, depth);

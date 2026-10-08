@@ -1,12 +1,13 @@
 <script>
 	import { alignByWrap } from "$lib/text-block-wrap.js"
 	import { getContext, onMount } from "svelte"
+	import { page } from "$app/state"
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating, StrategyMode, GenSeedStrategyWithCardId } from "ts-fsrs"
 	import { boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
-	import { isSeen, subdeckOrder, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress, subdeckLabel } from "$lib/subdecks.js"
+	import { isSeen, subdeckOrder, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress, subdeckPath } from "$lib/subdecks.js"
 	import { crossesDay, isDueAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
@@ -111,7 +112,12 @@
 	// of the deck's subdecks it runs through is the deck's own setting, and
 	// none at all where it gates nothing (gatingDepth).
 	let depth = $derived(gatingDepth(deck));
-	let unlockedSubdecks = $derived(unlockedSubdeckIds(deck.subdecks, deck.cards, depth));
+	// A single subdeck can be studied on its own (?subdeck=<id>): the session
+	// is the cards under it, and it is open whatever stands before it in the
+	// deck, with progression still holding among the subdecks inside it.
+	let scope = $derived(deck.subdecks.find(subdeck => subdeck.id === page.url.searchParams.get("subdeck")) ?? null);
+	let studyCards = $derived(scope ? cardsUnder(deck.subdecks, deck.cards, scope.id) : deck.cards);
+	let unlockedSubdecks = $derived(unlockedSubdeckIds(deck.subdecks, deck.cards, depth, scope?.id));
 	const gated = card => !isSeen(card) && !unlockedSubdecks.has(card.subdeck_id);
 
 	// The clock the queue is measured against. It ticks only while nothing is
@@ -145,7 +151,7 @@
 			: card.state === 0 || (card.state == null && card.last_review == null) ? "new"
 			: "review";
 	let counts = $derived.by(() => {
-		const due = deck.cards.filter(isDue);
+		const due = studyCards.filter(isDue);
 		return {
 			new: due.filter(card => queueOf(card) === "new").length,
 			learn: due.filter(card => queueOf(card) === "learn").length,
@@ -156,7 +162,7 @@
 	const byDueTime = (min, card) => Date.parse(card.due) < Date.parse(min.due) ? card : min;
 
 	let currentCard = $derived.by(() => {
-		const due = deck.cards.filter(isDue);
+		const due = studyCards.filter(isDue);
 		// Learning cards are time-critical, so they come first and in the order
 		// they fell due — Anki fetches them the same way. This is what brings a
 		// card graded Again back into the session a minute later instead of
@@ -171,7 +177,7 @@
 		// Nothing owed: reach ahead for the card the session would have waited
 		// on, nearest first. Only ever from an empty queue, so a card fetched
 		// early can never displace one that is genuinely due.
-		const soon = deck.cards.filter(isDueSoon);
+		const soon = studyCards.filter(isDueSoon);
 		return soon.length ? soon.reduce(byDueTime) : undefined;
 	});
 
@@ -367,7 +373,7 @@
 	// due — a locked subdeck's cards have no date to promise, its unlock note
 	// below speaks for them
 	let nextDue = $derived.by(() => {
-		const unfinished = deck.cards.filter(card => !card.finished_at && !gated(card));
+		const unfinished = studyCards.filter(card => !card.finished_at && !gated(card));
 		// the card that arrives first, by when it ACTUALLY arrives: a day-scale
 		// card is waiting at its day's boundary, not at the hour it was graded
 		return unfinished.length
@@ -379,11 +385,11 @@
 	// the first locked subdeck and how far the one before it, with everything
 	// inside it, has to go
 	let lockedNote = $derived.by(() => {
-		const first = firstLockedSubdeck(deck.subdecks, deck.cards, depth);
+		const first = firstLockedSubdeck(deck.subdecks, deck.cards, depth, scope?.id);
 		if (!first) return null;
 		return {
-			locked: subdeckLabel(first.locked),
-			before: subdeckLabel(first.before),
+			locked: subdeckPath(deck.subdecks, first.locked.id),
+			before: subdeckPath(deck.subdecks, first.before.id),
 			progress: subdeckProgress(cardsUnder(deck.subdecks, deck.cards, first.before.id))
 		};
 	});
@@ -693,7 +699,7 @@
 				{lockedNote.progress.graduated} of {lockedNote.progress.graduatedNeeded} graduated.
 			</p>
 		{:else}
-			<p>Congratulations you finished this deck for now! <span class="party"><PartyPopper /></span></p>
+			<p>Congratulations you finished this {scope ? "subdeck" : "deck"} for now! <span class="party"><PartyPopper /></span></p>
 		{/if}
 		{#if nextDue}
 			<p class="next-review">Next review: {formatNextReview(nextDue)}</p>

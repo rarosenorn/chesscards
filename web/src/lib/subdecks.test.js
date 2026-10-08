@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { unlockedSubdeckIds, firstLockedSubdeck, subdeckOutline, subdeckOrder, leafSubdecks, subdeckSubtree, cardsUnder, gatingDepth } from "./subdecks.js"
+import { unlockedSubdeckIds, firstLockedSubdeck, subdeckPath, subdeckLevels, subdeckOutline, subdeckOrder, leafSubdecks, subdeckSubtree, cardsUnder, gatingDepth } from "./subdecks.js"
 
 const subdeck = (id, position, parent_id = null) => ({ id, name: id, position, parent_id });
 const fresh = subdeck_id => ({ subdeck_id, card_type: "basic", state: 0 });
@@ -107,6 +107,53 @@ describe("the first locked subdeck", () => {
 	it("is nothing when nothing is shut", () => {
 		expect(firstLockedSubdeck(subdecks, [learned("a1"), learned("a2"), fresh("b1")])).toBe(null);
 		expect(firstLockedSubdeck(subdecks, [fresh("a1"), fresh("a2"), fresh("b1")], 0)).toBe(null);
+	})
+})
+
+describe("a subdeck studied on its own", () => {
+	// a: a1 (a1x, a1y), a2 · b: b1
+	const subdecks = [
+		subdeck("a", 1), subdeck("a1", 1, "a"), subdeck("a1x", 1, "a1"), subdeck("a1y", 2, "a1"), subdeck("a2", 2, "a"),
+		subdeck("b", 2), subdeck("b1", 1, "b")
+	];
+	const allNew = [fresh("a1x"), fresh("a1y"), fresh("a2"), fresh("b1")];
+
+	it("is open though the deck would hold it shut", () => {
+		expect(open(subdecks, allNew, Infinity)).toEqual(["a", "a1", "a1x"]);
+		expect([...unlockedSubdeckIds(subdecks, allNew, Infinity, "b")].sort()).toEqual(["b", "b1"]);
+		expect([...unlockedSubdeckIds(subdecks, allNew, Infinity, "a2")]).toEqual(["a2"]);
+	})
+
+	it("opens nothing outside itself", () => {
+		expect([...unlockedSubdeckIds(subdecks, allNew, 0, "a1")].sort()).toEqual(["a1", "a1x", "a1y"]);
+	})
+
+	it("keeps progression among the subdecks inside it, at the levels they sit at", () => {
+		// a's subdecks are level 2, a1's are level 3
+		expect([...unlockedSubdeckIds(subdecks, allNew, 1, "a")].sort()).toEqual(["a", "a1", "a1x", "a1y", "a2"]);
+		expect([...unlockedSubdeckIds(subdecks, allNew, 2, "a")].sort()).toEqual(["a", "a1", "a1x", "a1y"]);
+		expect([...unlockedSubdeckIds(subdecks, allNew, Infinity, "a")].sort()).toEqual(["a", "a1", "a1x"]);
+	})
+
+	it("names the first shut subdeck inside it only", () => {
+		const found = firstLockedSubdeck(subdecks, allNew, Infinity, "a1");
+		expect([found.locked.id, found.before.id]).toEqual(["a1y", "a1x"]);
+		expect(firstLockedSubdeck(subdecks, allNew, Infinity, "b")).toBe(null);
+	})
+})
+
+describe("a subdeck's place in words", () => {
+	const subdecks = [subdeck("a", 1), subdeck("a1", 1, "a"), subdeck("a1x", 1, "a1"), subdeck("b", 2)];
+
+	it("is the names down to it", () => {
+		expect(subdeckPath(subdecks, "a1x")).toBe("a › a1 › a1x");
+		expect(subdeckPath(subdecks, "b")).toBe("b");
+	})
+
+	it("counts the deck's levels of subdecks", () => {
+		expect(subdeckLevels(subdecks)).toBe(3);
+		expect(subdeckLevels([subdeck("only", 1)])).toBe(1);
+		expect(subdeckLevels([])).toBe(0);
 	})
 })
 

@@ -10,6 +10,7 @@
 	import { zenHidden } from "$lib/zen-state.svelte.js"
 	import { sideHasContent, syncTextBlocks } from "$lib/card-utils.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
+	import { subdeckPath } from "$lib/subdecks.js"
 
 	let { data, children } = $props();
 
@@ -112,6 +113,12 @@
 			goto(to);
 		});
 	});
+	let studiedSubdeck = $derived(
+		page.url.pathname.endsWith("/study")
+			? deck.subdecks.find(subdeck => subdeck.id === page.url.searchParams.get("subdeck"))
+			: undefined
+	);
+
 	// marketplace deck instances are readonly, so no editing tabs; settings is
 	// there for the one thing that is theirs, resetting their study progress.
 	// the editor trials (add-cards-2/-3/-5) keep their routes but not their
@@ -148,7 +155,15 @@
 	<div class="breadcrumbs">
 		<a href="/my-flashcards">My flashcards</a>
 		<span>{"->"}</span>
-		<span>{deck.name}</span>
+		<!-- studying one subdeck on its own (study's ?subdeck=): it is named
+		     here, after the deck, which is then the way back to the whole of it -->
+		{#if studiedSubdeck}
+			<a href="/my-flashcards/{page.params.id}/study">{deck.name}</a>
+			<span>{"->"}</span>
+			<span>{subdeckPath(deck.subdecks, studiedSubdeck.id)}</span>
+		{:else}
+			<span>{deck.name}</span>
+		{/if}
 	</div>
 	<div class="tabs">
 		{#each paths as path, i}

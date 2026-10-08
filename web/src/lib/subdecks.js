@@ -17,15 +17,9 @@
 
 const GRADUATED_SHARE = 0.8;
 
-// Every subdeck has a name, so there are two ways to write one out.
-//
-// Numbered, for the running text of study's unlock note, where the name
-// alone would not say how far along the subdeck sits.
-const subdeckLabel = subdeck => `Subdeck ${subdeck.position} — ${subdeck.name}`;
-
-// Bare, everywhere the subdecks are shown as a list: the Cards table's bars
-// and the pickers run in deck order, so the number only repeats the order
-// the eye already reads.
+// A subdeck's name, everywhere the subdecks are shown as an outline: the
+// Cards table's headers and the pickers run in deck order, so its place is
+// what the eye already reads.
 const subdeckName = subdeck => subdeck.name;
 
 // a tactic card carries no FSRS state; its grades stamp last_review
@@ -75,6 +69,18 @@ const subdeckOutline = (subdecks, descending = false) => {
 	return outline;
 }
 
+// A subdeck said in full, where it stands alone and its name would not say
+// which one it is: the names down to it, "Rook endgames › Lucena".
+const subdeckPath = (subdecks, subdeckId) => {
+	const byId = new Map(subdecks.map(subdeck => [subdeck.id, subdeck]));
+	const names = [];
+	for (let subdeck = byId.get(subdeckId); subdeck; subdeck = byId.get(subdeck.parent_id)) names.unshift(subdeck.name);
+	return names.join(" › ");
+}
+
+// how many levels of subdecks the deck has, for offering progression depths
+const subdeckLevels = subdecks => Math.max(0, ...subdeckOutline(subdecks).map(entry => entry.level));
+
 // where every subdeck falls in the reading order, for sorting cards into
 // deck order
 const subdeckOrder = subdecks =>
@@ -120,7 +126,11 @@ const gatingDepth = deck => deck.usesSubdecks ? deck.progressionDepth ?? Infinit
 // empty subdeck passes vacuously and never holds the ones after it shut).
 // firstLocked: the first shut subdeck in reading order and the sibling before
 // it that holds it shut, or null when nothing is shut.
-const walkProgression = (subdecks, cards, depth) => {
+// With a root, the walk is of that subdeck alone, studied on its own: it is
+// open whatever stands before it in the deck — asking for it is the
+// studier's say — and progression holds among the subdecks inside it, at the
+// levels they sit at in the deck.
+const walkProgression = (subdecks, cards, depth, rootId = null) => {
 	const children = childrenByParent(subdecks);
 	const own = new Map();
 	for (const card of cards) {
@@ -132,6 +142,8 @@ const walkProgression = (subdecks, cards, depth) => {
 
 	const unlocked = new Set();
 	let firstLocked = null;
+	if (rootId) unlocked.add(rootId);
+	const rootLevel = rootId ? subdeckOutline(subdecks).find(entry => entry.subdeck.id === rootId)?.level ?? 0 : 0;
 	const open = (parent, level) => {
 		const siblings = children.get(parent) ?? [];
 		for (const [index, subdeck] of siblings.entries()) {
@@ -144,13 +156,15 @@ const walkProgression = (subdecks, cards, depth) => {
 			}
 		}
 	}
-	open(null, 1);
+	open(rootId, rootLevel + 1);
 	return { unlocked, firstLocked };
 }
 
-const unlockedSubdeckIds = (subdecks, cards, depth = Infinity) => walkProgression(subdecks, cards, depth).unlocked;
+const unlockedSubdeckIds = (subdecks, cards, depth = Infinity, rootId = null) =>
+	walkProgression(subdecks, cards, depth, rootId).unlocked;
 
-const firstLockedSubdeck = (subdecks, cards, depth = Infinity) => walkProgression(subdecks, cards, depth).firstLocked;
+const firstLockedSubdeck = (subdecks, cards, depth = Infinity, rootId = null) =>
+	walkProgression(subdecks, cards, depth, rootId).firstLocked;
 
 // how far along a subdeck is toward passing, for the "unlocks at" note
 const subdeckProgress = cards => ({
@@ -160,4 +174,4 @@ const subdeckProgress = cards => ({
 	total: cards.length
 });
 
-export { GRADUATED_SHARE, subdeckLabel, subdeckName, isSeen, isGraduated, subdeckPasses, childrenByParent, subdeckOutline, subdeckOrder, leafSubdecks, subdeckChoices, subdeckSubtree, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress }
+export { GRADUATED_SHARE, subdeckName, subdeckPath, subdeckLevels, isSeen, isGraduated, subdeckPasses, childrenByParent, subdeckOutline, subdeckOrder, leafSubdecks, subdeckChoices, subdeckSubtree, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress }

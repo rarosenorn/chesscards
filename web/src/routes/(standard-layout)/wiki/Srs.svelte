@@ -16,14 +16,17 @@
 <h3>Subdeck progression</h3>
 
 <p>
-	With subdecks on, a deck can additionally hold its later subdecks shut until
-	the earlier ones are learned, so a long deck introduces itself in order
-	instead of all at once. Its own switch sits under the same
-	<strong>Settings</strong>, below the one above.
+	A deck with subdecks can hold its later subdecks shut until the earlier
+	ones are learned, so a long deck introduces itself in order instead of all
+	at once. How far down that goes is chosen under the deck's
+	<strong>Settings</strong>: not at all, through one or more levels of
+	subdecks, or through all of them. Inside the last level that counts,
+	everything is mixed.
 </p>
 
 <p>
-	A subdeck <strong>passes</strong> when both are true of its cards:
+	A subdeck <strong>passes</strong> when both are true of its cards — for a
+	subdeck that holds subdecks, of all the cards under it:
 </p>
 <ul>
 	<li>every card has been <strong>seen</strong> — met at least once</li>
@@ -34,10 +37,12 @@
 </ul>
 
 <p>
-	Subdecks open <strong>cumulatively</strong>: the first is always open, and
-	each next one opens once every subdeck before it has passed. So a subdeck
-	is locked while any earlier one is still short of the bar, and study says
-	which one is holding it and how far along that one is.
+	Subdecks open <strong>cumulatively</strong> among those that sit side by
+	side: the first is always open, and each next one opens once every one
+	before it has passed. So a subdeck is locked while any earlier one is
+	still short of the bar, and study says which one is holding it and how far
+	along that one is. A locked subdeck can still be studied on its own:
+	right-click it in <strong>Cards</strong> and choose Study subdeck.
 </p>
 
 <p>

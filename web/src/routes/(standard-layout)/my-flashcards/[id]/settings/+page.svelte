@@ -3,8 +3,26 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import FormErrors from "$lib/components/FormErrors.svelte"
 	import { typedConfirmModal } from "$lib/modals.svelte.js"
+	import { subdeckLevels } from "$lib/subdecks.js"
 
 	let { data, form } = $props();
+
+	// How deep progression can run on this deck: not at all, one number for
+	// each level short of its last, or every level it has. A deck with a
+	// single level of subdecks has only the two ends to offer, which then
+	// read as off and on. A stored depth that reaches the deck's last level
+	// is the same as every level.
+	let levels = $derived(subdeckLevels(data.deck.subdecks));
+	let depths = $derived([
+		{ value: "none", label: levels > 1 ? "None" : "Off" },
+		...Array.from({ length: Math.max(0, levels - 1) }, (_, index) =>
+			({ value: String(index + 1), label: index === 0 ? "1 level" : `${index + 1} levels` })),
+		{ value: "all", label: levels > 1 ? "All levels" : "On" }
+	]);
+	let chosenDepth = $derived.by(() => {
+		const depth = data.deck.progressionDepth;
+		return depth === 0 ? "none" : depth === null || depth >= levels ? "all" : String(depth);
+	});
 
 	let deleteForm = $state();
 	let resetForm = $state();
@@ -80,13 +98,22 @@
 		<h3>Subdeck progression</h3>
 		<p class="section-note">
 			New cards arrive subdeck by subdeck — the next subdeck unlocks once
-			the one before is learned. Off, every card is available from the start.
+			the one before is learned.
+			{#if levels > 1}
+				Choose how many levels of subdecks that goes for: inside the
+				last one that counts, everything is mixed.
+			{/if}
+			With none, every card is available from the start.
 		</p>
 		<form method="POST" action="?/progression" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
-			<label class="progression-toggle">
-				<input type="checkbox" name="value" value="true" checked={data.deck.progressionDepth !== 0} />
-				Follow subdeck progression
-			</label>
+			<div class="pills">
+				{#each depths as option}
+					<label class="pill" class:selected={chosenDepth === option.value}>
+						<input type="radio" name="value" value={option.value} checked={chosenDepth === option.value} />
+						{option.label}
+					</label>
+				{/each}
+			</div>
 		</form>
 	</section>
 	{/if}
@@ -179,12 +206,38 @@
 		text-decoration: none;
 		color: inherit;
 	}
-	.progression-toggle {
+	/* the depth choice, as the profile's three-way is drawn */
+	.pills {
 		display: flex;
-		align-items: center;
-		gap: 8px;
-		font-size: 0.95rem;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.pill {
+		border: 1px solid rgba(0, 0, 0, 0.25);
+		border-radius: 16px;
+		padding: 4px 12px;
 		cursor: pointer;
+		font-size: 0.9rem;
+		color: rgba(0, 0, 0, 0.75);
+	}
+	.pill:hover {
+		background-color: gainsboro;
+	}
+	.pill.selected {
+		background-color: var(--accent);
+		border-color: var(--accent);
+		color: var(--accent-text);
+	}
+	/* the radio itself is visually hidden; keyboard focus shows on the pill */
+	.pill input {
+		position: absolute;
+		opacity: 0;
+		width: 0;
+		height: 0;
+	}
+	.pill:has(input:focus-visible) {
+		outline: 2px solid var(--accent);
+		outline-offset: 1px;
 	}
 	.danger-actions {
 		display: flex;

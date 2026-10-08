@@ -15,7 +15,7 @@
 	let lists = $state({ meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks });
 	$effect(() => { lists = { meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks } });
 
-	// The plus beside a list's title asks for a name and makes a deck (or a
+	// The Add button beside a list's title asks for a name and makes a deck (or a
 	// metadeck) of it. A name the server refuses is asked for again, with
 	// what was wrong said under the field and what was typed still in it.
 	let naming = $state({ value: "", error: null });
@@ -317,7 +317,7 @@
 						>i</span>
 					{/if}
 					{#if list !== "market"}
-						<button class="new-btn" aria-label={list === "meta" ? "New metadeck" : "New deck"} onclick={() => createNew(list)}>+</button>
+						<button class="std-btn new-btn" aria-label={list === "meta" ? "Add metadeck" : "Add deck"} onclick={() => createNew(list)}>Add</button>
 					{/if}
 				</th>
 				<th>New</th>
@@ -596,29 +596,16 @@
 	table:last-of-type {
 		margin-bottom: 44px;
 	}
-	/* the plus beside a list's title that adds to it */
+	/* the button beside a list's title that adds to it: the app's standard
+	   button, at the size of a note beside a heading */
 	.new-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 16px;
-		height: 16px;
-		margin-left: 6px;
-		padding: 0 0 1px;
-		border: 1px solid rgba(0, 0, 0, 0.45);
-		border-radius: 50%;
-		background: none;
-		font: inherit;
+		margin-left: 8px;
+		padding: 2px 10px;
+		border-radius: 4px;
+		font-size: 0.8rem;
 		font-weight: 400;
-		font-size: 0.95rem;
-		line-height: 1;
-		color: rgba(0, 0, 0, 0.6);
 		vertical-align: 2px;
 		cursor: pointer;
-	}
-	.new-btn:hover {
-		border-color: black;
-		color: black;
 	}
 	/* the name field in the modal that follows */
 	.name-prompt {

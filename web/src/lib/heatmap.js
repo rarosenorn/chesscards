@@ -1,5 +1,5 @@
-// The activity heatmap: a square for each study day of the last year, month
-// by month in columns of weeks, shaded by how much was answered that day. Days are
+// The activity heatmap: a square for each study day of the last year, in
+// columns of weeks, shaded by how much was answered that day. Days are
 // 'YYYY-MM-DD' strings throughout (the server says which day an answer and
 // "today" fall in), reckoned here as plain calendar dates.
 
@@ -16,41 +16,30 @@ const weekday = day => (new Date(parse(day)).getUTCDay() + 6) % 7;
 const levelOf = (count, average) =>
 	count <= 0 ? 0 : count <= average * 0.5 ? 1 : count <= average ? 2 : count <= average * 1.5 ? 3 : 4;
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const two = n => String(n).padStart(2, "0");
-
-// The last `months` months, the one `today` is in last, each standing on
-// its own: { label, weeks }, the label "Oct '26", the weeks columns of
-// seven (Monday first) that hold that month's days only, null wherever a
-// column's day belongs to the month before or after. A day is
-// { day, count, level }, with `today` on the day it is; a day of this month
-// still to come is { day, future: true }.
-const heatmapMonths = (counts, today, months = 12) => {
+// The last `weeks` weeks as columns of seven days, Monday first, the last
+// column the week `today` is in. Each day is { day, count, level, today };
+// the days of that week still to come are null.
+const heatmapWeeks = (counts, today, weeks = 53) => {
 	const byDay = new Map(counts.map(({ day, count }) => [day, count]));
-	const [year, month] = today.split("-").map(Number);
-	const firsts = Array.from({ length: months }, (_, index) =>
-		new Date(Date.UTC(year, month - months + index, 1)));
-	const start = firsts[0].toISOString().slice(0, 10);
+	const start = addDays(today, -weekday(today) - (weeks - 1) * 7);
 	const shown = counts.filter(({ day, count }) => day >= start && day <= today && count > 0);
 	const average = shown.length ? shown.reduce((sum, { count }) => sum + count, 0) / shown.length : 0;
-
-	return firsts.map(first => {
-		const y = first.getUTCFullYear(), m = first.getUTCMonth();
-		const length = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
-		// how far down its first column the month begins
-		const offset = weekday(first.toISOString().slice(0, 10));
-		const weeks = Array.from({ length: Math.ceil((offset + length) / 7) }, (_, week) =>
-			Array.from({ length: 7 }, (_, index) => {
-				const date = week * 7 + index - offset + 1;
-				if (date < 1 || date > length) return null;
-				const day = `${y}-${two(m + 1)}-${two(date)}`;
-				if (day > today) return { day, future: true };
-				const count = byDay.get(day) ?? 0;
-				return { day, count, level: levelOf(count, average), today: day === today };
-			}));
-		return { label: `${MONTHS[m]} '${two(y % 100)}`, weeks };
-	});
+	return Array.from({ length: weeks }, (_, week) => Array.from({ length: 7 }, (_, index) => {
+		const day = addDays(start, week * 7 + index);
+		if (day > today) return null;
+		const count = byDay.get(day) ?? 0;
+		return { day, count, level: levelOf(count, average), today: day === today };
+	}));
 }
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// The month named at a column, as "Oct '26": at the first column a month
+// begins in (the one holding its 1st), and at no other.
+const monthLabels = columns => columns.map(column => {
+	const first = column.find(cell => cell?.day.endsWith("-01"));
+	return first ? `${MONTHS[Number(first.day.slice(5, 7)) - 1]} '${first.day.slice(2, 4)}` : "";
+});
 
 // a day as it is said in a square's tooltip: 8 Oct 2026
 const sayDay = day => `${Number(day.slice(8))} ${MONTHS[Number(day.slice(5, 7)) - 1]} ${day.slice(0, 4)}`;
@@ -75,4 +64,4 @@ const streaks = (counts, today) => {
 	return { total, current, longest };
 }
 
-export { levelOf, heatmapMonths, sayDay, streaks }
+export { levelOf, heatmapWeeks, monthLabels, sayDay, streaks }

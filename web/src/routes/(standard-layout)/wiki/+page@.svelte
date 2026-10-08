@@ -1,10 +1,12 @@
 <script>
-	// The wiki is one page with a section list down its left side: a section
-	// is chosen in the URL (?section=), so a section can be linked and the
-	// back button walks them. FAQ lives here now — it used to be its own top
+	// The wiki is one page with a section list to the left of it, outside the
+	// page's own card as the marketplace's themes are: a section is chosen in
+	// the URL (?section=), so a section can be linked and the back button
+	// walks them. FAQ lives here now — it used to be its own top
 	// nav entry, which put a handful of questions on the same footing as the
 	// whole marketplace.
 	import { page } from "$app/state"
+	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import Faq from "./Faq.svelte"
 	import Editor from "./Editor.svelte"
 	import Srs from "./Srs.svelte"
@@ -26,68 +28,62 @@
 	);
 </script>
 
-<div class="wiki">
+<div class="wiki-layout">
 	<nav class="wiki-nav">
-		<ul>
-			{#each sections as section (section.slug)}
-				<li>
-					<a
-						href="?section={section.slug}"
-						class:current={section.slug === current.slug}
-						aria-current={section.slug === current.slug ? "page" : undefined}
-					>
-						{section.title}
-					</a>
-				</li>
-			{/each}
-		</ul>
+		{#each sections as section (section.slug)}
+			<a
+				href="?section={section.slug}"
+				class:current={section.slug === current.slug}
+				aria-current={section.slug === current.slug ? "page" : undefined}
+			>
+				{section.title}
+			</a>
+		{/each}
 	</nav>
-	<article class="wiki-body">
-		<h2>{current.title}</h2>
-		<current.component />
-	</article>
+	<div class="page-column">
+		<StandardLayout>
+			<article class="wiki-body">
+				<h2>{current.title}</h2>
+				<current.component />
+			</article>
+		</StandardLayout>
+	</div>
 </div>
 
 <style>
-	.wiki {
-		display: flex;
-		align-items: flex-start;
-		gap: 28px;
+	/* As the marketplace lays itself out: the page's column is centred in
+	   the window and the side columns take the rest, the section list
+	   sitting at the right edge of the left one. */
+	.wiki-layout {
+		display: grid;
+		grid-template-columns: 1fr minmax(0, 1000px) 1fr;
+		gap: 30px;
 	}
-	/* the section list is the page's spine: a fixed column, ruled off from
-	   the body so the two read as list and content rather than two columns */
 	.wiki-nav {
-		flex: none;
-		width: 170px;
-		border-right: 1px solid #e4e4e4;
-		padding-right: 12px;
-	}
-	.wiki-nav ul {
-		list-style: none;
-		margin: 0;
-		padding: 0;
 		display: flex;
 		flex-direction: column;
+		width: 190px;
 		gap: 2px;
+		/* container offset (25px) + heading strip height (71px): level with
+		   the top of the content under the page's heading */
+		margin-top: 96px;
+		align-self: start;
+		justify-self: end;
 	}
 	.wiki-nav a {
-		display: block;
-		padding: 5px 10px;
+		padding: 8px 12px;
 		border-radius: 4px;
-		color: #404040;
+		color: rgba(0, 0, 0, 0.7);
 		text-decoration: none;
-		font-size: 0.95rem;
 	}
 	.wiki-nav a:hover {
-		background-color: #f2f2f2;
+		background-color: rgba(0, 0, 0, 0.07);
 	}
 	.wiki-nav a.current {
-		background-color: var(--accent-subtle);
-		color: var(--accent);
-		font-weight: 500;
+		background-color: var(--accent);
+		color: white;
 	}
-	.wiki-body {
-		flex: 1;
+	.page-column {
 		min-width: 0;
 	}
 	.wiki-body h2 {

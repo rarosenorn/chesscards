@@ -655,50 +655,49 @@
 		applyFresh(await renameSubdeck({ deckId: deck.id, subdeckId: rename.subdeckId, name: rename.value.trim() }));
 	}
 
-	// The way back from subdecks that deletes no card: the subdecks inside a
-	// subdeck are taken away and all their cards become its own, in order.
-	// Asked of no subdeck, it is the whole deck that goes back to a plain
-	// list. A grouping of any size is asked about first, since it cannot be
-	// put back; a single subdeck going (the Temp left by a first subdeck made
-	// and deleted again) is not.
+	// Unfolding: the way back from subdecks that deletes no card. The
+	// subdecks inside a subdeck are taken away and all their cards become its
+	// own, in order; asked of no subdeck, it is the whole deck that goes back
+	// to a plain list. The grouping cannot be put back, so it is always asked
+	// about first, in words that say what goes and what stays.
 	const holdsSubdecks = subdeck => deck.subdecks.some(other => other.parent_id === subdeck.id);
 
-	const flatten = async (subdeck = null) => {
+	const unfold = async (subdeck = null) => {
 		const inside = subdeck ? subdeckSubtree(deck.subdecks, subdeck.id).size - 1 : deck.subdecks.length;
-		if (inside > 1) {
-			const cards = subdeck ? cardsUnder(deck.subdecks, deck.cards, subdeck.id).length : deck.cards.length;
-			const count = cards === 1 ? "1 card stays" : `${cards} cards stay`;
-			const confirmed = await confirmModal({
-				title: "Remove subdecks",
-				message: subdeck
-					? `This removes the ${inside} subdecks inside "${subdeck.name}". Their ${count}, in order, directly in "${subdeck.name}".`
-					: `This removes all ${inside} subdecks. The deck's ${count}, in order, as one plain list.`,
-				confirmLabel: "Remove subdecks"
-			});
-			if (!confirmed) return;
-		}
+		const cards = subdeck ? cardsUnder(deck.subdecks, deck.cards, subdeck.id).length : deck.cards.length;
+		const gone = subdeck
+			? `${inside === 1 ? "the subdeck" : `the ${inside} subdecks`} inside "${subdeck.name}"`
+			: inside === 1 ? "the deck's subdeck" : `all ${inside} of the deck's subdecks`;
+		const kept = cards === 0
+			? "There are no cards in them."
+			: `${cards === 1 ? "The 1 card in them stays" : `The ${cards} cards in them stay`}, in the same order, `
+				+ (subdeck ? `directly in "${subdeck.name}".` : "as one plain list.");
+		const confirmed = await confirmModal({
+			title: "Unfold subdecks",
+			message: `This removes ${gone}. ${kept}`,
+			confirmLabel: "Unfold"
+		});
+		if (!confirmed) return;
 		applyFresh(await flattenSubdecks({ deckId: deck.id, subdeckId: subdeck?.id }));
 	}
 
-	// A subdeck goes with everything in it. That is asked about first when
-	// there is something to lose: the cards under it, with their history.
-	// (The deck's last one can go as well: the deck then stops using subdecks
-	// and is a plain list again.)
+	// A subdeck goes with everything in it: the subdecks inside it and every
+	// card under it, with their history. Always asked about first, in words
+	// that say what goes. (The deck's last one can go as well: the deck then
+	// stops using subdecks and is a plain list again.)
 	const removeSubdeck = async subdeck => {
 		const inside = subdeckSubtree(deck.subdecks, subdeck.id).size - 1;
 		const cards = cardsUnder(deck.subdecks, deck.cards, subdeck.id);
-		if (cards.length > 0) {
-			const count = cards.length === 1 ? "the 1 card" : `the ${cards.length} cards`;
-			const confirmed = await confirmModal({
-				title: "Delete subdeck",
-				message: `This permanently deletes "${subdeck.name}"`
-					+ (inside > 0 ? `, the ${inside === 1 ? "subdeck" : `${inside} subdecks`} inside it` : "")
-					+ ` and ${count} in it, with their review history.`,
-				confirmLabel: "Delete",
-				danger: true
-			});
-			if (!confirmed) return;
-		}
+		const subdecksGone = inside > 0 ? `, the ${inside === 1 ? "subdeck" : `${inside} subdecks`} inside it` : "";
+		const confirmed = await confirmModal({
+			title: "Delete subdeck",
+			message: cards.length > 0
+				? `This permanently deletes "${subdeck.name}"${subdecksGone} and ${cards.length === 1 ? "the 1 card" : `the ${cards.length} cards`} in it, with their review history.`
+				: `This permanently deletes "${subdeck.name}"${subdecksGone}. There are no cards in it.`,
+			confirmLabel: "Delete",
+			danger: true
+		});
+		if (!confirmed) return;
 		if (cards.some(card => card.id === draft.editingCardId)) stopEditing();
 		applyFresh(await deleteSubdeck({ deckId: deck.id, subdeckId: subdeck.id }));
 	}
@@ -1044,10 +1043,10 @@
 				onclick={() => {
 					const subdeck = subdeckMenu.subdeck;
 					subdeckMenu = null;
-					flatten(subdeck);
+					unfold(subdeck);
 				}}
 			>
-				Remove its subdecks, keep cards
+				Unfold subdecks
 			</button>
 		{/if}
 		<button
@@ -1348,7 +1347,7 @@
 									<div class="subdeck-head">
 										<button class="add-subdeck-btn" onmousedown={e => e.stopPropagation()} onclick={() => startAddSubdeck()}>+ Add subdeck</button>
 										{#if deck.usesSubdecks}
-											<button class="add-subdeck-btn remove-subdecks-btn" onmousedown={e => e.stopPropagation()} onclick={() => flatten()}>Remove all subdecks</button>
+											<button class="add-subdeck-btn remove-subdecks-btn" onmousedown={e => e.stopPropagation()} onclick={() => unfold()}>Unfold subdecks</button>
 										{/if}
 									</div>
 								{/if}

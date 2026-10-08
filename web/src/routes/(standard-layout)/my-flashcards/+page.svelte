@@ -439,7 +439,7 @@
 	.expander {
 		position: relative;
 		z-index: 1;
-		width: 22px;
+		width: 16px;
 		height: 16px;
 		padding: 0;
 		border: none;
@@ -447,7 +447,6 @@
 		cursor: pointer;
 		vertical-align: baseline;
 		font: inherit;
-		font-size: 1.3em;
 		line-height: 16px;
 		color: #404040;
 	}
@@ -460,7 +459,7 @@
 	.expander::after {
 		content: "";
 		position: absolute;
-		inset: -8px -3px -8px -6px;
+		inset: -8px -5px -8px -9px;
 	}
 	.expander.open::before {
 		content: "\2212";

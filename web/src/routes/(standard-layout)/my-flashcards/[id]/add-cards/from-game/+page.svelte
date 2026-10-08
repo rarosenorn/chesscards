@@ -1,7 +1,7 @@
 <script>
 	import { getContext, onMount } from "svelte"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
-	import { subdeckName } from "$lib/subdecks.js"
+	import { subdeckChoices } from "$lib/subdecks.js"
 	import { startImport, saveUsername } from "./import.remote.js"
 	import { current, follow, resume, cancel } from "./import-state.svelte.js"
 	import { SPEED_ICON_PATHS } from "$lib/lichess-speed-icons.js"
@@ -14,10 +14,12 @@
 	const KINDS = [["blunder", "Blunders"], ["mistake", "Mistakes"], ["inaccuracy", "Inaccuracies"]];
 	let kinds = $state({ blunder: true, mistake: true, inaccuracy: true });
 
-	let subdecksSorted = $derived([...deck.subdecks].sort((a, b) => a.position - b.position));
+	// the deck's outline; cards go only into the subdecks that hold cards
+	let choices = $derived(subdeckChoices(deck.subdecks));
+	let cardSubdecks = $derived(choices.filter(choice => !choice.disabled));
 	let subdeckId = $state(null);
 	let validSubdeckId = $derived(
-		subdecksSorted.some(subdeck => subdeck.id === subdeckId) ? subdeckId : subdecksSorted.at(-1)?.id
+		cardSubdecks.some(choice => choice.id === subdeckId) ? subdeckId : cardSubdecks.at(-1)?.id
 	);
 
 	// a busy month is hundreds of games: the list opens on the newest few —
@@ -267,8 +269,8 @@
 			<label class="subdeck">
 				Subdeck
 				<select value={validSubdeckId} onchange={e => subdeckId = e.currentTarget.value}>
-					{#each subdecksSorted as subdeck (subdeck.id)}
-						<option value={subdeck.id}>{subdeckName(subdeck)}</option>
+					{#each choices as choice (choice.id)}
+						<option value={choice.id} disabled={choice.disabled}>{choice.label}</option>
 					{/each}
 				</select>
 			</label>

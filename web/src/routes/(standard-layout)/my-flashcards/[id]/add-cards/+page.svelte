@@ -12,7 +12,7 @@
 	import { page } from "$app/state"
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
 	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft, loadFrozenSides, saveFrozenSides, loadFrozenBoards, saveFrozenBoards, loadSubdeckId, saveSubdeckId } from "$lib/add-cards-draft.js"
-	import { subdeckName } from "$lib/subdecks.js"
+	import { subdeckChoices } from "$lib/subdecks.js"
 	import Snowflake from "$lib/icons/Snowflake.svelte"
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
@@ -43,12 +43,15 @@
 	// which subdeck the cards are filed into — like the type, a sticky mode of
 	// writing the deck; a stored subdeck that has since been deleted falls back
 	// to the last one
-	let subdecksSorted = $derived([...deck.subdecks].sort((a, b) => a.position - b.position));
+	// the picker lists the deck's outline; cards go only into the subdecks
+	// that hold cards, so those are the ones it lets through
+	let choices = $derived(subdeckChoices(deck.subdecks));
+	let cardSubdecks = $derived(choices.filter(choice => !choice.disabled));
 	let subdeckId = $state(browser ? loadSubdeckId(deckId) : null);
 	let validSubdeckId = $derived(
-		subdecksSorted.some(subdeck => subdeck.id === subdeckId)
+		cardSubdecks.some(choice => choice.id === subdeckId)
 			? subdeckId
-			: subdecksSorted[subdecksSorted.length - 1]?.id
+			: cardSubdecks[cardSubdecks.length - 1]?.id
 	);
 	// A subdeck can be started from here, so a run of cards that belongs in a
 	// new one does not send you to the Cards tab and back. The + opens a
@@ -387,10 +390,10 @@
 	{#if deck.usesSubdecks}
 	<div class="subdeck-picker">
 		<label>
-			Ch.
+			Subdeck
 			<select value={validSubdeckId} onchange={e => chooseSubdeck(e.currentTarget.value)}>
-				{#each subdecksSorted as subdeck (subdeck.id)}
-					<option value={subdeck.id}>{subdeckName(subdeck)}</option>
+				{#each choices as choice (choice.id)}
+					<option value={choice.id} disabled={choice.disabled}>{choice.label}</option>
 				{/each}
 			</select>
 		</label>

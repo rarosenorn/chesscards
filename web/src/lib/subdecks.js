@@ -84,6 +84,12 @@ const subdeckOrder = subdecks =>
 const leafSubdecks = subdecks =>
 	subdeckOutline(subdecks).filter(entry => entry.leaf).map(entry => entry.subdeck);
 
+// The subdecks as the choices of where cards go: the outline top to bottom,
+// each name stepped in by its depth (with non-breaking spaces, which a
+// <select> keeps). Only the ones that hold cards can be chosen.
+const subdeckChoices = subdecks => subdeckOutline(subdecks).map(({ subdeck, level, leaf }) =>
+	({ id: subdeck.id, label: "\u00a0\u00a0\u00a0".repeat(level - 1) + subdeck.name, disabled: !leaf }));
+
 // the ids of a subdeck and of everything inside it
 const subdeckSubtree = (subdecks, subdeckId) => {
 	const children = childrenByParent(subdecks);
@@ -154,4 +160,4 @@ const subdeckProgress = cards => ({
 	total: cards.length
 });
 
-export { GRADUATED_SHARE, subdeckLabel, subdeckName, isSeen, isGraduated, subdeckPasses, childrenByParent, subdeckOutline, subdeckOrder, leafSubdecks, subdeckSubtree, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress }
+export { GRADUATED_SHARE, subdeckLabel, subdeckName, isSeen, isGraduated, subdeckPasses, childrenByParent, subdeckOutline, subdeckOrder, leafSubdecks, subdeckChoices, subdeckSubtree, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress }

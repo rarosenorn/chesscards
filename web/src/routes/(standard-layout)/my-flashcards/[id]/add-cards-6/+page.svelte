@@ -16,7 +16,7 @@
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import ChessboardNode from "$lib/components/ChessboardNode.svelte"
 	import { newBoard, boardForJson, docSideJson, docHasContent } from "$lib/card-utils.js"
-	import { subdeckLabel } from "$lib/subdecks.js"
+	import { subdeckChoices } from "$lib/subdecks.js"
 	import { loadSubdeckId, saveSubdeckId, loadCardType, saveCardType, DEFAULT_CARD_TYPE } from "$lib/add-cards-draft.js"
 
 	const startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -33,12 +33,13 @@
 		cardType = value;
 		saveCardType(deckId, value);
 	}
-	let subdecksSorted = $derived([...deck.subdecks].sort((a, b) => a.position - b.position));
+	let choices = $derived(subdeckChoices(deck.subdecks));
+	let cardSubdecks = $derived(choices.filter(choice => !choice.disabled));
 	let subdeckId = $state(browser ? loadSubdeckId(deckId) : null);
 	let validSubdeckId = $derived(
-		subdecksSorted.some(subdeck => subdeck.id === subdeckId)
+		cardSubdecks.some(choice => choice.id === subdeckId)
 			? subdeckId
-			: subdecksSorted[subdecksSorted.length - 1]?.id
+			: cardSubdecks[cardSubdecks.length - 1]?.id
 	);
 	const chooseSubdeck = value => {
 		subdeckId = value;
@@ -176,12 +177,12 @@
 {/snippet}
 
 <div class="type-row">
-	{#if subdecksSorted.length > 1}
+	{#if cardSubdecks.length > 1}
 		<label class="subdeck-picker">
 			Subdeck
 			<select value={validSubdeckId} onchange={e => chooseSubdeck(e.currentTarget.value)}>
-				{#each subdecksSorted as subdeck (subdeck.id)}
-					<option value={subdeck.id}>{subdeckLabel(subdeck)}</option>
+				{#each choices as choice (choice.id)}
+					<option value={choice.id} disabled={choice.disabled}>{choice.label}</option>
 				{/each}
 			</select>
 		</label>

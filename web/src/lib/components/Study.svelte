@@ -257,9 +257,14 @@
 	// on, so a break elsewhere on the site, or a reload, does not end it.
 	// It lasts the study day (to the rollover hour, as due dates are read):
 	// come back after the day has turned and it is gone, so yesterday's
-	// cramming never stands in the way of today's reviews.
+	// cramming never stands in the way of today's reviews. A session being
+	// studied as the day turns carries on into the new one: every answer
+	// marks it as that day's, and one touched within the last hour is kept
+	// whichever side of the hour that was.
 	const CRAM_PREFIX = "chesscards:cram:";
-	const sameStudyDay = at => dayStart(at, rolloverHour()) === dayStart(Date.now(), rolloverHour());
+	const CRAM_GRACE_MS = 60 * 60 * 1000;
+	const sameStudyDay = at =>
+		dayStart(at, rolloverHour()) === dayStart(Date.now(), rolloverHour()) || Date.now() - at < CRAM_GRACE_MS;
 	const storedCram = key => {
 		try {
 			const saved = JSON.parse(localStorage.getItem(CRAM_PREFIX + key));

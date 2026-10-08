@@ -19,7 +19,7 @@
 	import MoveRefDialog from "$lib/components/MoveRefDialog.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
 	import { createTabTrap } from "$lib/tab-trap.js"
-	import { createSubdeck } from "../browse/browse.remote.js"
+	import { createSubdeck } from "$lib/deck.remote.js"
 	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docHasBoardPairBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage, docPuzzlesWithoutBackBlocks, puzzleWithoutBackMessage } from "$lib/card-utils.js"
 
 	// the shared deck context (layout); new cards are pushed into it so

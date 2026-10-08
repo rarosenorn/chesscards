@@ -38,4 +38,18 @@ const holders = (metadecks, metadeckId) => {
 	return held;
 }
 
-export { resolveDecks, holders }
+// A metadeck's decks (`parts`, as study has them) as one outline of subdecks,
+// for looking through its cards: each deck stands at the top under its own
+// name, saying which deck it is (`deckId`), with the deck's subdecks under
+// it. A deck that uses none has its cards directly under its name: the one
+// subdeck every deck keeps stands in for it.
+const metadeckOutline = parts => parts.flatMap((part, index) => {
+	const top = { parent_id: null, name: part.name, position: index + 1, deckId: part.id };
+	if (!part.usesSubdecks && part.subdecks.length === 1) return [{ ...part.subdecks[0], ...top }];
+	return [
+		{ id: part.id, ...top },
+		...part.subdecks.map(subdeck => ({ ...subdeck, parent_id: subdeck.parent_id ?? part.id }))
+	];
+});
+
+export { resolveDecks, holders, metadeckOutline }

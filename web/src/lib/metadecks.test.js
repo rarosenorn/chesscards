@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { resolveDecks, holders } from "./metadecks.js"
+import { resolveDecks, holders, metadeckOutline } from "./metadecks.js"
 
 const deck = id => ({ kind: "deck", id });
 const instance = id => ({ kind: "instance", id });
@@ -50,5 +50,31 @@ describe("the metadecks that cannot go inside one", () => {
 		expect([...holders(metadecks, "rook")].sort()).toEqual(["all", "endgames", "rook"]);
 		expect([...holders(metadecks, "all")]).toEqual(["all"]);
 		expect([...holders(metadecks, "other")]).toEqual(["other"]);
+	})
+})
+
+describe("a metadeck's decks as one outline", () => {
+	const parts = [
+		{ id: "plain", name: "Plain deck", usesSubdecks: false, subdecks: [{ id: "p1", parent_id: null, name: "Subdeck 1", position: 1 }] },
+		{ id: "tree", name: "Tree deck", usesSubdecks: true, subdecks: [
+			{ id: "t1", parent_id: null, name: "Rook", position: 1 },
+			{ id: "t2", parent_id: "t1", name: "Lucena", position: 1 }
+		] }
+	];
+	const outline = metadeckOutline(parts);
+
+	it("puts each deck at the top under its own name, in the metadeck's order", () => {
+		expect(outline.filter(node => node.parent_id === null).map(node => [node.name, node.position, node.deckId]))
+			.toEqual([["Plain deck", 1, "plain"], ["Tree deck", 2, "tree"]]);
+	})
+
+	it("keeps a plain deck's cards directly under its name", () => {
+		expect(outline.find(node => node.deckId === "plain").id).toBe("p1");
+	})
+
+	it("hangs a deck's subdecks under it as they were", () => {
+		expect(outline.find(node => node.id === "t1").parent_id).toBe("tree");
+		expect(outline.find(node => node.id === "t2").parent_id).toBe("t1");
+		expect(outline.find(node => node.id === "t1").deckId).toBeUndefined();
 	})
 })

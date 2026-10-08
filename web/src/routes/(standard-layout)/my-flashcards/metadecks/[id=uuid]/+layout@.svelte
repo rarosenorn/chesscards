@@ -13,16 +13,21 @@
 	setContext("deck", deck);
 	$effect(() => { Object.assign(deck, data.deck) });
 
+	// what the cards page keeps while the other tabs are visited: the card
+	// selected, the sort, what is folded (see the deck's layout)
+	const cardDrafts = $state({ browse: null });
+	setContext("cardDrafts", cardDrafts);
+
 	// which card is showing its answer in study (see the deck's layout)
 	const studyState = $state({ turnedCardId: null, cram: null });
 	setContext("studyState", studyState);
 
 	const base = $derived(`/my-flashcards/metadecks/${page.params.id}`);
-	const paths = ["study", "settings"];
-	const names = ["Study", "Settings"];
+	const paths = ["study", "browse", "settings"];
+	const names = ["Study", "Cards", "Settings"];
 
 	// the letters a deck's tabs answer to (the bar listens for them)
-	const TAB_KEYS = { s: "study", i: "settings" };
+	const TAB_KEYS = { s: "study", c: "browse", i: "settings" };
 	const shortcutFor = path => Object.keys(TAB_KEYS).find(key => TAB_KEYS[key] === path);
 </script>
 

@@ -3,6 +3,7 @@ import * as marketplace from "$lib/server/marketplace.js"
 
 export const load = async ({ params, locals }) => {
 	return {
+		contents: await marketplace.getDeckContents(params.id),
 		reviews: await marketplace.getReviews(params.id, locals.userId),
 		isAdmin: locals.isAdmin
 	}

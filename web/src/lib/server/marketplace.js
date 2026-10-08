@@ -118,6 +118,21 @@ const getDeckPreviewCards = async marketplaceDeckId => {
 	return rows;
 }
 
+// A marketplace deck's subdecks, each with the count of its own cards, for
+// the contents outline on its page; none for a deck that does not use them
+const getDeckContents = async marketplaceDeckId => {
+	const { rows } = await pool.query(`
+		select ms.id, ms.parent_id, ms.name, ms.position,
+			(select count(*) from marketplace_cards mc where mc.subdeck_id = ms.id)::int cards
+		from marketplace_subdecks ms
+		join marketplace_decks md on md.id = ms.marketplace_deck_id
+		where md.id = $1 and md.uses_subdecks`,
+		[marketplaceDeckId]
+	);
+
+	return rows;
+}
+
 // A marketplace deck's thumbnail
 const getDeckImage = async marketplaceDeckId => {
 	const { rows } = await pool.query(
@@ -546,4 +561,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceProgressionDepth, resetInstanceSchedule, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceProgressionDepth, resetInstanceSchedule, createInstanceReviewLog }

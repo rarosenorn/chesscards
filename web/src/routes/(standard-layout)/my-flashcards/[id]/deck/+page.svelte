@@ -5,6 +5,7 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import DescriptionEditor from "$lib/components/DescriptionEditor.svelte"
 	import DescriptionView from "$lib/components/DescriptionView.svelte"
+	import DeckContents from "$lib/components/DeckContents.svelte"
 	import DeckReviews from "$lib/components/DeckReviews.svelte"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import ThumbnailCrop from "$lib/components/ThumbnailCrop.svelte"
@@ -189,6 +190,7 @@
 			{:else}
 				<p class="empty">No description</p>
 			{/if}
+			<DeckContents subdecks={data.contents} />
 			{#if data.reviews}
 				<DeckReviews
 					marketplaceDeckId={data.listing.marketplaceDeckId}

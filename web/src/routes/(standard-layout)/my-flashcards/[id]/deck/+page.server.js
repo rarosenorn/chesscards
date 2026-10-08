@@ -21,6 +21,13 @@ export const load = async ({ locals, params, parent }) => {
 		pageTitle: "Deck",
 		listing,
 		sampleCards,
+		// the deck's subdecks with their card counts, for the contents outline
+		// the marketplace shows: the marketplace deck's own, or this deck's as
+		// they stand
+		contents: deck.isMarketplace
+			? await marketplace.getDeckContents(listing.marketplaceDeckId)
+			: !deck.usesSubdecks ? [] : deck.subdecks.map(subdeck =>
+				({ ...subdeck, cards: deck.cards.filter(card => card.subdeck_id === subdeck.id).length })),
 		// a deck taken from the marketplace is reviewed here as well as there
 		reviews: deck.isMarketplace
 			? await marketplace.getReviews(listing.marketplaceDeckId, locals.userId)

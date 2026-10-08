@@ -4,6 +4,7 @@
 	import { SvelteSet } from "svelte/reactivity"
 	import { confirmModal, settleModal } from "$lib/modals.svelte.js"
 	import Heatmap from "$lib/components/Heatmap.svelte"
+	import Info from "$lib/icons/Info.svelte"
 	import { invalidateAll } from "$app/navigation"
 	import { resolveDecks, holders } from "$lib/metadecks.js"
 	import { reorderDecks, reorderMetadecks, addToMetadeck, removeFromMetadeck } from "./decks.remote.js"
@@ -314,7 +315,7 @@
 						<span
 							class="info"
 							data-tip="A metadeck groups decks so you can study them together. Drag a deck onto one, or right-click a deck and choose Add to metadeck. The decks stay in their own lists; drag one out of a metadeck to take it out."
-						>i</span>
+						><Info /></span>
 					{/if}
 				</th>
 				<th>New</th>
@@ -480,24 +481,14 @@
 	tbody td:first-child {
 		padding-left: 4px;
 	}
-	/* the small "i" beside a section's title that explains it on hover: the
-	   old sign-board kind, a solid disc with a bold serif letter cut out */
+	/* the information sign beside a section's title that explains it on
+	   hover, in the orange such signs come in */
 	.info {
 		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 15px;
-		height: 15px;
 		margin-left: 4px;
-		border-radius: 50%;
-		background-color: rgba(0, 0, 0, 0.6);
-		font-family: Georgia, "Times New Roman", serif;
-		font-size: 11px;
-		font-weight: 700;
-		font-style: normal;
-		line-height: 1;
-		color: white;
-		vertical-align: 2px;
+		font-size: 15px;
+		color: #ffa107;
+		vertical-align: -2px;
 		cursor: help;
 	}
 	/* The plus that opens a row onto what is inside it, and the minus that

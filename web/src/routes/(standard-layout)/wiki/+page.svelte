@@ -10,12 +10,14 @@
 	import Srs from "./Srs.svelte"
 	import AnnotationColors from "./AnnotationColors.svelte"
 	import Shortcuts from "./Shortcuts.svelte"
+	import GoodDeck from "./GoodDeck.svelte"
 
 	const sections = [
 		{ slug: "editor", title: "Editor", component: Editor },
 		{ slug: "shortcuts", title: "Keyboard shortcuts", component: Shortcuts },
 		{ slug: "srs", title: "SRS algorithm", component: Srs },
 		{ slug: "annotation-colors", title: "Annotation colors", component: AnnotationColors },
+		{ slug: "good-deck", title: "How to make a good flashcard deck", component: GoodDeck },
 		{ slug: "faq", title: "FAQ", component: Faq }
 	];
 

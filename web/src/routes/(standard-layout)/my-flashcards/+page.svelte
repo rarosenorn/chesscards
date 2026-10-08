@@ -439,7 +439,7 @@
 	.expander {
 		position: relative;
 		z-index: 1;
-		width: 16px;
+		width: 22px;
 		height: 16px;
 		padding: 0;
 		border: none;
@@ -447,11 +447,20 @@
 		cursor: pointer;
 		vertical-align: baseline;
 		font: inherit;
+		font-size: 1.3em;
 		line-height: 16px;
 		color: #404040;
 	}
 	.expander::before {
 		content: "+";
+	}
+	/* the sign answers to more than its own strokes: the whole height of the
+	   row and some room either side, so a press meant for it does not land
+	   on the name and open the deck */
+	.expander::after {
+		content: "";
+		position: absolute;
+		inset: -8px -3px -8px -6px;
 	}
 	.expander.open::before {
 		content: "\2212";

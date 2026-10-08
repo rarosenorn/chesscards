@@ -64,9 +64,9 @@
 		flex-direction: column;
 		width: 190px;
 		gap: 2px;
-		/* the page's own offset from the bar above it: the list starts level
-		   with the top of the page's card */
-		margin-top: 25px;
+		/* a little under the top of the page's card (25px), so the first
+		   section's words stand level with where the heading's padding ends */
+		margin-top: 37px;
 		align-self: start;
 		justify-self: end;
 	}

@@ -64,9 +64,9 @@
 		flex-direction: column;
 		width: 190px;
 		gap: 2px;
-		/* container offset (25px) + heading strip height (71px): level with
-		   the top of the content under the page's heading */
-		margin-top: 96px;
+		/* the page's own offset from the bar above it: the list starts level
+		   with the top of the page's card */
+		margin-top: 25px;
 		align-self: start;
 		justify-self: end;
 	}

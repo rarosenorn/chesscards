@@ -1,5 +1,5 @@
 import { pool } from "./pool.js"
-import { BOUNDS } from "./decks.js"
+import { BOUNDS, inDeckOrder } from "./decks.js"
 import { createEmptyCard } from "ts-fsrs"
 
 const themes = ["openings", "endgames", "tactics", "strategy", "checkmates"];
@@ -144,23 +144,29 @@ const approveUploadRequest = async requestId => {
 		if (!request) throw new Error("Request not found or not pending");
 
 		const { rows: [mpDeck] } = await client.query(
-			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, chapters)
-			 select $1, $2, $3, $4, $5, $6, $7, d.chapters from decks d where d.id = $8 returning id`,
+			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, chapters, progression_depth)
+			 select $1, $2, $3, $4, $5, $6, $7, d.chapters, d.progression_depth from decks d where d.id = $8 returning id`,
 			[request.user_id, request.name, request.description, request.price, request.theme, request.image, request.image_type, request.deck_id]
 		);
-		// the stage structure travels with the cards, matched up by position
-		await client.query(
-			"insert into marketplace_stages(marketplace_deck_id, name, position) select $1, name, position from stages where deck_id = $2",
-			[mpDeck.id, request.deck_id]
-		);
-		// array_position gives the preview cards their requested order and
-		// leaves non-preview cards (and since-deleted preview ids) at null
+		// The stage tree travels with the cards. Every stage gets its new id
+		// up front (copies), so a copy can name its parent's copy and each
+		// card its stage's, all in the one statement. array_position gives
+		// the preview cards their requested order and leaves non-preview
+		// cards (and since-deleted preview ids) at null.
 		await client.query(`
+			with copies as (
+				select s.id source_id, gen_random_uuid() id, s.parent_id, s.name, s.position
+				from stages s where s.deck_id = $2
+			), copied_stages as (
+				insert into marketplace_stages(id, marketplace_deck_id, parent_id, name, position)
+				select copy.id, $1, parent.id, copy.name, copy.position
+				from copies copy
+				left join copies parent on parent.source_id = copy.parent_id
+			)
 			insert into marketplace_cards(marketplace_deck_id, stage_id, position, front, back, preview_order, card_type)
-			select $1, ms.id, c.position, c.front, c.back, array_position($3::uuid[], c.id), c.card_type
+			select $1, copy.id, c.position, c.front, c.back, array_position($3::uuid[], c.id), c.card_type
 			from cards c
-			join stages s on s.id = c.stage_id
-			join marketplace_stages ms on ms.marketplace_deck_id = $1 and ms.position = s.position
+			join copies copy on copy.source_id = c.stage_id
 			where c.deck_id = $2`,
 			[mpDeck.id, request.deck_id, request.preview_card_ids]
 		);
@@ -207,8 +213,10 @@ const createDeckInstance = async (userId, marketplaceDeckId) => {
 	try {
 		await client.query("begin");
 		const { rows: [instance] } = await client.query(
-			`insert into marketplace_deck_instances(user_id, marketplace_deck_id, position)
-			values($1, $2, (select coalesce(max(position), 0) + 1 from marketplace_deck_instances where user_id = $1))
+			`insert into marketplace_deck_instances(user_id, marketplace_deck_id, position, progression_depth)
+			values($1, $2,
+				(select coalesce(max(position), 0) + 1 from marketplace_deck_instances where user_id = $1),
+				(select progression_depth from marketplace_decks where id = $2))
 			returning id`,
 			[userId, marketplaceDeckId]
 		);
@@ -297,8 +305,8 @@ const reorderInstances = async (userId, ids) => {
 // render them unchanged
 const getInstanceById = async (userId, instanceId) => {
 	const { rows } = await pool.query(`
-		select i.id, md.name, md.chapters, i.stage_progression "stageProgression",
-			coalesce((select json_agg(json_build_object('id', ms.id, 'name', ms.name, 'position', ms.position) order by ms.position)
+		select i.id, md.name, md.chapters, i.progression_depth "progressionDepth",
+			coalesce((select json_agg(json_build_object('id', ms.id, 'parent_id', ms.parent_id, 'name', ms.name, 'position', ms.position) order by ms.position)
 				from marketplace_stages ms where ms.marketplace_deck_id = md.id), '[]'::json) stages,
 			coalesce(json_agg(json_build_object(
 				'id', ci.id,
@@ -310,16 +318,16 @@ const getInstanceById = async (userId, instanceId) => {
 				'reps', ci.reps, 'lapses', ci.lapses, 'learning_steps', ci.learning_steps,
 				'state', ci.state, 'last_review', ci.last_review,
 				'card_type', ci.card_type, 'finished_at', ci.finished_at
-			) order by ms.position, mc.position) filter (where ci.id is not null), '[]'::json) cards
+			)) filter (where ci.id is not null), '[]'::json) cards
 		from marketplace_deck_instances i
 		join marketplace_decks md on md.id = i.marketplace_deck_id
 		left join marketplace_card_instances ci on ci.marketplace_deck_instance_id = i.id
 		left join marketplace_cards mc on mc.id = ci.marketplace_card_id
-		left join marketplace_stages ms on ms.id = mc.stage_id
 		where i.user_id = $1 and i.id = $2
 		group by i.id, md.id, md.name, md.chapters`,
 		[userId, instanceId]
 	);
+	if (rows[0]) inDeckOrder(rows[0]);
 
 	return rows[0];
 }
@@ -342,12 +350,12 @@ const getInstanceListing = async (userId, instanceId) => {
 	return rows[0];
 }
 
-// the studier's own progression switch; flipping it is the same kind of
-// per-deck exception a personal deck's toggle is
-const updateInstanceStageProgression = async (userId, instanceId, value) => {
+// the studier's own progression depth; setting it is the same kind of
+// per-deck exception a personal deck's is
+const updateInstanceProgressionDepth = async (userId, instanceId, depth) => {
 	const { rowCount } = await pool.query(
-		"update marketplace_deck_instances set stage_progression = $3 where id = $2 and user_id = $1",
-		[userId, instanceId, value]);
+		"update marketplace_deck_instances set progression_depth = $3 where id = $2 and user_id = $1",
+		[userId, instanceId, depth]);
 	if (rowCount === 1) {
 		await pool.query(`update "user" set "stageProgressionMode" = 'per-deck' where id = $1`, [userId]);
 	}
@@ -534,4 +542,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceStageProgression, resetInstanceSchedule, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceProgressionDepth, resetInstanceSchedule, createInstanceReviewLog }

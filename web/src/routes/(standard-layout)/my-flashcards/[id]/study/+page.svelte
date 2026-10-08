@@ -6,7 +6,7 @@
 	import { boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
-	import { isSeen, unlockedStageIds, stageProgress, stageLabel } from "$lib/stages.js"
+	import { isSeen, stageOrder, cardsUnder, gatingDepth, unlockedStageIds, firstLockedStage, stageProgress, stageLabel } from "$lib/stages.js"
 	import { crossesDay, isDueAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
@@ -101,19 +101,18 @@
 		? isSeen(card)
 		: card.state === 2 || card.state === 3;
 
-	let stagePositions = $derived(new Map(deck.stages.map(stage => [stage.id, stage.position])));
+	let stageIndex = $derived(stageOrder(deck.stages));
 	const byDeckOrder = (a, b) =>
-		stagePositions.get(a.stage_id) - stagePositions.get(b.stage_id) || a.position - b.position;
+		stageIndex.get(a.stage_id) - stageIndex.get(b.stage_id) || a.position - b.position;
 
 	// Progression gates only the introduction of unseen cards: anything
 	// already met keeps its reviews coming even if its stage has fallen
-	// back behind the bar (cards moved, stages regrouped). A deck with
-	// chapters switched off shows none of them, so it gates nothing either —
-	// its stages may still be there, but nothing tells the studier so.
-	let progression = $derived(deck.chapters && deck.stageProgression);
-	let unlockedStages = $derived(unlockedStageIds(deck.stages, deck.cards));
-	const gated = card =>
-		progression && !isSeen(card) && !unlockedStages.has(card.stage_id);
+	// back behind the bar (cards moved, stages regrouped). How many levels
+	// of the deck's stages it runs through is the deck's own setting, and
+	// none at all where it gates nothing (gatingDepth).
+	let depth = $derived(gatingDepth(deck));
+	let unlockedStages = $derived(unlockedStageIds(deck.stages, deck.cards, depth));
+	const gated = card => !isSeen(card) && !unlockedStages.has(card.stage_id);
 
 	// The clock the queue is measured against. It ticks only while nothing is
 	// on screen (see below), so a card that comes due mid-review can never
@@ -377,19 +376,15 @@
 	});
 
 	// when the queue runs dry against a locked stage, say what unlocks it:
-	// the first locked stage and how far the one before it has to go
+	// the first locked stage and how far the one before it, with everything
+	// inside it, has to go
 	let lockedNote = $derived.by(() => {
-		if (!progression) return null;
-		const sorted = [...deck.stages].sort((a, b) => a.position - b.position);
-		const index = sorted.findIndex(stage => !unlockedStages.has(stage.id));
-		if (index < 1) return null;
-		const locked = sorted[index];
-		const before = sorted[index - 1];
-		const progress = stageProgress(deck.cards.filter(card => card.stage_id === before.id));
+		const first = firstLockedStage(deck.stages, deck.cards, depth);
+		if (!first) return null;
 		return {
-			locked: stageLabel(locked),
-			before: stageLabel(before),
-			progress
+			locked: stageLabel(first.locked),
+			before: stageLabel(first.before),
+			progress: stageProgress(cardsUnder(deck.stages, deck.cards, first.before.id))
 		};
 	});
 

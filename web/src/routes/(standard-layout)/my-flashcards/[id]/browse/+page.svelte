@@ -17,7 +17,7 @@
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
 	import { canonicalSideJson } from "$lib/card-utils.js"
-	import { unlockedStageIds, stageName } from "$lib/stages.js"
+	import { gatingDepth, unlockedStageIds, stageName } from "$lib/stages.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardContent, updateCardType, deleteCards, createStage, renameStage, deleteStage, moveCards, listDecks, moveCardsToDeck, copyCards } from "./browse.remote.js"
 
@@ -111,7 +111,7 @@
 	// and unfiltered, the rows sit grouped under collapsible stage headers.
 	let stagesSorted = $derived([...deck.stages].sort((a, b) => a.position - b.position));
 	let stagePositions = $derived(new Map(deck.stages.map(stage => [stage.id, stage.position])));
-	let unlockedStages = $derived(unlockedStageIds(deck.stages, deck.cards));
+	let unlockedStages = $derived(unlockedStageIds(deck.stages, deck.cards, gatingDepth(deck)));
 
 	let stageCards = $derived.by(() => {
 		const map = new Map(stagesSorted.map(stage => [stage.id, []]));
@@ -1085,7 +1085,7 @@
 									<button class="stage-toggle" onmousedown={e => e.stopPropagation()} onclick={() => draft.collapsed[group.stage.id] = !group.collapsed}>
 										<span class="collapse-arrow" class:collapsed={group.collapsed}></span>
 										<span class="stage-name">{stageName(group.stage)}</span>
-										{#if deck.stageProgression && !unlockedStages.has(group.stage.id)}
+										{#if !unlockedStages.has(group.stage.id)}
 											<svg class="stage-lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
 												<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
 												<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>

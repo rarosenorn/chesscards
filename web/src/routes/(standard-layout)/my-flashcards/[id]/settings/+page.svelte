@@ -103,7 +103,7 @@
 		</p>
 		<form method="POST" action="?/progression" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
 			<label class="progression-toggle">
-				<input type="checkbox" name="value" value="true" checked={data.deck.stageProgression} />
+				<input type="checkbox" name="value" value="true" checked={data.deck.progressionDepth !== 0} />
 				Follow chapter progression
 			</label>
 		</form>

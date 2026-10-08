@@ -101,10 +101,13 @@ create table decks (
 	-- detail nothing shows. The stages survive being switched off, so turning
 	-- chapters back on restores the grouping instead of rebuilding it.
 	chapters boolean not null default false,
-	-- introduce new cards stage by stage (all seen + most graduated unlocks
-	-- the next); off = every stage is open, Anki style. Only bites while
-	-- chapters is on — a deck with no chapters has nothing to gate.
-	stage_progression boolean not null default true,
+	-- How many levels down new cards are introduced stage by stage (all seen
+	-- + most graduated unlocks the next): 0 = none, every card is open from
+	-- the start, Anki style; 1 = the top-level stages in order, everything
+	-- inside one mixed; 2 = theirs in order as well; null = every level there
+	-- is. Only bites while chapters is on — a deck with no chapters has
+	-- nothing to gate.
+	progression_depth smallint check (progression_depth >= 0),
 	-- the deck's own listing (its Deck tab): an upload request starts from
 	-- it, and editing it never reaches a listing already on the marketplace.
 	-- A description is blocks, like a card's side (text and boards), and the
@@ -120,11 +123,15 @@ create table decks (
 -- Every card belongs to a stage and every deck has at least one; a deck that
 -- wants no progression is simply a deck of one stage. Every stage is named:
 -- the Cards table shows the name alone, and the order is read off the rows.
--- Positions (stage in deck, card in stage) are kept dense 1..n by the server
--- ops that move things.
+-- The stages of a deck form a tree (the interface's subdecks): parent_id is
+-- the stage one sits inside, null at the deck's top level. A stage holds
+-- either cards or stages, never both, so the cards all sit at the leaves.
+-- Positions (stage among its siblings, card in stage) are kept dense 1..n by
+-- the server ops that move things.
 create table stages (
 	id uuid primary key default gen_random_uuid(),
 	deck_id uuid references decks(id) on delete cascade not null,
+	parent_id uuid references stages(id) on delete cascade,
 	name text not null,
 	position smallint not null
 );
@@ -167,13 +174,18 @@ create table marketplace_decks (
 	image_type text not null,
 	-- the author's chapter choice, copied from the source deck at approval: a
 	-- deck published without chapters reads as one list for everyone who takes it
-	chapters boolean not null default false
+	chapters boolean not null default false,
+	-- the author's progression depth (as decks.progression_depth), which
+	-- each copy of the deck starts at
+	progression_depth smallint check (progression_depth >= 0)
 );
 
--- the deck's stage structure, copied from the source deck at upload approval
+-- the deck's stage structure, tree and all, copied from the source deck at
+-- upload approval
 create table marketplace_stages (
 	id uuid primary key default gen_random_uuid(),
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
+	parent_id uuid references marketplace_stages(id) on delete cascade,
 	name text not null,
 	position smallint not null
 );
@@ -196,8 +208,9 @@ create table marketplace_deck_instances (
 	marketplace_deck_id uuid references marketplace_decks(id) not null,
 	-- its place among the user's marketplace decks, as decks.position
 	position integer not null default 0,
-	-- each studier follows (or ignores) the deck's stages for themselves
-	stage_progression boolean not null default true
+	-- each studier follows the deck's stages as deep as they choose (as
+	-- decks.progression_depth); it starts at the author's own depth
+	progression_depth smallint check (progression_depth >= 0)
 );
 
 create table marketplace_card_instances (

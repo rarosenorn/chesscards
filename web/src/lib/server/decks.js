@@ -1,4 +1,5 @@
 import { pool } from "./pool.js"
+import { stageOrder } from "../stages.js"
 
 // a deck is born with its Stage 1: every card belongs to a stage, so there is
 // always one to put the first card in. Stages are named, so the first one
@@ -14,19 +15,28 @@ const create = async (userId, name) => {
 	return rows[0]
 }
 
+// A deck with its stages (a tree: see lib/stages.js) and its cards, the
+// cards in the deck's reading order
 const getById = async (userId, id) => {
 	const { rows } =
 		await pool.query(`
-			select d.id, d.name, d.chapters, d.stage_progression "stageProgression",
-				coalesce((select json_agg(json_build_object('id', s.id, 'name', s.name, 'position', s.position) order by s.position)
+			select d.id, d.name, d.chapters, d.progression_depth "progressionDepth",
+				coalesce((select json_agg(json_build_object('id', s.id, 'parent_id', s.parent_id, 'name', s.name, 'position', s.position) order by s.position)
 					from stages s where s.deck_id = d.id), '[]'::json) stages,
-				coalesce((select json_agg(to_jsonb(c) order by s.position, c.position)
-					from cards c join stages s on s.id = c.stage_id where c.deck_id = d.id), '[]'::json) cards
+				coalesce((select json_agg(to_jsonb(c)) from cards c where c.deck_id = d.id), '[]'::json) cards
 			from decks d
 			where d.user_id = $1 and d.id = $2`, [userId, id]
 		);
+	if (rows[0]) inDeckOrder(rows[0]);
 
 	return rows[0];
+}
+
+// a deck's cards put in its reading order: stage by stage as the tree reads,
+// then by their place in the stage
+const inDeckOrder = deck => {
+	const order = stageOrder(deck.stages);
+	deck.cards.sort((a, b) => order.get(a.stage_id) - order.get(b.stage_id) || a.position - b.position);
 }
 
 // Due and still in play — the shared condition behind every count below, and
@@ -532,12 +542,14 @@ const updateChapters = async (userId, deckId, value) => {
 	return rowCount === 1;
 }
 
-// touching a single deck's toggle also puts the profile's three-way back to
-// "per deck" — the bulk modes only mean anything until the next exception
-const updateStageProgression = async (userId, deckId, value) => {
+// How deep the deck's progression runs (0 = none, null = every level; see
+// decks.progression_depth). Touching a single deck's setting also puts the
+// profile's three-way back to "per deck" — the bulk modes only mean anything
+// until the next exception.
+const updateProgressionDepth = async (userId, deckId, depth) => {
 	const { rowCount } = await pool.query(
-		"update decks set stage_progression = $3 where id = $2 and user_id = $1",
-		[userId, deckId, value]);
+		"update decks set progression_depth = $3 where id = $2 and user_id = $1",
+		[userId, deckId, depth]);
 	if (rowCount === 1) {
 		await pool.query(`update "user" set "stageProgressionMode" = 'per-deck' where id = $1`, [userId]);
 	}
@@ -557,9 +569,10 @@ const getStageProgressionMode = async userId => {
 const setStageProgressionMode = async (userId, mode) => {
 	await pool.query('update "user" set "stageProgressionMode" = $2 where id = $1', [userId, mode]);
 	if (mode === "per-deck") return;
-	const value = mode === "all";
-	await pool.query("update decks set stage_progression = $2 where user_id = $1", [userId, value]);
-	await pool.query("update marketplace_deck_instances set stage_progression = $2 where user_id = $1", [userId, value]);
+	// every level, or none
+	const depth = mode === "all" ? null : 0;
+	await pool.query("update decks set progression_depth = $2 where user_id = $1", [userId, depth]);
+	await pool.query("update marketplace_deck_instances set progression_depth = $2 where user_id = $1", [userId, depth]);
 }
 
 const createReviewLog = async (userId, cardId, log) => {
@@ -569,4 +582,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, getNames, moveCardsToDeck, copyCards, updateChapters, updateStageProgression, getStageProgressionMode, setStageProgressionMode }
+export { BOUNDS, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createStage, renameStage, deleteStage, moveCards, getNames, moveCardsToDeck, copyCards, updateChapters, updateProgressionDepth, getStageProgressionMode, setStageProgressionMode }

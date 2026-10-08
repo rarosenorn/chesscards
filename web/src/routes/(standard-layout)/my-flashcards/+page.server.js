@@ -32,7 +32,7 @@ const actions = {
 			});
 		}
 		try {
-			await decks.create(locals.userId, data.get("name"));
+			await decks.create(locals.userId, result.data);
 		} catch (err) {
 			if (err.code === "23505") {
 				return fail(409, {
@@ -56,7 +56,7 @@ const actions = {
 		}
 		let metadeck;
 		try {
-			metadeck = await metadecks.create(locals.userId, data.get("name"));
+			metadeck = await metadecks.create(locals.userId, result.data);
 		} catch (err) {
 			if (err.code === "23505") {
 				return fail(409, {

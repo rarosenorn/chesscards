@@ -1,17 +1,14 @@
 import { getRequestEvent, command } from "$app/server"
 import { error } from "@sveltejs/kit"
 import * as metadecks from "$lib/server/metadecks.js"
-
-const UUID = /^[0-9a-f-]{36}$/i;
+import { checkIds, checkIdList } from "$lib/server/ids.js"
 
 // what the metadeck holds, said whole (see metadecks.setItems)
 export const setItems =
 	command("unchecked", async ({ id, deckIds, instanceIds, metadeckIds }) => {
 		const { locals } = getRequestEvent();
-		const lists = [deckIds, instanceIds, metadeckIds];
-		if (!lists.every(Array.isArray) || ![id, ...lists.flat()].every(value => typeof value === "string" && UUID.test(value))) {
-			error(400, "Bad request");
-		}
+		checkIds(id);
+		for (const ids of [deckIds, instanceIds, metadeckIds]) checkIdList(ids);
 		try {
 			await metadecks.setItems(locals.userId, id, { deckIds, instanceIds, metadeckIds });
 		} catch (err) {

@@ -12,7 +12,7 @@ export const actions = {
 			return fail(400, { name: data.get("name"), errors: result.error.flatten().formErrors });
 		}
 		try {
-			await metadecks.rename(locals.userId, params.id, data.get("name"));
+			await metadecks.rename(locals.userId, params.id, result.data);
 		} catch (err) {
 			if (err.code === "23505") {
 				return fail(409, {

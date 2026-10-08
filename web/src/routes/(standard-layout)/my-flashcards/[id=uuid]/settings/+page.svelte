@@ -62,7 +62,6 @@
 				maxlength="100"
 				autocomplete="off"
 			/>
-			<input name="id" type="hidden" value={data.deck.id} />
 			<button class="std-btn">Rename</button>
 		</form>
 	</section>
@@ -142,7 +141,6 @@
 					}
 				}}
 			>
-				<input type="hidden" name="id" value={data.deck.id} />
 				<button type="button" class="danger-button" onclick={confirmDelete}>Delete deck</button>
 			</form>
 			{/if}

@@ -14,8 +14,7 @@
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState } from "$lib/modals.svelte.js"
 	import { zen, zenActive, resetZen, setZen } from "$lib/zen-state.svelte.js"
-	import { updateCardStudyStateAndAddLog } from "./study.remote.js"
-	import { updateCardContent, updateCardType, deleteCards } from "../browse/browse.remote.js"
+	import { updateCardStudyStateAndAddLog, updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
 
 	let deck = getContext("deck");
 	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);

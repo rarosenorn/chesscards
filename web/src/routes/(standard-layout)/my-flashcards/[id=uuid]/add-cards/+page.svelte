@@ -419,6 +419,7 @@
 				<input
 					class="subdeck-add-input"
 					bind:this={subdeckAddInput}
+					maxlength="100"
 					placeholder="Subdeck name"
 					bind:value={subdeckAdd.value}
 					onkeydown={e => {

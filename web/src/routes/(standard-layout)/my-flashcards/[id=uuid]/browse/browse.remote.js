@@ -2,38 +2,8 @@ import { getRequestEvent, command } from "$app/server"
 import { error } from "@sveltejs/kit"
 import { createEmptyCard } from "ts-fsrs"
 import * as decks from "$lib/server/decks.js"
-
-export const updateCardContent =
-	command("unchecked", async ({ cardId, front, back }) => {
-		const { locals } = getRequestEvent();
-		if (!await decks.updateCardContent(locals.userId, cardId, front, back)) {
-			error(403, "Unauthorized");
-		}
-	})
-
-// the updated card goes back to the client, which puts it into the shared
-// deck context — the row's Due/Reps/State follow the new type at once
-export const updateCardType =
-	command("unchecked", async ({ cardId, cardType }) => {
-		const { locals } = getRequestEvent();
-		const type = cardType === "tactic" ? "tactic" : "basic";
-		const card = await decks.updateCardType(locals.userId, cardId, type, Object.values(createEmptyCard()));
-		if (!card) error(403, "Unauthorized");
-		return card;
-	})
-
-export const deleteCards =
-	command("unchecked", async ({ cardIds }) => {
-		const { locals } = getRequestEvent();
-		if (await decks.deleteCards(locals.userId, cardIds) === 0) {
-			error(403, "Unauthorized");
-		}
-	})
-
-const UUID = /^[0-9a-f-]{36}$/i;
-const checkIds = (...ids) => {
-	if (!ids.flat().every(id => typeof id === "string" && UUID.test(id))) error(400, "Bad request");
-}
+import * as zod from "$lib/zod-schemas.js"
+import { checkIds, checkIdList, checkIndex } from "$lib/server/ids.js"
 
 // The subdeck ops renumber positions across the deck, so each returns the
 // fresh deck for the client to assign into the shared context — mirroring
@@ -46,13 +16,19 @@ const freshDeck = async (locals, deckId) => {
 
 // A subdeck always has a name: the callers only offer to create or rename
 // one through a field, and a blank one is a cancelled edit, not an erasure.
+// It is stored without the space around it.
+const subdeckName = name => {
+	const result = zod.subdeck.safeParse(name);
+	if (!result.success) error(400, result.error.flatten().formErrors[0]);
+	return result.data;
+}
+
 // parentId names the subdeck the new one goes inside; without it the new one
 // joins the deck's top level
 export const createSubdeck =
 	command("unchecked", async ({ deckId, name, parentId }) => {
 		const { locals } = getRequestEvent();
-		const trimmed = name?.trim();
-		if (!trimmed) error(400, "A subdeck needs a name");
+		const trimmed = subdeckName(name);
 		checkIds(deckId, parentId ?? []);
 		try { await decks.createSubdeck(locals.userId, deckId, trimmed, parentId ?? null); }
 		catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
@@ -62,8 +38,8 @@ export const createSubdeck =
 export const renameSubdeck =
 	command("unchecked", async ({ deckId, subdeckId, name }) => {
 		const { locals } = getRequestEvent();
-		const trimmed = name?.trim();
-		if (!trimmed) error(400, "A subdeck needs a name");
+		const trimmed = subdeckName(name);
+		checkIds(deckId, subdeckId);
 		if (!await decks.renameSubdeck(locals.userId, subdeckId, trimmed)) {
 			error(403, "Unauthorized");
 		}
@@ -97,6 +73,7 @@ export const moveSubdeck =
 	command("unchecked", async ({ deckId, subdeckId, parentId, index }) => {
 		const { locals } = getRequestEvent();
 		checkIds(deckId, subdeckId, parentId ?? []);
+		checkIndex(index);
 		try { await decks.moveSubdeck(locals.userId, deckId, subdeckId, parentId ?? null, index ?? null); }
 		catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
 		return freshDeck(locals, deckId);
@@ -105,7 +82,11 @@ export const moveSubdeck =
 export const moveCards =
 	command("unchecked", async ({ deckId, cardIds, subdeckId, index }) => {
 		const { locals } = getRequestEvent();
-		await decks.moveCards(locals.userId, deckId, cardIds, subdeckId, index ?? null);
+		checkIdList(cardIds);
+		checkIds(deckId, subdeckId);
+		checkIndex(index);
+		try { await decks.moveCards(locals.userId, deckId, cardIds, subdeckId, index ?? null); }
+		catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
 		return freshDeck(locals, deckId);
 	})
 
@@ -121,7 +102,8 @@ export const listDecks =
 export const moveCardsToDeck =
 	command("unchecked", async ({ deckId, cardIds, targetDeckId }) => {
 		const { locals } = getRequestEvent();
-		checkIds(deckId, cardIds, targetDeckId);
+		checkIdList(cardIds);
+		checkIds(deckId, targetDeckId);
 		try { await decks.moveCardsToDeck(locals.userId, deckId, cardIds, targetDeckId); }
 		catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }
 		return freshDeck(locals, deckId);
@@ -130,7 +112,8 @@ export const moveCardsToDeck =
 export const copyCards =
 	command("unchecked", async ({ deckId, cardIds, targetDeckId, subdeckId }) => {
 		const { locals } = getRequestEvent();
-		checkIds(deckId, cardIds, targetDeckId, subdeckId ?? []);
+		checkIdList(cardIds);
+		checkIds(deckId, targetDeckId, subdeckId ?? []);
 		try {
 			await decks.copyCards(locals.userId, deckId, cardIds, targetDeckId, subdeckId ?? null, Object.values(createEmptyCard()));
 		} catch (err) { if (err.message === "Unauthorized") error(403, "Unauthorized"); throw err; }

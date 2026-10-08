@@ -19,7 +19,8 @@
 	import { canonicalSideJson } from "$lib/card-utils.js"
 	import { gatingDepth, unlockedSubdeckIds, subdeckName, childrenByParent, subdeckOutline, subdeckSubtree, cardsUnder } from "$lib/subdecks.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
-	import { updateCardContent, updateCardType, deleteCards, createSubdeck, renameSubdeck, deleteSubdeck, flattenSubdecks, moveSubdeck, moveCards, listDecks, moveCardsToDeck, copyCards } from "./browse.remote.js"
+	import { updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
+	import { createSubdeck, renameSubdeck, deleteSubdeck, flattenSubdecks, moveSubdeck, moveCards, listDecks, moveCardsToDeck, copyCards } from "./browse.remote.js"
 
 	let deck = getContext("deck");
 	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
@@ -1228,6 +1229,7 @@
 				<input
 					class="subdeck-rename-input"
 					autofocus
+					maxlength="100"
 					placeholder="Subdeck name"
 					bind:value={() => subdeckAdd?.value ?? "", value => { if (subdeckAdd) subdeckAdd.value = value; }}
 					onblur={commitAddSubdeck}
@@ -1276,6 +1278,7 @@
 									<input
 										class="subdeck-rename-input"
 										autofocus
+										maxlength="100"
 										placeholder={group.subdeck.name}
 										bind:value={() => subdeckRename?.value ?? "", value => { if (subdeckRename) subdeckRename.value = value; }}
 										onblur={commitSubdeckRename}

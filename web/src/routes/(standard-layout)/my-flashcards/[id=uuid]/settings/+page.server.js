@@ -2,6 +2,7 @@ import { fail, redirect } from "@sveltejs/kit"
 import { createEmptyCard } from "ts-fsrs"
 import * as decks from "$lib/server/decks.js"
 import * as marketplace from "$lib/server/marketplace.js"
+import * as zod from "$lib/zod-schemas.js"
 
 export const load = async ({ locals, params, parent }) => {
 	// a marketplace deck instance has nothing here but its study progress: the
@@ -41,15 +42,18 @@ export const actions = {
 			? await decks.updateProgressionDepth(locals.userId, params.id, depth)
 			: await marketplace.updateInstanceProgressionDepth(locals.userId, params.id, depth);
 	},
-	delete: async ({ request, locals }) => {
-		const data = await request.formData();
-		await decks.remove(data.get("id"), locals.userId);
+	delete: async ({ params, locals }) => {
+		await decks.remove(params.id, locals.userId);
 		redirect(303, "/my-flashcards");
 	},
-	rename: async ({ request, locals }) => {
+	rename: async ({ params, request, locals }) => {
 		const data = await request.formData();
+		const result = zod.deck.safeParse(data.get("name"));
+		if (!result.success) {
+			return fail(400, { name: data.get("name"), errors: result.error.flatten().formErrors });
+		}
 		try {
-			await decks.updateName(data.get("id"), data.get("name"), locals.userId);
+			await decks.updateName(params.id, result.data, locals.userId);
 		} catch (err) {
 			if (err.code === "23505") {
 				return fail(409, {

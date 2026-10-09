@@ -21,7 +21,7 @@
 						<img class="thumbnail" src="/marketplace/{mpDeck.id}/thumbnail" alt={mpDeck.name} />
 						<div class="card-body">
 							<p class="deck-name">{mpDeck.name}</p>
-							<p class="deck-author">By {mpDeck.author}</p>
+							<p class="deck-author">by {mpDeck.author}</p>
 							<p class="deck-meta">
 								{mpDeck.cardCount} cards ·
 								<ReviewCounts reviewCount={mpDeck.reviewCount} recommendCount={mpDeck.recommendCount} />

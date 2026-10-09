@@ -37,8 +37,15 @@ describe("the weeks shown", () => {
 		const ahead = heatmapWeeks([OLD], TODAY, 2, 2, forecast);
 		expect(ahead[2][4]).toEqual({ day: "2026-10-09", count: 5, level: 2, future: true });
 		expect(ahead[3][0]).toEqual({ day: "2026-10-12", count: 90, level: 10, future: true });
-		// today is a day gone by here: what was answered, not what is due
-		expect(ahead[2][3]).toEqual({ day: TODAY, count: 0, level: 0, today: true });
+	})
+
+	it("show what today has due until something is answered on it, then what was answered", () => {
+		const forecast = [{ day: TODAY, count: 15 }];
+		expect(heatmapWeeks([OLD], TODAY, 2, 2, forecast)[2][3])
+			.toEqual({ day: TODAY, count: 15, level: 4, future: true, today: true });
+		expect(heatmapWeeks([OLD, { day: TODAY, count: 3 }], TODAY, 2, 2, forecast)[2][3])
+			.toEqual({ day: TODAY, count: 3, level: 2, today: true });
+		expect(heatmapWeeks([OLD], TODAY, 2, 2, [])[2][3]).toEqual({ day: TODAY, count: 0, level: 0, today: true });
 	})
 })
 

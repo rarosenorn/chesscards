@@ -11,9 +11,10 @@ const studyDay = (at, zone, hour) =>
 	`to_char(date_trunc('day', (${at} at time zone ${zone}) - make_interval(hours => ${hour})), 'YYYY-MM-DD')`;
 
 // Every day the user answered anything, oldest first, each { day, count };
-// every day after today that cards of theirs fall due on, each { day, count }
-// (cards already met and not finished: a card never studied has no day of
-// its own to come); and the study day it is now.
+// every day from today on that cards of theirs fall due on, each
+// { day, count } (cards already met and not finished: a card never studied
+// has no day of its own to come, and one overdue has had its day); and the
+// study day it is now.
 const getDailyCounts = async (userId, { timeZone, rolloverHour }) => {
 	const { rows: days } = await pool.query(`
 		select day, sum(n)::int count from (
@@ -39,7 +40,7 @@ const getDailyCounts = async (userId, { timeZone, rolloverHour }) => {
 		) cards
 		group by day order by day`, [userId, timeZone, rolloverHour]);
 
-	return { days, forecast: due.filter(({ day }) => day > today), today };
+	return { days, forecast: due.filter(({ day }) => day >= today), today };
 }
 
 // one practice answer, to a card of the user's own or of a marketplace deck

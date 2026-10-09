@@ -30,6 +30,7 @@
 						{#if cell.future}
 							<span
 								class="day due-{cell.level}"
+								class:today={cell.today}
 								data-tip="{cell.count ? `${plural(cell.count, "card")} due` : "No cards due"} on {sayDay(cell.day)}"
 							></span>
 						{:else}

@@ -38,7 +38,9 @@ const usualDay = counts => {
 // that was never there. A day is { day, count, level, today }, its count the
 // answers given on it (`counts`). A day still to come is
 // { day, count, level, future: true }, its count the cards due on it
-// (`forecast`). Both are shaded on the one scale, against the usual day.
+// (`forecast`). Today stands with the days to come until something is
+// answered on it: what it has due, while that is all there is to say of it.
+// Both are shaded on the one scale, against the usual day.
 const heatmapWeeks = (counts, today, before = 26, after = 26, forecast = []) => {
 	const monday = day => addDays(day, -weekday(day));
 	const first = counts.find(({ count }) => count > 0)?.day ?? today;
@@ -49,12 +51,13 @@ const heatmapWeeks = (counts, today, before = 26, after = 26, forecast = []) => 
 	const due = new Map(forecast.map(({ day, count }) => [day, count]));
 	return Array.from({ length: before + 1 + after }, (_, week) => Array.from({ length: 7 }, (_, index) => {
 		const day = addDays(start, week * 7 + index);
-		if (day > today) {
-			const count = due.get(day) ?? 0;
-			return { day, count, level: levelOf(count, usual), future: true };
+		const answered = done.get(day) ?? 0;
+		const waiting = due.get(day) ?? 0;
+		if (day > today) return { day, count: waiting, level: levelOf(waiting, usual), future: true };
+		if (day === today && answered === 0 && waiting > 0) {
+			return { day, count: waiting, level: levelOf(waiting, usual), future: true, today: true };
 		}
-		const count = done.get(day) ?? 0;
-		return { day, count, level: levelOf(count, usual), today: day === today };
+		return { day, count: answered, level: levelOf(answered, usual), today: day === today };
 	}));
 }
 

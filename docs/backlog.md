@@ -33,7 +33,7 @@
 
 ## Metadecks: My flashcards
 [ ] Metadecks is the last list and is there even when empty
-[ ] "Create metadeck" under Metadecks asks for a name in a dialog (Enter or Create makes it, Escape or Cancel leaves; stays on My flashcards); "Create deck" under My decks does the same
+[ ] "Create deck" and "Create metadeck" at the right of the My flashcards heading each ask for a name in a dialog (Enter or Create makes it, Escape or Cancel leaves; stays on My flashcards)
 [ ] a refused name (too short, already taken) is asked for again with the reason under the field
 [ ] the "i" beside Metadecks explains what one is on hover
 [ ] drag a deck, a marketplace deck or a metadeck onto a metadeck: it goes inside and stays in its own list
@@ -87,13 +87,6 @@
 [ ] while the Cram prompt (or any dialog) is open, Space / 1-4 and the tab shortcuts do nothing to the page behind
 
 # Things to test/check heatmap
-[ ] days ahead are in ten greys on the same scale, darker the more cards fall due that day; hovering says "N cards due on <date>"
-[ ] days ahead count only cards already studied (own and marketplace decks); new cards are not in it
-[ ] grading a card moves it onto the right future day (after going back to My flashcards)
-[ ] grey for a day with nothing, then ten greens: a usual day (your average per active day, at least 20) is mid-green, more than four times that the darkest
-[ ] hovering a square outlines it and says the date and count ("12 reviews on 8 Oct 2026")
-[ ] a normal review adds 1 to today's square after going back to My flashcards
-[ ] cram: counted answers and practice answers (Again / Got it) both add to today
 [ ] reviews of marketplace decks count too
 [ ] a review after midnight but before the rollover hour lands on the previous day
 [ ] line under it: "Reviews in the last year", "Current streak", "Longest streak", values in green
@@ -101,6 +94,7 @@
 [ ] current streak still counts yesterday's run while today is not studied yet, and drops to 0 after a missed day
 [ ] deleting a card removes its saved reviews from the heatmap (practice answers stay)
 [ ] with less than 26 weeks of history it starts at the week of your first review and shows more of the future instead
+[ ] today's square: grey with what is due today until you answer something, then green with what you answered; overdue cards are not shown on any day
 [ ] a new account shows an all-grey heatmap starting this week, and zeros
 
 # Needed before launch

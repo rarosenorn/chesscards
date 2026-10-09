@@ -468,7 +468,7 @@
 		advanceQueueClock();
 		deck.cards[deck.cards.indexOf(card)] = cardAndLog.card;
 		if (cram) {
-			settle(cram, backAt(cardAndLog.card));
+			settle(cram, backAt(cardAndLog.card, rating === Rating.Again));
 			cramAdvance();
 		}
 		await updateCardStudyStateAndAddLog(cardAndLog);

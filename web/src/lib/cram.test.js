@@ -126,13 +126,17 @@ describe("a session taken up again", () => {
 })
 
 describe("when a card graded for real comes back", () => {
-	it("is its next step while it is learning or relearning", () => {
-		expect(backAt(learning("a", 10))).toBe(NOW + 600_000);
-		expect(backAt({ ...learning("a", 10), state: 3 })).toBe(NOW + 600_000);
+	it("is at its next step, after Again", () => {
+		expect(backAt(learning("a", 1), true)).toBe(NOW + 60_000);
+		expect(backAt({ ...learning("a", 10), state: 3 }, true)).toBe(NOW + 600_000);
 	})
 
-	it("is never, once it is on a real schedule or a tactic", () => {
-		expect(backAt(review("a", 3 * DAY))).toBe(null);
-		expect(backAt({ id: "t", card_type: "tactic", state: null, due: at(DAY) })).toBe(null);
+	it("is never after any other answer, whatever steps the card has left", () => {
+		expect(backAt(learning("a", 10), false)).toBe(null);
+		expect(backAt(review("a", 3 * DAY), false)).toBe(null);
+	})
+
+	it("is never for a tactic, which comes back as practice instead", () => {
+		expect(backAt({ id: "t", card_type: "tactic", state: null, due: at(DAY) }, true)).toBe(null);
 	})
 })

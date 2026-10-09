@@ -2,9 +2,9 @@ import { isDueAt } from "./rollover.js"
 import { isSeen } from "./subdecks.js"
 
 // A cram session goes through every card of what is being studied, due or
-// not, once, in an order chosen at its start. A card answered Again, or one
-// still on its learning steps, comes back when its wait is over, or sooner
-// when nothing else is left. The session is plain data, so it can be kept
+// not, once, in an order chosen at its start. One answer does for a card,
+// unless the answer is Again: then it comes back when its wait is over, or
+// sooner when nothing else is left. The session is plain data, so it can be kept
 // where it outlives a change of tab:
 // { order, counts, queue, waiting, currentId, total }, queue the ids not yet
 // shown, waiting the ids that come back mapped to when (ms), currentId the
@@ -61,11 +61,12 @@ const answerCounts = (card, now, rolloverHour) =>
 		? !card.finished_at && isDueAt(card, now, rolloverHour)
 		: card.state !== 2 || isDueAt(card, now, rolloverHour);
 
-// When a card just graded for real comes back within the session: at its
-// next step, while it is on its (re)learning steps. Graduated, or put on a
-// real schedule, it is done with here (null).
-const backAt = card =>
-	card.card_type !== "tactic" && (card.state === 1 || card.state === 3) ? Date.parse(card.due) : null;
+// When a card just graded for real comes back within the session: only
+// after Again, at the (re)learning step that puts it on. Any other answer
+// finishes it here (null), whatever steps it has left: those are ordinary
+// study's to ask for, and the one answer has been saved for them.
+const backAt = (card, again) =>
+	again && card.card_type !== "tactic" ? Date.parse(card.due) : null;
 
 // The card that comes next, taken out of where it waited and put on screen:
 // a card whose wait is over (the longest over first), else the next not yet

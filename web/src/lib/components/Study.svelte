@@ -296,14 +296,33 @@
 			else localStorage.setItem(CRAM_PREFIX + cram.scopeKey, JSON.stringify({ ...cram, savedAt: Date.now() }));
 		} catch {}
 	});
-	// sessions of earlier days, left under things not visited since, are
-	// cleared out whenever Study opens
+	// How many sessions have been gone through to the end today on what is
+	// being studied, for the screen a finished one ends on. Kept as the
+	// session is: in this browser, under what it was started on, for the
+	// study day.
+	const CRAM_COUNT_PREFIX = "chesscards:cram-count:";
+	const studyDay = () => dayStart(Date.now(), rolloverHour());
+	const cramsCompleted = key => {
+		try {
+			const saved = JSON.parse(localStorage.getItem(CRAM_COUNT_PREFIX + key));
+			return saved?.day === studyDay() ? saved.count : 0;
+		} catch {
+			return 0;
+		}
+	}
+
+	// sessions and counts of earlier days, left under things not visited
+	// since, are cleared out whenever Study opens
 	onMount(() => {
 		try {
 			for (const key of Object.keys(localStorage)) {
-				if (!key.startsWith(CRAM_PREFIX)) continue;
-				let fresh = false;
-				try { fresh = sameStudyDay(JSON.parse(localStorage.getItem(key)).savedAt); } catch {}
+				let fresh = true;
+				try {
+					if (key.startsWith(CRAM_PREFIX)) fresh = sameStudyDay(JSON.parse(localStorage.getItem(key)).savedAt);
+					else if (key.startsWith(CRAM_COUNT_PREFIX)) fresh = JSON.parse(localStorage.getItem(key)).day === studyDay();
+				} catch {
+					fresh = false;
+				}
 				if (!fresh) localStorage.removeItem(key);
 			}
 		} catch {}
@@ -344,11 +363,17 @@
 		studyState.cram = { scopeKey, ...startCram([...studyCards].sort(byDeckOrder), { order, counts }) };
 		cramAdvance();
 	}
-	// the next card of the session, read against a fresh clock
+	// the next card of the session, read against a fresh clock; with none
+	// left the session is one more gone through today
 	const cramAdvance = () => {
 		isCardTurned = false;
 		advanceQueueClock();
-		takeNext(studyState.cram, now);
+		const session = studyState.cram;
+		if (takeNext(session, now) != null) return;
+		session.completed = cramsCompleted(session.scopeKey) + 1;
+		try {
+			localStorage.setItem(CRAM_COUNT_PREFIX + session.scopeKey, JSON.stringify({ day: studyDay(), count: session.completed }));
+		} catch {}
 	}
 	const endCram = () => {
 		try { localStorage.removeItem(CRAM_PREFIX + scopeKey); } catch {}
@@ -950,8 +975,10 @@
 {:else}
 	<div class="deck-done" class:zen={zenActive()}>
 		{#if cram}
-			<p>Cram finished: {cram.total} card{cram.total === 1 ? "" : "s"}.</p>
-			<button class="std-btn again-btn" onclick={() => beginCram(cram)}>Go again</button>
+			<!-- going again asks for the order and the rest afresh, as starting
+			     the first one did -->
+			<p>Cram sessions completed: {cram.completed}</p>
+			<button class="std-btn again-btn" onclick={chooseCram}>Go again?</button>
 		{:else if emptyNote}
 			<p>{emptyNote}</p>
 		{:else if lockedNote}

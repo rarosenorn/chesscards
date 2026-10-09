@@ -1021,11 +1021,11 @@
 {/snippet}
 
 <style>
-	/* bottom left of the window, out of the card's way: they belong to the
+	/* bottom right of the window, out of the card's way: they belong to the
 	   page rather than to the card, and the card is centred */
 	.page-btns {
 		position: fixed;
-		left: 16px;
+		right: 16px;
 		bottom: 16px;
 		z-index: 30;
 		display: flex;

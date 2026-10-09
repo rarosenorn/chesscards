@@ -471,6 +471,11 @@
 		table-layout: fixed;
 		width: 100%;
 	}
+	/* the first list stands as far under the page's heading as the lists
+	   stand under each other (20px): the page's own padding is 25px */
+	table:first-of-type {
+		margin-top: -5px;
+	}
 	th:nth-child(n + 2) {
 		width: 65px;
 	}

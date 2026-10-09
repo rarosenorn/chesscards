@@ -4,6 +4,7 @@
 	import { SvelteSet } from "svelte/reactivity"
 	import { confirmModal, settleModal } from "$lib/modals.svelte.js"
 	import Heatmap from "$lib/components/Heatmap.svelte"
+	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import Info from "$lib/icons/Info.svelte"
 	import { invalidateAll } from "$app/navigation"
 	import { resolveDecks, holders } from "$lib/metadecks.js"
@@ -16,7 +17,7 @@
 	let lists = $state({ meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks });
 	$effect(() => { lists = { meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks } });
 
-	// The Create button under a list asks for a name and makes a deck (or a
+	// The Create buttons in the page's heading ask for a name and make a deck (or a
 	// metadeck) of it. A name the server refuses is asked for again, with
 	// what was wrong said under the field and what was typed still in it.
 	let naming = $state({ value: "", error: null });
@@ -304,7 +305,7 @@
 {/snippet}
 
 {#snippet deckTable(firstTableHeader, list)}
-	<table data-list={list} class:creatable={list !== "market"} class:dragging={drag?.started}>
+	<table data-list={list} class:dragging={drag?.started}>
 		<thead>
 			<tr>
 				<th>
@@ -440,23 +441,25 @@
 	</div>
 {/snippet}
 
-<!-- under a list, the button that adds to it: it asks for the name -->
-{#snippet createButton(list)}
-	<div class="create">
-		<button class="std-btn" onclick={() => createNew(list)}>{list === "meta" ? "Create metadeck" : "Create deck"}</button>
+<StandardLayout>
+	<!-- what the page can make, at the right of its heading: always in view,
+	     and out of the lists' way. Each asks for the name. -->
+	{#snippet headerActions()}
+		<div class="header-actions">
+			<button class="std-btn" onclick={() => createNew("mine")}>Create deck</button>
+			<button class="std-btn" onclick={() => createNew("meta")}>Create metadeck</button>
+		</div>
+	{/snippet}
+
+	{@render deckTable("Marketplace decks", "market")}
+	{@render deckTable("My decks", "mine")}
+	{@render deckTable("Metadecks", "meta")}
+
+	<!-- the year's study, a square a day, under everything there is to study -->
+	<div class="activity">
+		<Heatmap days={data.activity.days} forecast={data.activity.forecast} today={data.activity.today} />
 	</div>
-{/snippet}
-
-{@render deckTable("Marketplace decks", "market")}
-{@render deckTable("My decks", "mine")}
-{@render createButton("mine")}
-{@render deckTable("Metadecks", "meta")}
-{@render createButton("meta")}
-
-<!-- the year's study, a square a day, under everything there is to study -->
-<div class="activity">
-	<Heatmap days={data.activity.days} forecast={data.activity.forecast} today={data.activity.today} />
-</div>
+</StandardLayout>
 
 <style>
 	/* fixed shared column widths so both tables' columns line up */
@@ -591,17 +594,13 @@
 	th:first-child {
 		font-size: 1.05rem;
 	}
-	/* The create button belongs to the list it adds to, so it sits closer to
-	   it than the lists sit to each other, and keeps their distance from
-	   what comes next. */
-	table.creatable {
-		margin-bottom: 8px;
+	/* the two Create buttons in the page's heading: the app's standard
+	   button, a size down so the heading keeps its height */
+	.header-actions {
+		display: flex;
+		gap: 8px;
 	}
-	.create {
-		margin: 6px 0 32px;
-	}
-	/* the app's standard button, at the size of a note under a list */
-	.create button {
+	.header-actions button {
 		padding: 5px 14px;
 		font-size: 0.95rem;
 		cursor: pointer;

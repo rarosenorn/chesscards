@@ -21,6 +21,7 @@
 						<img class="thumbnail" src="/marketplace/{mpDeck.id}/thumbnail" alt={mpDeck.name} />
 						<div class="card-body">
 							<p class="deck-name">{mpDeck.name}</p>
+							<p class="deck-author">By {mpDeck.author}</p>
 							<p class="deck-meta">
 								{mpDeck.cardCount} cards ·
 								<ReviewCounts reviewCount={mpDeck.reviewCount} recommendCount={mpDeck.recommendCount} />
@@ -113,6 +114,14 @@
 	}
 	.deck-name {
 		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	/* who made it, under its name: a marketplace is bought from by author */
+	.deck-author {
+		font-size: 0.85rem;
+		color: rgba(0, 0, 0, 0.55);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;

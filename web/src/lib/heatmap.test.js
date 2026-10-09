@@ -5,7 +5,9 @@ import { levelOf, usualDay, heatmapWeeks, monthLabels, sayDay, streaks } from ".
 const TODAY = "2026-10-08";
 
 describe("the weeks shown", () => {
-	const weeks = heatmapWeeks([{ day: "2026-10-05", count: 10 }, { day: "2026-10-08", count: 30 }], TODAY, 2, 2);
+	// a history going back further than the weeks shown
+	const OLD = { day: "2026-01-05", count: 20 };
+	const weeks = heatmapWeeks([OLD, { day: "2026-10-05", count: 10 }, { day: "2026-10-08", count: 30 }], TODAY, 2, 2);
 
 	it("are columns of seven days from Monday, this week in the middle", () => {
 		expect(weeks.length).toBe(5);
@@ -32,11 +34,29 @@ describe("the weeks shown", () => {
 
 	it("give a day to come the cards due on it, on the same scale", () => {
 		const forecast = [{ day: "2026-10-09", count: 5 }, { day: "2026-10-12", count: 90 }, { day: TODAY, count: 99 }];
-		const ahead = heatmapWeeks([{ day: "2026-10-01", count: 20 }], TODAY, 2, 2, forecast);
+		const ahead = heatmapWeeks([OLD], TODAY, 2, 2, forecast);
 		expect(ahead[2][4]).toEqual({ day: "2026-10-09", count: 5, level: 2, future: true });
 		expect(ahead[3][0]).toEqual({ day: "2026-10-12", count: 90, level: 10, future: true });
 		// today is a day gone by here: what was answered, not what is due
 		expect(ahead[2][3]).toEqual({ day: TODAY, count: 0, level: 0, today: true });
+	})
+})
+
+describe("with less history than the weeks behind today", () => {
+	it("starts at the week of the first day studied, and runs as many weeks in all", () => {
+		const weeks = heatmapWeeks([{ day: "2026-10-01", count: 5 }, { day: TODAY, count: 5 }], TODAY, 26, 26);
+		expect(weeks.length).toBe(53);
+		expect(weeks[0][0].day).toBe("2026-09-28");
+		expect(weeks[0][3]).toMatchObject({ day: "2026-10-01", count: 5 });
+		expect(weeks[1][3]).toMatchObject({ day: TODAY, today: true });
+		expect(weeks[52][6]).toMatchObject({ day: "2027-10-03", future: true });
+	})
+
+	it("starts at this week when nothing has been studied yet", () => {
+		const weeks = heatmapWeeks([], TODAY, 26, 26);
+		expect(weeks[0][0].day).toBe("2026-10-05");
+		expect(weeks[0][3]).toMatchObject({ day: TODAY, today: true });
+		expect(weeks.length).toBe(53);
 	})
 })
 
@@ -53,8 +73,9 @@ describe("the usual day", () => {
 
 describe("the months named at the columns", () => {
 	it("stand where each begins, with the year", () => {
-		expect(monthLabels(heatmapWeeks([], TODAY, 6, 1))).toEqual(["", "Sep '26", "", "", "", "Oct '26", "", ""]);
-		expect(monthLabels(heatmapWeeks([], "2026-01-10", 2, 0))).toEqual(["", "Jan '26", ""]);
+		const old = [{ day: "2020-01-01", count: 1 }];
+		expect(monthLabels(heatmapWeeks(old, TODAY, 6, 1))).toEqual(["", "Sep '26", "", "", "", "Oct '26", "", ""]);
+		expect(monthLabels(heatmapWeeks(old, "2026-01-10", 2, 0))).toEqual(["", "Jan '26", ""]);
 	})
 })
 

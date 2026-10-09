@@ -32,12 +32,18 @@ const usualDay = counts => {
 
 // Weeks as columns of seven days, Monday first, with the week `today` is in
 // in the middle: `before` weeks behind it and `after` weeks ahead, as Anki's
-// heatmap stands. A day is { day, count, level, today }, its count the
+// heatmap stands. With less history than that, it starts at the week of the
+// first day anything was answered (this week, with none at all) and runs as
+// many weeks in all, so the room goes to the days ahead instead of to a past
+// that was never there. A day is { day, count, level, today }, its count the
 // answers given on it (`counts`). A day still to come is
 // { day, count, level, future: true }, its count the cards due on it
 // (`forecast`). Both are shaded on the one scale, against the usual day.
 const heatmapWeeks = (counts, today, before = 26, after = 26, forecast = []) => {
-	const start = addDays(today, -weekday(today) - before * 7);
+	const monday = day => addDays(day, -weekday(day));
+	const first = counts.find(({ count }) => count > 0)?.day ?? today;
+	const centred = addDays(monday(today), -before * 7);
+	const start = first > centred ? monday(first > today ? today : first) : centred;
 	const usual = usualDay(counts);
 	const done = new Map(counts.map(({ day, count }) => [day, count]));
 	const due = new Map(forecast.map(({ day, count }) => [day, count]));

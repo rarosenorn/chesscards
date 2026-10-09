@@ -33,7 +33,7 @@
 
 ## Metadecks: My flashcards
 [ ] Metadecks is the last list and is there even when empty
-[ ] "Create deck" and "Create metadeck" at the right of the My flashcards heading each ask for a name in a dialog (Enter or Create makes it, Escape or Cancel leaves; stays on My flashcards)
+[ ] "Create deck" and "Create metadeck", centred under the heatmap, each ask for a name in a dialog (Enter or Create makes it, Escape or Cancel leaves; stays on My flashcards)
 [ ] a refused name (too short, already taken) is asked for again with the reason under the field
 [ ] the "i" beside Metadecks explains what one is on hover
 [ ] drag a deck, a marketplace deck or a metadeck onto a metadeck: it goes inside and stays in its own list
@@ -87,7 +87,6 @@
 [ ] while the Cram prompt (or any dialog) is open, Space / 1-4 and the tab shortcuts do nothing to the page behind
 
 # Things to test/check heatmap
-[ ] reviews of marketplace decks count too
 [ ] a review after midnight but before the rollover hour lands on the previous day
 [ ] line under it: "Reviews in the last year", "Current streak", "Longest streak", values in green
 [ ] "Reviews in the last year" covers 12 months, though only the last 26 weeks are drawn

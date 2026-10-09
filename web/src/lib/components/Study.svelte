@@ -838,7 +838,7 @@
 			</span>
 		{/if}
 		{#if cram}
-			<p class="deck-counts cram">Cram · {cardsLeft(cram)} left</p>
+			<p class="deck-counts cram">Cramming {cardsLeft(cram)}/{cram.total}</p>
 		{:else}
 		<p class="deck-counts"><span class="count new" class:current={currentQueue === "new"}><span class="hair">{"\u200a"}</span>{counts.new}<span class="hair">{"\u200a"}</span></span><span class="plus">+</span><span class="count learn" class:current={currentQueue === "learn"}><span class="hair">{"\u200a"}</span>{counts.learn}<span class="hair">{"\u200a"}</span></span><span class="plus">+</span><span class="count review" class:current={currentQueue === "review"}><span class="hair">{"\u200a"}</span>{counts.review}<span class="hair">{"\u200a"}</span></span></p>
 		{/if}

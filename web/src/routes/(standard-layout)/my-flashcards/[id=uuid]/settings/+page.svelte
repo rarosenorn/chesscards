@@ -40,7 +40,7 @@
 	const confirmDelete = async () => {
 		const confirmed = await typedConfirmModal({
 			title: "Delete deck",
-			message: `This permanently deletes "${data.deck.name}", its cards and their review history.`,
+			message: `This permanently deletes "${data.deck.name}", its cards and their progress.`,
 			requiredText: data.deck.name,
 			confirmLabel: "Delete deck"
 		});

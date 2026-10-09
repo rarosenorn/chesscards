@@ -537,7 +537,8 @@ const flattenSubdecks = async (userId, deckId, subdeckId = null) => {
 }
 
 // A subdeck goes with everything inside it: its subdecks, and every card
-// under it with its review history (the caller has asked the user first).
+// under it with its progress (the caller has asked the user first). What
+// was answered on those cards stays in review_logs, as study done.
 // When the last one goes the deck stops using subdecks: it is a plain list
 // again, with the one unseen subdeck every deck keeps for its cards to sit
 // in (fresh and empty, as a new deck is born with).

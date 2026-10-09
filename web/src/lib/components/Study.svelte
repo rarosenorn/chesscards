@@ -66,13 +66,13 @@
 	}
 
 	// the Delete key drops the card being studied, behind browse's confirmation
-	// — the card and its review history go for good. Removing it from
+	// — the card and its progress go for good. Removing it from
 	// deck.cards re-derives currentCard, so the next due card takes its place.
 	const deleteCurrentCard = async () => {
 		const { id } = currentCard;
 		const confirmed = await confirmModal({
 			title: "Delete card",
-			message: "This permanently deletes the card and its review history.",
+			message: "This permanently deletes the card and its progress.",
 			confirmLabel: "Delete",
 			danger: true
 		});

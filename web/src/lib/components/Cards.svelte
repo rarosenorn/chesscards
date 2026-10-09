@@ -694,7 +694,7 @@
 		const confirmed = await confirmModal({
 			title: "Delete subdeck",
 			message: cards.length > 0
-				? `This permanently deletes "${subdeck.name}"${subdecksGone} and ${cards.length === 1 ? "the 1 card" : `the ${cards.length} cards`} in it, with their review history.`
+				? `This permanently deletes "${subdeck.name}"${subdecksGone} and ${cards.length === 1 ? "the 1 card" : `the ${cards.length} cards`} in it, with their progress.`
 				: `This permanently deletes "${subdeck.name}"${subdecksGone}. There are no cards in it.`,
 			confirmLabel: "Delete",
 			danger: true
@@ -835,8 +835,8 @@
 		const confirmed = await confirmModal({
 			title: ids.length === 1 ? "Delete card" : `Delete ${ids.length} cards`,
 			message: ids.length === 1
-				? "This permanently deletes the card and its review history."
-				: `This permanently deletes these ${ids.length} cards and their review history.`,
+				? "This permanently deletes the card and its progress."
+				: `This permanently deletes these ${ids.length} cards and their progress.`,
 			confirmLabel: "Delete",
 			danger: true
 		});

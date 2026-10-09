@@ -87,14 +87,7 @@
 [ ] while the Cram prompt (or any dialog) is open, Space / 1-4 and the tab shortcuts do nothing to the page behind
 
 # Things to test/check heatmap
-[ ] a review after midnight but before the rollover hour lands on the previous day
-[ ] line under it: "Reviews in the last year", "Current streak", "Longest streak", values in green
-[ ] "Reviews in the last year" covers 12 months, though only the last 26 weeks are drawn
-[ ] current streak still counts yesterday's run while today is not studied yet, and drops to 0 after a missed day
 [ ] deleting a card removes its saved reviews from the heatmap (practice answers stay)
-[ ] with less than 26 weeks of history it starts at the week of your first review and shows more of the future instead
-[ ] today's square: grey with what is due today until you answer something, then green with what you answered; overdue cards are not shown on any day
-[ ] a new account shows an all-grey heatmap starting this week, and zeros
 
 # Needed before launch
 [ ] Landing page

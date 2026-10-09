@@ -635,6 +635,14 @@
 	table.dragging tbody > tr:hover {
 		background-color: transparent;
 	}
+	/* the name in the row under the pointer is underlined, with the row's
+	   tint; not while a row is being carried */
+	tbody > tr:hover a {
+		text-decoration: underline;
+	}
+	table.dragging tbody > tr:hover a {
+		text-decoration: none;
+	}
 	:global(body:has(table.dragging)),
 	:global(body:has(table.dragging) *) {
 		cursor: grabbing;

@@ -100,7 +100,8 @@
 [ ] "Reviews in the last year" covers 12 months, though only the last 26 weeks are drawn
 [ ] current streak still counts yesterday's run while today is not studied yet, and drops to 0 after a missed day
 [ ] deleting a card removes its saved reviews from the heatmap (practice answers stay)
-[ ] a new account shows an all-grey heatmap and zeros
+[ ] with less than 26 weeks of history it starts at the week of your first review and shows more of the future instead
+[ ] a new account shows an all-grey heatmap starting this week, and zeros
 
 # Needed before launch
 [ ] Landing page

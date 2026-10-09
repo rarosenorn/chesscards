@@ -348,6 +348,19 @@ create table practice_logs (
 	answered timestamptz not null default now()
 );
 
+-- A cram session gone through to the end: by whom, when, and on what (the
+-- deck, marketplace deck taken or metadeck that was crammed, and the one
+-- subdeck of it when it was only that). Plain ids, not references: it is a
+-- record of study done, kept whatever becomes of the deck. Study's end
+-- screen counts the day's from it.
+create table cram_sessions (
+	id uuid primary key default gen_random_uuid(),
+	user_id uuid references "user" ("id") on delete cascade not null,
+	studied uuid not null,
+	subdeck uuid,
+	completed timestamptz not null default now()
+);
+
 -- An index behind every foreign key that has none of its own (a primary key
 -- or a unique constraint leading with it): Postgres makes none for the
 -- referencing side, and without one each "the cards of this deck" is a scan
@@ -375,6 +388,7 @@ create index marketplace_review_votes_user_id_idx on marketplace_review_votes (u
 create index metadeck_items_deck_id_idx on metadeck_items (deck_id);
 create index metadeck_items_marketplace_deck_instance_id_idx on metadeck_items (marketplace_deck_instance_id);
 create index metadeck_items_child_metadeck_id_idx on metadeck_items (child_metadeck_id);
+create index cram_sessions_user_id_idx on cram_sessions (user_id);
 create index practice_logs_user_id_idx on practice_logs (user_id);
 create index practice_logs_card_id_idx on practice_logs (card_id);
 create index practice_logs_marketplace_card_instance_id_idx on practice_logs (marketplace_card_instance_id);

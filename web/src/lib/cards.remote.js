@@ -5,6 +5,7 @@ import * as decks from "$lib/server/decks.js"
 import * as marketplace from "$lib/server/marketplace.js"
 import * as activity from "$lib/server/activity.js"
 import { checkIds, checkIdList } from "$lib/server/ids.js"
+import { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE } from "$lib/rollover.js"
 
 // What is done to a card from wherever it is shown: study grades it, and
 // study and the Cards tab both edit and delete it.
@@ -39,6 +40,21 @@ export const logPractice =
 		if (!await activity.logPractice(locals.userId, cardId, !!instance, !!gotIt)) {
 			error(403, "Unauthorized");
 		}
+	})
+
+// a cram session gone through to the end, on a deck (or a marketplace deck
+// taken, or a metadeck) or one subdeck of it: the answer is how many that
+// makes there today, by the user's own day (their zone and rollover hour, as
+// the deck list reads them)
+export const completeCramSession =
+	command("unchecked", async ({ studiedId, subdeckId }) => {
+		const { locals, cookies } = getRequestEvent();
+		if (!locals.userId) error(403, "Unauthorized");
+		checkIds(studiedId, subdeckId ?? []);
+		return activity.completeCramSession(locals.userId, studiedId, subdeckId ?? null, {
+			timeZone: cookies.get(TZ_COOKIE) || Intl.DateTimeFormat().resolvedOptions().timeZone,
+			rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR
+		});
 	})
 
 export const updateCardContent =

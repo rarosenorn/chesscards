@@ -467,7 +467,7 @@
 		padding: 8px;
 		border-collapse: collapse;
 		margin-top: 12px;
-		margin-bottom: 20px;
+		margin-bottom: 8px;
 		table-layout: fixed;
 		width: 100%;
 	}
@@ -605,8 +605,10 @@
 		font-size: 0.95rem;
 		cursor: pointer;
 	}
+	/* the heatmap keeps its distance from the last list though the lists
+	   have drawn closer to each other */
 	.activity {
-		margin-top: 12px;
+		margin-top: 24px;
 	}
 	/* the name field in the modal that follows */
 	.name-prompt {

@@ -897,7 +897,7 @@
 								class="std-btn"
 								title="Shortcut key: Space or 2"
 							>
-								Got it
+								Ok
 							</button>
 						</div>
 					{:else if isTactic}

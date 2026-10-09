@@ -33,7 +33,7 @@
 
 ## Metadecks: My flashcards
 [ ] Metadecks is the last list and is there even when empty
-[ ] "Create deck" and "Create metadeck", centred under the heatmap, each ask for a name in a dialog (Enter or Create makes it, Escape or Cancel leaves; stays on My flashcards)
+[ ] "Create deck" and "Create metadeck", centred between the lists and the heatmap, each ask for a name in a dialog (Enter or Create makes it, Escape or Cancel leaves; stays on My flashcards)
 [ ] a refused name (too short, already taken) is asked for again with the reason under the field
 [ ] the "i" beside Metadecks explains what one is on hover
 [ ] drag a deck, a marketplace deck or a metadeck onto a metadeck: it goes inside and stays in its own list
@@ -90,6 +90,7 @@
 [ ] deleting a card removes its saved reviews from the heatmap (practice answers stay)
 
 # Needed before launch
+[ ] fsrs learning from machine learning reviews
 [ ] Landing page
 [ ] why flashcards page
 [ ] Wiki page better

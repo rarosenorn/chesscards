@@ -443,7 +443,7 @@
 <!-- under a list, the button that adds to it: it asks for the name -->
 {#snippet createButton(list)}
 	<div class="create">
-		<button class="std-btn" aria-label={list === "meta" ? "Create metadeck" : "Create deck"} onclick={() => createNew(list)}>Create</button>
+		<button class="std-btn" onclick={() => createNew(list)}>{list === "meta" ? "Create metadeck" : "Create deck"}</button>
 	</div>
 {/snippet}
 

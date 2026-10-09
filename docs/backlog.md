@@ -33,7 +33,7 @@
 
 ## Metadecks: My flashcards
 [ ] Metadecks is the last list and is there even when empty
-[ ] the "Create" button under Metadecks asks for a name in a dialog (Enter or Create makes it, Escape or Cancel leaves; stays on My flashcards); same under My decks
+[ ] "Create metadeck" under Metadecks asks for a name in a dialog (Enter or Create makes it, Escape or Cancel leaves; stays on My flashcards); "Create deck" under My decks does the same
 [ ] a refused name (too short, already taken) is asked for again with the reason under the field
 [ ] the "i" beside Metadecks explains what one is on hover
 [ ] drag a deck, a marketplace deck or a metadeck onto a metadeck: it goes inside and stays in its own list
@@ -87,7 +87,7 @@
 [ ] while the Cram prompt (or any dialog) is open, Space / 1-4 and the tab shortcuts do nothing to the page behind
 
 # Things to test/check heatmap
-[ ] it sits at the bottom of My flashcards, centred, under the Metadecks Create button
+[ ] it sits at the bottom of My flashcards, centred, under the "Create metadeck" button
 [ ] one grid, a column a week, with today in the middle: 26 weeks back and 26 weeks ahead; month names under the column each month starts in ("Oct '26")
 [ ] rows are M T W T F S S, Monday at the top
 [ ] today is outlined in black

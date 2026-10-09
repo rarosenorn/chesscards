@@ -973,17 +973,17 @@
      is on the top-edge peek and Escape are the ways back. -->
 {#if !zen.on}
 	<div class="page-btns">
-		<button
-			class="page-btn"
-			title="Shortcut key: z"
-			onclick={() => setZen(true)}
-		>Zen mode</button>
 		<!-- cramming: every card here, due or not; the same button ends it -->
 		{#if cram}
 			<button class="page-btn" onclick={endCram}>End cram</button>
 		{:else if studyCards.length}
 			<button class="page-btn" onclick={chooseCram}>Cram</button>
 		{/if}
+		<button
+			class="page-btn"
+			title="Shortcut key: z"
+			onclick={() => setZen(true)}
+		>Zen mode</button>
 	</div>
 {/if}
 

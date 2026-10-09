@@ -10,32 +10,42 @@ const addDays = (day, n) => new Date(parse(day) + n * DAY_MS).toISOString().slic
 // Monday 0 to Sunday 6
 const weekday = day => (new Date(parse(day)).getUTCDay() + 6) % 7;
 
-// How strongly a day is shaded, 0 (nothing answered) to 4, against the
-// average of the days that had anything: half the usual or less is the
-// lightest, more than half again the usual the darkest. Against the average
-// rather than the best day, so one long session does not fade all the rest.
-const levelOf = (count, average) =>
-	count <= 0 ? 0 : count <= average * 0.5 ? 1 : count <= average ? 2 : count <= average * 1.5 ? 3 : 4;
+// How strongly a day is shaded, as Anki's Review Heatmap add-on grades it:
+// 0 for nothing, then ten steps against the usual day, from an eighth of it
+// or less (1) to more than four times it (10).
+const STEPS = [0.125, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 4];
+const levelOf = (count, usual) => {
+	if (count <= 0) return 0;
+	const step = STEPS.findIndex(factor => count <= factor * usual);
+	return step === -1 ? STEPS.length + 1 : step + 1;
+}
+
+// The usual day, as the add-on reckons it: the answers given over all the
+// days that had any, per such day. Never taken as less than 20, so the few
+// reviews of someone starting out do not all come out dark.
+const USUAL_FLOOR = 20;
+const usualDay = counts => {
+	const active = counts.filter(({ count }) => count > 0);
+	const total = active.reduce((sum, { count }) => sum + count, 0);
+	return Math.max(USUAL_FLOOR, Math.round(total / Math.max(active.length, 1)));
+}
 
 // Weeks as columns of seven days, Monday first, with the week `today` is in
 // in the middle: `before` weeks behind it and `after` weeks ahead, as Anki's
 // heatmap stands. A day is { day, count, level, today }, its count the
 // answers given on it (`counts`). A day still to come is
 // { day, count, level, future: true }, its count the cards due on it
-// (`forecast`), shaded against the average of the days ahead that have any.
+// (`forecast`). Both are shaded on the one scale, against the usual day.
 const heatmapWeeks = (counts, today, before = 26, after = 26, forecast = []) => {
 	const start = addDays(today, -weekday(today) - before * 7);
-	const end = addDays(start, (before + 1 + after) * 7 - 1);
-	const average = days => days.length ? days.reduce((sum, { count }) => sum + count, 0) / days.length : 0;
+	const usual = usualDay(counts);
 	const done = new Map(counts.map(({ day, count }) => [day, count]));
-	const usual = average(counts.filter(({ day, count }) => day >= start && day <= today && count > 0));
 	const due = new Map(forecast.map(({ day, count }) => [day, count]));
-	const usualDue = average(forecast.filter(({ day, count }) => day > today && day <= end && count > 0));
 	return Array.from({ length: before + 1 + after }, (_, week) => Array.from({ length: 7 }, (_, index) => {
 		const day = addDays(start, week * 7 + index);
 		if (day > today) {
 			const count = due.get(day) ?? 0;
-			return { day, count, level: levelOf(count, usualDue), future: true };
+			return { day, count, level: levelOf(count, usual), future: true };
 		}
 		const count = done.get(day) ?? 0;
 		return { day, count, level: levelOf(count, usual), today: day === today };
@@ -74,4 +84,4 @@ const streaks = (counts, today) => {
 	return { total, current, longest };
 }
 
-export { levelOf, heatmapWeeks, monthLabels, sayDay, streaks }
+export { levelOf, usualDay, heatmapWeeks, monthLabels, sayDay, streaks }

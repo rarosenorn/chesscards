@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest"
-import { levelOf, heatmapWeeks, monthLabels, sayDay, streaks } from "./heatmap.js"
+import { levelOf, usualDay, heatmapWeeks, monthLabels, sayDay, streaks } from "./heatmap.js"
 
 // 2026-10-08 is a Thursday
 const TODAY = "2026-10-08";
 
 describe("the weeks shown", () => {
-	const weeks = heatmapWeeks([{ day: "2026-10-05", count: 10 }, { day: "2026-10-08", count: 30 }, { day: "2020-01-01", count: 999 }], TODAY, 2, 2);
+	const weeks = heatmapWeeks([{ day: "2026-10-05", count: 10 }, { day: "2026-10-08", count: 30 }], TODAY, 2, 2);
 
 	it("are columns of seven days from Monday, this week in the middle", () => {
 		expect(weeks.length).toBe(5);
@@ -24,19 +24,30 @@ describe("the weeks shown", () => {
 		expect(weeks[3].every(cell => cell.future)).toBe(true);
 	})
 
-	it("give a day to come the cards due on it, shaded against the average of the days ahead", () => {
-		const forecast = [{ day: "2026-10-09", count: 5 }, { day: "2026-10-12", count: 35 }, { day: TODAY, count: 99 }, { day: "2027-06-01", count: 500 }];
-		const ahead = heatmapWeeks([], TODAY, 2, 2, forecast);
-		expect(ahead[2][4]).toEqual({ day: "2026-10-09", count: 5, level: 1, future: true });
-		expect(ahead[3][0]).toEqual({ day: "2026-10-12", count: 35, level: 4, future: true });
+	it("carry each day's count, shaded against the usual day (20 here), and mark today", () => {
+		expect(weeks[2][0]).toEqual({ day: "2026-10-05", count: 10, level: 3, today: false });
+		expect(weeks[2][3]).toEqual({ day: TODAY, count: 30, level: 7, today: true });
+		expect(weeks[1][2]).toEqual({ day: "2026-09-30", count: 0, level: 0, today: false });
+	})
+
+	it("give a day to come the cards due on it, on the same scale", () => {
+		const forecast = [{ day: "2026-10-09", count: 5 }, { day: "2026-10-12", count: 90 }, { day: TODAY, count: 99 }];
+		const ahead = heatmapWeeks([{ day: "2026-10-01", count: 20 }], TODAY, 2, 2, forecast);
+		expect(ahead[2][4]).toEqual({ day: "2026-10-09", count: 5, level: 2, future: true });
+		expect(ahead[3][0]).toEqual({ day: "2026-10-12", count: 90, level: 10, future: true });
 		// today is a day gone by here: what was answered, not what is due
 		expect(ahead[2][3]).toEqual({ day: TODAY, count: 0, level: 0, today: true });
 	})
+})
 
-	it("carry each day's count, shaded against the average of the active days shown, and mark today", () => {
-		expect(weeks[2][0]).toEqual({ day: "2026-10-05", count: 10, level: 1, today: false });
-		expect(weeks[2][3]).toEqual({ day: TODAY, count: 30, level: 3, today: true });
-		expect(weeks[1][2]).toEqual({ day: "2026-09-30", count: 0, level: 0, today: false });
+describe("the usual day", () => {
+	it("is the answers per day that had any, over all there is", () => {
+		expect(usualDay([{ day: "2020-01-01", count: 100 }, { day: "2026-10-01", count: 50 }, { day: "2026-10-02", count: 0 }])).toBe(75);
+	})
+
+	it("is never taken as less than 20", () => {
+		expect(usualDay([{ day: "2026-10-01", count: 3 }])).toBe(20);
+		expect(usualDay([])).toBe(20);
 	})
 })
 
@@ -48,8 +59,9 @@ describe("the months named at the columns", () => {
 })
 
 describe("how strongly a day is shaded", () => {
-	it("runs from nothing to more than half again the usual", () => {
-		expect([0, 5, 10, 20, 30, 31].map(count => levelOf(count, 20))).toEqual([0, 1, 1, 2, 3, 4]);
+	it("runs in ten steps from an eighth of the usual day to more than four times it", () => {
+		expect([0, 2, 5, 10, 15, 20, 25, 30, 40, 80, 81].map(count => levelOf(count, 20)))
+			.toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 	})
 })
 

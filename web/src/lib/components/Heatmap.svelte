@@ -117,32 +117,68 @@
 	.day:hover {
 		outline: 1px solid black;
 	}
-	/* Anki's Review Heatmap add-on, as it colours them: what was studied in
-	   the greens of its lime theme, light to dark... */
+	/* Anki's Review Heatmap add-on, as it colours and grades them: what was
+	   studied in the ten greens of its lime theme, light to dark... */
 	.day.level-1 {
 		background-color: #d6e685;
 	}
 	.day.level-2 {
-		background-color: #8cc665;
+		background-color: #bddb7a;
 	}
 	.day.level-3 {
-		background-color: #44a340;
+		background-color: #a4d06f;
 	}
 	.day.level-4 {
+		background-color: #8cc665;
+	}
+	.day.level-5 {
+		background-color: #74ba58;
+	}
+	.day.level-6 {
+		background-color: #5cae4c;
+	}
+	.day.level-7 {
+		background-color: #44a340;
+	}
+	.day.level-8 {
+		background-color: #378f36;
+	}
+	.day.level-9 {
+		background-color: #2a7b2c;
+	}
+	.day.level-10 {
 		background-color: #1e6823;
 	}
-	/* ...and what falls due on the days ahead in its greys, the more cards
-	   the darker */
+	/* ...and what falls due on the days ahead in its ten greys, the more
+	   cards the darker */
 	.day.due-1 {
 		background-color: #d9d9d9;
 	}
 	.day.due-2 {
-		background-color: #acacac;
+		background-color: #cacaca;
 	}
 	.day.due-3 {
-		background-color: #7f7f7f;
+		background-color: #bbbbbb;
 	}
 	.day.due-4 {
+		background-color: #acacac;
+	}
+	.day.due-5 {
+		background-color: #9d9d9d;
+	}
+	.day.due-6 {
+		background-color: #8e8e8e;
+	}
+	.day.due-7 {
+		background-color: #7f7f7f;
+	}
+	.day.due-8 {
+		background-color: #707070;
+	}
+	.day.due-9 {
+		background-color: #616161;
+	}
+	.day.due-10 {
 		background-color: #525252;
 	}
 	.summary {

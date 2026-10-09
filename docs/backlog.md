@@ -87,14 +87,10 @@
 [ ] while the Cram prompt (or any dialog) is open, Space / 1-4 and the tab shortcuts do nothing to the page behind
 
 # Things to test/check heatmap
-[ ] it sits at the bottom of My flashcards, centred, under the "Create metadeck" button
-[ ] one grid, a column a week, with today in the middle: 26 weeks back and 26 weeks ahead; month names under the column each month starts in ("Oct '26")
-[ ] rows are M T W T F S S, Monday at the top
-[ ] today is outlined in black
-[ ] days ahead are grey, darker the more cards fall due that day; hovering says "N cards due on <date>"
+[ ] days ahead are in ten greys on the same scale, darker the more cards fall due that day; hovering says "N cards due on <date>"
 [ ] days ahead count only cards already studied (own and marketplace decks); new cards are not in it
 [ ] grading a card moves it onto the right future day (after going back to My flashcards)
-[ ] grey for a day with nothing, four greens for more; a normal day is mid-green, a very long one the darkest
+[ ] grey for a day with nothing, then ten greens: a usual day (your average per active day, at least 20) is mid-green, more than four times that the darkest
 [ ] hovering a square outlines it and says the date and count ("12 reviews on 8 Oct 2026")
 [ ] a normal review adds 1 to today's square after going back to My flashcards
 [ ] cram: counted answers and practice answers (Again / Got it) both add to today
@@ -123,6 +119,7 @@
 [ ] lichess, chess.com and google login / signup
 [ ] claude api insteado f my own for importing bad moves from games
 [~] subdecks and metadecks
+[~] heatmap
 [ ] responsive
 [ ] phone app
 

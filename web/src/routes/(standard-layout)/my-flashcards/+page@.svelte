@@ -467,7 +467,7 @@
 		padding: 8px;
 		border-collapse: collapse;
 		margin-top: 12px;
-		margin-bottom: 32px;
+		margin-bottom: 20px;
 		table-layout: fixed;
 		width: 100%;
 	}

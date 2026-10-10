@@ -47,6 +47,10 @@ the course says is left out because it looked minor.
 Follow the tree: at each branch a card asking which moves we look at, then a
 card per line until the next branch. Always context, and ask why.
 
+At a branch, the opponent's options go most common first: the main line's
+cards before the side lines', and the same order for the arrows' bullets on
+the branch card's back. The course's own order gives way to this.
+
 - **Branch card** — "What are Black's options after 4.Nxe5! ?" / "What are
   Black's 2 most common responses to 6.d4?". Board opens at the branch; one
   green `solutionArrows` arrow per candidate; back = a bullet per candidate

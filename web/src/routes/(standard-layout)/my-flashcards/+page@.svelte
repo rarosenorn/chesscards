@@ -17,7 +17,7 @@
 	let lists = $state({ meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks });
 	$effect(() => { lists = { meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks } });
 
-	// The Create buttons at the foot of the page ask for a name and make a deck (or a
+	// The Create button under a list asks for a name and makes a deck (or a
 	// metadeck) of it. A name the server refuses is asked for again, with
 	// what was wrong said under the field and what was typed still in it.
 	let naming = $state({ value: "", error: null });
@@ -441,18 +441,20 @@
 	</div>
 {/snippet}
 
+<!-- under a list, in line with its names, the button that adds to it: it
+     asks for the name -->
+{#snippet createButton(list)}
+	<div class="create-row">
+		<button class="std-btn" onclick={() => createNew(list)}>{list === "meta" ? "Create metadeck" : "Create deck"}</button>
+	</div>
+{/snippet}
+
 <StandardLayout>
-	<!-- what the page can make, at the right of its title row. Each asks
-	     for the name. -->
-	{#snippet headerActions()}
-		<div class="create-row">
-			<button class="std-btn" onclick={() => createNew("mine")}>Create deck</button>
-			<button class="std-btn" onclick={() => createNew("meta")}>Create metadeck</button>
-		</div>
-	{/snippet}
 	{@render deckTable("Marketplace decks", "market")}
 	{@render deckTable("My decks", "mine")}
+	{@render createButton("mine")}
 	{@render deckTable("Metadecks", "meta")}
+	{@render createButton("meta")}
 
 	<!-- the year's study, a square a day, under everything there is to study -->
 	<div class="activity">
@@ -598,11 +600,11 @@
 	th:first-child {
 		font-size: 1.05rem;
 	}
-	/* the two Create buttons, at the right of the page's title row: the
-	   app's standard button, a size down */
+	/* a list's Create button, under it and indented to where its names
+	   begin, closer to it than to the list that follows: the app's standard
+	   button, a size down */
 	.create-row {
-		display: flex;
-		gap: 8px;
+		margin: 2px 0 12px 24px;
 	}
 	.create-row button {
 		padding: 5px 14px;

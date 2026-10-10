@@ -44,6 +44,14 @@
 //   "back":  <side>                      // optional
 // }
 //
+// A chapter the user has also written cards in by hand takes those cards as
+// place-holders, so the two kinds share one order:
+//
+//   { "keep": "<the card's uuid>", "note": "what it asks, for the reader" }
+//
+// Such a card is never read or written here: it only holds its place among
+// the chapter's cards (and is moved to it if it stands elsewhere).
+//
 // <side> = {
 //   "text": "paragraphs, blank-line separated. **bold** supported.
 //            lines starting with '1. ' become an ordered list,
@@ -148,6 +156,10 @@ const chapters = (spec.chapters ?? []).map((chapter, ci) => {
 		name: chapter.name,
 		cards: (chapter.cards ?? []).map((card, i) => {
 			const label = `"${chapter.name}" card ${i + 1}`
+			if (card.keep != null) {
+				if (typeof card.keep !== "string" || !/^[0-9a-f-]{36}$/i.test(card.keep)) bad(`${label}: keep must be a card's uuid`)
+				return { keep: card.keep }
+			}
 			const type = card.type ?? "basic"
 			if (!["basic", "tactic"].includes(type)) bad(`${label}: unknown type "${type}"`)
 			if (card.id != null) {
@@ -170,7 +182,7 @@ if (problems.length > 0) {
 
 const pool = new pg.Pool()
 const client = await pool.connect()
-let inserted = 0, updated = 0, unchanged = 0, adopted = 0, retyped = 0
+let inserted = 0, updated = 0, unchanged = 0, adopted = 0, retyped = 0, kept = 0, moved = 0
 const pruned = []
 const nextLock = { deck: spec.deck, cards: {} }
 try {
@@ -232,8 +244,22 @@ try {
 		subdeckByName.set(chapter.name, subdeck)
 
 		for (const [index, card] of chapter.cards.entries()) {
-			const frontKey = canonical(card.front)
 			const position = index + 1
+
+			// a card made by hand in the app: only its place is ours to set
+			if (card.keep) {
+				const own = byId.get(card.keep)
+				if (!own) throw new Error(`"${chapter.name}" card ${position}: no card ${card.keep} in this deck to keep`)
+				claimed.add(own.id)
+				kept++
+				if (own.subdeck_id !== subdeck.id || own.position !== position) {
+					await client.query("update cards set subdeck_id=$2, position=$3 where id=$1", [own.id, subdeck.id, position])
+					moved++
+				}
+				continue
+			}
+
+			const frontKey = canonical(card.front)
 
 			// find the row this spec card already owns: by id via the lockfile,
 			// else by an identical front (adopting a card written before ids)
@@ -303,6 +329,7 @@ try {
 
 	console.log(`\n${spec.deck}: ${inserted} new, ${updated} updated, ${unchanged} unchanged ` +
 		`(${total} in spec, deck ${deckExisted ? "existed" : "created"})`)
+	if (kept > 0) console.log(`  ${kept} hand-made card(s) kept as they are` + (moved > 0 ? `, ${moved} of them moved to their place` : ""))
 	if (adopted > 0) console.log(`  ${adopted} pre-existing card(s) adopted by id — their history is preserved`)
 	if (retyped > 0) console.log(`  ${retyped} card(s) changed type, which resets their schedule`)
 	if (pruned.length > 0) {

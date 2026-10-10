@@ -442,6 +442,14 @@
 {/snippet}
 
 <StandardLayout>
+	<!-- what the page can make, at the right of its title row. Each asks
+	     for the name. -->
+	{#snippet headerActions()}
+		<div class="create-row">
+			<button class="std-btn" onclick={() => createNew("mine")}>Create deck</button>
+			<button class="std-btn" onclick={() => createNew("meta")}>Create metadeck</button>
+		</div>
+	{/snippet}
 	{@render deckTable("Marketplace decks", "market")}
 	{@render deckTable("My decks", "mine")}
 	{@render deckTable("Metadecks", "meta")}
@@ -449,13 +457,6 @@
 	<!-- the year's study, a square a day, under everything there is to study -->
 	<div class="activity">
 		<Heatmap days={data.activity.days} forecast={data.activity.forecast} today={data.activity.today} />
-	</div>
-
-	<!-- what the page can make, in a row at its foot against the right edge.
-	     Each asks for the name. -->
-	<div class="create-row">
-		<button class="std-btn" onclick={() => createNew("mine")}>Create deck</button>
-		<button class="std-btn" onclick={() => createNew("meta")}>Create metadeck</button>
 	</div>
 </StandardLayout>
 
@@ -597,13 +598,11 @@
 	th:first-child {
 		font-size: 1.05rem;
 	}
-	/* the two Create buttons, centred under the heatmap: the app's standard
-	   button, a size down */
+	/* the two Create buttons, at the right of the page's title row: the
+	   app's standard button, a size down */
 	.create-row {
 		display: flex;
-		justify-content: center;
 		gap: 8px;
-		margin: 24px 0 0;
 	}
 	.create-row button {
 		padding: 5px 14px;

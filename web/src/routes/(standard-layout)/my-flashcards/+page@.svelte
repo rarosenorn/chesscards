@@ -603,7 +603,7 @@
 		display: flex;
 		justify-content: flex-end;
 		gap: 8px;
-		margin: 4px 0 12px;
+		margin: 12px 0 12px;
 	}
 	.create-row button {
 		padding: 5px 14px;

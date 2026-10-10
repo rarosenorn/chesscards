@@ -597,11 +597,11 @@
 	th:first-child {
 		font-size: 1.05rem;
 	}
-	/* the two Create buttons, under the heatmap and against the page's right
-	   edge: the app's standard button, a size down */
+	/* the two Create buttons, centred under the heatmap: the app's standard
+	   button, a size down */
 	.create-row {
 		display: flex;
-		justify-content: flex-end;
+		justify-content: center;
 		gap: 8px;
 		margin: 24px 0 0;
 	}

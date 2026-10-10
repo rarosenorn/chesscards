@@ -17,7 +17,7 @@
 	let lists = $state({ meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks });
 	$effect(() => { lists = { meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks } });
 
-	// The Create button under a list asks for a name and makes a deck (or a
+	// The Create buttons under the lists ask for a name and make a deck (or a
 	// metadeck) of it. A name the server refuses is asked for again, with
 	// what was wrong said under the field and what was typed still in it.
 	let naming = $state({ value: "", error: null });
@@ -441,19 +441,17 @@
 	</div>
 {/snippet}
 
-<!-- under a list, centred, the button that adds to it: it asks for the name -->
-{#snippet createButton(list)}
-	<div class="create-row">
-		<button class="std-btn" onclick={() => createNew(list)}>{list === "meta" ? "Create metadeck" : "Create deck"}</button>
-	</div>
-{/snippet}
-
 <StandardLayout>
 	{@render deckTable("Marketplace decks", "market")}
 	{@render deckTable("My decks", "mine")}
-	{@render createButton("mine")}
 	{@render deckTable("Metadecks", "meta")}
-	{@render createButton("meta")}
+
+	<!-- what the page can make, in a row under the lists at their right
+	     edge. Each asks for the name. -->
+	<div class="create-row">
+		<button class="std-btn" onclick={() => createNew("mine")}>Create deck</button>
+		<button class="std-btn" onclick={() => createNew("meta")}>Create metadeck</button>
+	</div>
 
 	<!-- the year's study, a square a day, under everything there is to study -->
 	<div class="activity">
@@ -599,11 +597,12 @@
 	th:first-child {
 		font-size: 1.05rem;
 	}
-	/* a list's Create button, centred under it and closer to it than to the
-	   list that follows: the app's standard button, a size down */
+	/* the two Create buttons, under the last list and against its right
+	   edge: the app's standard button, a size down */
 	.create-row {
 		display: flex;
-		justify-content: center;
+		justify-content: flex-end;
+		gap: 8px;
 		margin: 4px 0 12px;
 	}
 	.create-row button {

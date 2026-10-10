@@ -51,10 +51,12 @@ At a branch, the opponent's options go most common first: the main line's
 cards before the side lines', and the same order for the arrows' bullets on
 the branch card's back. The course's own order gives way to this.
 
-- **Branch card** — "What are Black's options after 4.Nxe5! ?" / "What are
-  Black's 2 most common responses to 6.d4?". Board opens at the branch; one
-  green `solutionArrows` arrow per candidate; back = a bullet per candidate
-  with the author's verdict.
+- **Branch card** — "What are Black's 5 main moves after 4.Nxe5! ?" / "What
+  are Black's 2 main moves after 6.d4, and how do they turn out?". Always this
+  wording, with the number of moves the answer holds — never an open "What
+  are Black's options after …". Board opens at the branch; one green
+  `solutionArrows` arrow per candidate; back = a bullet per candidate with the
+  author's verdict.
 - **Move card** — "What is your move after 3...Bc5?! and why?". Board opens at
   the position (the board itself tints the squares of the opponent's last
   move — no arrow for it), the answer as a green `solutionArrows` arrow; back = the move and the author's

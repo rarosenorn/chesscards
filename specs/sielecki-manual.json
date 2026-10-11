@@ -4633,6 +4633,1710 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Four Knights Scotch 4.d4 − Sidelines",
+      "chapters": [
+        {
+          "name": "Overview",
+          "cards": [
+            {
+              "id": "fs-ov-bb4",
+              "front": {
+                "text": "Play the Four Knights Scotch line with 4...Bb4 from the first move.",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxg7"
+                    ],
+                    "orientation": "w",
+                    "solutionFrom": 0,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Black's best reply is 4...exd4.\n- 4...Bb4 A rare and slightly dubious move. We can prove an advantage, but only with one reply!\n- 5.Nxe5! The only good move! It is not obvious at first sight why you should capture e5 with the knight and avoid other options.\n- 5...Nxe4 Black wants to get the pawn back immediately. It's not a good move, but it requires a precise reply.\n- 6.Qg4! The best and most fun move to play! We attack both the knight and the g-pawn and enter wild complications.\n- 6...Nxc3 The only move available. The knight was attacked, and retreating or covering it failed due to our queen taking g7.\n- 7.Qxg7! Wow, what a mess! The position is very favorable for us."
+            },
+            {
+              "id": "fs-ov-d6-bd7",
+              "front": {
+                "text": "Play the Four Knights Scotch line with 4...d6 and 5...Bd7 from the first move.",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2"
+                    ],
+                    "orientation": "w",
+                    "solutionFrom": 0,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Black's best reply is 4...exd4.\n- 4...d6 A passive and dubious move, but it is important to study, as the position may arise from various move orders.\n- 5.Bb5! An important move to remember! We pin Black's knight and thus increase the pressure on the e5-pawn. In addition, we also threaten d4-d5, attacking the unlucky pinned knight!\n- 5...Bd7 Black addresses the pin, a logical move.\n- 6.Bxc6! This move is surprisingly strong, although we give up the bishop for a knight voluntarily.\n- 6...Bxc6 The only good reply. Black sets up a counterattack on our e-pawn.\n- 7.Qe2! A strong move! We cover the attacked e-pawn, and Black's e-pawn is now in danger again."
+            },
+            {
+              "id": "fs-ov-d6-exd4",
+              "front": {
+                "text": "Play the Four Knights Scotch line with 4...d6 and 5...exd4 from the first move.",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "exd4",
+                      "Nxd4",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2"
+                    ],
+                    "orientation": "w",
+                    "solutionFrom": 0,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Black's best reply is 4...exd4.\n- 4...d6 A passive and dubious move, but it is important to study, as the position may arise from various move orders.\n- 5.Bb5! An important move to remember! We pin Black's knight and thus increase the pressure on the e5-pawn. In addition, we also threaten d4-d5, attacking the unlucky pinned knight!\n- 5...exd4 Black gives up the idea of keeping a pawn on e5.\n- 6.Nxd4 We are now attacking Black's knight twice, so there is little choice for our opponent.\n- 6...Bd7 Black needs to cover the knight; there is nothing else.\n- 7.Bxc6! A strong move! Usually, you want to keep your pair of bishops − this case is an exception. By taking on c6, we preserve our well-placed d4-knight.\n- 7...Bxc6 This recapture is played most of the time.\n- 8.Qe2 We cover our important central pawn and prepare Bf4 and O-O-O."
+            }
+          ]
+        },
+        {
+          "name": "4...Bb4",
+          "cards": [
+            {
+              "id": "fs-4th-moves",
+              "front": {
+                "text": "Besides 4...exd4, which 2 Black replies to 4.d4 do we look at, and how do we feel about them?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 7,
+                    "solutionArrows": {
+                      "7": [
+                        [
+                          "success",
+                          "f8",
+                          "b4"
+                        ],
+                        [
+                          "success",
+                          "d7",
+                          "d6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "Black's best reply to 4.d4 is 4...exd4. Two alternatives are worth checking:\n\n- [4...Bb4] pins our knight, but it is a risky choice. We need to know how to tackle it though.\n- [4...d6] is a passive defense but important to study. The resulting positions may also arise from different move orders.\n\nOther moves make little sense, as we attack the e-pawn, and Black can't just ignore this threat."
+            },
+            {
+              "id": "fsb-nxe5",
+              "front": {
+                "text": "What is your move after 4...Bb4 and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "f3",
+                          "e5"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 8,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "5.Nxe5! The only good move! White often struggles against 4...Bb4 because it is not obvious at first sight why you should capture e5 with the knight and avoid other options.\n\n4...Bb4 is a rare and slightly dubious move. We can prove an advantage, but only with this one reply!"
+            },
+            {
+              "id": "fsb-not-dxe5-d5",
+              "front": {
+                "text": "After 4...Bb4, why not 5.dxe5 or 5.d5 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "f3",
+                          "e5"
+                        ],
+                        [
+                          "danger",
+                          "d4",
+                          "e5"
+                        ],
+                        [
+                          "warning",
+                          "d4",
+                          "d5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [5.dxe5]? The problem with [5.dxe5 | 5...Nxe4] is that Black immediately puts serious pressure on our c3-knight.\n- Black is also happy about [5.d5 Ne7 6.Nxe5 Nxe4], when the pin is annoying again."
+            },
+            {
+              "id": "fsb-nxe5-replies",
+              "front": {
+                "text": "What are Black's 2 main moves after 5.Nxe5! and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 9,
+                    "solutionArrows": {
+                      "9": [
+                        [
+                          "success",
+                          "f6",
+                          "e4"
+                        ],
+                        [
+                          "success",
+                          "c6",
+                          "e5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [5...Nxe4] is Black's most aggressive reply. Black wants to get the pawn back immediately. It's not a good move, but it requires a precise reply.\n- [5...Nxe5]? is an even worse option."
+            },
+            {
+              "id": "fsb-qg4",
+              "front": {
+                "text": "What is your move after 5...Nxe4 and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 10,
+                    "solutionArrows": {
+                      "10": [
+                        [
+                          "success",
+                          "d1",
+                          "g4"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 10,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "6.Qg4! The best and most fun move to play! We attack both the knight and the g-pawn and enter wild complications."
+            },
+            {
+              "id": "fsb-qxg7",
+              "front": {
+                "text": "What is your move after 6...Nxc3, and why was it Black's only move?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxg7"
+                    ],
+                    "orientation": "w",
+                    "openAt": 12,
+                    "solutionArrows": {
+                      "12": [
+                        [
+                          "success",
+                          "g4",
+                          "g7"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 12,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "7.Qxg7! Wow, what a mess! The position is very favorable for us.\n\n6...Nxc3 was the only move available. The knight was attacked, and retreating or covering it failed due to our queen taking g7."
+            },
+            {
+              "id": "fsb-qxg7-replies",
+              "front": {
+                "text": "What are Black's 3 main moves after 7.Qxg7! and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxg7"
+                    ],
+                    "orientation": "w",
+                    "openAt": 13,
+                    "solutionArrows": {
+                      "13": [
+                        [
+                          "success",
+                          "c3",
+                          "d5"
+                        ],
+                        [
+                          "success",
+                          "c3",
+                          "e4"
+                        ],
+                        [
+                          "success",
+                          "h8",
+                          "f8"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [7...Nd5+ 8.c3] or [7...Ne4+ 8.c3] is great for us.\n- [7...Rf8] leads to an even more exciting position."
+            },
+            {
+              "id": "fsb-nd5-c3",
+              "front": {
+                "text": "What is your move after 7...Nd5+ or 7...Ne4+, and why is it great for us?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxg7",
+                      "Nd5+",
+                      "c3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 14,
+                    "solutionArrows": {
+                      "14": [
+                        [
+                          "success",
+                          "c2",
+                          "c3"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 14,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "8.c3 We still attack the h8-rook and threaten mate, which will win back the piece with interest.\n\n[7...Ne4+ 8.c3] is the same."
+            },
+            {
+              "id": "fsb-qf6-next3",
+              "front": {
+                "text": "What are the next 3 plies following 8...Qf6, and how do we stand after them?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxg7",
+                      "Nd5+",
+                      "c3",
+                      "Qf6",
+                      "Qxf6",
+                      "Nxf6",
+                      "Nxc6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 16,
+                    "solutionFrom": 16,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 9.Qxf6 claude: We trade queens.\n- 9...Nxf6 claude: Black recaptures.\n- 10.Nxc6 claude: We take the knight, and the bishop on b4 is still attacked by our c-pawn.\n\nAfter [10...Bxc3+ 11.bxc3] we have great bishops in a wide-open position."
+            },
+            {
+              "id": "fsb-rf8-a3",
+              "front": {
+                "text": "What is your move after 7...Rf8, and what are Black's 2 main moves after it?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxg7",
+                      "Rf8",
+                      "a3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 14,
+                    "solutionArrows": {
+                      "14": [
+                        [
+                          "success",
+                          "a2",
+                          "a3"
+                        ]
+                      ],
+                      "15": [
+                        [
+                          "success",
+                          "b4",
+                          "a5"
+                        ],
+                        [
+                          "success",
+                          "c6",
+                          "d4"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 14,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "8.a3! attacks Black's bishop.\n\n- [8...Ba5] The bishop retreats.\n- [8...Nxd4] is even wilder."
+            },
+            {
+              "id": "fsb-ba5-next3",
+              "front": {
+                "text": "What are the next 3 plies following 8...Ba5 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxg7",
+                      "Rf8",
+                      "a3",
+                      "Ba5",
+                      "Nxc6",
+                      "dxc6",
+                      "Qe5+"
+                    ],
+                    "orientation": "w",
+                    "openAt": 16,
+                    "solutionFrom": 16,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 9.Nxc6 claude: We trade knights with an attack on the queen.\n- 9...dxc6 claude: Black recaptures.\n- 10.Qe5+ claude: A check that also hits the bishop on a5."
+            },
+            {
+              "id": "fsb-qe7-next3",
+              "front": {
+                "text": "What are the next 3 plies following 10...Qe7, and how do we stand?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxg7",
+                      "Rf8",
+                      "a3",
+                      "Ba5",
+                      "Nxc6",
+                      "dxc6",
+                      "Qe5+",
+                      "Qe7",
+                      "Qxe7+",
+                      "Kxe7",
+                      "Bd2"
+                    ],
+                    "orientation": "w",
+                    "openAt": 20,
+                    "solutionFrom": 20,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 11.Qxe7+ claude: Our queen is pinned, so we trade.\n- 11...Kxe7 claude: Forced.\n- 12.Bd2! gives us a large advantage after regaining the piece."
+            },
+            {
+              "id": "fsb-nxd4-next3",
+              "front": {
+                "text": "What are the next 3 plies following 8...Nxd4 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxg7",
+                      "Rf8",
+                      "a3",
+                      "Nxd4",
+                      "axb4",
+                      "Nxc2+",
+                      "Kd2"
+                    ],
+                    "orientation": "w",
+                    "openAt": 16,
+                    "solutionFrom": 16,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 9.axb4! claude: We take the bishop and leave the knights alone.\n- 9...Nxc2+ claude: Black forks king and rook.\n- 10.Kd2 claude: The king attacks both knights."
+            },
+            {
+              "id": "fsb-kxc3",
+              "front": {
+                "text": "What is your move after 10...Nxa1, and what do we threaten?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxg7",
+                      "Rf8",
+                      "a3",
+                      "Nxd4",
+                      "axb4",
+                      "Nxc2+",
+                      "Kd2",
+                      "Nxa1",
+                      "Kxc3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 20,
+                    "solutionArrows": {
+                      "20": [
+                        [
+                          "success",
+                          "d2",
+                          "c3"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 20,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "11.Kxc3! We have a winning attack! The main threat is Bc4 and Re1, aiming for the king!\n\nIt is funny to see our king on c3 and the stranded enemy knight on a1, but this is irrelevant, as we strike first."
+            },
+            {
+              "id": "fsb-nxe5-next3",
+              "front": {
+                "text": "After 5...Nxe5?, what are the next 3 plies?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe5",
+                      "dxe5",
+                      "Nxe4",
+                      "Qg4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 10,
+                    "solutionFrom": 10,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 6.dxe5 claude: We recapture and attack the knight.\n- 6...Nxe4 claude: Black takes the e-pawn, as in the main line.\n- 7.Qg4! is great for us.\n\n5...Nxe5? is an even worse option than 5...Nxe4."
+            },
+            {
+              "id": "fsb-nxe5-qxb4",
+              "front": {
+                "text": "What are the next 3 plies following 7...Nxc3 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe5",
+                      "dxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxb4",
+                      "Nd5",
+                      "Qg4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 14,
+                    "solutionFrom": 14,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 8.Qxb4! claude: With our d-pawn gone from d4, the queen can take the bishop.\n- 8...Nd5 claude: The knight escapes with an attack on our queen.\n- 9.Qg4 − how does Black defend the kingside?"
+            },
+            {
+              "id": "fsb-nxe5-bh6",
+              "front": {
+                "text": "What do you play after 9...O-O and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe5",
+                      "dxe5",
+                      "Nxe4",
+                      "Qg4",
+                      "Nxc3",
+                      "Qxb4",
+                      "Nd5",
+                      "Qg4",
+                      "O-O",
+                      "Bh6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 18,
+                    "solutionArrows": {
+                      "18": [
+                        [
+                          "success",
+                          "c1",
+                          "h6"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 18,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "10.Bh6 We win material. claude: Mate on g7 is threatened, and after 10...g6 the bishop takes the rook on f8."
+            },
+            {
+              "id": "fsb-verdict",
+              "front": {
+                "text": "What is the verdict on the whole 4...Bb4 5.Nxe5 Nxe4 variation?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "Bb4",
+                      "Nxe5",
+                      "Nxe4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 10
+                  }
+                ]
+              },
+              "back": "It is rarely played and extremely dubious for Black, but we need to be ready for a wild game. Studying the complications is lots of fun, even if you'll rarely get it on the board in a real game."
+            }
+          ]
+        },
+        {
+          "name": "4...d6 5.Bb5 Bd7",
+          "cards": [
+            {
+              "id": "fsd-why-study",
+              "front": {
+                "text": "Why is 4...d6 important to study, although it is passive and dubious?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8
+                  }
+                ]
+              },
+              "back": "The position after 4...d6 and the following line may arise from various move orders, making it a fairly frequently seen line if you add up all the possible ways to reach it:\n\n- [1.e4 e5 2.Nf3 d6 3.d4 Nc6 4.Nc3 Nf6]\n- [1.e4 e5 2.Nf3 Nc6 3.Nc3 d6 4.d4 Nf6]\n- [1.e4 d6 2.d4 Nf6 3.Nc3 e5 4.Nf3 Nc6]\n\nWhenever Black opts for an early ...Nc6 and ...d6, locking in their f8-bishop, we'll reach similar or identical positions."
+            },
+            {
+              "id": "fsd-bb5",
+              "front": {
+                "text": "What is your move after 4...d6 and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "f1",
+                          "b5"
+                        ]
+                      ],
+                      "9": [
+                        [
+                          "success",
+                          "d4",
+                          "d5"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 8,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "5.Bb5! An important move to remember! We pin Black's knight and thus increase the pressure on the e5-pawn. In addition, we also threaten d4-d5, attacking the unlucky pinned knight!"
+            },
+            {
+              "id": "fsd-not-dxe5",
+              "front": {
+                "text": "After 4...d6, why not trade on e5 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "f1",
+                          "b5"
+                        ],
+                        [
+                          "warning",
+                          "d4",
+                          "e5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "We don't want to trade on e5, as Black is happy about the simplifications. After [5.dxe5 Nxe5 6.Nxe5 dxe5 7.Qxd8+ Kxd8], we could spoil Black's castling ideas, but once the queens are traded, this is less of a problem for our opponent.\n\nUltimately, we only helped Black because the trades activated their f8-bishop. We want to keep this piece locked in and, therefore, should avoid the capture on e5."
+            },
+            {
+              "id": "fsd-bb5-replies",
+              "front": {
+                "text": "What are Black's 2 main moves after 5.Bb5! and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 9,
+                    "solutionArrows": {
+                      "9": [
+                        [
+                          "success",
+                          "c8",
+                          "d7"
+                        ],
+                        [
+                          "success",
+                          "e5",
+                          "d4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "The pin and the threat of d4-d5 only leave two options for Black:\n\n- [5...Bd7] breaks the pin, a logical move.\n- [5...exd4] takes the pawn on d4. Black gives up the idea of keeping a pawn on e5."
+            },
+            {
+              "id": "fsd1-next3",
+              "front": {
+                "text": "What are the next 3 plies following 5...Bd7 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2"
+                    ],
+                    "orientation": "w",
+                    "openAt": 10,
+                    "solutionFrom": 10,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 6.Bxc6! This move is surprisingly strong, although we give up the bishop for a knight voluntarily.\n- 6...Bxc6 The only good reply. Black must play it to set up a counterattack on our e-pawn.\n- 7.Qe2! A strong move! We cover the attacked e-pawn and accomplish several points. Black's e-pawn is now in danger again."
+            },
+            {
+              "id": "fsd1-recapture",
+              "front": {
+                "text": "After 6.Bxc6!, why must Black take back with the bishop?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "Bd7",
+                      "Bxc6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 11,
+                    "solutionArrows": {
+                      "11": [
+                        [
+                          "success",
+                          "d7",
+                          "c6"
+                        ],
+                        [
+                          "danger",
+                          "b7",
+                          "c6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "[6...Bxc6] is the only good reply, as [6...bxc6]? [6...bxc6 | 7.dxe5] wins the e-pawn for us.\n\nBlack must play 6...Bxc6 to set up a counterattack on our e-pawn."
+            },
+            {
+              "id": "fsd1-not-dxe5",
+              "front": {
+                "text": "After 6...Bxc6, why not 7.dxe5 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 12,
+                    "solutionArrows": {
+                      "12": [
+                        [
+                          "success",
+                          "d1",
+                          "e2"
+                        ],
+                        [
+                          "danger",
+                          "d4",
+                          "e5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "[7.dxe5]? is bad due to [7.dxe5 | 7...Nxe4], when we have achieved nothing."
+            },
+            {
+              "id": "fsd1-qe2-replies",
+              "front": {
+                "text": "What are Black's 3 main moves after 7.Qe2! and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2"
+                    ],
+                    "orientation": "w",
+                    "openAt": 13,
+                    "solutionArrows": {
+                      "13": [
+                        [
+                          "success",
+                          "e5",
+                          "d4"
+                        ],
+                        [
+                          "success",
+                          "f8",
+                          "e7"
+                        ],
+                        [
+                          "success",
+                          "f6",
+                          "d7"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [7...exd4] is Black's most common and relatively best continuation.\n- [7...Be7]? Black can't just play 'any move', as [7...Be7 | 8.dxe5] demonstrates.\n- [7...Nd7]?? tries to cover the pawn, but we trap the bishop."
+            },
+            {
+              "id": "fsd1-exd4",
+              "front": {
+                "text": "What is your move after 7...exd4, and where does it lead?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2",
+                      "exd4",
+                      "Nxd4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 14,
+                    "solutionArrows": {
+                      "14": [
+                        [
+                          "success",
+                          "f3",
+                          "d4"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 14,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "8.Nxd4 leads to a position that we examine via the more common move order 5...exd4 6.Nxd4 Bd7 7.Bxc6 Bxc6 8.Qe2, which is excellent for White."
+            },
+            {
+              "id": "fsd1-be7",
+              "front": {
+                "text": "What do you play after 7...Be7? and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2",
+                      "Be7",
+                      "dxe5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 14,
+                    "solutionArrows": {
+                      "14": [
+                        [
+                          "success",
+                          "d4",
+                          "e5"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 14,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "8.dxe5 Black's e-pawn was in danger again, and they can't just play 'any move'. claude: We win a pawn."
+            },
+            {
+              "id": "fsd1-nd7",
+              "front": {
+                "text": "What do you play after 7...Nd7?? and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2",
+                      "Nd7",
+                      "d5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 14,
+                    "solutionArrows": {
+                      "14": [
+                        [
+                          "success",
+                          "d4",
+                          "d5"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 14,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "8.d5! traps the bishop!"
+            },
+            {
+              "id": "fsd1-be7-next3",
+              "front": {
+                "text": "After 5...Be7??, what are the next 3 plies?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "Be7",
+                      "d5",
+                      "a6",
+                      "Ba4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 10,
+                    "solutionFrom": 10,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 6.d5 Black can't ignore the pin. claude: We attack the pinned knight.\n- 6...a6 claude: Black hits the bishop to break the pin.\n- 7.Ba4 claude: We keep the pin."
+            },
+            {
+              "id": "fsd1-b5-next3",
+              "front": {
+                "text": "What are the next 3 plies following 7...b5 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "Be7",
+                      "d5",
+                      "a6",
+                      "Ba4",
+                      "b5",
+                      "Nxb5",
+                      "axb5",
+                      "Bxb5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 14,
+                    "solutionFrom": 14,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 8.Nxb5! claude: We give the knight to keep the pin.\n- 8...axb5 claude: Black takes it.\n- 9.Bxb5 We'll regain the piece with interest."
+            },
+            {
+              "id": "fsd1-a6-next3",
+              "front": {
+                "text": "After 5...a6??, what are the next 3 plies?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "a6",
+                      "Bxc6+",
+                      "bxc6",
+                      "dxe5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 10,
+                    "solutionFrom": 10,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 6.Bxc6+ claude: We take with check.\n- 6...bxc6 claude: Black recaptures.\n- 7.dxe5 We win the central pawn and have weakened Black's pawn structure on top of that."
+            }
+          ]
+        },
+        {
+          "name": "4...d6 5.Bb5 exd4",
+          "cards": [
+            {
+              "id": "fsd2-nxd4",
+              "front": {
+                "text": "What is your move after 5...exd4, and why does it leave Black little choice?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "exd4",
+                      "Nxd4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 10,
+                    "solutionArrows": {
+                      "10": [
+                        [
+                          "success",
+                          "f3",
+                          "d4"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 10,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "6.Nxd4 We are now attacking Black's knight twice, so there is little choice for our opponent.\n\nWith 5...exd4 Black gives up the idea of keeping a pawn on e5."
+            },
+            {
+              "id": "fsd2-move-orders",
+              "front": {
+                "text": "Which other move orders reach the position after 5...exd4 6.Nxd4 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "exd4",
+                      "Nxd4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 11
+                  }
+                ]
+              },
+              "back": "- [4...exd4 5.Nxd4 d6 6.Bb5]\n- [1.e4 e5 2.Nf3 d6 3.d4 exd4 4.Nxd4 Nf6 5.Nc3 Nc6 6.Bb5]"
+            },
+            {
+              "id": "fsd2-next3",
+              "front": {
+                "text": "What are the next 3 plies following 6...Bd7 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "exd4",
+                      "Nxd4",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2"
+                    ],
+                    "orientation": "w",
+                    "openAt": 12,
+                    "solutionFrom": 12,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 7.Bxc6! A strong move! Usually, you want to keep your pair of bishops − this case is an exception. By taking on c6, we preserve our well-placed d4-knight.\n- 7...Bxc6 This recapture is played most of the time.\n- 8.Qe2 We cover our important central pawn and prepare Bf4 and O-O-O.\n\nWith 6...Bd7 Black needs to cover the knight; there is nothing else."
+            },
+            {
+              "id": "fsd2-importance",
+              "front": {
+                "text": "Why is the position after 8.Qe2 of special importance?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "exd4",
+                      "Nxd4",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2"
+                    ],
+                    "orientation": "w",
+                    "openAt": 15
+                  }
+                ]
+              },
+              "back": "[5...Bd7 6.Bxc6 Bxc6 7.Qe2 exd4 8.Nxd4] is a second move order to reach it. Black is in trouble now, as our simple plan is very effective."
+            },
+            {
+              "id": "fsd2-plan-next3",
+              "front": {
+                "text": "What are the next 3 plies following 8...Be7, and what are we ready for?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "exd4",
+                      "Nxd4",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2",
+                      "Be7",
+                      "Bf4",
+                      "O-O",
+                      "O-O-O"
+                    ],
+                    "orientation": "w",
+                    "openAt": 16,
+                    "solutionFrom": 16,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 9.Bf4 claude: The bishop comes out, as 8.Qe2 prepared.\n- 9...O-O claude: Black castles.\n- 10.O-O-O We are ready to launch a kingside attack based on moves like g4 and Nf5. Black has no counterplay to speak of."
+            },
+            {
+              "id": "fsd2-why-queenside",
+              "front": {
+                "text": "Why can we afford to castle queenside against Black's setup with 4...d6 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "exd4",
+                      "Nxd4",
+                      "Bd7",
+                      "Bxc6",
+                      "Bxc6",
+                      "Qe2",
+                      "Be7",
+                      "Bf4",
+                      "O-O",
+                      "O-O-O"
+                    ],
+                    "orientation": "w",
+                    "openAt": 19
+                  }
+                ]
+              },
+              "back": "Black's setup, starting with 4...d6, is passive. This allows us to play more ambitiously than usual. Going for queenside castling is a promising option here, as it allows us to have a safe king and still push the kingside pawns forward to start an attack.\n\nIn many opening lines, it is not feasible to castle queenside, as it takes too much time to prepare. Black's passive setup gives us the time to play Qe2, Bf4 and finally, O-O-O."
+            },
+            {
+              "id": "fsd2-bxc6-qf3",
+              "front": {
+                "text": "What is your move after 7...bxc6 and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "exd4",
+                      "Nxd4",
+                      "Bd7",
+                      "Bxc6",
+                      "bxc6",
+                      "Qf3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 14,
+                    "solutionArrows": {
+                      "14": [
+                        [
+                          "success",
+                          "d1",
+                          "f3"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 14,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "8.Qf3! accomplishes multiple goals. We prepare queenside castling, strengthen Nf5 ideas, and we are ready to answer 8...Be7 with 9.e5!"
+            },
+            {
+              "id": "fsd2-bxc6-be7",
+              "front": {
+                "text": "After 7...bxc6 8.Qf3!, what are the next 3 plies following 8...Be7 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "exd4",
+                      "Nxd4",
+                      "Bd7",
+                      "Bxc6",
+                      "bxc6",
+                      "Qf3",
+                      "Be7",
+                      "e5",
+                      "dxe5",
+                      "Nxc6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 16,
+                    "solutionFrom": 16,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 9.e5! claude: We open the long diagonal for our queen.\n- 9...dxe5 claude: Black takes the pawn.\n- 10.Nxc6 leads to a crushing attack."
+            },
+            {
+              "id": "fsd2-a6",
+              "front": {
+                "text": "What do you play after 6...a6?? and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4",
+                      "d6",
+                      "Bb5",
+                      "exd4",
+                      "Nxd4",
+                      "a6",
+                      "Nxc6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 12,
+                    "solutionArrows": {
+                      "12": [
+                        [
+                          "success",
+                          "d4",
+                          "c6"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 12,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "7.Nxc6! wins even more material than the other capture, [7.Bxc6+]."
+            },
+            {
+              "id": "fs-conclusion",
+              "front": {
+                "text": "What is the conclusion on Black's alternatives to 4...exd4 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "Nc6",
+                      "Nc3",
+                      "Nf6",
+                      "d4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 7
+                  }
+                ]
+              },
+              "back": "Black should answer 4.d4 with 4...exd4, as the alternatives don't convince. The pin 4...Bb4 leads to tactical complications, but Black is in danger. On the other hand, 4...d6 is too passive and gives us excellent prospects for an attack."
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -37,6 +37,11 @@
 //   ]
 // }
 //
+// A chapter may hold chapters instead of cards — the deck's subdecks form a
+// tree, and a subdeck holds either cards or subdecks, never both:
+//
+//   { "name": "Main Line", "chapters": [ { "name": "Overview", "cards": [...] }, ... ] }
+//
 // <card> = {
 //   "id":   "ov-first-moves",            // stable id; edits update in place
 //   "type": "basic" | "tactic",          // optional, default "basic"
@@ -150,12 +155,28 @@ if (!Array.isArray(spec.chapters) || spec.chapters.length === 0) bad("spec: no c
 
 // build + validate everything before touching the database
 const specIds = new Set()
-const chapters = (spec.chapters ?? []).map((chapter, ci) => {
-	if (!chapter.name?.trim()) bad(`chapter ${ci + 1}: missing name`)
+const buildChapter = (chapter, ci, path) => {
+	if (!chapter.name?.trim()) bad(`${path}chapter ${ci + 1}: missing name`)
+	const here = `${path}${chapter.name}`
+	if (chapter.chapters != null) {
+		if (!Array.isArray(chapter.chapters) || chapter.chapters.length === 0) bad(`"${here}": chapters must be a non-empty list`)
+		if ((chapter.cards ?? []).length > 0) bad(`"${here}": holds both cards and chapters — a subdeck holds one or the other`)
+		const names = new Set()
+		for (const child of chapter.chapters ?? []) {
+			if (names.has(child.name)) bad(`"${here}": two chapters named "${child.name}"`)
+			names.add(child.name)
+		}
+		return {
+			name: chapter.name,
+			cards: [],
+			chapters: (Array.isArray(chapter.chapters) ? chapter.chapters : []).map((child, i) => buildChapter(child, i, `${here} / `))
+		}
+	}
 	return {
 		name: chapter.name,
+		chapters: [],
 		cards: (chapter.cards ?? []).map((card, i) => {
-			const label = `"${chapter.name}" card ${i + 1}`
+			const label = `"${here}" card ${i + 1}`
 			if (card.keep != null) {
 				if (typeof card.keep !== "string" || !/^[0-9a-f-]{36}$/i.test(card.keep)) bad(`${label}: keep must be a card's uuid`)
 				return { keep: card.keep }
@@ -170,9 +191,11 @@ const chapters = (spec.chapters ?? []).map((chapter, ci) => {
 			return { id: card.id ?? null, type, ...buildCard(card, label) }
 		})
 	}
-})
+}
+const chapters = (spec.chapters ?? []).map((chapter, ci) => buildChapter(chapter, ci, ""))
 
-const total = chapters.reduce((n, c) => n + c.cards.length, 0)
+const countCards = chapter => chapter.cards.length + chapter.chapters.reduce((n, c) => n + countCards(c), 0)
+const total = chapters.reduce((n, c) => n + countCards(c), 0)
 
 if (problems.length > 0) {
 	console.error(`\n${problems.length} validation problem(s) — nothing written:\n`)
@@ -217,31 +240,45 @@ try {
 	}
 	const claimed = new Set()
 
-	// a spec chapter is a top-level subdeck of the deck
+	// a spec chapter is a subdeck of the deck: top-level, or inside the subdeck
+	// of the chapter that holds it. Matched by name among its siblings.
 	const { rows: existingSubdecks } = await client.query(
-		"select id, name, position from subdecks where deck_id = $1 and parent_id is null order by position", [deck.id])
-	const subdeckByName = new Map(existingSubdecks.filter(s => s.name).map(s => [s.name, s]))
+		"select id, name, position, parent_id from subdecks where deck_id = $1 order by position", [deck.id])
+	const subdeckKey = (parentId, name) => `${parentId ?? ""}/${name}`
+	const subdeckByName = new Map(existingSubdecks.filter(s => s.name).map(s => [subdeckKey(s.parent_id, s.name), s]))
 	// legacy decks may still carry an unnamed subdeck; adopt it for the first
 	// chapter (new decks get their first chapter's name at creation above)
-	let unnamed = existingSubdecks.find(s => !s.name) ?? null
+	let unnamed = existingSubdecks.find(s => !s.name && s.parent_id == null) ?? null
 
-	for (const chapter of chapters) {
-		let subdeck = subdeckByName.get(chapter.name)
-		if (!subdeck && unnamed) {
+	const importChapter = async (chapter, parentId, depth) => {
+		const indent = "  ".repeat(depth + 1)
+		let subdeck = subdeckByName.get(subdeckKey(parentId, chapter.name))
+		if (!subdeck && unnamed && parentId == null) {
 			await client.query("update subdecks set name = $2 where id = $1", [unnamed.id, chapter.name])
 			subdeck = unnamed
 			unnamed = null
-			console.log(`  chapter "${chapter.name}" (named the deck's first chapter)`)
+			console.log(`${indent}chapter "${chapter.name}" (named the deck's first chapter)`)
 		} else if (!subdeck) {
 			({ rows: [subdeck] } = await client.query(`
-				insert into subdecks(deck_id, name, position)
-				select $1, $2, coalesce((select max(position) from subdecks where deck_id = $1 and parent_id is null), 0) + 1
-				returning id, name, position`, [deck.id, chapter.name]))
-			console.log(`  chapter "${chapter.name}" (new)`)
+				insert into subdecks(deck_id, name, parent_id, position)
+				select $1, $2, $3, coalesce((select max(position) from subdecks
+					where deck_id = $1 and parent_id is not distinct from $3), 0) + 1
+				returning id, name, position, parent_id`, [deck.id, chapter.name, parentId]))
+			console.log(`${indent}chapter "${chapter.name}" (new)`)
 		} else {
-			console.log(`  chapter "${chapter.name}" (existing)`)
+			console.log(`${indent}chapter "${chapter.name}" (existing)`)
 		}
-		subdeckByName.set(chapter.name, subdeck)
+		subdeckByName.set(subdeckKey(parentId, chapter.name), subdeck)
+
+		if (chapter.chapters.length > 0) {
+			// a subdeck holds cards or subdecks, never both
+			if (existingCards.some(c => c.subdeck_id === subdeck.id))
+				throw new Error(`"${chapter.name}" already holds cards, so it cannot hold chapters`)
+			for (const child of chapter.chapters) await importChapter(child, subdeck.id, depth + 1)
+			return
+		}
+		if (existingSubdecks.some(s => s.parent_id === subdeck.id))
+			throw new Error(`"${chapter.name}" already holds subdecks, so it cannot hold cards`)
 
 		for (const [index, card] of chapter.cards.entries()) {
 			const position = index + 1
@@ -317,6 +354,7 @@ try {
 			inserted++
 		}
 	}
+	for (const chapter of chapters) await importChapter(chapter, null, 0)
 
 	// cards this spec used to own but no longer lists
 	for (const [id, cardId] of Object.entries(lock.cards ?? {})) {

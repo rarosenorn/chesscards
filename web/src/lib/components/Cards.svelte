@@ -162,7 +162,7 @@
 		// the due date itself, so ascending is soonest-due first — the order
 		// study takes them in — with cards finished for good last
 		due: card => (card.finished_at ? null : Date.parse(card.due)),
-		reps: card => card.reps,
+		reps: card => card.reps ?? 0,
 		// the FSRS states run New, Learning, Review, Relearning in value order
 		state: card => (card.card_type === "tactic" ? null : card.state)
 	};
@@ -1219,7 +1219,7 @@
 						{/if}
 					</td>
 					<td>{@render cellOrDash(formatDue(card))}</td>
-					<td>{@render cellOrDash(card.reps)}</td>
+					<td>{@render cellOrDash(card.reps ?? 0)}</td>
 					<td>{@render cellOrDash(card.card_type === "tactic" ? null : stateNames[card.state])}</td>
 			{/snippet}
 			<!-- The name field of a subdeck being added. Like the rename and

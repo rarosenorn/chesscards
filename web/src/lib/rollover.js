@@ -59,4 +59,13 @@ const isDueAt = (card, now, hour = DEFAULT_ROLLOVER_HOUR) =>
 		? Date.parse(card.due) < dayEnd(now, hour)
 		: Date.parse(card.due) <= now;
 
-export { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE, ROLLOVER_HOURS, DAY_MS, crossesDay, dayStart, dayEnd, availableAt, isDueAt }
+// Anki's learn-ahead limit: a learning step this close is within the
+// session's reach, so it is counted as waiting — in the deck list as in
+// study — and study shows it early once nothing else is left. Only the short
+// steps are reached for: a day-scale card already waits for its boundary, and
+// reaching past that would be handing over tomorrow.
+const LEARN_AHEAD_MS = 20 * 60 * 1000;
+const isDueSoonAt = (card, now) =>
+	!crossesDay(card) && Date.parse(card.due) <= now + LEARN_AHEAD_MS;
+
+export { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE, ROLLOVER_HOURS, DAY_MS, LEARN_AHEAD_MS, crossesDay, dayStart, dayEnd, availableAt, isDueAt, isDueSoonAt }

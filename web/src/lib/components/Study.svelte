@@ -8,7 +8,7 @@
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { isSeen, subdeckOrder, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress, subdeckPath } from "$lib/subdecks.js"
-	import { crossesDay, isDueAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
+	import { isDueAt, isDueSoonAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
@@ -191,17 +191,15 @@
 	// "finished for now" for a card that could be answered right now. Only the
 	// short steps are ever within reach — everything on a real schedule is days
 	// away — so this needs no test for which queue a card is in.
-	const LEARN_AHEAD_MS = 20 * 60 * 1000;
-	// Only the short steps are reached for. A day-scale card already waits for
-	// its boundary, and reaching past that would be handing over tomorrow.
-	const isDueSoon = card =>
-		isWaiting(card) && !crossesDay(card) && Date.parse(card.due) <= now + LEARN_AHEAD_MS;
+	const isDueSoon = card => isWaiting(card) && isDueSoonAt(card, now);
 
 	// Anki's three counts, on the same split the deck list uses (decks.js):
 	// a card is new while it has never been graded, learning while it is
 	// stepping through the short intervals, due once it is on a real
 	// schedule. Gated and finished cards are not waiting, so they are not
-	// counted.
+	// counted. The learning count reaches as far as learn-ahead does, as
+	// Anki's: a step a few minutes off is this session's, and the card shown
+	// early is never counted as none.
 	const queueOf = card =>
 		card.state === 1 || card.state === 3 ? "learn"
 			: card.state === 0 || (card.state == null && card.last_review == null) ? "new"
@@ -210,7 +208,7 @@
 		const due = studyCards.filter(isDue);
 		return {
 			new: due.filter(card => queueOf(card) === "new").length,
-			learn: due.filter(card => queueOf(card) === "learn").length,
+			learn: studyCards.filter(card => queueOf(card) === "learn" && (isDue(card) || isDueSoon(card))).length,
 			review: due.filter(card => queueOf(card) === "review").length
 		};
 	});

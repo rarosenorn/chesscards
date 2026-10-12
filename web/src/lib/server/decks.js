@@ -1,5 +1,6 @@
 import { pool } from "./pool.js"
 import { childrenByParent, subdeckOrder, leafSubdecks, subdeckSubtree, deckListing } from "../subdecks.js"
+import { LEARN_AHEAD_MS } from "../rollover.js"
 
 // a deck is born with its Subdeck 1: every card belongs to a subdeck, so there is
 // always one to put the first card in. Subdecks are named, so the first one
@@ -62,6 +63,13 @@ const BOUNDS = `select ((
 		+ make_interval(hours => $3) + interval '1 day'
 ) at time zone $2) day_end`;
 
+// Within reach of learn-ahead — the SQL twin of isDueSoonAt (lib/rollover.js),
+// for the learning count: a short step counts as waiting from that long
+// before it falls due, as it does in study.
+const dueSoon = c => `(${c}.finished_at is null
+	and (${c}.last_review is null or ${c}.due - ${c}.last_review < interval '1 day')
+	and ${c}.due <= now() + make_interval(secs => ${LEARN_AHEAD_MS / 1000}))`;
+
 // The list's raw numbers for a group of cards (alias c): what progression
 // goes by — the SQL twins of isSeen and isGraduated (lib/subdecks.js) — and
 // what is due, in anki's three columns. A tactic card carries no FSRS state,
@@ -76,7 +84,7 @@ const listCounts = (c, due) => `
 		then ${c}.finished_at is not null or coalesce(${c}.reps, 0) > 0
 		else ${c}.state in (2, 3) end)::int graduated,
 	count(*) filter (where ${due} and (${c}.state = 0 or (${c}.state is null and ${c}.last_review is null)))::int "new",
-	count(*) filter (where ${due} and ${c}.state in (1, 3))::int learn,
+	count(*) filter (where (${due} or ${dueSoon(c)}) and ${c}.state in (1, 3))::int learn,
 	count(*) filter (where ${due} and (${c}.state = 2 or (${c}.state is null and ${c}.last_review is not null)))::int review`;
 
 // The list's decks, each with its numbers and its subdecks' (deckListing).

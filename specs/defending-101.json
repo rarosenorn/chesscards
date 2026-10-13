@@ -8,8 +8,14 @@
           "id": "basics-why",
           "front": "Why is spotting a tactic for your opponent harder than spotting one for yourself?",
           "back": {
-            "text": "- We have to visualize one extra move (our own move)\n- We have to switch perspectives and think from our opponent's point of view\n- We have to sort through multiple threats to devise an optimal defence against the most serious threat\n- We do many more training exercises with attacking motifs than with defending motifs\n\nEven a top grandmaster misses a mate in one this way: in Rogers-Kortchnoi, Biel 1986, Black played 1...Kc5?? and was mated, where [1...Ke5 2.Qg5+ Kd6] repeats moves.",
+            "text": "- We have to visualize one extra move (our own move)\n- We have to switch perspectives and think from our opponent's point of view\n- We have to sort through multiple threats to devise an optimal defence against the most serious threat\n- We do many more training exercises with attacking motifs than with defending motifs\n\nThe extra move, in the book's example (Rogers-Kortchnoi, Biel 1986):\n\n- Board 1, White to move: the mate is one move away, 2.Qc7#. \"You would show no hesitation.\"\n- Board 2, one move earlier and Black to move: \"Would you still be able to foresee White's mate in one and pick the right king move for Black accordingly?\" C: the same mate is now two moves away. Black first has to picture 1...Kc5, a move not yet on the board, and only then can see 2.Qc7# against it.\n\nEven a top grandmaster misses a mate in one this way: Kortchnoi played 1...Kc5?? and was mated, where [1...Ke5 2.Qg5+ Kd6](2) repeats moves.",
             "boards": [
+              {
+                "fen": "3Q4/5p2/4p3/2k5/2Pq1p1P/P4P2/3p2PK/8 w - - 1 2",
+                "moves": [
+                  "Qc7#"
+                ]
+              },
               {
                 "fen": "3Q4/5p2/3kp3/8/2Pq1p1P/P4P2/3p2PK/8 b - - 0 1",
                 "moves": [

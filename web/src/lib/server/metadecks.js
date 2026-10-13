@@ -165,8 +165,8 @@ const getForStudy = async (userId, id) => {
 		studyOrder: metadeck.studyOrder,
 		reviewsFirst: metadeck.reviewsFirst,
 		isMetadeck: true,
-		parts: parts.map(({ id, name, subdecks, usesSubdecks, progressionDepth }) =>
-			({ id, name, subdecks, usesSubdecks, progressionDepth })),
+		parts: parts.map(({ id, name, subdecks, usesSubdecks, progressionDepth, intro }) =>
+			({ id, name, subdecks, usesSubdecks, progressionDepth, intro })),
 		subdecks: parts.flatMap(part => part.subdecks),
 		cards: parts.flatMap(part => part.cards)
 	};

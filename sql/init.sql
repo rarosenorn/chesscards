@@ -117,6 +117,9 @@ create table decks (
 	image bytea,
 	image_type text,
 	preview_card_ids uuid[] not null default '{}',
+	-- The deck's intro: a page read before its first card is studied. Blocks,
+	-- like the description, with headings among the text; null for none.
+	intro jsonb,
 	unique(user_id, name)
 );
 
@@ -133,7 +136,9 @@ create table subdecks (
 	deck_id uuid references decks(id) on delete cascade not null,
 	parent_id uuid references subdecks(id) on delete cascade,
 	name text not null,
-	position smallint not null
+	position smallint not null,
+	-- the subdeck's own intro, as the deck's (decks.intro)
+	intro jsonb
 );
 
 -- Tactic cards are graded Correct/Incorrect instead of FSRS: Correct finishes
@@ -177,7 +182,9 @@ create table marketplace_decks (
 	uses_subdecks boolean not null default false,
 	-- the author's progression depth (as decks.progression_depth), which
 	-- each copy of the deck starts at
-	progression_depth smallint check (progression_depth >= 0)
+	progression_depth smallint check (progression_depth >= 0),
+	-- the deck's intro and its subdecks' (below), copied with them
+	intro jsonb
 );
 
 -- the deck's subdeck structure, tree and all, copied from the source deck at
@@ -187,7 +194,8 @@ create table marketplace_subdecks (
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
 	parent_id uuid references marketplace_subdecks(id) on delete cascade,
 	name text not null,
-	position smallint not null
+	position smallint not null,
+	intro jsonb
 );
 
 create table marketplace_cards (

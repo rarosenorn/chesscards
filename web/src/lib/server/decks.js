@@ -19,12 +19,13 @@ const create = async (userId, name) => {
 }
 
 // A deck with its subdecks (a tree: see lib/subdecks.js) and its cards, the
-// cards in the deck's reading order
+// cards in the deck's reading order. The intros come along, the deck's and
+// each subdeck's: study shows them before the first card (lib/intros.js).
 const getById = async (userId, id) => {
 	const { rows } =
 		await pool.query(`
-			select d.id, d.name, d.uses_subdecks "usesSubdecks", d.progression_depth "progressionDepth",
-				coalesce((select json_agg(json_build_object('id', s.id, 'parent_id', s.parent_id, 'name', s.name, 'position', s.position) order by s.position)
+			select d.id, d.name, d.uses_subdecks "usesSubdecks", d.progression_depth "progressionDepth", d.intro,
+				coalesce((select json_agg(json_build_object('id', s.id, 'parent_id', s.parent_id, 'name', s.name, 'position', s.position, 'intro', s.intro) order by s.position)
 					from subdecks s where s.deck_id = d.id), '[]'::json) subdecks,
 				coalesce((select json_agg(to_jsonb(c)) from cards c where c.deck_id = d.id), '[]'::json) cards
 			from decks d
@@ -461,6 +462,20 @@ const createSubdeck = async (userId, deckId, name, parentId = null) => {
 	}
 }
 
+// A deck's intro, or one of its subdecks' when subdeckId names it: blocks,
+// or null to have none. It goes as JSON text, as a description does.
+const updateIntro = async (userId, deckId, subdeckId, intro) => {
+	const json = intro && JSON.stringify(intro);
+	const { rowCount } = subdeckId
+		? await pool.query(`
+			update subdecks s set intro = $4
+			from decks d where s.id = $3 and s.deck_id = d.id and d.id = $2 and d.user_id = $1`,
+			[userId, deckId, subdeckId, json])
+		: await pool.query("update decks set intro = $3 where user_id = $1 and id = $2", [userId, deckId, json]);
+
+	return rowCount === 1;
+}
+
 const renameSubdeck = async (userId, subdeckId, name) => {
 	const { rowCount } = await pool.query(`
 		update subdecks s set name = $3
@@ -760,4 +775,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, listCounts, withListing, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, moveSubdeck, flattenSubdecks, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }
+export { BOUNDS, listCounts, withListing, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, updateIntro, moveSubdeck, flattenSubdecks, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }

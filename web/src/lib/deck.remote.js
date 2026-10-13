@@ -4,6 +4,7 @@ import { createEmptyCard } from "ts-fsrs"
 import * as decks from "$lib/server/decks.js"
 import * as zod from "$lib/zod-schemas.js"
 import { checkIds, checkIdList, checkIndex } from "$lib/server/ids.js"
+import { sideHasContent } from "$lib/card-utils.js"
 
 // The subdeck ops renumber positions across the deck, so each returns the
 // fresh deck for the client to assign into the shared context — mirroring
@@ -44,6 +45,21 @@ export const renameSubdeck =
 			error(403, "Unauthorized");
 		}
 		return freshDeck(locals, deckId);
+	})
+
+// The intro page of the deck, or of the subdeck named: blocks, as a card's
+// side is stored. One with nothing on it is no intro. What was stored goes
+// back, for the client to put in the shared deck.
+export const saveIntro =
+	command("unchecked", async ({ deckId, subdeckId, intro }) => {
+		const { locals } = getRequestEvent();
+		checkIds(deckId, subdeckId ?? []);
+		if (!Array.isArray(intro)) error(400, "Bad request");
+		const blocks = sideHasContent(intro) ? intro : null;
+		if (!await decks.updateIntro(locals.userId, deckId, subdeckId ?? null, blocks)) {
+			error(403, "Unauthorized");
+		}
+		return blocks;
 	})
 
 // a subdeck goes with the subdecks and cards inside it

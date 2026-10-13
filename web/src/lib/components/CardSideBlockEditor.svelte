@@ -16,6 +16,7 @@
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
 	import { BlockNode, BlockNavigation, insertChessboardBlock, insertBoardAtCaret, appendBlockWithBoards, configureBlockUiCleanup } from "$lib/tiptap-chessboard-block/index.js"
 	import { MoveRef } from "$lib/tiptap-move-ref.js"
+	import { Heading } from "$lib/tiptap-heading.js"
 
 	// One side of the add-cards editor: a tiptap document where a whole
 	// chessboard block (v1-style, boards inside managed by buttons and
@@ -24,7 +25,7 @@
 	// inside the blocks (tiptap-chessboard-block/).
 	let element = $state()
 	let editor = $state(null)
-	let { boardUi, isBack = false, initialDoc = null, duplicate = false, onDocChanged = null, onEditorFocus = null, onEditorBlur = null, onEditorTransaction = null } = $props();
+	let { boardUi, isBack = false, initialDoc = null, duplicate = false, headings = false, onDocChanged = null, onEditorFocus = null, onEditorBlur = null, onEditorTransaction = null } = $props();
 
 	export const getJson = () => editor?.getJSON();
 	export const getEditor = () => editor;
@@ -132,6 +133,8 @@
 				customOrderedList, customBulletList, ListItem, UndoRedo,
 				Dropcursor, BlockNavigation, Gapcursor, chessboardShortcut,
 				MoveRef,
+				// an intro page's headings; a card's side has none
+				...(headings ? [Heading] : []),
 				BlockNode.configure({ ui: boardUi, isBack })
 			],
 			content: initialDoc ?? "",

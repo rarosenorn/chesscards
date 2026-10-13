@@ -47,6 +47,17 @@
 // spec order among themselves, as cards do; a subdeck the spec does not name
 // keeps its place.
 //
+// The deck and any chapter may carry an intro, the page study shows before
+// the first card there:
+//
+//   "intro": [ "# Heading\n\ntext with [moves]", { "boards": [ <board> ] }, "more text" ]
+//
+// Text and boards in reading order, or one string for text alone. Text is
+// written as a card side's is, and a line starting "# " or "## " is a
+// heading. The boards count down the page; [moves](2) names the second, and
+// with no number the board above the text (or the first below). An intro the
+// spec leaves out stays as it is in the deck; "intro": null takes it away.
+//
 // <card> = {
 //   "id":   "ov-first-moves",            // stable id; edits update in place
 //   "type": "basic" | "tactic",          // optional, default "basic"
@@ -128,7 +139,7 @@ import { cardBuilder } from "../src/lib/card-spec.js"
 const DEFAULT_USER_EMAIL = "rasmusrjakobsen@gmail.com"
 const problems = []
 const bad = msg => problems.push(msg)
-const { buildCard } = cardBuilder(bad)
+const { buildCard, buildIntro } = cardBuilder(bad)
 
 // jsonb does not preserve key order, so compare canonically (mirrors
 // canonicalSideJson in the add-cards page, which drives its duplicate warning)
@@ -160,9 +171,13 @@ if (!Array.isArray(spec.chapters) || spec.chapters.length === 0) bad("spec: no c
 
 // build + validate everything before touching the database
 const specIds = new Set()
+// undefined (not in the spec) is left alone, null removes
+const introOf = (holder, label) => holder.intro == null ? holder.intro : buildIntro(holder.intro, label)
+const deckIntro = introOf(spec, "deck intro")
 const buildChapter = (chapter, ci, path) => {
 	if (!chapter.name?.trim()) bad(`${path}chapter ${ci + 1}: missing name`)
 	const here = `${path}${chapter.name}`
+	const intro = introOf(chapter, `"${here}" intro`)
 	if (chapter.chapters != null) {
 		if (!Array.isArray(chapter.chapters) || chapter.chapters.length === 0) bad(`"${here}": chapters must be a non-empty list`)
 		if ((chapter.cards ?? []).length > 0) bad(`"${here}": holds both cards and chapters — a subdeck holds one or the other`)
@@ -173,12 +188,14 @@ const buildChapter = (chapter, ci, path) => {
 		}
 		return {
 			name: chapter.name,
+			intro,
 			cards: [],
 			chapters: (Array.isArray(chapter.chapters) ? chapter.chapters : []).map((child, i) => buildChapter(child, i, `${here} / `))
 		}
 	}
 	return {
 		name: chapter.name,
+		intro,
 		chapters: [],
 		cards: (chapter.cards ?? []).map((card, i) => {
 			const label = `"${here}" card ${i + 1}`
@@ -210,7 +227,7 @@ if (problems.length > 0) {
 
 const pool = new pg.Pool()
 const client = await pool.connect()
-let inserted = 0, updated = 0, unchanged = 0, adopted = 0, retyped = 0, kept = 0, moved = 0
+let inserted = 0, updated = 0, unchanged = 0, adopted = 0, retyped = 0, kept = 0, moved = 0, intros = 0
 const pruned = []
 const nextLock = { deck: spec.deck, cards: {} }
 try {
@@ -222,7 +239,7 @@ try {
 
 	// deck: reuse by name, else create (with its implicit first subdeck)
 	let { rows: [deck] } = await client.query(
-		"select id from decks where user_id = $1 and name = $2", [user.id, spec.deck])
+		"select id, intro from decks where user_id = $1 and name = $2", [user.id, spec.deck])
 	const deckExisted = Boolean(deck)
 	if (!deck) {
 		// the implicit first subdeck is named for the spec's first chapter:
@@ -232,6 +249,15 @@ try {
 			s as (insert into subdecks(deck_id, name, position) select id, $3, 1 from d)
 			select id from d`, [user.id, spec.deck, chapters[0].name]))
 	}
+
+	// an intro the spec names is written where it differs from the deck's
+	const importIntro = async (table, row, intro, said) => {
+		if (intro === undefined || canonical(row.intro ?? null) === canonical(intro)) return
+		await client.query(`update ${table} set intro = $2 where id = $1`, [row.id, intro && JSON.stringify(intro)])
+		console.log(`${said}: intro ${!intro ? "removed" : row.intro ? "updated" : "new"}`)
+		intros++
+	}
+	await importIntro("decks", deck, deckIntro, `  deck "${spec.deck}"`)
 
 	const { rows: existingCards } = await client.query(
 		"select id, subdeck_id, position, front, back, card_type, reps from cards where deck_id = $1", [deck.id])
@@ -248,7 +274,7 @@ try {
 	// a spec chapter is a subdeck of the deck: top-level, or inside the subdeck
 	// of the chapter that holds it. Matched by name among its siblings.
 	const { rows: existingSubdecks } = await client.query(
-		"select id, name, position, parent_id from subdecks where deck_id = $1 order by position", [deck.id])
+		"select id, name, position, parent_id, intro from subdecks where deck_id = $1 order by position", [deck.id])
 	const subdeckKey = (parentId, name) => `${parentId ?? ""}/${name}`
 	const subdeckByName = new Map(existingSubdecks.filter(s => s.name).map(s => [subdeckKey(s.parent_id, s.name), s]))
 	// legacy decks may still carry an unnamed subdeck; adopt it for the first
@@ -274,6 +300,7 @@ try {
 			console.log(`${indent}chapter "${chapter.name}" (existing)`)
 		}
 		subdeckByName.set(subdeckKey(parentId, chapter.name), subdeck)
+		await importIntro("subdecks", subdeck, chapter.intro, `${indent}  "${chapter.name}"`)
 
 		if (chapter.chapters.length > 0) {
 			await importChapters(chapter.chapters, subdeck.id, depth + 1)
@@ -390,6 +417,7 @@ try {
 
 	console.log(`\n${spec.deck}: ${inserted} new, ${updated} updated, ${unchanged} unchanged ` +
 		`(${total} in spec, deck ${deckExisted ? "existed" : "created"})`)
+	if (intros > 0) console.log(`  ${intros} intro page(s) written`)
 	if (kept > 0) console.log(`  ${kept} hand-made card(s) kept as they are` + (moved > 0 ? `, ${moved} of them moved to their place` : ""))
 	if (adopted > 0) console.log(`  ${adopted} pre-existing card(s) adopted by id — their history is preserved`)
 	if (retyped > 0) console.log(`  ${retyped} card(s) changed type, which resets their schedule`)

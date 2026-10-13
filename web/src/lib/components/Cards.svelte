@@ -13,6 +13,7 @@
 	import { flip } from "svelte/animate"
 	import { SvelteSet } from "svelte/reactivity"
 	import { page } from "$app/state"
+	import { goto } from "$app/navigation"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
@@ -1040,6 +1041,16 @@
 		>
 			Add subdeck inside
 		</button>
+		<!-- the subdeck's intro page, where it is read and written -->
+		<button
+			onclick={() => {
+				const id = subdeckMenu.subdeck.id;
+				subdeckMenu = null;
+				goto(`/my-flashcards/${deck.id}/intro?subdeck=${id}`);
+			}}
+		>
+			Intro
+		</button>
 		{#if holdsSubdecks(subdeckMenu.subdeck)}
 			<button
 				onclick={() => {
@@ -1356,9 +1367,12 @@
 									{@render subdeckAddField()}
 								{:else}
 									<!-- the deck's own two moves on its subdecks: one
-									     more, or none at all (its cards kept) -->
+									     more, or none at all (its cards kept); and
+									     the way to the deck's intro page (a
+									     subdeck's is in its own menu) -->
 									<div class="subdeck-head">
 										<button class="add-subdeck-btn" onmousedown={e => e.stopPropagation()} onclick={() => startAddSubdeck()}>+ Add subdeck</button>
+										<a class="add-subdeck-btn remove-subdecks-btn" href="/my-flashcards/{deck.id}/intro" onmousedown={e => e.stopPropagation()}>Deck intro</a>
 										{#if deck.usesSubdecks}
 											<button class="add-subdeck-btn remove-subdecks-btn" onmousedown={e => e.stopPropagation()} onclick={() => flatten()}>Flatten subdecks</button>
 										{/if}
@@ -1843,6 +1857,9 @@
 	}
 	.add-subdeck-btn:hover {
 		color: black;
+	}
+	a.add-subdeck-btn {
+		text-decoration: none;
 	}
 	/* at the far end of the add row, and no wider than its words */
 	.remove-subdecks-btn {

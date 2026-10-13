@@ -8,10 +8,11 @@
 
 	// A deck description: one side of the card editor — text and boards, the
 	// boards as a card's back has them (no hidden back layer, nothing to turn).
+	// An intro page is written in it too, with `headings` among its text.
 	// `doc` (an editor document captured with getDoc) wins over `blocks` (a
 	// stored description), so a host that unmounts this can bring the edit
 	// back as it was.
-	let { blocks = null, doc = null, onSubmit = null } = $props();
+	let { blocks = null, doc = null, onSubmit = null, headings = false } = $props();
 
 	const boardUi = { editingIds: new Set(), editorStates: {}, applyEditors: {}, invalidBoards: {} };
 	// svelte-ignore state_referenced_locally -- initial content only; edits live in the editor
@@ -89,6 +90,7 @@
 			onAddChessboard={addChessboard}
 			onInsertMoves={openMoves}
 			movesDisabled={boards === 0}
+			{headings}
 		/>
 		{#if movesOpen}
 			<MoveRefDialog
@@ -103,6 +105,7 @@
 			bind:this={editor}
 			{boardUi}
 			isBack
+			{headings}
 			{initialDoc}
 			onEditorFocus={handleEditorFocus}
 			onEditorBlur={handleEditorBlur}

@@ -101,12 +101,20 @@ export const cardBuilder = bad => {
 	}
 
 	// blank-line separated paragraphs; a run of "1. " lines becomes an
-	// orderedList, a run of "- " lines a bulletList
+	// orderedList, a run of "- " lines a bulletList. On an intro page
+	// (ctx.headings) a line starting "# " or "## " is a heading, of the
+	// first or second level.
+	const HEADING = /^(#{1,2})\s+(.*)$/
 	const textDoc = (str, ctx) => {
 		const content = []
+		// a heading is a paragraph of its own, whatever lines it was written among
+		if (ctx.headings) str = str.replace(/^[ \t]*#{1,2}[ \t]+.*$/gm, "\n$&\n")
 		for (const chunk of str.trim().split(/\n\s*\n/)) {
 			const lines = chunk.split("\n").map(l => l.trim()).filter(Boolean)
-			if (lines.length > 0 && lines.every(l => /^-\s+/.test(l))) {
+			const heading = ctx.headings && lines.length === 1 ? HEADING.exec(lines[0]) : null
+			if (heading) {
+				content.push({ type: "heading", attrs: { level: heading[1].length }, content: inline(heading[2], ctx) })
+			} else if (lines.length > 0 && lines.every(l => /^-\s+/.test(l))) {
 				content.push({
 					type: "bulletList",
 					content: lines.map(l => ({
@@ -230,5 +238,37 @@ export const cardBuilder = bad => {
 		}
 	}
 
-	return { buildCard }
+	// An intro page (a deck's, a subdeck's): text and boards in the order
+	// they are read. The spec is the text alone, or a list whose items are
+	// text and { "boards": [ <board>, ... ] } — one board, or a row of them.
+	// The boards count 1, 2, 3 down the page, which is the number a
+	// [move](n) names; without a number it is the board above the text, or
+	// with none above, the first below.
+	const buildIntro = (spec, label) => {
+		const parts = typeof spec === "string" ? [spec] : spec
+		if (!Array.isArray(parts) || parts.some(part => typeof part !== "string" && !Array.isArray(part?.boards))) {
+			bad(`${label}: must be text, or a list of text and { "boards": [...] }`)
+			return null
+		}
+		let count = 0
+		const built = parts.map(part => typeof part === "string" ? part
+			: part.boards.map(board => ({ ...buildBoard(board, `${label} board ${count + 1}`), number: ++count })))
+		const pageBoards = built.filter(Array.isArray).flat()
+		const blocks = []
+		for (const [index, part] of built.entries()) {
+			if (Array.isArray(part)) {
+				if (part.length > 0) blocks.push({ type: "chessboards", content: part.map(({ number, ...board }) => board) })
+				continue
+			}
+			if (!part.trim()) continue
+			const above = built.slice(0, index).filter(Array.isArray).flat().at(-1)
+			const nearest = above ?? built.slice(index + 1).filter(Array.isArray).flat()[0]
+			const boards = nearest ? [nearest, ...pageBoards.filter(board => board !== nearest)] : []
+			blocks.push({ type: "text", content: textDoc(part, { label, boards, headings: true }) })
+		}
+		if (blocks.length === 0) bad(`${label}: empty — needs text or at least one board`)
+		return blocks
+	}
+
+	return { buildCard, buildIntro }
 }

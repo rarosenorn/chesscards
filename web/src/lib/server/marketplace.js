@@ -159,23 +159,23 @@ const approveUploadRequest = async requestId => {
 		if (!request) throw new Error("Request not found or not pending");
 
 		const { rows: [mpDeck] } = await client.query(
-			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, uses_subdecks, progression_depth)
-			 select $1, $2, $3, $4, $5, $6, $7, d.uses_subdecks, d.progression_depth from decks d where d.id = $8 returning id`,
+			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, uses_subdecks, progression_depth, intro)
+			 select $1, $2, $3, $4, $5, $6, $7, d.uses_subdecks, d.progression_depth, d.intro from decks d where d.id = $8 returning id`,
 			// the description as JSON text, as pg would send its blocks array as a postgres array
 			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id]
 		);
-		// The subdeck tree travels with the cards. Every subdeck gets its new id
+		// The subdeck tree travels with the cards, intros and all. Every subdeck gets its new id
 		// up front (copies), so a copy can name its parent's copy and each
 		// card its subdeck's, all in the one statement. array_position gives
 		// the preview cards their requested order and leaves non-preview
 		// cards (and since-deleted preview ids) at null.
 		await client.query(`
 			with copies as (
-				select s.id source_id, gen_random_uuid() id, s.parent_id, s.name, s.position
+				select s.id source_id, gen_random_uuid() id, s.parent_id, s.name, s.position, s.intro
 				from subdecks s where s.deck_id = $2
 			), copied_subdecks as (
-				insert into marketplace_subdecks(id, marketplace_deck_id, parent_id, name, position)
-				select copy.id, $1, parent.id, copy.name, copy.position
+				insert into marketplace_subdecks(id, marketplace_deck_id, parent_id, name, position, intro)
+				select copy.id, $1, parent.id, copy.name, copy.position, copy.intro
 				from copies copy
 				left join copies parent on parent.source_id = copy.parent_id
 			)
@@ -324,8 +324,8 @@ const reorderInstances = async (userId, ids) => {
 // render them unchanged
 const getInstanceById = async (userId, instanceId) => {
 	const { rows } = await pool.query(`
-		select i.id, md.name, md.uses_subdecks "usesSubdecks", i.progression_depth "progressionDepth",
-			coalesce((select json_agg(json_build_object('id', ms.id, 'parent_id', ms.parent_id, 'name', ms.name, 'position', ms.position) order by ms.position)
+		select i.id, md.name, md.uses_subdecks "usesSubdecks", i.progression_depth "progressionDepth", md.intro,
+			coalesce((select json_agg(json_build_object('id', ms.id, 'parent_id', ms.parent_id, 'name', ms.name, 'position', ms.position, 'intro', ms.intro) order by ms.position)
 				from marketplace_subdecks ms where ms.marketplace_deck_id = md.id), '[]'::json) subdecks,
 			coalesce(json_agg(json_build_object(
 				'id', ci.id,

@@ -12,7 +12,7 @@
 	// on focus/blur and every transaction. Read via menu.editor everywhere —
 	// deriving the editor once would collapse reactivity to the stable editor
 	// instance, and isActive/can would never be re-read.
-	let { menu, onAddChessboard, onInsertMoves = null, movesDisabled = false } = $props();
+	let { menu, onAddChessboard, onInsertMoves = null, movesDisabled = false, headings = false } = $props();
 </script>
 
 <!-- preventDefault on mousedown stops the browser from stealing focus from
@@ -35,6 +35,20 @@ the editor when a menu button is pressed, click still fires -->
 		><ItalicIcon />
 		</button>
 	</div>
+	{#if headings}
+		<!-- an intro page's two levels of heading, under its title -->
+		<span class="seperator"></span>
+		<div class="button-row">
+			{#each [1, 2] as level}
+				<button
+					class="heading-btn"
+					onclick={() => menu.editor.chain().focus().toggleHeading({ level }).run()}
+					class:active={menu.editor?.isActive("heading", { level })}
+					disabled={!menu.focused}
+				>H{level}</button>
+			{/each}
+		</div>
+	{/if}
 	<span class="seperator"></span>
 	<div class="button-row">
 		<button
@@ -120,9 +134,13 @@ the editor when a menu button is pressed, click still fires -->
 	.add-board-btn :global(svg) {
 		height: 1rem;
 	}
-	/* the only lettered button in the bar: a move is what it writes */
-	.moves-btn {
+	/* the lettered buttons in the bar: a move is what the one writes, a
+	   heading the others */
+	.moves-btn, .heading-btn {
 		font-size: 0.8rem;
 		font-weight: 600;
+	}
+	.heading-btn.active {
+		color: white;
 	}
 </style>

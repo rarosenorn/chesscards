@@ -1,0 +1,41 @@
+import { Node, textblockTypeInputRule } from "@tiptap/core"
+
+// The headings of an intro page: two levels, under the page's own title —
+// which is the h1, so level 1 is written as an h2 and level 2 as an h3.
+// "# " and "## " at the start of a line make them, as the buttons do.
+// Only the intro editor carries this node; a card's text has no headings.
+const LEVELS = [1, 2];
+
+export const Heading = Node.create({
+	name: "heading",
+	content: "inline*",
+	group: "block",
+	defining: true,
+
+	addAttributes() {
+		return { level: { default: 1, rendered: false } };
+	},
+
+	parseHTML() {
+		return LEVELS.map(level => ({ tag: `h${level + 1}`, attrs: { level } }));
+	},
+
+	renderHTML({ node, HTMLAttributes }) {
+		return [`h${node.attrs.level + 1}`, HTMLAttributes, 0];
+	},
+
+	addCommands() {
+		return {
+			toggleHeading: attributes => ({ commands }) =>
+				commands.toggleNode(this.name, "paragraph", attributes)
+		};
+	},
+
+	addInputRules() {
+		return LEVELS.map(level => textblockTypeInputRule({
+			find: new RegExp(`^(#{${level}})\\s$`),
+			type: this.type,
+			getAttributes: { level }
+		}));
+	}
+});

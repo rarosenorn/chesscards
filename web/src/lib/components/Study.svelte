@@ -10,6 +10,8 @@
 	import { isSeen, subdeckOrder, cardsUnder, gatingDepth, unlockedSubdeckIds, firstLockedSubdeck, subdeckProgress, subdeckPath } from "$lib/subdecks.js"
 	import { isDueAt, isDueSoonAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
+	import IntroView from "$lib/components/IntroView.svelte"
+	import { introPlaces, pendingIntro } from "$lib/intros.js"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState, settleModal } from "$lib/modals.svelte.js"
@@ -388,6 +390,52 @@
 		isCardTurned = false;
 	});
 
+	// --- intros ---
+	// A deck's intro, and a subdeck's, is a page read before the first card
+	// there is studied (lib/intros.js). It stands where the card would, with
+	// a Study button that passes it: first the deck's, then each subdeck's
+	// down to the card's own. A page passed is remembered in this browser, so
+	// a reload before the first grade does not bring it back; once a card
+	// under it has been studied it never comes up by itself again.
+	const INTROS_READ_KEY = "chesscards:intros-read";
+	// null until the browser has been asked: a page that may have been passed
+	// is held back for that moment, not flashed
+	let introsRead = $state(null);
+	onMount(() => {
+		try { introsRead = new Set(JSON.parse(localStorage.getItem(INTROS_READ_KEY) ?? "[]")); }
+		catch { introsRead = new Set(); }
+	});
+	// The deck whose intros are in question, a metadeck's being the deck the
+	// card is of, and the subdeck they lead down to: the card's, or with no
+	// card up, the one being studied.
+	let introDeck = $derived(currentCard ? parts[partOf(currentCard)] : parts.length === 1 ? parts[0] : null);
+	let introTrail = $derived(introDeck ? introPlaces(introDeck, currentCard ? currentCard.subdeck_id : scope?.id) : []);
+	// a page opened by hand (the Intro button, a name above a page's title)
+	let openedIntro = $state(null);
+	let intro = $derived.by(() => {
+		if (editingCard) return null;
+		const opened = introTrail.find(place => place.blocks && place.key === openedIntro);
+		if (opened || !currentCard) return opened ?? null;
+		return pendingIntro(introDeck, cardsOfPart(introDeck), currentCard.subdeck_id, introsRead ?? new Set());
+	});
+	// the page with the names it sits under, each leading to its own page
+	let introCrumbs = $derived(intro
+		? introTrail.slice(0, introTrail.findIndex(place => place.key === intro.key) + 1).map(place => ({
+			name: place.name,
+			onclick: place.blocks && place.key !== intro.key ? () => openedIntro = place.key : undefined
+		}))
+		: []);
+	// the Study button: on to the next page on the way, or to the card
+	const passIntro = () => {
+		if (!intro) return;
+		introsRead = new Set([...introsRead ?? [], intro.key]);
+		try { localStorage.setItem(INTROS_READ_KEY, JSON.stringify([...introsRead])); } catch {}
+		openedIntro = null;
+		window.scrollTo(0, 0);
+	}
+	// the Intro button: the page nearest the card
+	const openIntro = () => openedIntro = introTrail.findLast(place => place.blocks)?.key ?? null;
+
 	let isTactic = $derived(currentCard?.card_type === "tactic");
 	// which of the three the card on screen came out of
 	let currentQueue = $derived(currentCard ? queueOf(currentCard) : null);
@@ -638,7 +686,7 @@
 	// is the end of the session, and the page's chrome belongs back on it.
 	// The mode itself stays on, so the next card enters zen again.
 	$effect(() => {
-		zen.studying = currentCard != null;
+		zen.studying = currentCard != null && !intro;
 		if (!currentCard) zen.peeking = false;
 	});
 
@@ -659,6 +707,16 @@
 		// while editing, the card editor owns the keyboard (Ctrl+Enter saves),
 		// and a modal owns it while it is up
 		if (editingCard || modalState.current) return;
+		// an intro page is up: Enter is its Study button, unless it is
+		// pressing a button of the page's own, and the card under it takes
+		// no keys
+		if (intro) {
+			if (introsRead && e.key === "Enter" && !e.target.closest?.("button, a")) {
+				e.preventDefault();
+				passIntro();
+			}
+			return;
+		}
 		const typing = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA"
 			|| e.target.isContentEditable;
 		if (e.key === "z" && !e.ctrlKey && !e.metaKey && !e.altKey && !typing) {
@@ -787,7 +845,15 @@
 </div>
 {/snippet}
 
-{#if currentCard && editingCard && CardBlockEdit}
+{#if intro && introsRead}
+	<IntroView crumbs={introCrumbs} blocks={intro.blocks}>
+		<div class="intro-study">
+			<button class="std-btn" onclick={passIntro}>{currentCard ? "Study" : "Close"}</button>
+		</div>
+	</IntroView>
+{:else if intro}
+	<!-- nothing, for the moment before the browser says which pages were passed -->
+{:else if currentCard && editingCard && CardBlockEdit}
 	<!-- the add-cards type row, above the card and on the page's own ground -->
 	<div class="edit-type-row">
 		<span id="edit-card-type-label">Type</span>
@@ -985,6 +1051,10 @@
 		{:else if studyCards.length}
 			<button class="page-btn" onclick={chooseCram}>Cram</button>
 		{/if}
+		<!-- the intro page of what is being studied, to read again -->
+		{#if !intro && introTrail.some(place => place.blocks)}
+			<button class="page-btn" onclick={openIntro}>Intro</button>
+		{/if}
 		<button
 			class="page-btn"
 			title="Shortcut key: z"
@@ -1029,6 +1099,11 @@
 <style>
 	/* bottom right of the window, out of the card's way: they belong to the
 	   page rather than to the card, and the card is centred */
+	.intro-study {
+		display: flex;
+		justify-content: center;
+		margin-top: 24px;
+	}
 	.page-btns {
 		position: fixed;
 		right: 16px;

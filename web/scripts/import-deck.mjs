@@ -239,7 +239,7 @@ try {
 
 	// deck: reuse by name, else create (with its implicit first subdeck)
 	let { rows: [deck] } = await client.query(
-		"select id, intro from decks where user_id = $1 and name = $2", [user.id, spec.deck])
+		"select id, intro, uses_subdecks from decks where user_id = $1 and name = $2", [user.id, spec.deck])
 	const deckExisted = Boolean(deck)
 	if (!deck) {
 		// the implicit first subdeck is named for the spec's first chapter:
@@ -418,6 +418,11 @@ try {
 	console.log(`\n${spec.deck}: ${inserted} new, ${updated} updated, ${unchanged} unchanged ` +
 		`(${total} in spec, deck ${deckExisted ? "existed" : "created"})`)
 	if (intros > 0) console.log(`  ${intros} intro page(s) written`)
+	// a subdeck's intro shows only where the deck shows its subdecks, and
+	// that is the deck's own switch (Cards, or its settings), not set here
+	const hasSubdeckIntro = list => list.some(chapter => chapter.intro || hasSubdeckIntro(chapter.chapters))
+	if (!deck.uses_subdecks && hasSubdeckIntro(chapters))
+		console.log("  note: this deck has its subdecks switched off, so its subdecks' intro pages will not show in study")
 	if (kept > 0) console.log(`  ${kept} hand-made card(s) kept as they are` + (moved > 0 ? `, ${moved} of them moved to their place` : ""))
 	if (adopted > 0) console.log(`  ${adopted} pre-existing card(s) adopted by id — their history is preserved`)
 	if (retyped > 0) console.log(`  ${retyped} card(s) changed type, which resets their schedule`)

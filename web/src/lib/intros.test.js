@@ -136,7 +136,8 @@ describe("the intros on the way to a subdeck", () => {
 		expect(pendingIntro(deck, cards, "a2", new Set()).key).toBe("a2");
 	})
 
-	it("skip a place that has no intro", () => {
+	it("skip a place that has no intro, or one with nothing on it", () => {
 		expect(pendingIntro({ ...deck, intro: null }, [fresh("b")], "b", new Set())).toBe(null);
+		expect(pendingIntro({ ...deck, intro: [] }, [fresh("b")], "b", new Set())).toBe(null);
 	})
 })

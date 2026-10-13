@@ -47,14 +47,16 @@ const isIntroBlocks = value => {
 // subdeck down to it, each with the intro it has (blocks, or null). A deck
 // that does not use its subdecks shows nothing of them, so it has only its
 // own. key is what the place is known by: the deck's id, or the subdeck's.
+// (A page with no blocks on it is no page.)
+const blocksOf = holder => holder.intro?.length > 0 ? holder.intro : null;
 const introPlaces = (deck, subdeckId = null) => {
-	const places = [{ key: deck.id, name: deck.name, blocks: deck.intro ?? null, subdeckId: null }];
+	const places = [{ key: deck.id, name: deck.name, blocks: blocksOf(deck), subdeckId: null }];
 	if (!deck.usesSubdecks || !subdeckId) return places;
 	const byId = new Map(deck.subdecks.map(subdeck => [subdeck.id, subdeck]));
 	const trail = [];
 	for (let subdeck = byId.get(subdeckId); subdeck; subdeck = byId.get(subdeck.parent_id)) trail.unshift(subdeck);
 	for (const subdeck of trail) {
-		places.push({ key: subdeck.id, name: subdeck.name, blocks: subdeck.intro ?? null, subdeckId: subdeck.id });
+		places.push({ key: subdeck.id, name: subdeck.name, blocks: blocksOf(subdeck), subdeckId: subdeck.id });
 	}
 	return places;
 }

@@ -154,8 +154,8 @@ describe("the My flashcards list's numbers", () => {
 	const deck = progressionDepth => ({ subdecks, usesSubdecks: true, progressionDepth });
 	const row = (listing, id) => listing.subdecks.find(entry => entry.id === id);
 
-	it("counts for the deck what its progression leaves open", () => {
-		expect(deckListing(deck(null), stats)).toMatchObject({ new: 2, learn: 1, review: 1 });
+	it("counts for the deck every card in it, in a locked subdeck as in an open one", () => {
+		expect(deckListing(deck(null), stats)).toMatchObject({ new: 7, learn: 1, review: 1 });
 		expect(deckListing(deck(0), stats)).toMatchObject({ new: 7, learn: 1, review: 1 });
 	})
 
@@ -167,11 +167,24 @@ describe("the My flashcards list's numbers", () => {
 		expect(listing.subdecks.filter(entry => entry.holdsSubdecks).map(entry => entry.name)).toEqual(["a"]);
 	})
 
-	it("counts for a subdeck what studying it alone would bring, locked or not", () => {
+	it("counts for a subdeck every card under it, locked or not", () => {
 		const listing = deckListing(deck(null), stats);
 		expect(row(listing, "a")).toMatchObject({ new: 2, learn: 1, review: 1 });
 		expect(row(listing, "a1")).toMatchObject({ new: 0, learn: 0, review: 1 });
 		expect(row(listing, "b")).toMatchObject({ new: 5, learn: 0, review: 0, locked: true });
+	})
+
+	it("counts for a subdeck the ones it holds shut inside it, so a row is the sum of those under it", () => {
+		// a1 not begun: a2 is shut behind it, and b behind a
+		const unbegun = new Map([
+			["a1", { total: 4, seen: 0, graduated: 0, new: 4, learn: 0, review: 0 }],
+			["a2", { total: 3, seen: 0, graduated: 0, new: 3, learn: 0, review: 0 }],
+			["b", { total: 5, seen: 0, graduated: 0, new: 5, learn: 0, review: 0 }]
+		]);
+		const listing = deckListing(deck(null), unbegun);
+		expect(row(listing, "a2")).toMatchObject({ new: 3, locked: true });
+		expect(row(listing, "a")).toMatchObject({ new: 7, locked: false });
+		expect(listing).toMatchObject({ new: 12 });
 	})
 
 	it("lists no subdecks for a deck that uses none, and gates nothing", () => {

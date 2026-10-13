@@ -203,8 +203,7 @@
 			if (closedAt !== null && subdeck.level > closedAt) continue;
 			const id = `${deckRowId}:${subdeck.id}`;
 			closedAt = subdeck.holdsSubdecks && !expanded.has(id) ? subdeck.level : null;
-			// a subdeck is studied on its own from here, locked or not; its
-			// numbers are what that would bring
+			// a subdeck is studied on its own from here, locked or not
 			rows.push({
 				id, depth: depth + subdeck.level, name: subdeck.name,
 				href: `my-flashcards/${deck.id}/study?subdeck=${subdeck.id}`,

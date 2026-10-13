@@ -188,29 +188,26 @@ const firstLockedSubdeck = (subdecks, cards, depth = Infinity, rootId = null) =>
 	walkProgression(subdecks, statsBySubdeck(cards), depth, rootId).firstLocked;
 
 // The My flashcards list's numbers for a deck and, when it uses subdecks, for
-// each of them. A row's counts are what studying that row would put in front
-// of you: the learning and review cards due under it, and the new ones in
-// the subdecks progression leaves open — for the deck as a whole, or for a
-// subdeck studied on its own (which is open itself, whatever the deck holds
-// shut before it). A subdeck's row also says whether the deck has it locked,
-// and whether it has subdecks of its own to open onto.
+// each of them. A row's counts are of everything under it: the learning and
+// review cards due, and every new card, in a subdeck progression still holds
+// shut as much as in an open one — so a row is the sum of the rows under it.
+// A subdeck's row also says whether the deck has it locked, and whether it
+// has subdecks of its own to open onto.
 // stats: subdeck id -> its own cardStats and its due counts, { new, learn,
 // review }.
 const deckListing = ({ subdecks, usesSubdecks, progressionDepth }, stats) => {
-	const depth = gatingDepth({ usesSubdecks, progressionDepth });
 	const counts = (rootId = null) => {
-		const open = walkProgression(subdecks, stats, depth, rootId).unlocked;
 		const inside = rootId ? subdeckSubtree(subdecks, rootId) : null;
 		const sum = { new: 0, learn: 0, review: 0 };
 		for (const [id, own] of stats) {
 			if (inside && !inside.has(id)) continue;
+			sum.new += own.new;
 			sum.learn += own.learn;
 			sum.review += own.review;
-			if (open.has(id)) sum.new += own.new;
 		}
 		return sum;
 	}
-	const open = walkProgression(subdecks, stats, depth).unlocked;
+	const open = walkProgression(subdecks, stats, gatingDepth({ usesSubdecks, progressionDepth })).unlocked;
 	return {
 		...counts(),
 		subdecks: !usesSubdecks ? [] : subdeckOutline(subdecks).map(({ subdeck, level, leaf }) =>

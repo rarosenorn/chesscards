@@ -26,7 +26,7 @@
         }
       ]
     },
-    "This is Rogers-Kortchnoi, Biel 1986. Kortchnoi is facing a skewer, and both 1...Kc5 and 1...Ke5 protect the queen. The task is to pick the right square for the king. Kortchnoi played 1...Kc5?? and was mated, where [1...Ke5 2.Qg5+ Kd6] repeats moves.\n\nIf a top grandmaster misses a mate in one like this, it is very easy to find loads of similar defensive mistakes in lower-rated games. Keeping your own king safe is much harder than mating the enemy king. There are several reasons why spotting a tactical opportunity for your opponent is hard:\n\n- We have to visualize one extra move (our own move). C: on the first board the mate is one move away. On the second it is two: Black first has to picture 1...Kc5, a move that is not on the board yet, and only then can see 2.Qc7# against it.\n- We have to switch perspectives and think from our opponent's point of view\n- We have to sort through multiple threats to devise an optimal defence against the most serious threat\n- We do many more training exercises with attacking motifs than with defending motifs\n\nLuckily, you can improve your defensive skills by learning the right techniques and, most important, by solving as many defensive exercises as possible.\n\n# How this deck works\n\nC: a defender is in one of three situations, and each has its own set of defences:\n\n1. Your king is in check\n2. Mate is threatened, but your king is not in check\n3. One of your pieces is in danger\n\nEach situation is a subdeck. It opens with a page like this one, which shows its defences on the book's examples. Then come cards that ask you to describe each defence, and then the book's exercises as puzzles that tell you which defence to use.\n\nIn the subdeck after those, Defend and name the technique, nobody tells you the defence: you find the move and say which technique it was. The last subdeck, Synthesis, asks for the lists of defences side by side."
+    "This is Rogers-Kortchnoi, Biel 1986. Kortchnoi is facing a skewer, and both 1...Kc5 and 1...Ke5 protect the queen. The task is to pick the right square for the king. Kortchnoi played 1...Kc5?? and was mated, where [1...Ke5 2.Qg5+ Kd6] repeats moves.\n\nIf a top grandmaster misses a mate in one like this, it is very easy to find loads of similar defensive mistakes in lower-rated games. Keeping your own king safe is much harder than mating the enemy king. There are several reasons why spotting a tactical opportunity for your opponent is hard:\n\n- We have to visualize one extra move (our own move). C: on the first board the mate is one move away. On the second it is two: Black first has to picture 1...Kc5, a move that is not on the board yet, and only then can see 2.Qc7# against it.\n- We have to switch perspectives and think from our opponent's point of view\n- We have to sort through multiple threats to devise an optimal defence against the most serious threat\n- We do many more training exercises with attacking motifs than with defending motifs\n\nLuckily, you can improve your defensive skills by learning the right techniques and, most important, by solving as many defensive exercises as possible.\n\n# How this deck works\n\nC: a defender is in one of three situations, and each has its own set of defences:\n\n1. Your king is in check\n2. Mate is threatened, but your king is not in check\n3. One of your pieces is in danger\n\nEach situation is a subdeck. It opens with a page like this one, which shows its defences on the book's examples. Then come cards that ask you to describe each defence, and then the book's exercises as puzzles. The first puzzle after a defence says which defence to use; the ones after it only say what the situation is.\n\nIn the subdeck after those, Defend and name the technique, nobody tells you the defence: you find the move and say which technique it was. The last subdeck, Synthesis, asks for the lists of defences side by side."
   ],
   "chapters": [
     {
@@ -173,7 +173,7 @@
           "id": "ex-783",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/5k2/p7/1r6/1KpBp2P/2P1P3/5PR1/3b4 w - - 0 1",
@@ -194,7 +194,7 @@
           "id": "ex-784",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "4Q3/7p/8/2p2p1k/p4P2/6P1/7K/2q5 b - - 0 1",
@@ -215,7 +215,7 @@
           "id": "ex-787",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "5k2/2qp4/5p2/8/QP6/P1r1K3/4PR2/8 w - - 0 1",
@@ -236,7 +236,7 @@
           "id": "ex-789",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/4Q3/5pk1/6pP/7p/1pq2P1P/8/3K4 b - - 0 1",
@@ -257,7 +257,7 @@
           "id": "ex-792",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/3pn2p/p1b1k3/1p4NK/1P2P3/8/3B4/8 b - - 0 1",
@@ -315,7 +315,7 @@
           "id": "ex-883",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "7Q/2q1Kp2/8/3P1p2/1P3Pk1/2P5/8/8 w - - 0 1",
@@ -338,7 +338,7 @@
           "id": "ex-887",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/2p2pk1/pp3n2/1n6/3K3P/1P6/P4P1B/1B6 w - - 0 1",
@@ -359,7 +359,7 @@
           "id": "ex-889",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/p4p2/2p4p/5b2/k4Pp1/1BP4P/P4rP1/4R2K b - - 0 1",
@@ -433,7 +433,7 @@
           "id": "ex-810",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by blocking the check.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "r7/2R4p/4ppk1/4P1p1/p2b2P1/3B2P1/6K1/8 b - - 0 1",
@@ -454,7 +454,7 @@
           "id": "ex-897",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by blocking the check.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "Q7/5pp1/k3p2p/1pq1N3/1n6/1K4P1/5P2/8 b - - 0 1",
@@ -491,7 +491,7 @@
           "id": "ex-794",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "3K4/6p1/4k1P1/5p2/2Q2P2/8/5p2/4q3 b - - 0 1",
@@ -514,7 +514,7 @@
           "id": "ex-795",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/p4k2/6p1/2p2n1p/1pP1N2K/1P6/P3nBPP/8 w - - 0 1",
@@ -535,7 +535,7 @@
           "id": "ex-796",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "B1Q5/6k1/6p1/1p2p3/3p1pPK/3Pb3/2P2q1P/8 w - - 0 1",
@@ -556,7 +556,7 @@
           "id": "ex-797",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/3R4/k1PpB1Pp/8/K7/P7/8/2rb4 w - - 0 1",
@@ -577,7 +577,7 @@
           "id": "ex-803",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/5Q1p/3p2p1/p3pk2/3q4/7P/6PK/8 b - - 0 1",
@@ -598,7 +598,7 @@
           "id": "ex-804",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/kpQ2p2/p7/4N2q/3nP3/8/5PPK/8 w - - 0 1",
@@ -619,7 +619,7 @@
           "id": "ex-805",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "4Q3/p7/8/3p1p2/P3k1p1/1P6/5PPK/3q4 b - - 0 1",
@@ -640,7 +640,7 @@
           "id": "ex-807",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "7k/8/Q4P1p/8/4P1p1/3p2Kr/R6P/7q w - - 0 1",
@@ -661,7 +661,7 @@
           "id": "ex-808",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/P7/1B1R3p/7P/4bp2/2k1p3/4P1K1/r7 w - - 0 1",
@@ -682,7 +682,7 @@
           "id": "ex-809",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/1r5p/8/3N4/R7/5PP1/K2kP2P/2n5 w - - 0 1",
@@ -703,7 +703,7 @@
           "id": "ex-811",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "7k/4p3/p7/1p4Q1/8/1KP5/PP6/3q4 w - - 0 1",
@@ -726,7 +726,7 @@
           "id": "ex-813",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/8/8/r1p5/1kR5/8/6r1/1KR5 b - - 0 1",
@@ -747,7 +747,7 @@
           "id": "ex-815",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/8/6p1/7p/3p4/1Q1k3P/3p2PK/4q3 b - - 0 1",
@@ -768,7 +768,7 @@
           "id": "ex-892",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/1p3q2/2p5/8/p1N5/P1P1k3/1P3p2/2K2B2 b - - 0 1",
@@ -789,7 +789,7 @@
           "id": "ex-895",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "5Q2/8/1p3p2/3k1P2/2P5/2K5/8/7q b - - 0 1",
@@ -810,7 +810,7 @@
           "id": "ex-904",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/2p2p2/p2p3k/4K3/B5Pb/P3P2N/4n1P1/8 w - - 0 1",
@@ -831,7 +831,7 @@
           "id": "ex-907",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/7R/1k6/1pn5/8/2K1r3/1P1N4/8 w - - 0 1",
@@ -852,7 +852,7 @@
           "id": "ex-909",
           "type": "tactic",
           "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
+            "text": "You are in check. Defend.",
             "boards": [
               {
                 "fen": "8/q2p3Q/8/7p/3K4/P4P1P/1P1k2P1/8 w - - 0 1",
@@ -1024,7 +1024,7 @@
           "id": "ex-793",
           "type": "tactic",
           "front": {
-            "text": "Mate is threatened. Defend by trading the attacker.",
+            "text": "Mate is threatened. Defend.",
             "boards": [
               {
                 "fen": "7k/1q6/p2p1NQ1/2pP4/5p2/5P1p/3n3P/7K b - - 0 1",
@@ -1045,7 +1045,7 @@
           "id": "ex-812",
           "type": "tactic",
           "front": {
-            "text": "Mate is threatened. Defend by trading the attacker.",
+            "text": "Mate is threatened. Defend.",
             "boards": [
               {
                 "fen": "7k/5pp1/Q1p3p1/p5P1/8/bPq5/P1P2PB1/1K6 w - - 0 1",
@@ -1070,7 +1070,7 @@
           "id": "ex-900",
           "type": "tactic",
           "front": {
-            "text": "Mate is threatened. Defend by trading the attacker.",
+            "text": "Mate is threatened. Defend.",
             "boards": [
               {
                 "fen": "1k4b1/p3p2r/B1Rp4/5P2/3P2p1/8/5P2/6K1 b - - 0 1",
@@ -1152,7 +1152,7 @@
           "id": "ex-806",
           "type": "tactic",
           "front": {
-            "text": "Mate is threatened. Defend by pinning the attacker.",
+            "text": "Mate is threatened. Defend.",
             "boards": [
               {
                 "fen": "8/8/2p2P1p/P1kp3P/1r6/1PK1p3/3rP2R/5R2 w - - 0 1",
@@ -1244,7 +1244,7 @@
           "id": "ex-802",
           "type": "tactic",
           "front": {
-            "text": "Mate is threatened. Defend the critical square.",
+            "text": "Mate is threatened. Defend.",
             "boards": [
               {
                 "fen": "7k/p6p/1b4pP/2pB1p2/2P5/8/3B2PK/1b6 b - - 0 1",
@@ -1311,7 +1311,7 @@
           "id": "ex-799",
           "type": "tactic",
           "front": {
-            "text": "Mate is threatened. Defend by creating an escape square.",
+            "text": "Mate is threatened. Defend.",
             "boards": [
               {
                 "fen": "8/B2kpp2/3p4/1P1PbKPp/4P3/1B6/2P3bP/8 w - - 0 1",
@@ -1332,7 +1332,7 @@
           "id": "ex-814",
           "type": "tactic",
           "front": {
-            "text": "Mate is threatened. Defend by creating an escape square.",
+            "text": "Mate is threatened. Defend.",
             "boards": [
               {
                 "fen": "8/8/7r/B3R3/2pk1Pp1/pb1p3p/3P3P/K7 b - - 0 1",
@@ -1512,7 +1512,7 @@
           "id": "ex-884",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by picking the right square for it.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "5k2/1p1r4/5pp1/p1pn1p2/3P3P/2P1RP2/PP2NK1P/8 w - - 0 1",
@@ -1533,7 +1533,7 @@
           "id": "ex-893",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by picking the right square for it.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "1N2k3/prp2bp1/8/P6p/7P/1P2P3/4K3/1R6 w - - 0 1",
@@ -1554,7 +1554,7 @@
           "id": "ex-899",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by picking the right square for it.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "3r1k2/pp3ppp/8/8/3p1P2/PP4P1/2PK3n/2N4R b - - 0 1",
@@ -1575,7 +1575,7 @@
           "id": "ex-911",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by picking the right square for it.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "1Nb1k3/5p2/6p1/1r6/8/R5P1/1P3PK1/8 w - - 0 1",
@@ -1596,7 +1596,7 @@
           "id": "ex-912",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by picking the right square for it.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "8/ppk2p2/5p2/3p1N2/2rP1Rn1/2P5/PP6/7K b - - 0 1",
@@ -1662,7 +1662,7 @@
           "id": "ex-910",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by trading the attacker.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "8/bp1p4/p2B2p1/4q2p/5k1P/KP6/P5P1/3Q4 b - - 0 1",
@@ -1726,7 +1726,7 @@
           "id": "ex-896",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by pinning the attacker.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "6k1/pB6/4b3/5N1p/1P1p4/P6K/2Pn1P2/8 w - - 0 1",
@@ -1751,7 +1751,7 @@
           "id": "ex-905",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by pinning the attacker.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "8/kr4p1/p2p4/8/4p2r/P2R1R1P/K1P1P3/8 w - - 0 1",
@@ -1857,7 +1857,7 @@
           "id": "ex-881",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by protecting it.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "5k2/2p1rpp1/8/1n4P1/8/2PB4/5PK1/7R b - - 0 1",
@@ -1878,7 +1878,7 @@
           "id": "ex-891",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by protecting it.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "k7/6p1/p4p1p/1rpn4/4B3/6P1/3K1PR1/8 b - - 0 1",
@@ -1899,7 +1899,7 @@
           "id": "ex-898",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by protecting it.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "6rk/1R6/p6p/3b1p2/5P2/P1P1P3/6BP/6K1 w - - 0 1",
@@ -1920,7 +1920,7 @@
           "id": "ex-908",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend by protecting it.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "8/2R1pk1p/4p1p1/p3n3/3B4/1P5K/4P3/r7 b - - 0 1",
@@ -1984,7 +1984,7 @@
           "id": "ex-894",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend with a counterattack.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "1r6/k4p1p/4p3/2p1Pp2/7B/7P/K1P5/R6n b - - 0 1",
@@ -2011,7 +2011,7 @@
           "id": "ex-901",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend with a counterattack.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "8/2p3p1/1pP4p/p2rkp2/P4P2/2KR4/2R4r/8 b - - 0 1",
@@ -2034,7 +2034,7 @@
           "id": "ex-906",
           "type": "tactic",
           "front": {
-            "text": "One of your pieces is in danger. Defend with a counterattack.",
+            "text": "One of your pieces is in danger. Defend.",
             "boards": [
               {
                 "fen": "1k3r2/2p2B2/8/1b6/8/p3P3/P2P4/R3K3 w - - 0 1",

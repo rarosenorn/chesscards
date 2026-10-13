@@ -42,6 +42,11 @@
 //
 //   { "name": "Main Line", "chapters": [ { "name": "Overview", "cards": [...] }, ... ] }
 //
+// A chapter that already holds cards can be split this way: list its cards in
+// its new subdecks and they move there, history and all. Chapters stand in
+// spec order among themselves, as cards do; a subdeck the spec does not name
+// keeps its place.
+//
 // <card> = {
 //   "id":   "ov-first-moves",            // stable id; edits update in place
 //   "type": "basic" | "tactic",          // optional, default "basic"
@@ -271,14 +276,9 @@ try {
 		subdeckByName.set(subdeckKey(parentId, chapter.name), subdeck)
 
 		if (chapter.chapters.length > 0) {
-			// a subdeck holds cards or subdecks, never both
-			if (existingCards.some(c => c.subdeck_id === subdeck.id))
-				throw new Error(`"${chapter.name}" already holds cards, so it cannot hold chapters`)
-			for (const child of chapter.chapters) await importChapter(child, subdeck.id, depth + 1)
-			return
+			await importChapters(chapter.chapters, subdeck.id, depth + 1)
+			return subdeck
 		}
-		if (existingSubdecks.some(s => s.parent_id === subdeck.id))
-			throw new Error(`"${chapter.name}" already holds subdecks, so it cannot hold cards`)
 
 		for (const [index, card] of chapter.cards.entries()) {
 			const position = index + 1
@@ -353,8 +353,31 @@ try {
 			if (card.id) nextLock.cards[card.id] = made.id
 			inserted++
 		}
+		return subdeck
 	}
-	for (const chapter of chapters) await importChapter(chapter, null, 0)
+	// sibling chapters take spec order, sharing out the places they already
+	// hold between them, so a subdeck made in the app is not pushed aside
+	const importChapters = async (siblings, parentId, depth) => {
+		const subdecks = []
+		for (const chapter of siblings) subdecks.push(await importChapter(chapter, parentId, depth))
+		const places = subdecks.map(s => s.position).sort((a, b) => a - b)
+		for (const [i, subdeck] of subdecks.entries()) {
+			if (subdeck.position === places[i]) continue
+			await client.query("update subdecks set position = $2 where id = $1", [subdeck.id, places[i]])
+			subdeck.position = places[i]
+		}
+	}
+	await importChapters(chapters, null, 0)
+
+	// a subdeck holds cards or subdecks, never both. Checked once every card
+	// stands where the spec puts it, so a chapter being split into subdecks
+	// passes as long as none of its cards is left behind
+	const { rows: mixed } = await client.query(`
+		select s.name from subdecks s where s.deck_id = $1
+			and exists (select 1 from cards c where c.subdeck_id = s.id)
+			and exists (select 1 from subdecks k where k.parent_id = s.id)`, [deck.id])
+	if (mixed.length > 0)
+		throw new Error(`${mixed.map(s => `"${s.name}"`).join(", ")} would hold both cards and subdecks`)
 
 	// cards this spec used to own but no longer lists
 	for (const [id, cardId] of Object.entries(lock.cards ?? {})) {

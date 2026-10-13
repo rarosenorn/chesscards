@@ -2,107 +2,529 @@
   "deck": "My First Chess Opening Repetoire - Christof Sielecki",
   "chapters": [
     {
+      "name": "Quickstart",
+      "cards": [
+        {
+          "keep": "fa047a40-4a52-49ec-a107-e87fe4945d3c",
+          "note": "the user's own rules for making opening cards"
+        },
+        {
+          "id": "ph-ov-be7",
+          "front": {
+            "text": "Play the Philidor line with 3...exd4 and 5...Be7 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "d6",
+                  "d4",
+                  "exd4",
+                  "Nxd4",
+                  "Nf6",
+                  "Nc3",
+                  "Be7",
+                  "Bf4",
+                  "O-O",
+                  "Qd2",
+                  "Nc6",
+                  "O-O-O"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 2...d6 Black covers the attacked e5-pawn with their d-pawn. This defense is called the 'Philidor Defense'. The move does not develop a piece and locks in the f8-bishop.\n- 3.d4 This is White's strongest move. We open the center, prepare the development of the c1-bishop, and attack Black's e5-pawn.\n- 3...exd4 Black's best move. Black has no fully satisfactory way to keep the pawn on e5 and therefore captures our d-pawn.\n- 4.Nxd4 An easy move. We recapture the pawn and centralize our knight.\n- 4...Nf6 A logical choice and the most popular move. Black develops the kingside and attacks our pawn.\n- 5.Nc3 Easy one: we cover the pawn and develop our knight.\n- 5...Be7 Black develops the bishop and prepares kingside castling. It is a modest setup, but Black's position is rather solid.\n- 6.Bf4 The most aggressive move. We plan to play Qd2 and O-O-O next. With our king safely positioned on the queenside, we may attack the kingside by pushing our pawns.\n- 6...O-O Black gets their king to safety.\n- 7.Qd2 We continue with our plan: secure our king on the queenside and attack on the other side of the board.\n- 7...Nc6 claude: Black develops the knight.\n- 8.O-O-O We have completed queenside castling and are ready to attack on the kingside."
+        },
+        {
+          "id": "ph-ov-c5",
+          "front": {
+            "text": "Play the Philidor line with 3...exd4 and 5...c5? from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "d6",
+                  "d4",
+                  "exd4",
+                  "Nxd4",
+                  "Nf6",
+                  "Nc3",
+                  "c5",
+                  "Nde2"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 2...d6 Black covers the attacked e5-pawn with their d-pawn. This defense is called the 'Philidor Defense'. The move does not develop a piece and locks in the f8-bishop.\n- 3.d4 This is White's strongest move. We open the center, prepare the development of the c1-bishop, and attack Black's e5-pawn.\n- 3...exd4 Black's best move. Black has no fully satisfactory way to keep the pawn on e5 and therefore captures our d-pawn.\n- 4.Nxd4 An easy move. We recapture the pawn and centralize our knight.\n- 4...Nf6 A logical choice and the most popular move. Black develops the kingside and attacks our pawn.\n- 5.Nc3 Easy one: we cover the pawn and develop our knight.\n- 5...c5? Black attacks our strong knight, but the cure is worse than the disease. Every pawn move involves a commitment and may weaken crucial squares or pawns.\n- 6.Nde2 Black has weakened the d5-square, which would be ideal for a knight. From e2, we can quickly reach d5 via the f4-square."
+        },
+        {
+          "id": "ph-ov-bg4",
+          "front": {
+            "text": "Play the Philidor line with 3...Bg4? from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "d6",
+                  "d4",
+                  "Bg4",
+                  "dxe5",
+                  "Bxf3",
+                  "Qxf3",
+                  "dxe5",
+                  "Bc4",
+                  "Nf6",
+                  "Qb3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 2...d6 Black covers the attacked e5-pawn with their d-pawn. This defense is called the 'Philidor Defense'. The move does not develop a piece and locks in the f8-bishop.\n- 3.d4 This is White's strongest move. We open the center, prepare the development of the c1-bishop, and attack Black's e5-pawn.\n- 3...Bg4? Black pins our knight, but this move is a well-known mistake since Morphy's game from 1858!\n- 4.dxe5! We usually don't want to trade on e5, but this is an exception. Concrete move sequences always beat general concepts.\n- 4...Bxf3 Black gives up the bishop pair and speeds up our development, a welcome sight.\n- 5.Qxf3 We keep our pawn structure intact, and place our queen on an active square.\n- 5...dxe5 Black has restored material equality but will be in deep trouble after our natural reply.\n- 6.Bc4 The ideal type of move. We develop our bishop to a great square and threaten mate!\n- 6...Nf6 Black develops a piece and stops the mate threat simultaneously.\n- 7.Qb3! This queen move is powerful, attacking both b7 and, even more importantly, the f7-pawn with terrible consequences."
+        },
+        {
+          "id": "pt-ov-bb4",
+          "front": {
+            "text": "Play the Petroff line with 3...Bb4 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nf6",
+                  "Nc3",
+                  "Bb4",
+                  "Nxe5",
+                  "Bxc3",
+                  "dxc3",
+                  "d6",
+                  "Nd3",
+                  "Nxe4",
+                  "Be2",
+                  "O-O",
+                  "O-O"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 2...Nf6 Black goes for the Petroff Defense. Instead of covering their e5-pawn, they allow the capture and prefer starting a direct counterattack against our e-pawn.\n- 3.Nc3 We cover our attacked e4-pawn, a simple and good reply to the Petroff.\n- 3...Bb4 This is Black's best move if they want to avoid 3...Nc6 for some reason. It gives up the e5-pawn, but Black gets enough activity to regain it quickly.\n- 4.Nxe5 We grab the central pawn, thank you very much.\n- 4...Bxc3 The immediate capture, the most commonly played move. By playing ...Bb4, Black prepared to capture our knight on c3, followed by ...Nxe4.\n- 5.dxc3 We always go for this capture here, as we immediately open our bishop on c1.\n- 5...d6! An important move!\n- 6.Nd3 This is our standard retreat square in this line.\n- 6...Nxe4 Black needs to regain the pawn before we cover it by f2-f3.\n- 7.Be2 Ready to castle.\n- 7...O-O claude: Black castles.\n- 8.O-O The initial opening phase is completed. We have castled and are ready for the next phase of the game."
+        },
+        {
+          "id": "pt-ov-bc5",
+          "front": {
+            "text": "Play the Petroff line with 3...Bc5? from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nf6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nc6",
+                  "Nxc6",
+                  "dxc6",
+                  "h3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 2...Nf6 Black goes for the Petroff Defense. Instead of covering their e5-pawn, they allow the capture and prefer starting a direct counterattack against our e-pawn.\n- 3.Nc3 We cover our attacked e4-pawn, a simple and good reply to the Petroff.\n- 3...Bc5? Black sacrifices their e-pawn for insufficient compensation.\n- 4.Nxe5 Tasty chess! If you can win Black's e-pawn for no obvious compensation, you should go for it.\n- 4...Nc6 This is Black's best try and worth investigating.\n- 5.Nxc6 The simplest solution.\n- 5...dxc6 The only move. We have reached a position that usually arises via a different move order, the 'Stafford Gambit'.\n- 6.h3! The little pawn move is essential. Black's idea was to attack our vulnerable f2-spot with ...Ng4, which is a dangerous knight jump."
+        },
+        {
+          "id": "tk-ov-bxd4",
+          "front": {
+            "text": "Play the Three Knights 3...Bc5 line with 4...Nxe5 and 5...Bxd4? from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bxd4",
+                  "Qxd4",
+                  "Qf6",
+                  "Nb5"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Bc5?! Black develops the bishop and increases control over the d4-square. It looks like a logical move, but it is a dubious choice, given that White plays the correct reply.\n- 4.Nxe5! We can take the central pawn, based on the idea 4...Nxe5 5.d4, when the fork on bishop and knight regains the piece.\n- 4...Nxe5 Black's best defense.\n- 5.d4 We regain our piece, forking two minor pieces. Now Black's path to a reasonable game is narrow.\n- 5...Bxd4? A welcome sight! Black surrenders the bishop pair and activates our queen!\n- 6.Qxd4 Black has a limited choice now, as we attack the knight.\n- 6...Qf6 This move introduces fun complications, and it sets a trap.\n- 7.Nb5! A cool move to remember! We attack c7, but at the same time, the knight does now protect our queen. Black has no good reply now."
+        },
+        {
+          "id": "tk-ov-bd6",
+          "front": {
+            "text": "Play the Three Knights 3...Bc5 line with 4...Nxe5 and 5...Bd6 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Nxe5",
+                  "d4",
+                  "Bd6",
+                  "dxe5",
+                  "Bxe5",
+                  "Bd3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Bc5?! Black develops the bishop and increases control over the d4-square. It looks like a logical move, but it is a dubious choice, given that White plays the correct reply.\n- 4.Nxe5! We can take the central pawn, based on the idea 4...Nxe5 5.d4, when the fork on bishop and knight regains the piece.\n- 4...Nxe5 Black's best defense.\n- 5.d4 We regain our piece, forking two minor pieces. Now Black's path to a reasonable game is narrow.\n- 5...Bd6 Black's best defense and the only way to reach a playable position.\n- 6.dxe5 We restore material equality, an easy move.\n- 6...Bxe5 claude: Black recaptures.\n- 7.Bd3 The final move to remember. We develop our bishop and prepare kingside castling."
+        },
+        {
+          "id": "tk-ov-qf6",
+          "front": {
+            "text": "Play the Three Knights 3...Bc5 line with 4...Bxf2+?! and 6...Qf6+? from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Qf6+",
+                  "Kg1",
+                  "Ng4",
+                  "Qd2"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Bc5?! Black develops the bishop and increases control over the d4-square. It looks like a logical move, but it is a dubious choice, given that White plays the correct reply.\n- 4.Nxe5! We can take the central pawn, based on the idea 4...Nxe5 5.d4, when the fork on bishop and knight regains the piece.\n- 4...Bxf2+?! Black realizes that 4...Nxe5 5.d4 looks nice for White and decides to give up the bishop immediately.\n- 5.Kxf2 We have to take the bishop, no choice.\n- 5...Nxe5 Black restores material equality.\n- 6.d4 Here we go! We complete our dream pawn center and hit Black's knight, winning time.\n- 6...Qf6+? A very tempting move, getting the queen into the game with a check. It is Black's most popular choice, but this only helps us.\n- 7.Kg1 The safest spot for our king in the long run.\n- 7...Ng4 A rare move, but it can be extremely irritating to face. Black threatens ...Qf2#.\n- 8.Qd2! The only move that works! There is just one move that covers the mate and keeps the d4-pawn protected."
+        },
+        {
+          "id": "tk-ov-ng6",
+          "front": {
+            "text": "Play the Three Knights 3...Bc5 line with 4...Bxf2+?! and 6...Ng6 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bc5",
+                  "Nxe5",
+                  "Bxf2+",
+                  "Kxf2",
+                  "Nxe5",
+                  "d4",
+                  "Ng6",
+                  "Be2"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Bc5?! Black develops the bishop and increases control over the d4-square. It looks like a logical move, but it is a dubious choice, given that White plays the correct reply.\n- 4.Nxe5! We can take the central pawn, based on the idea 4...Nxe5 5.d4, when the fork on bishop and knight regains the piece.\n- 4...Bxf2+?! Black realizes that 4...Nxe5 5.d4 looks nice for White and decides to give up the bishop immediately.\n- 5.Kxf2 We have to take the bishop, no choice.\n- 5...Nxe5 Black restores material equality.\n- 6.d4 Here we go! We complete our dream pawn center and hit Black's knight, winning time.\n- 6...Ng6 Black's relatively best choice.\n- 7.Be2 Remember this idea: we start the sequence Be2, Rf1, and Kg1 to get our king to a safe spot on the kingside."
+        },
+        {
+          "id": "tkb-ov-d6",
+          "front": {
+            "text": "Play the Three Knights line with 3...d6 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "d6",
+                  "d4",
+                  "Bg4",
+                  "Bb5",
+                  "exd4",
+                  "Qxd4",
+                  "Bxf3",
+                  "gxf3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...d6 This move is unnecessarily passive. Black's f8-bishop looks rather sad now, as it can't be developed to an active spot on c5 or b4 anymore.\n- 4.d4 Very logical, as we intend to play the d-pawn after 3...Nf6 4.d4, going for the Four Knights Scotch. Now we'll likely get a favorable version of this opening.\n- 4...Bg4 Black develops their bishop and pins our knight.\n- 5.Bb5! A strong move! We develop and pin Black's knight, which increases the pressure on the e5-pawn. We threaten d4-d5 now, with a deadly pin!\n- 5...exd4 Black is scared of d4-d5 and takes our pawn to stop our threat.\n- 6.Qxd4 We have pinned the black knight, so taking the pawn with the queen is possible.\n- 6...Bxf3 Black usually takes on f3, hoping to gain something by doubling our pawns.\n- 7.gxf3 Taking the bishop is strong. We plan to castle queenside, so Be3 and O-O-O is the general idea."
+        },
+        {
+          "id": "tkb-ov-bb4",
+          "front": {
+            "text": "Play the Three Knights line with 3...Bb4 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Bb4",
+                  "Nd5",
+                  "Nf6",
+                  "c3",
+                  "Bc5",
+                  "b4",
+                  "Bb6",
+                  "d4"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Bb4 Black continues their kingside development, a move according to general opening principles. It is still not as good as 3...Nf6: the bishop move has a direct drawback that we can exploit.\n- 4.Nd5! You shouldn't move the same piece multiple times in the opening... unless it is strong! We lose time by moving our knight again, but we will gain MORE time by hitting Black's bishop with pawn moves.\n- 4...Nf6 Black gets the knight into the game and wants to castle soon, a good move.\n- 5.c3 Occupying the center by playing c3 & d4 is an attractive idea − let's go for it!\n- 5...Bc5 This is the most important move to examine. It is played the most here.\n- 6.b4 We attack the bishop again.\n- 6...Bb6 Black keeps the bishop on the most active diagonal.\n- 7.d4! An important moment. We ignore the threat to our e-pawn and focus on classic opening goals: we occupy the center and want to develop quickly."
+        },
+        {
+          "id": "fs-ov-bb4",
+          "front": {
+            "text": "Play the Four Knights Scotch line with 4...Bb4 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Nf6",
+                  "d4",
+                  "Bb4",
+                  "Nxe5",
+                  "Nxe4",
+                  "Qg4",
+                  "Nxc3",
+                  "Qxg7"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Black's best reply is 4...exd4.\n- 4...Bb4 A rare and slightly dubious move. We can prove an advantage, but only with one reply!\n- 5.Nxe5! The only good move! It is not obvious at first sight why you should capture e5 with the knight and avoid other options.\n- 5...Nxe4 Black wants to get the pawn back immediately. It's not a good move, but it requires a precise reply.\n- 6.Qg4! The best and most fun move to play! We attack both the knight and the g-pawn and enter wild complications.\n- 6...Nxc3 The only move available. The knight was attacked, and retreating or covering it failed due to our queen taking g7.\n- 7.Qxg7! Wow, what a mess! The position is very favorable for us."
+        },
+        {
+          "id": "fs-ov-d6-bd7",
+          "front": {
+            "text": "Play the Four Knights Scotch line with 4...d6 and 5...Bd7 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Nf6",
+                  "d4",
+                  "d6",
+                  "Bb5",
+                  "Bd7",
+                  "Bxc6",
+                  "Bxc6",
+                  "Qe2"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Black's best reply is 4...exd4.\n- 4...d6 A passive and dubious move, but it is important to study, as the position may arise from various move orders.\n- 5.Bb5! An important move to remember! We pin Black's knight and thus increase the pressure on the e5-pawn. In addition, we also threaten d4-d5, attacking the unlucky pinned knight!\n- 5...Bd7 Black addresses the pin, a logical move.\n- 6.Bxc6! This move is surprisingly strong, although we give up the bishop for a knight voluntarily.\n- 6...Bxc6 The only good reply. Black sets up a counterattack on our e-pawn.\n- 7.Qe2! A strong move! We cover the attacked e-pawn, and Black's e-pawn is now in danger again."
+        },
+        {
+          "id": "fs-ov-d6-exd4",
+          "front": {
+            "text": "Play the Four Knights Scotch line with 4...d6 and 5...exd4 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Nf6",
+                  "d4",
+                  "d6",
+                  "Bb5",
+                  "exd4",
+                  "Nxd4",
+                  "Bd7",
+                  "Bxc6",
+                  "Bxc6",
+                  "Qe2"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Black's best reply is 4...exd4.\n- 4...d6 A passive and dubious move, but it is important to study, as the position may arise from various move orders.\n- 5.Bb5! An important move to remember! We pin Black's knight and thus increase the pressure on the e5-pawn. In addition, we also threaten d4-d5, attacking the unlucky pinned knight!\n- 5...exd4 Black gives up the idea of keeping a pawn on e5.\n- 6.Nxd4 We are now attacking Black's knight twice, so there is little choice for our opponent.\n- 6...Bd7 Black needs to cover the knight; there is nothing else.\n- 7.Bxc6! A strong move! Usually, you want to keep your pair of bishops − this case is an exception. By taking on c6, we preserve our well-placed d4-knight.\n- 7...Bxc6 This recapture is played most of the time.\n- 8.Qe2 We cover our important central pawn and prepare Bf4 and O-O-O."
+        },
+        {
+          "id": "fk-ov-nxd4",
+          "front": {
+            "text": "Play the Four Knights Scotch line with 5...Nxd4? from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Nf6",
+                  "d4",
+                  "exd4",
+                  "Nxd4",
+                  "Nxd4",
+                  "Qxd4",
+                  "d6",
+                  "Bf4"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Reaching this type of position is a primary concept of our repertoire.\n- 4...exd4 Black's best answer is taking our pawn.\n- 5.Nxd4 The obvious move to get our pawn back. Our e-pawn is actively placed in the center, controlling the d5-square, and we can easily develop our minor pieces.\n- 5...Nxd4? This move is incredibly popular in amateur games. We are happy about this trade, as it only helps to develop our forces.\n- 6.Qxd4 Our queen is now in a commanding central position. Black can't develop their f8-bishop to an active square, as we control all of them.\n- 6...d6 Passive, but relatively best. Black accepted that the bishop needed to be developed to the modest e7-square.\n- 7.Bf4 I like this aggressive move. We want to castle queenside next, followed by a pawn storm on the kingside. Moves like f3, g4, and h4 come to mind."
+        },
+        {
+          "id": "fk-ov-bb4",
+          "front": {
+            "text": "Play the Four Knights Scotch line with 5...Bb4! from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Nf6",
+                  "d4",
+                  "exd4",
+                  "Nxd4",
+                  "Bb4",
+                  "Nxc6",
+                  "bxc6",
+                  "Bd3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Reaching this type of position is a primary concept of our repertoire.\n- 4...exd4 Black's best answer is taking our pawn.\n- 5.Nxd4 The obvious move to get our pawn back. Our e-pawn is actively placed in the center, controlling the d5-square, and we can easily develop our minor pieces.\n- 5...Bb4! Black's best move and the only one that leads to a fully satisfactory game for our opponent. It fights for the control of d5 by pinning our knight and exerts pressure on our e-pawn.\n- 6.Nxc6 An important move, and the only good one. Black had increased the pressure on our e-pawn, so we must take on c6 first, then develop our bishop.\n- 6...bxc6 Capturing towards the center is Black's best move.\n- 7.Bd3 We develop, protect our pawn and prepare castling − all in one move."
+        },
+        {
+          "id": "fk-ov-bc5",
+          "front": {
+            "text": "Play the Four Knights Scotch line with 5...Bc5 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "e5",
+                  "Nf3",
+                  "Nc6",
+                  "Nc3",
+                  "Nf6",
+                  "d4",
+                  "exd4",
+                  "Nxd4",
+                  "Bc5",
+                  "Be3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Reaching this type of position is a primary concept of our repertoire.\n- 4...exd4 Black's best answer is taking our pawn.\n- 5.Nxd4 The obvious move to get our pawn back. Our e-pawn is actively placed in the center, controlling the d5-square, and we can easily develop our minor pieces.\n- 5...Bc5 Black opts for a natural development move and attacks our centralized knight. Its theoretical evaluation is 'slightly better for White', not more, but in practice Black often stumbles right on the next move.\n- 6.Be3! It is important to remember this move. We cover the knight, which is considerably stronger than taking on c6. Black's bishop is unprotected, and this makes Nxc6! a serious threat!"
+        }
+      ]
+    },
+    {
       "name": "Philidor's Defense",
       "chapters": [
-        {
-          "name": "Overview",
-          "cards": [
-            {
-              "keep": "fa047a40-4a52-49ec-a107-e87fe4945d3c",
-              "note": "the user's own rules for making opening cards"
-            },
-            {
-              "id": "ph-ov-be7",
-              "front": {
-                "text": "Play the Philidor line with 3...exd4 and 5...Be7 from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "d6",
-                      "d4",
-                      "exd4",
-                      "Nxd4",
-                      "Nf6",
-                      "Nc3",
-                      "Be7",
-                      "Bf4",
-                      "O-O",
-                      "Qd2",
-                      "Nc6",
-                      "O-O-O"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 2...d6 Black covers the attacked e5-pawn with their d-pawn. This defense is called the 'Philidor Defense'. The move does not develop a piece and locks in the f8-bishop.\n- 3.d4 This is White's strongest move. We open the center, prepare the development of the c1-bishop, and attack Black's e5-pawn.\n- 3...exd4 Black's best move. Black has no fully satisfactory way to keep the pawn on e5 and therefore captures our d-pawn.\n- 4.Nxd4 An easy move. We recapture the pawn and centralize our knight.\n- 4...Nf6 A logical choice and the most popular move. Black develops the kingside and attacks our pawn.\n- 5.Nc3 Easy one: we cover the pawn and develop our knight.\n- 5...Be7 Black develops the bishop and prepares kingside castling. It is a modest setup, but Black's position is rather solid.\n- 6.Bf4 The most aggressive move. We plan to play Qd2 and O-O-O next. With our king safely positioned on the queenside, we may attack the kingside by pushing our pawns.\n- 6...O-O Black gets their king to safety.\n- 7.Qd2 We continue with our plan: secure our king on the queenside and attack on the other side of the board.\n- 7...Nc6 claude: Black develops the knight.\n- 8.O-O-O We have completed queenside castling and are ready to attack on the kingside."
-            },
-            {
-              "id": "ph-ov-c5",
-              "front": {
-                "text": "Play the Philidor line with 3...exd4 and 5...c5? from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "d6",
-                      "d4",
-                      "exd4",
-                      "Nxd4",
-                      "Nf6",
-                      "Nc3",
-                      "c5",
-                      "Nde2"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 2...d6 Black covers the attacked e5-pawn with their d-pawn. This defense is called the 'Philidor Defense'. The move does not develop a piece and locks in the f8-bishop.\n- 3.d4 This is White's strongest move. We open the center, prepare the development of the c1-bishop, and attack Black's e5-pawn.\n- 3...exd4 Black's best move. Black has no fully satisfactory way to keep the pawn on e5 and therefore captures our d-pawn.\n- 4.Nxd4 An easy move. We recapture the pawn and centralize our knight.\n- 4...Nf6 A logical choice and the most popular move. Black develops the kingside and attacks our pawn.\n- 5.Nc3 Easy one: we cover the pawn and develop our knight.\n- 5...c5? Black attacks our strong knight, but the cure is worse than the disease. Every pawn move involves a commitment and may weaken crucial squares or pawns.\n- 6.Nde2 Black has weakened the d5-square, which would be ideal for a knight. From e2, we can quickly reach d5 via the f4-square."
-            },
-            {
-              "id": "ph-ov-bg4",
-              "front": {
-                "text": "Play the Philidor line with 3...Bg4? from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "d6",
-                      "d4",
-                      "Bg4",
-                      "dxe5",
-                      "Bxf3",
-                      "Qxf3",
-                      "dxe5",
-                      "Bc4",
-                      "Nf6",
-                      "Qb3"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 2...d6 Black covers the attacked e5-pawn with their d-pawn. This defense is called the 'Philidor Defense'. The move does not develop a piece and locks in the f8-bishop.\n- 3.d4 This is White's strongest move. We open the center, prepare the development of the c1-bishop, and attack Black's e5-pawn.\n- 3...Bg4? Black pins our knight, but this move is a well-known mistake since Morphy's game from 1858!\n- 4.dxe5! We usually don't want to trade on e5, but this is an exception. Concrete move sequences always beat general concepts.\n- 4...Bxf3 Black gives up the bishop pair and speeds up our development, a welcome sight.\n- 5.Qxf3 We keep our pawn structure intact, and place our queen on an active square.\n- 5...dxe5 Black has restored material equality but will be in deep trouble after our natural reply.\n- 6.Bc4 The ideal type of move. We develop our bishop to a great square and threaten mate!\n- 6...Nf6 Black develops a piece and stops the mate threat simultaneously.\n- 7.Qb3! This queen move is powerful, attacking both b7 and, even more importantly, the f7-pawn with terrible consequences."
-            }
-          ]
-        },
         {
           "name": "3...exd4 5...Be7",
           "cards": [
@@ -947,71 +1369,6 @@
     {
       "name": "Petroff's Defense",
       "chapters": [
-        {
-          "name": "Overview",
-          "cards": [
-            {
-              "id": "pt-ov-bb4",
-              "front": {
-                "text": "Play the Petroff line with 3...Bb4 from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nf6",
-                      "Nc3",
-                      "Bb4",
-                      "Nxe5",
-                      "Bxc3",
-                      "dxc3",
-                      "d6",
-                      "Nd3",
-                      "Nxe4",
-                      "Be2",
-                      "O-O",
-                      "O-O"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 2...Nf6 Black goes for the Petroff Defense. Instead of covering their e5-pawn, they allow the capture and prefer starting a direct counterattack against our e-pawn.\n- 3.Nc3 We cover our attacked e4-pawn, a simple and good reply to the Petroff.\n- 3...Bb4 This is Black's best move if they want to avoid 3...Nc6 for some reason. It gives up the e5-pawn, but Black gets enough activity to regain it quickly.\n- 4.Nxe5 We grab the central pawn, thank you very much.\n- 4...Bxc3 The immediate capture, the most commonly played move. By playing ...Bb4, Black prepared to capture our knight on c3, followed by ...Nxe4.\n- 5.dxc3 We always go for this capture here, as we immediately open our bishop on c1.\n- 5...d6! An important move!\n- 6.Nd3 This is our standard retreat square in this line.\n- 6...Nxe4 Black needs to regain the pawn before we cover it by f2-f3.\n- 7.Be2 Ready to castle.\n- 7...O-O claude: Black castles.\n- 8.O-O The initial opening phase is completed. We have castled and are ready for the next phase of the game."
-            },
-            {
-              "id": "pt-ov-bc5",
-              "front": {
-                "text": "Play the Petroff line with 3...Bc5? from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nf6",
-                      "Nc3",
-                      "Bc5",
-                      "Nxe5",
-                      "Nc6",
-                      "Nxc6",
-                      "dxc6",
-                      "h3"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 2...Nf6 Black goes for the Petroff Defense. Instead of covering their e5-pawn, they allow the capture and prefer starting a direct counterattack against our e-pawn.\n- 3.Nc3 We cover our attacked e4-pawn, a simple and good reply to the Petroff.\n- 3...Bc5? Black sacrifices their e-pawn for insufficient compensation.\n- 4.Nxe5 Tasty chess! If you can win Black's e-pawn for no obvious compensation, you should go for it.\n- 4...Nc6 This is Black's best try and worth investigating.\n- 5.Nxc6 The simplest solution.\n- 5...dxc6 The only move. We have reached a position that usually arises via a different move order, the 'Stafford Gambit'.\n- 6.h3! The little pawn move is essential. Black's idea was to attack our vulnerable f2-spot with ...Ng4, which is a dangerous knight jump."
-            }
-          ]
-        },
         {
           "name": "3...Bb4",
           "cards": [
@@ -2183,133 +2540,6 @@
     {
       "name": "Three Knights 3...Bc5",
       "chapters": [
-        {
-          "name": "Overview",
-          "cards": [
-            {
-              "id": "tk-ov-bxd4",
-              "front": {
-                "text": "Play the Three Knights 3...Bc5 line with 4...Nxe5 and 5...Bxd4? from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Bc5",
-                      "Nxe5",
-                      "Nxe5",
-                      "d4",
-                      "Bxd4",
-                      "Qxd4",
-                      "Qf6",
-                      "Nb5"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Bc5?! Black develops the bishop and increases control over the d4-square. It looks like a logical move, but it is a dubious choice, given that White plays the correct reply.\n- 4.Nxe5! We can take the central pawn, based on the idea 4...Nxe5 5.d4, when the fork on bishop and knight regains the piece.\n- 4...Nxe5 Black's best defense.\n- 5.d4 We regain our piece, forking two minor pieces. Now Black's path to a reasonable game is narrow.\n- 5...Bxd4? A welcome sight! Black surrenders the bishop pair and activates our queen!\n- 6.Qxd4 Black has a limited choice now, as we attack the knight.\n- 6...Qf6 This move introduces fun complications, and it sets a trap.\n- 7.Nb5! A cool move to remember! We attack c7, but at the same time, the knight does now protect our queen. Black has no good reply now."
-            },
-            {
-              "id": "tk-ov-bd6",
-              "front": {
-                "text": "Play the Three Knights 3...Bc5 line with 4...Nxe5 and 5...Bd6 from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Bc5",
-                      "Nxe5",
-                      "Nxe5",
-                      "d4",
-                      "Bd6",
-                      "dxe5",
-                      "Bxe5",
-                      "Bd3"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Bc5?! Black develops the bishop and increases control over the d4-square. It looks like a logical move, but it is a dubious choice, given that White plays the correct reply.\n- 4.Nxe5! We can take the central pawn, based on the idea 4...Nxe5 5.d4, when the fork on bishop and knight regains the piece.\n- 4...Nxe5 Black's best defense.\n- 5.d4 We regain our piece, forking two minor pieces. Now Black's path to a reasonable game is narrow.\n- 5...Bd6 Black's best defense and the only way to reach a playable position.\n- 6.dxe5 We restore material equality, an easy move.\n- 6...Bxe5 claude: Black recaptures.\n- 7.Bd3 The final move to remember. We develop our bishop and prepare kingside castling."
-            },
-            {
-              "id": "tk-ov-qf6",
-              "front": {
-                "text": "Play the Three Knights 3...Bc5 line with 4...Bxf2+?! and 6...Qf6+? from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Bc5",
-                      "Nxe5",
-                      "Bxf2+",
-                      "Kxf2",
-                      "Nxe5",
-                      "d4",
-                      "Qf6+",
-                      "Kg1",
-                      "Ng4",
-                      "Qd2"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Bc5?! Black develops the bishop and increases control over the d4-square. It looks like a logical move, but it is a dubious choice, given that White plays the correct reply.\n- 4.Nxe5! We can take the central pawn, based on the idea 4...Nxe5 5.d4, when the fork on bishop and knight regains the piece.\n- 4...Bxf2+?! Black realizes that 4...Nxe5 5.d4 looks nice for White and decides to give up the bishop immediately.\n- 5.Kxf2 We have to take the bishop, no choice.\n- 5...Nxe5 Black restores material equality.\n- 6.d4 Here we go! We complete our dream pawn center and hit Black's knight, winning time.\n- 6...Qf6+? A very tempting move, getting the queen into the game with a check. It is Black's most popular choice, but this only helps us.\n- 7.Kg1 The safest spot for our king in the long run.\n- 7...Ng4 A rare move, but it can be extremely irritating to face. Black threatens ...Qf2#.\n- 8.Qd2! The only move that works! There is just one move that covers the mate and keeps the d4-pawn protected."
-            },
-            {
-              "id": "tk-ov-ng6",
-              "front": {
-                "text": "Play the Three Knights 3...Bc5 line with 4...Bxf2+?! and 6...Ng6 from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Bc5",
-                      "Nxe5",
-                      "Bxf2+",
-                      "Kxf2",
-                      "Nxe5",
-                      "d4",
-                      "Ng6",
-                      "Be2"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Bc5?! Black develops the bishop and increases control over the d4-square. It looks like a logical move, but it is a dubious choice, given that White plays the correct reply.\n- 4.Nxe5! We can take the central pawn, based on the idea 4...Nxe5 5.d4, when the fork on bishop and knight regains the piece.\n- 4...Bxf2+?! Black realizes that 4...Nxe5 5.d4 looks nice for White and decides to give up the bishop immediately.\n- 5.Kxf2 We have to take the bishop, no choice.\n- 5...Nxe5 Black restores material equality.\n- 6.d4 Here we go! We complete our dream pawn center and hit Black's knight, winning time.\n- 6...Ng6 Black's relatively best choice.\n- 7.Be2 Remember this idea: we start the sequence Be2, Rf1, and Kg1 to get our king to a safe spot on the kingside."
-            }
-          ]
-        },
         {
           "name": "4...Nxe5 5.d4 Bxd4",
           "cards": [
@@ -3849,71 +4079,6 @@
       "name": "Three Knights 3.Nc3 − Others",
       "chapters": [
         {
-          "name": "Overview",
-          "cards": [
-            {
-              "id": "tkb-ov-d6",
-              "front": {
-                "text": "Play the Three Knights line with 3...d6 from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "d6",
-                      "d4",
-                      "Bg4",
-                      "Bb5",
-                      "exd4",
-                      "Qxd4",
-                      "Bxf3",
-                      "gxf3"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...d6 This move is unnecessarily passive. Black's f8-bishop looks rather sad now, as it can't be developed to an active spot on c5 or b4 anymore.\n- 4.d4 Very logical, as we intend to play the d-pawn after 3...Nf6 4.d4, going for the Four Knights Scotch. Now we'll likely get a favorable version of this opening.\n- 4...Bg4 Black develops their bishop and pins our knight.\n- 5.Bb5! A strong move! We develop and pin Black's knight, which increases the pressure on the e5-pawn. We threaten d4-d5 now, with a deadly pin!\n- 5...exd4 Black is scared of d4-d5 and takes our pawn to stop our threat.\n- 6.Qxd4 We have pinned the black knight, so taking the pawn with the queen is possible.\n- 6...Bxf3 Black usually takes on f3, hoping to gain something by doubling our pawns.\n- 7.gxf3 Taking the bishop is strong. We plan to castle queenside, so Be3 and O-O-O is the general idea."
-            },
-            {
-              "id": "tkb-ov-bb4",
-              "front": {
-                "text": "Play the Three Knights line with 3...Bb4 from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Bb4",
-                      "Nd5",
-                      "Nf6",
-                      "c3",
-                      "Bc5",
-                      "b4",
-                      "Bb6",
-                      "d4"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Bb4 Black continues their kingside development, a move according to general opening principles. It is still not as good as 3...Nf6: the bishop move has a direct drawback that we can exploit.\n- 4.Nd5! You shouldn't move the same piece multiple times in the opening... unless it is strong! We lose time by moving our knight again, but we will gain MORE time by hitting Black's bishop with pawn moves.\n- 4...Nf6 Black gets the knight into the game and wants to castle soon, a good move.\n- 5.c3 Occupying the center by playing c3 & d4 is an attractive idea − let's go for it!\n- 5...Bc5 This is the most important move to examine. It is played the most here.\n- 6.b4 We attack the bishop again.\n- 6...Bb6 Black keeps the bishop on the most active diagonal.\n- 7.d4! An important moment. We ignore the threat to our e-pawn and focus on classic opening goals: we occupy the center and want to develop quickly."
-            }
-          ]
-        },
-        {
           "name": "3...d6",
           "cards": [
             {
@@ -4965,99 +5130,6 @@
     {
       "name": "Four Knights Scotch 4.d4 exd4 − Main Line",
       "chapters": [
-        {
-          "name": "Overview",
-          "cards": [
-            {
-              "id": "fk-ov-nxd4",
-              "front": {
-                "text": "Play the Four Knights Scotch line with 5...Nxd4? from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Nf6",
-                      "d4",
-                      "exd4",
-                      "Nxd4",
-                      "Nxd4",
-                      "Qxd4",
-                      "d6",
-                      "Bf4"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Reaching this type of position is a primary concept of our repertoire.\n- 4...exd4 Black's best answer is taking our pawn.\n- 5.Nxd4 The obvious move to get our pawn back. Our e-pawn is actively placed in the center, controlling the d5-square, and we can easily develop our minor pieces.\n- 5...Nxd4? This move is incredibly popular in amateur games. We are happy about this trade, as it only helps to develop our forces.\n- 6.Qxd4 Our queen is now in a commanding central position. Black can't develop their f8-bishop to an active square, as we control all of them.\n- 6...d6 Passive, but relatively best. Black accepted that the bishop needed to be developed to the modest e7-square.\n- 7.Bf4 I like this aggressive move. We want to castle queenside next, followed by a pawn storm on the kingside. Moves like f3, g4, and h4 come to mind."
-            },
-            {
-              "id": "fk-ov-bb4",
-              "front": {
-                "text": "Play the Four Knights Scotch line with 5...Bb4! from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Nf6",
-                      "d4",
-                      "exd4",
-                      "Nxd4",
-                      "Bb4",
-                      "Nxc6",
-                      "bxc6",
-                      "Bd3"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Reaching this type of position is a primary concept of our repertoire.\n- 4...exd4 Black's best answer is taking our pawn.\n- 5.Nxd4 The obvious move to get our pawn back. Our e-pawn is actively placed in the center, controlling the d5-square, and we can easily develop our minor pieces.\n- 5...Bb4! Black's best move and the only one that leads to a fully satisfactory game for our opponent. It fights for the control of d5 by pinning our knight and exerts pressure on our e-pawn.\n- 6.Nxc6 An important move, and the only good one. Black had increased the pressure on our e-pawn, so we must take on c6 first, then develop our bishop.\n- 6...bxc6 Capturing towards the center is Black's best move.\n- 7.Bd3 We develop, protect our pawn and prepare castling − all in one move."
-            },
-            {
-              "id": "fk-ov-bc5",
-              "front": {
-                "text": "Play the Four Knights Scotch line with 5...Bc5 from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Nf6",
-                      "d4",
-                      "exd4",
-                      "Nxd4",
-                      "Bc5",
-                      "Be3"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Reaching this type of position is a primary concept of our repertoire.\n- 4...exd4 Black's best answer is taking our pawn.\n- 5.Nxd4 The obvious move to get our pawn back. Our e-pawn is actively placed in the center, controlling the d5-square, and we can easily develop our minor pieces.\n- 5...Bc5 Black opts for a natural development move and attacks our centralized knight. Its theoretical evaluation is 'slightly better for White', not more, but in practice Black often stumbles right on the next move.\n- 6.Be3! It is important to remember this move. We cover the knight, which is considerably stronger than taking on c6. Black's bishop is unprotected, and this makes Nxc6! a serious threat!"
-            }
-          ]
-        },
         {
           "name": "5...Nxd4",
           "cards": [
@@ -6672,103 +6744,6 @@
     {
       "name": "Four Knights Scotch 4.d4 − Sidelines",
       "chapters": [
-        {
-          "name": "Overview",
-          "cards": [
-            {
-              "id": "fs-ov-bb4",
-              "front": {
-                "text": "Play the Four Knights Scotch line with 4...Bb4 from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Nf6",
-                      "d4",
-                      "Bb4",
-                      "Nxe5",
-                      "Nxe4",
-                      "Qg4",
-                      "Nxc3",
-                      "Qxg7"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Black's best reply is 4...exd4.\n- 4...Bb4 A rare and slightly dubious move. We can prove an advantage, but only with one reply!\n- 5.Nxe5! The only good move! It is not obvious at first sight why you should capture e5 with the knight and avoid other options.\n- 5...Nxe4 Black wants to get the pawn back immediately. It's not a good move, but it requires a precise reply.\n- 6.Qg4! The best and most fun move to play! We attack both the knight and the g-pawn and enter wild complications.\n- 6...Nxc3 The only move available. The knight was attacked, and retreating or covering it failed due to our queen taking g7.\n- 7.Qxg7! Wow, what a mess! The position is very favorable for us."
-            },
-            {
-              "id": "fs-ov-d6-bd7",
-              "front": {
-                "text": "Play the Four Knights Scotch line with 4...d6 and 5...Bd7 from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Nf6",
-                      "d4",
-                      "d6",
-                      "Bb5",
-                      "Bd7",
-                      "Bxc6",
-                      "Bxc6",
-                      "Qe2"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Black's best reply is 4...exd4.\n- 4...d6 A passive and dubious move, but it is important to study, as the position may arise from various move orders.\n- 5.Bb5! An important move to remember! We pin Black's knight and thus increase the pressure on the e5-pawn. In addition, we also threaten d4-d5, attacking the unlucky pinned knight!\n- 5...Bd7 Black addresses the pin, a logical move.\n- 6.Bxc6! This move is surprisingly strong, although we give up the bishop for a knight voluntarily.\n- 6...Bxc6 The only good reply. Black sets up a counterattack on our e-pawn.\n- 7.Qe2! A strong move! We cover the attacked e-pawn, and Black's e-pawn is now in danger again."
-            },
-            {
-              "id": "fs-ov-d6-exd4",
-              "front": {
-                "text": "Play the Four Knights Scotch line with 4...d6 and 5...exd4 from the first move.",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Nf6",
-                      "d4",
-                      "d6",
-                      "Bb5",
-                      "exd4",
-                      "Nxd4",
-                      "Bd7",
-                      "Bxc6",
-                      "Bxc6",
-                      "Qe2"
-                    ],
-                    "orientation": "w",
-                    "solutionFrom": 0,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "- 3...Nf6 Black develops the king's knight, which is the best move.\n- 4.d4 immediately opens the center and leads to an open position. Black's best reply is 4...exd4.\n- 4...d6 A passive and dubious move, but it is important to study, as the position may arise from various move orders.\n- 5.Bb5! An important move to remember! We pin Black's knight and thus increase the pressure on the e5-pawn. In addition, we also threaten d4-d5, attacking the unlucky pinned knight!\n- 5...exd4 Black gives up the idea of keeping a pawn on e5.\n- 6.Nxd4 We are now attacking Black's knight twice, so there is little choice for our opponent.\n- 6...Bd7 Black needs to cover the knight; there is nothing else.\n- 7.Bxc6! A strong move! Usually, you want to keep your pair of bishops − this case is an exception. By taking on c6, we preserve our well-placed d4-knight.\n- 7...Bxc6 This recapture is played most of the time.\n- 8.Qe2 We cover our important central pawn and prepare Bf4 and O-O-O."
-            }
-          ]
-        },
         {
           "name": "4...Bb4",
           "cards": [

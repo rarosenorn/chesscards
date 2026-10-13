@@ -430,10 +430,13 @@
 	// the Study button: on to the next page on the way, or to the card
 	const passIntro = () => {
 		if (!intro) return;
+		// held before the marks change: they decide which page is up, so
+		// `intro` is already the next one (or none) the moment they do
+		const key = intro.key;
 		// kept here as well as in the browser: where the browser keeps
 		// nothing, the pages passed on this visit still stay passed
-		introsRead = new Set([...introsRead ?? [], intro.key]);
-		markIntroRead(intro.key);
+		introsRead = new Set([...introsRead ?? [], key]);
+		markIntroRead(key);
 		openedIntro = null;
 		window.scrollTo(0, 0);
 	}

@@ -56,7 +56,9 @@ export const saveIntro =
 		const { locals } = getRequestEvent();
 		checkIds(deckId, subdeckId ?? []);
 		if (!isIntroBlocks(intro)) error(400, "Bad request");
-		const blocks = sideHasContent(intro) ? intro : null;
+		// only what a block is made of is kept, whatever else was sent with it
+		const page = intro.map(({ type, content }) => ({ type, content }));
+		const blocks = sideHasContent(page) ? page : null;
 		if (!await decks.updateIntro(locals.userId, deckId, subdeckId ?? null, blocks)) {
 			error(403, "Unauthorized");
 		}

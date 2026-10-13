@@ -192,6 +192,31 @@ describe("an intro page in study", () => {
 		page.close();
 	})
 
+	it("is each deck's own in a metadeck, before that deck's first card", async () => {
+		const part = (id, name, subdeck) => ({
+			id, name, usesSubdecks: false, progressionDepth: 0, intro: text(`${name}'s page`),
+			subdecks: [{ id: subdeck, name: "Cards", position: 1, parent_id: null, intro: text("never shown") }]
+		});
+		const parts = [part("d1", "Openings", "s1"), part("d2", "Endings", "s2")];
+		const page = await study({
+			id: "meta", name: "Everything", isMetadeck: true, studyOrder: "in-order", reviewsFirst: true,
+			parts,
+			subdecks: parts.flatMap(each => each.subdecks),
+			cards: [{ ...card("one", "s1"), deck_id: "d1" }, { ...card("two", "s2"), deck_id: "d2" }]
+		});
+		expect(page.title()).toBe("Openings");
+		await page.press("Study");
+		expect(page.question()).toBe("Question one");
+
+		await page.key(" ");
+		await page.key("3");
+		// the first deck's card is learning and not yet back: on to the next deck
+		expect(page.title()).toBe("Endings");
+		await page.press("Study");
+		expect(page.question()).toBe("Question two");
+		page.close();
+	})
+
 	it("can be read with no card up, and closed", async () => {
 		// nothing due: the deck is done for now
 		const page = await study(deckOf([card("one", "a", true)]));

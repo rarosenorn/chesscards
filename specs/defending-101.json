@@ -1,5 +1,33 @@
 {
   "deck": "Defending 101",
+  "intro": [
+    "# Why defending is harder than attacking\n\nTake this position with White to move. You would show no hesitation and finish the game at once with 2.Qc7#.",
+    {
+      "boards": [
+        {
+          "fen": "3Q4/5p2/4p3/2k5/2Pq1p1P/P4P2/3p2PK/8 w - - 1 2",
+          "moves": [
+            "Qc7#"
+          ],
+          "orientation": "w"
+        }
+      ]
+    },
+    "Now go one move back and switch sides. The black king is still on d6, it is Black to move, and you have to find the best defence. Would you still be able to foresee White's mate in one and pick the right king move for Black?",
+    {
+      "boards": [
+        {
+          "fen": "3Q4/5p2/3kp3/8/2Pq1p1P/P4P2/3p2PK/8 b - - 0 1",
+          "moves": [
+            "Kc5",
+            "Qc7#"
+          ],
+          "orientation": "b"
+        }
+      ]
+    },
+    "This is Rogers-Kortchnoi, Biel 1986. Kortchnoi is facing a skewer, and both 1...Kc5 and 1...Ke5 protect the queen. The task is to pick the right square for the king. Kortchnoi played 1...Kc5?? and was mated, where [1...Ke5 2.Qg5+ Kd6] repeats moves.\n\nIf a top grandmaster misses a mate in one like this, it is very easy to find loads of similar defensive mistakes in lower-rated games. Keeping your own king safe is much harder than mating the enemy king. There are several reasons why spotting a tactical opportunity for your opponent is hard:\n\n- We have to visualize one extra move (our own move). C: on the first board the mate is one move away. On the second it is two: Black first has to picture 1...Kc5, a move that is not on the board yet, and only then can see 2.Qc7# against it.\n- We have to switch perspectives and think from our opponent's point of view\n- We have to sort through multiple threats to devise an optimal defence against the most serious threat\n- We do many more training exercises with attacking motifs than with defending motifs\n\nLuckily, you can improve your defensive skills by learning the right techniques and, most important, by solving as many defensive exercises as possible.\n\n# How this deck works\n\nC: a defender is in one of three situations, and each has its own set of defences:\n\n1. Your king is in check\n2. Mate is threatened, but your king is not in check\n3. One of your pieces is in danger\n\nEach situation is a chapter. It opens with a page like this one, which shows its defences on the book's examples. Then come cards that ask you to describe each defence, and then the book's exercises as puzzles that tell you which defence to use.\n\nIn the chapter after those, Defend and name the technique, nobody tells you the defence: you find the move and say which technique it was. The last chapter, Synthesis, asks for the lists of defences side by side."
+  ],
   "chapters": [
     {
       "name": "Basics",
@@ -8,14 +36,8 @@
           "id": "basics-why",
           "front": "Why is spotting a tactic for your opponent harder than spotting one for yourself?",
           "back": {
-            "text": "- We have to visualize one extra move (our own move)\n- We have to switch perspectives and think from our opponent's point of view\n- We have to sort through multiple threats to devise an optimal defence against the most serious threat\n- We do many more training exercises with attacking motifs than with defending motifs\n\nThe extra move, in the book's example (Rogers-Kortchnoi, Biel 1986):\n\n- Board 1, White to move: the mate is one move away, 2.Qc7#. \"You would show no hesitation.\"\n- Board 2, one move earlier and Black to move: \"Would you still be able to foresee White's mate in one and pick the right king move for Black accordingly?\" C: the same mate is now two moves away. Black first has to picture 1...Kc5, a move not yet on the board, and only then can see 2.Qc7# against it.\n\nEven a top grandmaster misses a mate in one this way: Kortchnoi played 1...Kc5?? and was mated, where [1...Ke5 2.Qg5+ Kd6](2) repeats moves.",
+            "text": "- We have to visualize one extra move (our own move)\n- We have to switch perspectives and think from our opponent's point of view\n- We have to sort through multiple threats to devise an optimal defence against the most serious threat\n- We do many more training exercises with attacking motifs than with defending motifs\n\nEven a top grandmaster misses a mate in one this way: in Rogers-Kortchnoi, Biel 1986, Black played 1...Kc5?? and was mated, where [1...Ke5 2.Qg5+ Kd6] repeats moves.",
             "boards": [
-              {
-                "fen": "3Q4/5p2/4p3/2k5/2Pq1p1P/P4P2/3p2PK/8 w - - 1 2",
-                "moves": [
-                  "Qc7#"
-                ]
-              },
               {
                 "fen": "3Q4/5p2/3kp3/8/2Pq1p1P/P4P2/3p2PK/8 b - - 0 1",
                 "moves": [
@@ -38,6 +60,73 @@
     },
     {
       "name": "King in check",
+      "intro": [
+        "# Three ways out of a check\n\nC: a check has to be answered at once, and there are only three ways to do it: move the king, block the check, or capture the checking piece.\n\n# Picking the right square\n\nPicking the right square is often easier said than done. You have to consider every king move, calculate the consequences of these moves and make sure you pick the one that does not lead to a mating pattern.\n\nWhere should the black king go?",
+        {
+          "boards": [
+            {
+              "fen": "5Q2/8/p4kp1/2p4p/1pP1P3/1P2KP2/8/7q b - - 0 1",
+              "moves": [
+                "Ke6",
+                "Qe8+",
+                "Kf6",
+                "Qf8+",
+                "Ke6"
+              ],
+              "orientation": "b"
+            }
+          ]
+        },
+        "Three king moves need to be assessed:\n\n- [1...Kg5 2.Qf4#] The king could only move on to h6 and h4, and the queen attacks both squares and the king in one move.\n- [1...Ke5 2.Qe7#] Here the king only has the d6- and e6-squares, and again the queen attacks both squares and the king in one move.\n- 1...Ke6 The king is relatively safe here. White can give many different checks, but will never get more than a draw, because we always have enough escape squares: 2.Qe8+ Kf6 3.Qf8+ Ke6 repeats moves.\n\n## Mate is not the only danger\n\nC: the wrong square can also lose a piece. The king can walk into a skewer, a knight fork or other double attack, or a discovered attack.",
+        {
+          "boards": [
+            {
+              "fen": "2Q5/3p4/4q3/3KP2p/pP5P/5P2/P2k4/8 w - - 0 1",
+              "moves": [
+                "Kd4"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "Here the king has to stay on the d-file to avoid a discovered attack: [1.Kc5 d6+ 2.exd6 Qxc8+]; [1.Ke4 d5+ 2.Kf4 Qxc8].\n\n# Blocking the check\n\nC: a piece or pawn steps between the checking piece and the king. Only a check from a queen, rook or bishop can be blocked: a knight or pawn check has no line to step into.",
+        {
+          "boards": [
+            {
+              "fen": "8/3r1p2/kp5P/3K1N2/2P1P1n1/P7/1R6/8 w - - 0 1",
+              "moves": [
+                "Nd6"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "Here blocking the d-file is the only way to avoid a direct mate: [1.Kc6 Ne5#].\n\n## When blocking backfires\n\nC: the blocker takes a flight square away from its own king, so the next check can be mate.",
+        {
+          "boards": [
+            {
+              "fen": "8/1k6/3p3P/QpqP4/5pb1/KP6/P5B1/8 w - - 0 1",
+              "moves": [
+                "Kb2"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "Here the king must retreat, because the two blocking moves lead to a direct mate: [1.Qb4 Qc1#]; [1.b4 Qc3#].\n\n# Capturing the checking piece\n\nC: you take the piece that gives check, with the king or with another piece. A capture with the king is a king move like any other: the square has to be safe.",
+        {
+          "boards": [
+            {
+              "fen": "8/p1p1Kp1p/Q7/3pk3/5P2/2P2P2/8/2q5 b - - 0 1",
+              "moves": [
+                "Qxf4"
+              ],
+              "orientation": "b"
+            }
+          ]
+        },
+        "Here the queen takes. The king moves run into a direct mate or a deadly skewer: [1...Kf5 2.Qf6#]; [1...Kxf4 2.Qh6+ Kg3 3.Qxc1]."
+      ],
       "cards": [
         {
           "id": "check-square",
@@ -784,6 +873,113 @@
     },
     {
       "name": "Mate threatened",
+      "intro": [
+        "# More ways to defend\n\nSometimes we must defend positions in which our king is not under attack. This provides us with more opportunities to parry the threat. C: the book tries them in the order below, each one when the one before it is not available.\n\n# Trading the attacker\n\nAn effective way to neutralize your opponent's attack is to trade the attacker. It is the most effective defensive tool.",
+        {
+          "boards": [
+            {
+              "fen": "8/5p1k/5QpP/1p4P1/1P6/pq3P2/3PK3/8 b - - 0 1",
+              "moves": [
+                "Qe6+",
+                "Qxe6",
+                "fxe6"
+              ],
+              "orientation": "b"
+            }
+          ]
+        },
+        "The black king is stuck in the corner and is facing the immediate threat of 2.Qg7#. Black can only neutralize this by trading queens: 1...Qe6+ 2.Qxe6 fxe6. The black king is safe, and the passed a-pawn will soon decide the game.\n\n# Pinning the attacker\n\nIf we cannot force a trade, we can try to pin the attacker to neutralize the threat.",
+        {
+          "boards": [
+            {
+              "fen": "8/8/8/6pk/3P4/2r3PK/r7/1R5R w - - 0 1",
+              "moves": [
+                "Rb5"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "Black threatens 1...g4#. After 1.Rb5 the g-pawn is pinned, and Black cannot make any progress.\n\n## Pin, then trade\n\nC: a pinned piece cannot run away, so it can often be traded on the next move.",
+        {
+          "boards": [
+            {
+              "fen": "1B6/7P/8/3p4/p2Pn3/P3p2B/4Pb2/1k1K4 w - - 0 1",
+              "moves": [
+                "Bf5",
+                "Kb2",
+                "Bxe4",
+                "dxe4",
+                "h8=Q"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "Here the knight threatens 1...Nc3#. White pins it with 1.Bf5 and trades it a move later, which decides the game with the passed h-pawn.\n\n# Blocking a file or diagonal\n\nIf we cannot trade or pin the attacker, we can try to diminish its influence by blocking a file or diagonal.",
+        {
+          "boards": [
+            {
+              "fen": "7B/b2pp3/P7/1R1P4/5Ppk/2P3p1/1P4K1/r7 w - - 0 1",
+              "moves": [
+                "Bd4"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "Both black pieces control the g1-square and they threaten to mate our king with 1...Rg1#. 1.Bd4! blocks the diagonal: the black bishop is locked out, so our king is no longer in danger.\n\n# Defending a critical square\n\nIf we cannot lock the enemy pieces out, we can try to defend the critical square and make sure our opponent cannot use it for delivering the mate.",
+        {
+          "boards": [
+            {
+              "fen": "3B4/2p5/1pP3p1/1P1P3p/p2b4/P2n3P/K1k3PN/8 w - - 0 1",
+              "moves": [
+                "Bg5"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "c1 is a critical square, because Black is ready to use it to mate our king with 1...Nc1#. 1.Bg5! controls the c1-square and parries the threat.\n\n## Getting there in time\n\nC: when the defender is too far away, it can use targeting: an attack on the enemy king lets it reach its square with tempo.",
+        {
+          "boards": [
+            {
+              "fen": "6k1/1p1p1p1p/5BpQ/p1KP4/4p2P/4P3/4P1q1/2b5 b - - 0 1",
+              "moves": [
+                "Ba3+",
+                "Kb6",
+                "Bf8"
+              ],
+              "orientation": "b"
+            }
+          ]
+        },
+        "Black must protect the g7-square against 2.Qg7#, and brings the bishop to f8 with a check on the way: 1...Ba3+ 2.Kb6 Bf8. The bishop controls g7 and chases the attacking queen away.\n\n# Creating an escape square\n\nIf we cannot neutralize the attackers or control the important squares, we can try to defend ourselves by creating an escape square for our king.",
+        {
+          "boards": [
+            {
+              "fen": "2r5/1Rb1B3/6pk/7p/4K2P/2p5/2P5/8 b - - 0 1",
+              "moves": [
+                "g5"
+              ],
+              "orientation": "b"
+            }
+          ]
+        },
+        "1...g5! Black needs the g6-square to keep the king safe. Three alternatives allow a direct mate or lose a piece: [1...Bd8 2.Bf8#]; [1...Kh7 2.Bd6], and the bishop is pinned; [1...Re8 2.Rxc7].\n\nC: mostly it is a pawn stepping forward that frees the square, even if that costs the pawn.\n\n# Stepping away with the king\n\nC: the king leaves the mating net before the check comes, while it still has a safe square to go to. (The book files this under picking the right square.)",
+        {
+          "boards": [
+            {
+              "fen": "8/8/7p/p7/1p3NnP/1Pk3P1/2P5/2K5 b - - 0 1",
+              "moves": [
+                "Kd4"
+              ],
+              "orientation": "b"
+            }
+          ]
+        },
+        "Here the threat is 2.Ne2#, and the king must reach a safe square to avoid direct mate. [1...Ne3 2.Ne2#] was the game."
+      ],
       "cards": [
         {
           "id": "threat-trade",
@@ -1175,6 +1371,103 @@
     },
     {
       "name": "Piece in danger",
+      "intro": [
+        "# Keeping your pieces safe\n\nAs a defender, you cannot spend all your energy on protecting your king. You also need to keep your pieces safe to avoid a position in which you have a decisive material disadvantage.\n\nPicking the right square, trading or pinning the attacker, and defending a critical square are not only tools for defending the king. They also work when a piece has to be safeguarded. In addition there are two fresh techniques: protecting your piece and the counterattack.\n\n# Picking the right square\n\nMoving an attacked piece to a safe square is the most frequent defensive duty we must fulfil in a game. The key is to determine your options, calculate them carefully and try to foresee your opponent's tactical resources.",
+        {
+          "boards": [
+            {
+              "fen": "3r1k2/2N2p2/p2b2p1/8/3p4/P2P3P/2P3P1/4R1K1 w - - 0 1",
+              "moves": [
+                "Nxa6",
+                "Ra8",
+                "Nb4"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "The knight is under attack and cannot be defended by another piece. It must choose between capturing the a6-pawn and retreating to d5.\n\n1.Nxa6! The knight looks vulnerable on the rim, but picking up the pawn is the right thing to do: [1.Nd5 Bg3 2.Rb1 Rxd5] runs into a discovered attack. After 1...Ra8 2.Nb4 the knight has safely returned.\n\n# Trading the attacker\n\nIdentifying the most annoying attacker and trading it for one of your own pieces is a very powerful tool for neutralizing a threat against one of your pieces.",
+        {
+          "boards": [
+            {
+              "fen": "k7/1p4p1/4Pb2/7R/3p4/3P1PP1/r2B2KP/8 w - - 0 1",
+              "moves": [
+                "Ra5+",
+                "Rxa5",
+                "Bxa5"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "The bishop is pinned, and there is no possibility of defending it. The black rook is responsible for the annoying pin and has to be eliminated as quickly as possible: 1.Ra5+! Rxa5 2.Bxa5.\n\n# Pinning the attacker\n\nAnother way to neutralize the attacker is to pin it.",
+        {
+          "boards": [
+            {
+              "fen": "8/pkp5/1p3p1r/4R1RP/8/P5P1/KP2P1r1/8 w - - 0 1",
+              "moves": [
+                "Re6",
+                "fxg5",
+                "Rxh6"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "White seems to be in trouble, since both rooks are under attack. 1.Re6! White identifies the f6-pawn as the key attacker and neutralizes it with a pin. After 1...fxg5 2.Rxh6 the rook ending is approximately equal.\n\n# Defending a critical square\n\nIdentifying a critical square in your camp and protecting it with one of your pieces is another technique from the king's defence that keeps your pieces safe.",
+        {
+          "boards": [
+            {
+              "fen": "8/2p2p2/1pB1nP1k/6p1/P1P3P1/1R1P1K1P/8/2r5 w - - 0 1",
+              "moves": [
+                "Ke3"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "If the black knight moves to d4, it will attack three of our pieces in one go. We can only evacuate one piece at a time, so we must protect the critical d4-square instead: 1.Ke3! The line we had to avoid is [1.Rb2 Nd4+ 2.Ke3 Nxc6].\n\nNote that 1.Ke4 also protects d4 but runs into another double attack: [1.Ke4 | 1...Nc5+ 2.Ke3 Nxb3].\n\n# Protecting your piece\n\nWhen one of our pieces is under attack and unable to move, we can safeguard it by protecting it with another piece. This was not possible for the king, because protecting an attacked king is simply against the rules.",
+        {
+          "boards": [
+            {
+              "fen": "1n4b1/6pk/3p4/1p1N3p/pP6/P4P1B/K2P3P/8 w - - 0 1",
+              "moves": [
+                "Bf5+",
+                "Kh6",
+                "Be4"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "The white knight is in serious danger, as it is pinned and quite remote from its colleagues. 1.Bf5+! Targeting: the bishop is heading for e4 with tempo. After 1...Kh6 2.Be4 the knight is safely protected by the bishop.\n\nC: protecting does not help when the attacker is worth less than the piece, since the exchange still loses material.\n\n# The counterattack\n\nThe counterattack is one of the most powerful techniques to defend your pieces, because it often contains an element of surprise. Instead of removing or protecting our jeopardized piece, we attack one of our opponent's pieces instead.",
+        {
+          "boards": [
+            {
+              "fen": "3k4/p5p1/2p2pnp/3N4/1P3P2/2P1R1P1/P6r/1K6 w - - 0 1",
+              "moves": [
+                "f5",
+                "Ne5",
+                "Nf4"
+              ],
+              "orientation": "w"
+            }
+          ]
+        },
+        "Our knight is trapped in the centre and cannot be defended, because the attacker is a tiny little pawn. 1.f5! The attack is the best defence: this move attacks an enemy piece and clears the f4-square for our knight in one go. After 1...Ne5 2.Nf4 the knight is safe; [1...cxd5 2.fxg6] is just a piece trade.\n\n# Blocking the line\n\nC: a piece or pawn steps between the attacker and its target, which often breaks a pin. (The book lists blocking only as a defence of the king.)",
+        {
+          "boards": [
+            {
+              "fen": "7k/p4p1p/5n2/1n3P2/1p5P/6N1/P7/B6K b - - 0 1",
+              "moves": [
+                "Nc3"
+              ],
+              "orientation": "b"
+            }
+          ]
+        },
+        "Here the knight must block the long diagonal to save its pinned colleague. 1...Kg7 protects the knight, but loses a piece: [1...Kg7 2.Nh5+ Kh6 3.Nxf6]."
+      ],
       "cards": [
         {
           "id": "piece-square",
@@ -1801,6 +2094,9 @@
     },
     {
       "name": "Defend and name the technique",
+      "intro": [
+        "C: in a game nobody tells you which defence to look for. The puzzles in this chapter only say: defend, and name the technique.\n\n1. Work out which of the three situations you are in: is your king in check, is mate threatened, or is one of your pieces in danger?\n2. Go through that situation's defences and choose your move.\n3. Name the technique before you play the move. The back of the card says which one it was."
+      ],
       "cards": [
         {
           "id": "ex-865",

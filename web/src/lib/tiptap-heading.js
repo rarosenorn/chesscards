@@ -20,8 +20,12 @@ export const Heading = Node.create({
 		return LEVELS.map(level => ({ tag: `h${level + 1}`, attrs: { level } }));
 	},
 
+	// The level is read from stored content, which the server takes as it is
+	// sent: anything but a level there is, is the first. It names the tag, and
+	// the server's renderer writes a tag name out as it is given.
 	renderHTML({ node, HTMLAttributes }) {
-		return [`h${node.attrs.level + 1}`, HTMLAttributes, 0];
+		const level = LEVELS.includes(node.attrs.level) ? node.attrs.level : LEVELS[0];
+		return [`h${level + 1}`, HTMLAttributes, 0];
 	},
 
 	addCommands() {

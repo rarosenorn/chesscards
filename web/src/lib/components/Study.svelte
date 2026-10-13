@@ -11,7 +11,7 @@
 	import { isDueAt, isDueSoonAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import IntroView from "$lib/components/IntroView.svelte"
-	import { introPlaces, pendingIntro } from "$lib/intros.js"
+	import { introPlaces, pendingIntro, readMarks, markIntroRead } from "$lib/intros.js"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState, settleModal } from "$lib/modals.svelte.js"
@@ -397,14 +397,10 @@
 	// down to the card's own. A page passed is remembered in this browser, so
 	// a reload before the first grade does not bring it back; once a card
 	// under it has been studied it never comes up by itself again.
-	const INTROS_READ_KEY = "chesscards:intros-read";
 	// null until the browser has been asked: a page that may have been passed
 	// is held back for that moment, not flashed
 	let introsRead = $state(null);
-	onMount(() => {
-		try { introsRead = new Set(JSON.parse(localStorage.getItem(INTROS_READ_KEY) ?? "[]")); }
-		catch { introsRead = new Set(); }
-	});
+	onMount(() => { introsRead = readMarks() });
 	// The deck whose intros are in question, a metadeck's being the deck the
 	// card is of, and the subdeck they lead down to: the card's, or with no
 	// card up, the one being studied.
@@ -412,8 +408,14 @@
 	let introTrail = $derived(introDeck ? introPlaces(introDeck, currentCard ? currentCard.subdeck_id : scope?.id) : []);
 	// a page opened by hand (the Intro button, a name above a page's title)
 	let openedIntro = $state(null);
+	// ...and it stays open only while it is on the way to what is up: Study
+	// turned to another subdeck closes it for good, not until that one
+	// happens to come round again
+	$effect(() => {
+		if (openedIntro && !introTrail.some(place => place.key === openedIntro)) openedIntro = null;
+	});
 	let intro = $derived.by(() => {
-		if (editingCard) return null;
+		if (editingCard || !introDeck) return null;
 		const opened = introTrail.find(place => place.blocks && place.key === openedIntro);
 		if (opened || !currentCard) return opened ?? null;
 		return pendingIntro(introDeck, cardsOfPart(introDeck), currentCard.subdeck_id, introsRead ?? new Set());
@@ -428,8 +430,10 @@
 	// the Study button: on to the next page on the way, or to the card
 	const passIntro = () => {
 		if (!intro) return;
+		// kept here as well as in the browser: where the browser keeps
+		// nothing, the pages passed on this visit still stay passed
 		introsRead = new Set([...introsRead ?? [], intro.key]);
-		try { localStorage.setItem(INTROS_READ_KEY, JSON.stringify([...introsRead])); } catch {}
+		markIntroRead(intro.key);
 		openedIntro = null;
 		window.scrollTo(0, 0);
 	}
@@ -1051,8 +1055,9 @@
 		{:else if studyCards.length}
 			<button class="page-btn" onclick={chooseCram}>Cram</button>
 		{/if}
-		<!-- the intro page of what is being studied, to read again -->
-		{#if !intro && introTrail.some(place => place.blocks)}
+		<!-- the intro page of what is being studied, to read again; not over
+		     a card being edited -->
+		{#if !intro && !editingCard && introTrail.some(place => place.blocks)}
 			<button class="page-btn" onclick={openIntro}>Intro</button>
 		{/if}
 		<button

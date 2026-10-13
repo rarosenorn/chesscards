@@ -3,8 +3,8 @@
 
 	let { data, children } = $props();
 
-	const paths = ["description", "browse"];
-	const names = ["Marketplace view", "Browse"];
+	const paths = ["description", "browse", "intros"];
+	const names = ["Marketplace view", "Browse", "Intros"];
 </script>
 
 <div class="review-nav-container">

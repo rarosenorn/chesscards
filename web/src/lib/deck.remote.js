@@ -5,6 +5,7 @@ import * as decks from "$lib/server/decks.js"
 import * as zod from "$lib/zod-schemas.js"
 import { checkIds, checkIdList, checkIndex } from "$lib/server/ids.js"
 import { sideHasContent } from "$lib/card-utils.js"
+import { isIntroBlocks } from "$lib/intros.js"
 
 // The subdeck ops renumber positions across the deck, so each returns the
 // fresh deck for the client to assign into the shared context — mirroring
@@ -54,7 +55,7 @@ export const saveIntro =
 	command("unchecked", async ({ deckId, subdeckId, intro }) => {
 		const { locals } = getRequestEvent();
 		checkIds(deckId, subdeckId ?? []);
-		if (!Array.isArray(intro)) error(400, "Bad request");
+		if (!isIntroBlocks(intro)) error(400, "Bad request");
 		const blocks = sideHasContent(intro) ? intro : null;
 		if (!await decks.updateIntro(locals.userId, deckId, subdeckId ?? null, blocks)) {
 			error(403, "Unauthorized");

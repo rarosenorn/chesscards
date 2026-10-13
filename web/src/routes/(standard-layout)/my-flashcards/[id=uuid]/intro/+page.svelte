@@ -52,6 +52,8 @@
 	});
 
 	const save = async () => {
+		// the editor is still on its way
+		if (!editor) return;
 		const intro = editor.read();
 		errors = intro.errors;
 		if (errors.length > 0) return;

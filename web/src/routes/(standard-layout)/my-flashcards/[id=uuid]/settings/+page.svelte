@@ -4,6 +4,7 @@
 	import FormErrors from "$lib/components/FormErrors.svelte"
 	import { typedConfirmModal } from "$lib/modals.svelte.js"
 	import { subdeckLevels } from "$lib/subdecks.js"
+	import { forgetIntrosRead } from "$lib/intros.js"
 
 	let { data, form } = $props();
 
@@ -127,7 +128,16 @@
 			</p>
 		{/if}
 		<div class="danger-actions">
-			<form bind:this={resetForm} method="POST" action="?/reset" use:enhance>
+			<!-- the deck's cards are new again, so its intro pages come up again -->
+			<form
+				bind:this={resetForm}
+				method="POST"
+				action="?/reset"
+				use:enhance={() => async ({ result, update }) => {
+					if (result.type === "success") forgetIntrosRead(data.deck);
+					await update();
+				}}
+			>
 				<button type="button" class="danger-button" onclick={confirmReset}>Reset deck</button>
 			</form>
 			{#if !data.deck.isMarketplace}

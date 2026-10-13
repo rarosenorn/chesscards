@@ -10,12 +10,15 @@
 	// `editor`, that stands where the page would, under the same title.
 	let { crumbs, blocks = null, editor = null, children } = $props();
 
-	let headings = $derived(introHeadings(blocks));
+	// each heading with its place among the page's, less the ones with no
+	// words to list
+	let headings = $derived(introHeadings(blocks).map((heading, index) => ({ ...heading, index })).filter(heading => heading.text));
 	let body = $state();
-	// the headings are found where they stand: the contents list and the
-	// page are the same headings in the same order
+	// The headings are found where they stand: the list and the page are the
+	// same headings in the same order — the ones in the page's own text, as
+	// introHeadings counts them, so not one inside a list.
 	const goTo = index =>
-		body?.querySelectorAll(".text-block :is(h2, h3)")[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
+		body?.querySelectorAll(".text-block > :is(h2, h3)")[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
 </script>
 
 <article class="intro card-surface">
@@ -42,9 +45,9 @@
 		{#if headings.length >= CONTENTS_FROM}
 			<nav class="contents" aria-label="Contents">
 				<ol>
-					{#each headings as heading, index}
+					{#each headings as heading (heading.index)}
 						<li class:sub={heading.level > 1}>
-							<button onclick={() => goTo(index)}>{heading.text}</button>
+							<button onclick={() => goTo(heading.index)}>{heading.text}</button>
 						</li>
 					{/each}
 				</ol>

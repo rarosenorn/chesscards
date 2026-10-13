@@ -1,5 +1,6 @@
 import { pool } from "./pool.js"
 import { BOUNDS, listCounts, withListing, inDeckOrder } from "./decks.js"
+import { subdeckOutline, subdeckTrail } from "../subdecks.js"
 import { createEmptyCard } from "ts-fsrs"
 
 const themes = ["openings", "endgames", "tactics", "strategy", "checkmates"];
@@ -77,22 +78,40 @@ const getPendingUploadRequests = async () => {
 	return rows;
 }
 
+// The request with what approving it would publish, for the admin to look
+// through: the deck's cards, and its intro pages (intros: the deck's, then
+// each subdeck's in the deck's order, each { crumbs, blocks } as IntroView
+// takes them) — the ones approveUploadRequest copies.
 const getUploadRequestWithCards = async requestId => {
 	const { rows } = await pool.query(`
 		select r.id, r.status, r.theme, r.name, r.description, r.price, r.preview_card_ids "previewCardIds", u.email,
-			json_agg(json_build_object('id', c.id, 'front', c.front, 'back', c.back)) cards
+			json_agg(json_build_object('id', c.id, 'front', c.front, 'back', c.back)) cards,
+			d.intro, d.uses_subdecks "usesSubdecks",
+			coalesce((select json_agg(json_build_object('id', s.id, 'parent_id', s.parent_id, 'name', s.name, 'position', s.position, 'intro', s.intro))
+				from subdecks s where s.deck_id = d.id), '[]'::json) subdecks
 		from marketplace_upload_requests r
 		join decks d on d.id = r.deck_id
 		join "user" u on u.id = r.user_id
 		left join cards c on c.deck_id = d.id
 		where r.id = $1
-		group by r.id, r.status, r.theme, r.name, r.description, r.price, r.preview_card_ids, u.email`,
+		group by r.id, r.status, r.theme, r.name, r.description, r.price, r.preview_card_ids, u.email, d.id`,
 		[requestId]
 	);
+	if (!rows[0]) return undefined;
 
-	if (rows[0] && rows[0].cards[0]?.id === null) rows[0].cards = [];
+	const { intro, usesSubdecks, subdecks, ...request } = rows[0];
+	if (request.cards[0]?.id === null) request.cards = [];
+	request.intros = [
+		...(intro ? [{ crumbs: [{ name: request.name }], blocks: intro }] : []),
+		...(!usesSubdecks ? [] : subdeckOutline(subdecks)
+			.filter(({ subdeck }) => subdeck.intro)
+			.map(({ subdeck }) => ({
+				crumbs: [request.name, ...subdeckTrail(subdecks, subdeck.id)].map(name => ({ name })),
+				blocks: subdeck.intro
+			})))
+	];
 
-	return rows[0];
+	return request;
 }
 
 // The pending request's thumbnail, for the admin review page
@@ -164,15 +183,19 @@ const approveUploadRequest = async requestId => {
 			// the description as JSON text, as pg would send its blocks array as a postgres array
 			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id]
 		);
-		// The subdeck tree travels with the cards, intros and all. Every subdeck gets its new id
+		// The subdeck tree travels with the cards, and each subdeck's intro
+		// with it — unless the deck does not use its subdecks: nobody who
+		// takes it would ever be shown those pages, and the admin was not.
+		// Every subdeck gets its new id
 		// up front (copies), so a copy can name its parent's copy and each
 		// card its subdeck's, all in the one statement. array_position gives
 		// the preview cards their requested order and leaves non-preview
 		// cards (and since-deleted preview ids) at null.
 		await client.query(`
 			with copies as (
-				select s.id source_id, gen_random_uuid() id, s.parent_id, s.name, s.position, s.intro
-				from subdecks s where s.deck_id = $2
+				select s.id source_id, gen_random_uuid() id, s.parent_id, s.name, s.position,
+					case when d.uses_subdecks then s.intro end intro
+				from subdecks s join decks d on d.id = s.deck_id where s.deck_id = $2
 			), copied_subdecks as (
 				insert into marketplace_subdecks(id, marketplace_deck_id, parent_id, name, position, intro)
 				select copy.id, $1, parent.id, copy.name, copy.position, copy.intro

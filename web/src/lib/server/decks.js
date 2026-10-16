@@ -12,7 +12,8 @@ import { LEARN_AHEAD_MS } from "../rollover.js"
 // - and the decks inside those (marketplace_subdecks, each said once for the
 //   copy of it this user has).
 // A bought deck and the decks inside it carry its instance_id. Their in
-// order / mixed is the author's unless the studier has chosen otherwise.
+// order / mixed is the author's unless the studier has chosen otherwise. A
+// bought deck also says who made it (author, the author's display name).
 
 // Due and still in play — the shared condition behind every count below, and
 // the SQL twin of isDueAt (lib/rollover.js). An interval of a day or more is
@@ -71,17 +72,18 @@ const BOUGHT_DECK = "coalesce(mc.subdeck_id, i.id)";
 // Every deck of the user's, of the three kinds, without cards.
 const getLibrary = async (userId, client = pool) => {
 	const { rows } = await client.query(`
-		select d.id, d.parent_id, d.name, d.position, d.in_order, false bought, null::uuid instance_id
+		select d.id, d.parent_id, d.name, d.position, d.in_order, false bought, null::uuid instance_id, null author
 		from decks d where d.user_id = $1
 		union all
 		select i.id, i.parent_id, md.name, i.position,
-			coalesce((i.in_order_overrides ->> i.id::text)::boolean, md.in_order), true, i.id
+			coalesce((i.in_order_overrides ->> i.id::text)::boolean, md.in_order), true, i.id, u.name
 		from marketplace_deck_instances i
 		join marketplace_decks md on md.id = i.marketplace_deck_id
+		join "user" u on u.id = md.user_id
 		where i.user_id = $1
 		union all
 		select ms.id, coalesce(ms.parent_id, i.id), ms.name, ms.position,
-			coalesce((i.in_order_overrides ->> ms.id::text)::boolean, ms.in_order), true, i.id
+			coalesce((i.in_order_overrides ->> ms.id::text)::boolean, ms.in_order), true, i.id, null
 		from marketplace_subdecks ms
 		join marketplace_deck_instances i on i.marketplace_deck_id = ms.marketplace_deck_id
 		where i.user_id = $1`, [userId]);
@@ -113,7 +115,7 @@ const getListing = async (userId, when) => {
 	const library = await getLibrary(userId);
 	return deckListing(library, await countsByDeck(userId, when)).map(({ deck, ...row }) => ({
 		id: deck.id, parent_id: deck.parent_id, name: deck.name, in_order: deck.in_order,
-		bought: deck.bought, instance_id: deck.instance_id, ...row
+		bought: deck.bought, instance_id: deck.instance_id, author: deck.author, ...row
 	}));
 }
 

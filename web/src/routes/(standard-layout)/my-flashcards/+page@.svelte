@@ -444,14 +444,11 @@
 						>
 							{row.name}
 						</a>
-						<!-- taken from the marketplace, not made: a small mark, grey
-						     as the page is -->
-						{#if isTaken(row)}
-							<svg class="taken" viewBox="0 0 16 16" aria-label="From the marketplace" role="img">
-								<path d="M2.5 6.2 3.6 2.5h8.8l1.1 3.7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-								<path d="M2.5 6.2c0 1.1 1.2 1.8 2.2 1.1.5.7 1.6.7 2.2 0 .5.7 1.6.7 2.2 0 .5.7 1.6.7 2.2 0 1 .7 2.2 0 2.2-1.1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-								<path d="M3.5 8v5.5h9V8M6.5 13.5V10h3v3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-							</svg>
+						<!-- taken from the marketplace: who made it, in grey after
+						     the name (not on the decks inside it, which are the same
+						     author's); a deck of the user's own says nothing -->
+						{#if isTaken(row) && row.author}
+							<span class="author">· {row.author}</span>
 						{/if}
 					</td>
 					{@render counts(row)}
@@ -558,13 +555,9 @@
 	.expander.empty {
 		visibility: hidden;
 	}
-	/* a marketplace deck taken, marked right of its name */
-	.taken {
-		display: inline-block;
-		width: 13px;
-		height: 13px;
-		margin-left: 6px;
-		vertical-align: -1px;
+	/* a marketplace deck's author, after its name */
+	.author {
+		margin-left: 4px;
 		color: rgba(0, 0, 0, 0.45);
 	}
 	/* The wheel that opens a deck's menu: grey, always there (a phone has no

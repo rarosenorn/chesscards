@@ -17,7 +17,7 @@
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
 	import { canonicalSideJson } from "$lib/card-utils.js"
-	import { unlockedDeckIds, deckOutline } from "$lib/deck-tree.js"
+	import { deckOutline } from "$lib/deck-tree.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
 	import { moveCards, listDecks, copyCards } from "$lib/deck.remote.js"
@@ -120,7 +120,6 @@
 	// one for each deck inside.
 	let outline = $derived(deckOutline(deck.decks));
 	let deckIndex = $derived(new Map(outline.map((entry, index) => [entry.deck.id, index])));
-	let unlockedDecks = $derived(unlockedDeckIds(deck.decks, deck.cards));
 
 	let deckCards = $derived.by(() => {
 		const map = new Map(deck.decks.map(entry => [entry.id, []]));
@@ -992,12 +991,6 @@
 									<button class="subdeck-toggle" onmousedown={e => e.stopPropagation()} onclick={() => draft.collapsed[group.deck.id] = !group.collapsed}>
 										<span class="collapse-arrow" class:collapsed={group.collapsed}></span>
 										<span class="subdeck-name">{group.deck.name}</span>
-										{#if !unlockedDecks.has(group.deck.id)}
-											<svg class="subdeck-lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
-												<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
-												<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
-											</svg>
-										{/if}
 									</button>
 								</div>
 							</td>
@@ -1446,11 +1439,6 @@
 	}
 	.collapse-arrow.collapsed {
 		transform: none;
-	}
-	.subdeck-lock {
-		width: 13px;
-		height: 13px;
-		color: rgba(0, 0, 0, 0.55);
 	}
 	.add-subdeck-btn {
 		width: 100%;

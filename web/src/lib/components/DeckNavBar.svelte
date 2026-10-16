@@ -12,7 +12,7 @@
 	// switcher: when the page shown can be turned to something else of the
 	// same kind (a deck's Study, to a deck around it or inside it), an arrow after the
 	// crumbs that opens the choice: { label, options }, each option
-	// { name, href, depth, current, locked? }.
+	// { name, href, depth, current }.
 	let { crumbs, tabs, switcher = null } = $props();
 	let switcherOpen = $state(false);
 
@@ -89,12 +89,6 @@
 								onclick={() => switcherOpen = false}
 							>
 								<span class="option-name">{option.name}</span>
-								{#if option.locked}
-									<svg class="lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
-										<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
-										<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
-									</svg>
-								{/if}
 							</a>
 						{/each}
 					</div>
@@ -280,11 +274,5 @@
 	.option-name {
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-	.lock {
-		flex: none;
-		width: 12px;
-		height: 12px;
-		color: rgba(0, 0, 0, 0.45);
 	}
 </style>

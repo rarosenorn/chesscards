@@ -10,7 +10,7 @@
 	import DeckNavBar from "$lib/components/DeckNavBar.svelte"
 	import { sideHasContent, syncTextBlocks } from "$lib/card-utils.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
-	import { deckOutline, unlockedDeckIds } from "$lib/deck-tree.js"
+	import { deckOutline } from "$lib/deck-tree.js"
 
 	let { data, children } = $props();
 
@@ -118,11 +118,9 @@
 
 	// What Study can be turned to: the decks around this one, up to the top
 	// of the list, and the decks inside it, as one outline. A deck inside
-	// that its progression still holds shut is marked, and can be studied all
-	// the same.
+	// that its progression still holds shut can be studied all the same.
 	let switcher = $derived.by(() => {
 		if (!onStudy || (deck.ancestors.length === 0 && deck.decks.length === 1)) return null;
-		const open = unlockedDeckIds(deck.decks, deck.cards);
 		return {
 			label: "Choose what to study",
 			options: [
@@ -133,8 +131,7 @@
 					name: inside.name,
 					href: `/my-flashcards/${inside.id}/study`,
 					depth: deck.ancestors.length + level,
-					current: inside.id === deck.id,
-					locked: !open.has(inside.id)
+					current: inside.id === deck.id
 				}))
 			]
 		};

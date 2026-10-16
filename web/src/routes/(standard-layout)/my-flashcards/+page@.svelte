@@ -10,8 +10,8 @@
 
 	// Every deck of the user's as one tree, in reading order (decks.getListing):
 	// their own, the marketplace decks they have taken, and the decks inside
-	// those. A row knows its level, whether it holds decks, whether
-	// progression has it locked, and the counts of everything under it.
+	// those. A row knows its level, whether it holds decks, and the counts
+	// of everything under it.
 	let rows = $derived(data.decks);
 	let byId = $derived(new Map(rows.map(row => [row.id, row])));
 	// a marketplace deck taken, and a deck inside one, which is not the
@@ -453,12 +453,6 @@
 								<path d="M3.5 8v5.5h9V8M6.5 13.5V10h3v3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
 							</svg>
 						{/if}
-						{#if row.locked}
-							<svg class="lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
-								<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
-								<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
-							</svg>
-						{/if}
 					</td>
 					{@render counts(row)}
 					<td class="wheel-cell">
@@ -563,14 +557,6 @@
 	}
 	.expander.empty {
 		visibility: hidden;
-	}
-	.lock {
-		display: inline-block;
-		width: 12px;
-		height: 12px;
-		margin-left: 4px;
-		vertical-align: -1px;
-		color: rgba(0, 0, 0, 0.45);
 	}
 	/* a marketplace deck taken, marked right of its name */
 	.taken {

@@ -191,6 +191,8 @@
 			const cards = deckCards.get(entry.deck.id);
 			groups.push({ ...entry, cards: draft.sortDescending ? [...cards].reverse() : cards, collapsed });
 		}
+		// run backwards, the deck's own cards (the lowest numbers) come last
+		if (draft.sortDescending && groups.length > 1) groups.push(groups.shift());
 		return groups;
 	});
 

@@ -146,6 +146,20 @@ describe("the Cards tab", () => {
 		view.close();
 	})
 
+	it("runs backwards with Order descending, the deck's own cards last", async () => {
+		const view = await open(deckOf());
+		[...view.target.querySelectorAll("thead button")].find(el => el.textContent.trim().startsWith("Order")).click();
+		await tick();
+		expect(view.rows()).toEqual([
+			"# Taken", "2.1 Front m1",
+			"# First", "1.1 Front y1",
+			"# Inner", "1.1.1 Front z1",
+			"2 Front x2", "1 Front x1",
+			"Deck intro"
+		]);
+		view.close();
+	})
+
 	it("is a plain list for a deck with nothing inside it", async () => {
 		const view = await open({
 			...deckOf(),

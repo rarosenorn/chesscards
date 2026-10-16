@@ -1,95 +1,185 @@
-# Things to test/check metadecks and subdecks
-## Subdecks: Cards tab and Add cards
-[ ] "+ Add subdeck" under the cards makes the deck's first subdeck (existing cards land in "Temp")
-[ ] right-click a subdeck: rename, add subdeck inside, flatten subdecks, delete subdeck
-[ ] drag a subdeck by its grip before / after / into another subdeck
-[ ] drag cards between subdecks, also into an empty one
-[ ] delete subdeck asks first and takes its subdecks and cards; deleting the last one makes the deck a plain list again
-[ ] flatten subdecks (on a subdeck, and for the whole deck from the bottom row) asks first and keeps the cards in order
-[ ] card numbers follow the path (2.3.17) and typing an order moves the card
-[ ] Add cards: the subdeck picker shows the outline; a new subdeck can be made from it
-[ ] subdeck names are trimmed and stop at 100 characters
+# AI prompts
+## double check for security, logic, edgecases
+Can you look through this feature and double check if the logic is correct, the edgecasesare correctly handled and if there are any security issues. Its ok if there are none and everything is good, just double check. If there are any, loop through previous statement until there are none. Take your time, its important.
 
-## Subdecks: progression and study
-[ ] deck Settings: Subdeck progression (None, 1 level, ..., All levels; Off / On with one level)
-[ ] study follows it: new cards from locked subdecks do not come, and the "unlocks when ... passes" note names the subdeck
-[ ] breadcrumb shows the subdeck path; long names are cut with an ellipsis and shown in full on hover
-[ ] arrow after the breadcrumb on Study: switch between Whole deck and any subdeck (locks shown, current one bold)
-[ ] the chosen subdeck is kept when going to Cards / Settings and back to Study, and forgotten when leaving the deck
-[ ] switching subdeck while an answer is showing: the next card comes front up
-[ ] an empty deck / subdeck says it has no cards instead of "Congratulations"
+## Add checklist for me to test through for feature
+Can you add checklist in backlog.md for me to test this implemented feature, incl. edgecases.
 
-## Subdecks: My flashcards
-[ ] a deck with subdecks opens with + / - level by level, and stays open after a reload
-[ ] pressing just beside the + / - still opens or closes the row, and does not open the deck
-[ ] nested rows look like the top-level ones (same weight and colour), only indented
-[ ] each subdeck row has its own New / Learn / Due and a lock if locked
-[ ] clicking a subdeck studies that subdeck on its own
+# Things to test/check nested decks
+## Your existing data (after the migration)
+[ ] every deck that had subdecks has them as decks inside it, with the same cards, order and progress (due dates, reps)
+[ ] a deck that had its subdecks switched off is one plain deck, its cards in the old order
+[ ] the metadecks "current" and "Overviews" are decks; "current" is Mixed and holds the 4 decks it held
+[ ] intros of the old subdecks are on the decks inside, and still show in study
+[ ] the marketplace decks you took are in the list, at the end of the top
 
-## Subdecks: marketplace
-[ ] approving an upload request copies the subdeck tree and the author's progression setting
-[ ] Contents card on the marketplace deck page and on the Deck tab
-[ ] a deck taken from the marketplace: own progression setting works, cards cannot be edited
+## My flashcards: the list
+[ ] one list, headed "Deck": your decks and the marketplace decks you took, in one tree, looking alike (no marketplace mark)
+[ ] a grey wheel at the end of every row that has a menu, always visible (no hover needed)
+[ ] + / - opens a deck onto the decks inside it, level by level; stays open after a reload
+[ ] a row's New / Learn / Due add up everything under it, also cards in locked decks
+[ ] no lock symbols anywhere (list, Cards headers, Study's arrow menu); a locked deck still studies when clicked
+[ ] "Create deck" asks for a name and makes a deck at the end of the top; a name you already have at the top is refused with the reason under the field
+[ ] deck names: trimmed, 1 to 100 characters (a 1-letter name now works); the same name is fine in two different parents
+[ ] no decks at all: "No decks yet. Create one, or take one from the marketplace."
 
-## Metadecks: My flashcards
-[ ] Metadecks is the last list and is there even when empty
-[ ] "Create deck" and "Create metadeck", centred between the lists and the heatmap, each ask for a name in a dialog (Enter or Create makes it, Escape or Cancel leaves; stays on My flashcards)
-[ ] a refused name (too short, already taken) is asked for again with the reason under the field
-[ ] the "i" beside Metadecks explains what one is on hover
-[ ] drag a deck, a marketplace deck or a metadeck onto a metadeck: it goes inside and stays in its own list
-[ ] drag a row out of a metadeck: it is removed; drag it onto another metadeck: it moves
-[ ] metadeck onto metadeck: middle of the row puts it inside, edges reorder; it cannot go inside itself
-[ ] right-click a row: "Add to metadeck" and, inside a metadeck, "Remove from ..."
-[ ] a metadeck's counts are the sum of its decks, each deck counted once
-[ ] a metadeck opens with + / - onto its decks and metadecks, down to their subdecks
-[ ] reorder decks, marketplace decks and metadecks by dragging still works
+## My flashcards: dragging
+[ ] drag a deck onto the middle of another: it goes inside (the target lights up, ghost says "A → B") and that deck opens
+[ ] drag to the top or bottom edge of a row: a line shows; it lands before / after that row at that row's level
+[ ] just under an open deck that holds decks: it becomes the first deck inside it
+[ ] between top-level rows: it comes out to the top level
+[ ] below the last row: end of the top
+[ ] a deck cannot go into itself or a deck inside it (nothing happens)
+[ ] a marketplace deck can be dragged (in and out of your decks), but nothing can go inside one, and the decks inside it cannot be dragged
+[ ] a name already used among the new siblings: "Could not move the deck" with the reason, nothing moves
+[ ] a plain click on a row still opens its Study; Escape cancels a drag
 
-## Metadecks: study and settings
-[ ] Mix: reviews shuffled together, new cards one from each deck in turn
-[ ] In order: new cards deck by deck
-[ ] In order, Due reviews: "From all decks first" (default) vs "Deck by deck"
-[ ] each deck keeps its own subdeck progression inside a metadeck
-[ ] marketplace cards in a metadeck have no Edit; own cards do
-[ ] an empty metadeck says it holds no decks yet
-[ ] Settings: rename, delete (its decks and their progress stay)
-[ ] Cards tab: each deck is a heading with its subdecks and cards under it; search, sort and preview work
-[ ] Cards tab is read-only (no edit, no drag, no right-click menu); "Open deck" goes to that deck's own Cards tab
+## My flashcards: the wheel menu (and right-click, same menu)
+[ ] your deck: New deck inside · Rename · Decks inside: In order / Mixed (only when it has decks inside, current one ticked) · Flatten (same) · Move to… · Delete
+[ ] marketplace deck: Move to… · In order / Mixed (if it has decks inside) · Remove
+[ ] a deck inside a marketplace deck: In order / Mixed if it has decks inside, else no wheel
+[ ] New deck inside: named in a dialog, appears inside and the parent opens
+[ ] Rename: field starts with the old name; a clash with a sibling is refused with the reason
+[ ] Delete: a deck with no cards under it goes at once; with cards it asks first, naming the decks and cards that go
+[ ] Delete a deck with a marketplace deck inside: the marketplace deck moves to the top of the list (the message says so)
+[ ] Remove (marketplace deck): always asks; your progress on it goes; you can take it again from the marketplace
+[ ] Flatten: asks first; the decks inside go, their cards land directly in the deck after its own, in order; a marketplace deck inside stays
+[ ] Move to…: "Top of the list" or any of your decks except itself and what is inside it; Move moves it to the end there
+[ ] menu closes on Escape and on a click elsewhere
 
-## Other things changed on the way
-[ ] deck and metadeck names: trimmed, 4 to 100 characters; a too-short or duplicate name reopens the create dialog with the reason
-[ ] renaming a deck in Settings is validated the same way
-[ ] a deck URL that is not a real id gives a 404
-[ ] tab shortcuts (s / c / a / d / i) work right after clicking a checkbox or a pill
-[ ] editing and deleting a card from Study and from Cards still work (their server code moved)
+## Study
+[ ] studying a deck studies everything under it, incl. marketplace decks inside it
+[ ] In order: the next deck inside opens only when the one before passes (all seen, 80% graduated); the deck's own cards count as the first
+[ ] the "unlocks when ... passes" note names the deck by its path (or "the cards of X" when X's own cards hold it)
+[ ] Mixed: all decks inside open; new cards come one from each in turn, each in its own order
+[ ] a course In order inside a Mixed deck keeps its own order
+[ ] reviews and learning cards always come, locked or not
+[ ] breadcrumb: My flashcards -> outer deck › ... › this deck; each outer name opens its Study
+[ ] arrow after the breadcrumb: the decks around and inside, the current one marked
+[ ] marketplace cards have no Edit (e does nothing); your own cards inside the same deck do
+[ ] cram on a deck covers everything under it; "Cram sessions completed today" counts per deck
+[ ] an empty deck says "This deck has no cards yet."
+
+## Cards tab
+[ ] the deck's own cards first (numbered 1, 2, ...), then a header per deck inside (1.1, 2.3.17, ...)
+[ ] headers collapse / expand, remembered while you visit the deck's other tabs
+[ ] drag cards within a deck, to another deck inside, onto a header (to its front)
+[ ] typing an order: "3" = third of the deck's own cards, "2.3" = third of the second deck inside; a marketplace deck's number is refused
+[ ] right-click a card: Move to deck / Copy to deck list all your decks as an outline
+[ ] marketplace cards (a marketplace deck inside yours): no drag handle, no type select, no right-click menu, no Edit, Delete key skips them
+[ ] "Deck intro" at the bottom opens the deck's intro page
+[ ] a marketplace deck's own Cards tab is read only
+
+## Add cards and import from game
+[ ] the Deck picker shows the deck and the decks inside it as an outline; marketplace decks inside are greyed out
+[ ] the chosen deck is remembered per deck; a deck that has gone falls back to the deck itself
+[ ] with no decks inside, no picker: cards go in the deck
+[ ] Import from game: the same picker, cards land in the chosen deck
+
+## Settings
+[ ] rename (a clash with a sibling is refused)
+[ ] "Decks inside": In order / Mixed, only when the deck has decks inside; on a marketplace deck it is your own choice
+[ ] Reset deck resets every card under it, incl. marketplace decks inside, and brings its intro pages back
+[ ] Delete deck deletes it with everything inside (a marketplace deck inside moves to the top)
+[ ] a marketplace deck: "Remove deck" instead of Delete; a deck inside a marketplace deck: no delete/remove
+[ ] Marketplace section: a deck with a marketplace deck inside says it cannot be shared
+
+## Marketplace
+[ ] any of your decks can be published (also one inside another); everything under it goes with it
+[ ] the request-upload page refuses (back to Settings) a deck with a marketplace deck inside
+[ ] admin review: card count, Browse and Intros cover the whole tree
+[ ] after approval: the decks inside keep their order, names, intros and In order / Mixed; the deck's own cards stay its own
+[ ] Contents card lists the decks inside with their card counts
+[ ] taking a deck puts it at the end of the top of My flashcards; taking the same deck twice is refused
+
+## Importer
+[ ] a spec's chapters become decks inside the spec's deck; chapters of chapters go one deeper
+[ ] a chapter can hold cards and chapters both; a top-level "cards" list fills the deck itself
+[ ] re-running a spec changes nothing ("0 new, 0 updated")
+[ ] a spec deck that now sits inside another deck (like Sielecki in "current") is still found by name
 
 # Things to test/check cram mode
-[ ] "Cram" button beside "Zen mode" on Study; the prompt asks for the order and "Answers count"
-[ ] defaults are In order and ticked; the last choice is remembered; Enter starts, Escape cancels
-[ ] works on a whole deck, on one subdeck (chosen from the breadcrumb) and on a metadeck
-[ ] every card comes up, due or not, also from locked subdecks
+[ ] fix card height in different modes and for different screen sizes, incl. when in zen / fs mode and hover at top to bring momentarily bars back
+[ ] works on a deck with decks inside it and on a deck inside another (chosen from the breadcrumb)
+[ ] every card comes up, due or not, also from locked decks
 [ ] In order follows the deck; Shuffled is random; By due date takes the soonest due first, then never-studied cards
 [ ] with "Answers count": new, learning and due cards show Again / Hard / Good / Easy and are saved like normal study
-[ ] with "Answers count": review cards not yet due show Again / Got it and the card is untouched (due date and reps unchanged)
-[ ] without "Answers count": every card shows Again / Got it and no card is touched
-[ ] practice answers (Again / Got it) still count in the activity heatmap for that day
+[ ] with "Answers count": review cards not yet due show Again / Ok and the card is untouched (due date and reps unchanged)
+[ ] without "Answers count": every card shows Again / Ok and no card is touched
+[ ] practice answers (Again / Ok) still count in the activity heatmap for that day
 [ ] Again brings the card back after about a minute, or straight away when nothing else is left
-[ ] a new card stays in the session until it has graduated (comes back for its 10 minute step)
-[ ] tactic cards: Incorrect / Correct when they count, Again / Got it when not
-[ ] the counter reads "Cram · N left" and goes down as cards are got right
-[ ] done screen "Cram finished: N cards" with "Go again"; "End cram" leaves at any time
-[ ] keys: Space shows, 1 = Again, Space or 2 = Got it; 1-4 on counted cards
+[ ] every card comes up once: any answer but Again finishes it for the session and the counter drops, also for a new or learning card (its next step is left to normal study)
+[ ] tactic cards: Incorrect / Correct when they count, Again / Ok when not
+[ ] the counter reads "Cram session: y/x", card y of x: y (in the due green) is 1 on the first card and x on the last; it stays put after Again until that card is got right
+[ ] done screen "Cram sessions completed today: n" (sessions finished on this deck today, kept on the account so it is the same on another device) with "Go again?", which asks for the order and "Answers count" again; "End cram" leaves at any time
+[ ] keys: Space shows, 1 = Again, Space or 2 = Ok; 1-4 on counted cards
 [ ] editing (e) and deleting (Delete) the card on screen work during a session
 [ ] the session survives Cards / Settings and back, going to the marketplace or wiki and back, and a reload
 [ ] a session from an earlier study day (before the rollover hour) is gone; one in progress as the hour passes carries on
-[ ] switching to another subdeck leaves the session; switching back the same day resumes it
+[ ] switching to another deck (breadcrumb or arrow) leaves the session; switching back the same day resumes it
 [ ] after cramming, normal study shows the right cards (those graded in cram are not asked again)
 [ ] Zen mode works while cramming
 [ ] while the Cram prompt (or any dialog) is open, Space / 1-4 and the tab shortcuts do nothing to the page behind
 
-# Things to test/check heatmap
-[ ] deleting a card removes its saved reviews from the heatmap (practice answers stay)
+# Things to test/check intro pages
+## Writing an intro
+[ ] Cards: "Deck intro" at the bottom opens the deck's intro page (a deck inside: open it and use its own Cards tab)
+[ ] a page with no intro opens straight in the editor (Save only, no Cancel); one with an intro opens to read, with "Edit"
+[ ] e opens the editor (not while typing in a field); Ctrl+Enter saves; Cancel drops the changes
+[ ] H1 / H2 buttons in the editor bar (only on intro pages, not on cards or the deck description); text, bold/italic, boards and moves all work
+[ ] saving a page with nothing on it removes the intro (shows "No intro")
+[ ] a bad board (invalid FEN) shows an error under the editor and does not save; with the server stopped, "Could not save the intro..." shows
+[ ] the names above the title lead to the outer pages (for the owner all of them, also ones with no intro yet); open the editor, click one: the other page loads, editor closed or open as that page needs
+[ ] a reload after saving shows the saved page (headings included)
+[ ] "Study" under a page goes to study of that deck
+## Reading an intro
+[ ] 3 or more headings: a contents list under the title, H2s indented; clicking one scrolls to it; a heading with no words is not listed and the others still scroll to the right place
+[ ] 2 or fewer headings: no contents list
+[ ] long page: the page scrolls, nothing scrolls inside it
+[ ] paragraphs read from the left, not centred as on a card
+## Study: when an intro comes up
+[ ] fresh deck with a deck intro: Study shows the intro before the first card; "Study" (or Enter) goes on to the card
+[ ] deck intro + intro of a deck inside + of one inside that: they come one after another, outermost first, then the card
+[ ] the crumbs above an inner deck's page lead back to the outer pages that have an intro (not to ones without)
+[ ] a deck inside with no intro, under a deck with one: only the outer one comes up
+[ ] pass an intro, reload before grading: it does not come back
+[ ] pass the last page of a run, reload: it does not come back either
+[ ] grade a card, then clear browser storage (or another browser / device): no intro comes up, since the deck has been begun
+[ ] another browser / device before any card is graded: the intro comes up again there
+[ ] moving on to the next deck inside (unlocked by progression) with its own intro: that intro comes up before its first card
+[ ] a deck where some cards have been studied but the intro was written afterwards: it does not come up by itself (Intro button only)
+[ ] a flattened deck: only its own intro is left (the decks inside, and their intros, are gone)
+[ ] studying a deck inside another directly (from My flashcards or the breadcrumb): the outer decks' intros first (unless begun), then its own, then the card
+[ ] Enter while a button or link on the page has focus does what that button does, not "Study"
+[ ] while an intro is up, Space / 1-4 / z / e do nothing to the card behind it
+[ ] zen mode on: the intro shows with the normal chrome, zen comes back on the card
+[ ] cram on a never-studied deck with an intro: the intro comes up first, then the cram cards
+[ ] no flash of the intro on load when it has already been passed
+## Study: Intro button
+[ ] "Intro" at the bottom right shows when the card's deck or one around it has an intro; opens the nearest one
+[ ] on a page opened this way the button reads "Close" when no card is up, "Study" when one is; it goes back to the card
+[ ] the crumbs on that page open the outer pages
+[ ] not shown while editing a card (e); not shown when nothing on the way has an intro
+[ ] opened intro, then switch deck in the breadcrumb: the page closes (does not reappear later when that deck comes round)
+[ ] done screen (no card up): Intro still opens the page of what is being studied
+## Mixed decks
+[ ] a Mixed deck with two decks inside, each with an intro: each one's intro comes up before its own first card, not the other's
+[ ] the Intro button opens the intro of the deck the card on screen is from
+## Reset
+[ ] Settings → Reset deck: the intros of the deck and of every deck inside it come up again in study on this browser
+[ ] another deck's passed intros are not affected by the reset
+## Marketplace
+[ ] upload a deck with intros: the admin review has an "Intros" tab with the deck's page and those of the decks inside it (with their trail), in reading order; "No intro pages" when there are none
+[ ] after approval, taking the deck: intros come up in study as for an own deck
+[ ] marketplace deck's intro page: read only (no Edit, no e, no editor), crumbs lead only to pages that have an intro
+[ ] the author editing their intro after publishing does not change the published one
+## Importer
+[ ] a spec with deck / chapter intros writes them ("N intro page(s) written")
+[ ] re-importing keeps intros up to date and does not duplicate them
 
 # Needed before launch
+[ ] slug for deck and study?subdeck better?
+[ ] in zen mode should be able to change subdeck
 [ ] fsrs learning from machine learning reviews
 [ ] Landing page
 [ ] why flashcards page
@@ -108,8 +198,11 @@
 [ ] claude api insteado f my own for importing bad moves from games
 [~] subdecks and metadecks
 [~] heatmap
+[ ] archive marketplace (and mb normal) decks so you dont have to see them in your list
 [ ] responsive
 [ ] phone app
+[ ] maybe allow subdecks alone to be put into metadeck?
+[ ] should deck progression be auto or allow to unlock when you reach end of current cards?
 
 # Currently working on
 
@@ -140,7 +233,55 @@
 
 Subdecks is good because if you have a large deck on 1 opening for example, its better to gain some mastery of the most popular lines and not too deep (like quickstart in chessable), rather than getting cards for the basics and then more obscure before you even have a level of internalization of the basics. Same for endgames, want to master basics before knight and bishop mate.
 
-## Subdecks and metadecks: the plan (agreed 2026-10-07, to build next)
+## Nested decks: the plan (agreed 2026-10-16, replaces subdecks and metadecks)
+The model:
+- One kind of deck. Any deck can sit inside another, to any depth (Anki's way). Subdecks and metadecks go.
+- A deck can hold cards and decks both; its own cards come before the decks inside it (Anki's default gather order does the same).
+- A deck with decks inside has a setting: In order (each deck inside unlocks when the one before passes; its own cards, if any, count as the first) or Mixed (all open, new cards taken one from each in turn). It holds wherever study starts from. New parents start In order. Due reviews always come; only new cards wait.
+- Studying a deck studies everything under it. A row's counts in My flashcards add up everything under it.
+- One parent per deck (as Anki). Order among siblings is the user's own, not alphabetical.
+- A bought deck can sit inside your own deck: its inside is fixed (nothing can be put in it), but In order / Mixed for the decks inside it is your own choice on your copy.
+- Publishing: any deck of your own, with everything under it. Refused when a taken marketplace deck (paid or free) is anywhere inside. A taken deck is never publishable.
+- Reset, delete, cram, statistics and the heatmap cover a deck and everything under it. Deleting a deck that has a bought deck inside moves the bought deck to the top level. Intros show from the outermost deck down, as now.
+- Names are unique among siblings only.
+
+Screens:
+- My flashcards: one tree list (bought decks marked with a small grey marketplace icon right of the name, not on the decks inside). Expand arrow per deck, remembered per browser. "Create deck" makes one at the top.
+- Dragging a row: onto a deck puts it inside (the deck highlights); between rows places it there at their level (a line shows where); between top-level rows takes it out.
+- A grey settings wheel at the end of every row (always visible, so phones work) opens the deck's menu; right-click opens the same: New deck inside · Rename · In order / Mixed (on a deck with decks inside) · Flatten · Move to… (a picker of the tree) · Delete (asks only when it has cards). A bought deck's menu: Move to… · In order / Mixed · Make my own copy (open decks only) · Remove.
+- Cards tab shows the deck's outline and moves cards between its decks; decks are created, nested, renamed and deleted in My flashcards only.
+- Every deck, also one inside a bought deck, has its own pages (Study, Cards, Intro, Settings…) at /my-flashcards/<its id>.
+
+Storage:
+- decks: parent_id (its parent, null at the top), in_order, position among siblings (shared with bought decks there); names unique per (user, parent). uses_subdecks and progression_depth go.
+- cards: deck_id is the deck the card sits in; subdeck_id goes. The subdecks table goes (each subdeck becomes a deck; card ids stay, so review history stays).
+- marketplace_deck_instances: parent_id (own deck, set null when it is deleted), position, and the studier's own In order / Mixed per deck inside it. One instance per user and marketplace deck.
+- marketplace_decks / marketplace_subdecks: in_order each; a marketplace card's subdeck_id may be null (the deck's own cards). uses_subdecks and progression_depth go.
+- metadecks become decks (Mix → Mixed, In order → In order); a deck that was in several goes to the first. The profile's bulk progression switch goes.
+
+Build order, each step usable on its own:
+1. Tree logic (lib/deck-tree.js): outline, reading order, unlock rule per parent, new-card order (in order / mixed), counts. Tests first.
+2. Migration (backup first, run on a copy) and the server: loading a deck with everything under it and its ancestors, create / move / nest with the ownership and loop checks, flatten, delete, reset.
+3. My flashcards: the tree, drag to nest / reorder / take out, the wheel menu.
+4. Deck pages for any deck: Study, Cards, the Add cards picker, Settings, Intro, Statistics.
+5. Bought decks: under your own decks, In order / Mixed on your copy.
+6. Marketplace: publish any deck's tree, the refusal, admin review, approval, Contents outline.
+7. Importer: spec chapters become decks inside the spec's deck.
+8. Remove metadecks, subdecks and the old code; a test checklist here.
+Later, its own feature: "Others may build on this" on free decks (FOSS): takers get "Make my own copy" (an editable deck of their own, keeping their progress, credited "Based on X by Y"); a version built on an open deck is always free and open.
+
+Progress (built 2026-10-16 on branch nested-decks, merged):
+- [x] 1. Tree logic (lib/deck-tree.js, with tests).
+- [x] 2. Migration (web/scripts/migrate-nested-decks.mjs; backup in scratch/db-backups) and the server (decks.getLibrary / getDeck / create / move / remove / flatten / setInOrder / reset).
+- [x] 3. My flashcards: one tree, drag to nest / reorder / take out, the wheel menu (also on right-click), Move to…, the marketplace mark.
+- [x] 4. Deck pages for any deck, also one inside a bought deck: Study (breadcrumb of the decks around it, switcher), Cards (the deck's own cards first, a header per deck inside), Add cards and import pickers, Settings (Decks inside: In order / Mixed), Intro.
+- [x] 5. Bought decks: inside your own decks, read only there, In order / Mixed on your copy, Remove.
+- [x] 6. Marketplace: publish any deck's tree, refused with a bought deck inside; admin review and approval copy the tree; Contents outline.
+- [x] 7. Importer: chapters are decks inside the spec's deck, may hold cards and chapters both; the deck is found by name wherever it sits.
+- [x] 8. Metadecks, subdecks, the profile's bulk progression switch and the old code removed; test checklist at the top of this file.
+Changed on the way: the Cards tab and Add cards no longer make decks inside (My flashcards does); deck names are 1–100 characters (were 4–100).
+
+## Subdecks and metadecks: the plan (agreed 2026-10-07, built; replaced by nested decks above)
 The model:
 - A deck holds cards. Inside it the author can make subdecks, nested to any depth (today's chapters, given a parent). They travel with the deck to the marketplace.
 - A metadeck holds no cards: it is the owner's private grouping of decks and other metadecks, nested to any depth, for studying them mixed. A deck can be in several metadecks. No loops. A card reachable twice is studied and counted once.
@@ -184,24 +325,9 @@ Progress:
 
 # Study features:
 ## Setting on customizing fsrs (also somehow see personal optimization)
+Decided 2026-10-09: do as Anki and FSRS's own optimizer do. Optimize only from cards that still exist, and for each card only from its last fresh start (the reviews since it was last new; a review log's `state` says where that is, so a reset needs no marker). Reviews of deleted cards are kept for the heatmap and statistics, not for optimization.
 
 ## restart deck (delete all progress of deck and do such that its a fresh deck from fsrs perspective)
-
-## Cram mode
-Need to figure out how cram mode should work before deciding if cram mode only available after completing due cards or always available
-Study all cards in the chosen deck by getting cards from the deck contiuously. How can we do it? 
-   - Look at Brainscape model for still evaluating and getting cards based on their relative "Mastery"
-   - Getting all cards in order (cards that are due are still evaluated and count towards fsrs, cards that are not due just have "next" and doesnt do anything towards fsrs. Then just get them in order continuously
-   - Maybe look at how others do them
-
-Built 2026-10-08 (decided the Anki way):
-- "Cram" at the bottom left of Study (always available) asks for the order (In order, Shuffled, By due date) and whether answers count; the last choice is remembered. It crams whatever Study is on: the deck, one subdeck, or a metadeck, every card, due or not, locked subdecks included.
-- Answers count: new and learning cards always, review cards when due. Those get the four usual buttons and are saved and scheduled as in ordinary study. Everything else is practice: Again / Got it, the card untouched (the answer is only noted as study done that day, for the heatmap).
-- Again brings the card back after a minute (a counted card at its own learning step), sooner when nothing else is left. A new card stays in the session until it graduates, as in an Anki filtered deck.
-- Ends on "Cram finished" with "Go again"; "End cram" leaves at any time. The session is saved in the browser per deck / subdeck, so it survives the deck's other tabs, a break elsewhere on the site and a reload; it lasts the study day (until the rollover hour) and is then dropped. A session being studied as the hour passes carries on into the new day.
-
-## Metadecks
-- Metadecks because sometimes you want to study more than one deck at the same time (ties into interleaving different but related subjects). For example if i want to study a deck on basic endgames together with a seperate deck on intermediate endgames. (should still adhere to subdeck progression)
 
 ## study all button
 - Button for study all, which studies all your decks in some way for interleaving all, still adhering to subdeck progression.

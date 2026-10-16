@@ -26,7 +26,7 @@
 	const deck = getContext("deck");
 	const deckId = page.params.id;
 
-	// Anki-style modes shared with the main editor: type and subdeck stick
+	// Anki-style modes shared with the main editor: type and deck stick
 	// per deck
 	let cardType = $state(browser ? loadCardType(deckId) : DEFAULT_CARD_TYPE);
 	const chooseCardType = value => {
@@ -296,7 +296,7 @@
 		   boards with real room */
 		max-width: 1240px;
 	}
-	/* subdeck/type bar above the card, sharing its column width */
+	/* deck/type bar above the card, sharing its column width */
 	.type-row {
 		width: 100%;
 		max-width: 1240px;

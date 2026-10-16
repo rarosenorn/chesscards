@@ -1,32 +1,37 @@
 <!-- content to come -->
 
-<h3>Subdecks</h3>
+<h3>Decks inside decks</h3>
 
 <p>
-	<em>Claude:</em> a deck starts out as one flat list. Add a subdeck from
-	the bottom of the deck's <strong>Cards</strong> tab to group its cards,
-	and the subdeck picker, the subdeck headers in Cards and the
-	<code>2.17</code> card numbering appear. Subdecks can sit inside one
-	another: right-click a subdeck to add one inside it, or drag it by its
-	grip into another. A subdeck holds either cards or subdecks, so cards that
-	are in the way move into a subdeck named Temp. Deleting the last subdeck
-	makes the deck a flat list again.
+	<em>Claude:</em> decks nest, as they do in Anki. In
+	<strong>My flashcards</strong>, drag a deck onto another to put it inside,
+	or between two rows to place it there; dragging it between the decks at the
+	top takes it out again. The wheel at the end of a row does the same and
+	more: make a deck inside it, rename it, move it, flatten it or delete it. A
+	deck can hold cards and decks both, and its own cards come first. Studying
+	a deck studies everything inside it, and its row counts everything inside
+	it too. A deck taken from the marketplace can go inside one of your own,
+	but nothing can go inside it.
 </p>
 
-<h3>Subdeck progression</h3>
+<h3>In order or mixed</h3>
 
 <p>
-	A deck with subdecks can hold its later subdecks shut until the earlier
-	ones are learned, so a long deck introduces itself in order instead of all
-	at once. How far down that goes is chosen under the deck's
-	<strong>Settings</strong>: not at all, through one or more levels of
-	subdecks, or through all of them. Inside the last level that counts,
-	everything is mixed.
+	A deck with decks inside takes them <strong>in order</strong> or
+	<strong>mixed</strong>, chosen from its wheel or under its
+	<strong>Settings</strong>. In order, a long course introduces itself
+	chapter by chapter instead of all at once: each deck inside opens once the
+	one before it is learned (the deck's own cards count as the first). Mixed,
+	every deck inside is open from the start and new cards come from each in
+	turn — for studying separate decks together. Each deck keeps its own
+	choice wherever you start studying from, so a course in order stays in
+	order inside a mixed deck. On a deck taken from the marketplace the choice
+	is yours; it starts as the author's.
 </p>
 
 <p>
-	A subdeck <strong>passes</strong> when both are true of its cards — for a
-	subdeck that holds subdecks, of all the cards under it:
+	A deck <strong>passes</strong> when both are true of all the cards under
+	it:
 </p>
 <ul>
 	<li>every card has been <strong>seen</strong> — met at least once</li>
@@ -37,30 +42,29 @@
 </ul>
 
 <p>
-	Subdecks open <strong>cumulatively</strong> among those that sit side by
-	side: the first is always open, and each next one opens once every one
-	before it has passed. So a subdeck is locked while any earlier one is
-	still short of the bar, and study says which one is holding it and how far
-	along that one is. A locked subdeck can still be studied on its own:
-	open its deck in <strong>My flashcards</strong> and click it.
+	Decks in order open <strong>cumulatively</strong>: the first is always
+	open, and each next one opens once every one before it has passed. So a
+	deck is locked while any earlier one is still short of the bar, and study
+	says which one is holding it and how far along that one is. A locked deck
+	can still be studied on its own: open it from <strong>My flashcards</strong>.
 </p>
 
 <p>
 	Progression gates only the <strong>introduction of unseen cards</strong>.
 	A card you have already met keeps coming back for review on schedule even
-	if its subdeck has since fallen behind the bar — because cards were moved,
-	or subdecks regrouped. Locking a subdeck never takes work away from you;
-	it only stops new work arriving.
+	if its deck has since fallen behind the bar — because cards were moved, or
+	decks regrouped. Locking a deck never takes work away from you; it only
+	stops new work arriving.
 </p>
 
 <p>
-	Nothing is stored as an unlock flag. Whether a subdeck is open is worked
-	out from the cards themselves each time, so resetting a deck's schedule
-	re-locks its later subdecks by itself, and moving cards between subdecks
-	takes effect immediately.
+	Nothing is stored as an unlock flag. Whether a deck is open is worked out
+	from the cards themselves each time, so resetting a deck's schedule locks
+	its later decks again by itself, and moving cards between decks takes
+	effect immediately.
 </p>
 
 <p>
-	An empty subdeck passes with nothing to prove, so it never holds up the
-	ones after it.
+	An empty deck passes with nothing to prove, so it never holds up the ones
+	after it.
 </p>

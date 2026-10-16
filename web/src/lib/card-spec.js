@@ -238,7 +238,7 @@ export const cardBuilder = bad => {
 		}
 	}
 
-	// An intro page (a deck's, a subdeck's): text and boards in the order
+	// An intro page (a deck's): text and boards in the order
 	// they are read. The spec is the text alone, or a list whose items are
 	// text and { "boards": [ <board>, ... ] } — one board, or a row of them.
 	// The boards count 1, 2, 3 down the page, which is the number a

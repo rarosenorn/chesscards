@@ -36,8 +36,8 @@ wins.
 ## Deck, chapter, card
 
 The app has no tags. The only structure is **deck → chapter → position**
-(a spec chapter is a top-level subdeck of the deck: `subdecks` in the schema,
-displayed as "Subdeck").
+(a spec chapter is a deck inside the spec's deck: decks nest, as in Anki,
+and a chapter of a chapter is a deck inside that one).
 
 - **deck** = one opening, from the player's side (e.g. "Caro-Kann").
 - **chapter** = one variation section.

@@ -8,7 +8,7 @@ description: Turn one Chessable course variation into flashcards in the user's o
 
 Default deck: `My First Chess Opening Repetoire - Christof Sielecki` (the user's
 hand-made deck; spelling as in the app). Spec: `specs/sielecki-manual.json`,
-one spec chapter per top-level subdeck of the deck. Course: Sielecki's 1.e4,
+one spec chapter per deck directly inside the deck. Course: Sielecki's 1.e4,
 https://www.chessable.com/learn/188863. Another deck → its own spec in
 `specs/`, named after it.
 

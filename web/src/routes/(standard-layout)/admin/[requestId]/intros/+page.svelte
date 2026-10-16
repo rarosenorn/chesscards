@@ -2,7 +2,7 @@
 	import IntroView from "$lib/components/IntroView.svelte"
 
 	// The deck's intro pages as study will show them to whoever takes the
-	// deck: its own, then each subdeck's. They are published with the cards,
+	// deck: its own, then those of the decks inside it. They are published with the cards,
 	// so they are reviewed with them.
 	let { data } = $props();
 </script>

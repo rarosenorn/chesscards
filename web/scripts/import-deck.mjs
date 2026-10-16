@@ -10,7 +10,9 @@
 // bounds. A spec that fails validation writes nothing at all.
 //
 // Idempotent by design. The deck and its chapters are matched by name and
-// reused. Cards are matched by their spec "id" through a lockfile written
+// reused: the deck among the decks at the top of My flashcards, a chapter
+// among the decks inside the one that holds it (a chapter is a deck inside
+// the spec's deck). Cards are matched by their spec "id" through a lockfile written
 // beside the spec (caro-kann.json -> caro-kann.lock.json), so EDITING A CARD
 // UPDATES IT IN PLACE and its FSRS history — due date, stability, review log —
 // survives. Give every card a stable id and never recycle one.
@@ -20,8 +22,10 @@
 // without losing anything. Failing both, it is inserted.
 //
 // Cards are positioned in spec order within their chapter, so reordering the
-// spec reorders the chapter. A card dropped from the spec is reported and
-// kept; --prune deletes it (and says so if it had been studied).
+// spec reorders the chapter. The cards of the deck itself may be given as
+// "cards" beside "chapters"; they come before the chapters' in study. A card
+// dropped from the spec is reported and kept; --prune deletes it (and says
+// so if it had been studied).
 //
 // Changing a card's "type" is the one edit that costs history: the
 // tactic_cards_have_no_fsrs_state constraint forces the schedule to reset.
@@ -37,15 +41,15 @@
 //   ]
 // }
 //
-// A chapter may hold chapters instead of cards — the deck's subdecks form a
-// tree, and a subdeck holds either cards or subdecks, never both:
+// A chapter may hold chapters, as decks hold decks, and cards beside them
+// (its own come first):
 //
 //   { "name": "Main Line", "chapters": [ { "name": "Overview", "cards": [...] }, ... ] }
 //
 // A chapter that already holds cards can be split this way: list its cards in
-// its new subdecks and they move there, history and all. Chapters stand in
-// spec order among themselves, as cards do; a subdeck the spec does not name
-// keeps its place.
+// its new chapters and they move there, history and all. Chapters stand in
+// spec order among themselves, as cards do; a deck inside that the spec does
+// not name keeps its place.
 //
 // The deck and any chapter may carry an intro, the page study shows before
 // the first card there:
@@ -167,57 +171,54 @@ const spec = JSON.parse(readFileSync(specFile, "utf8"))
 const lock = existsSync(lockFile) ? JSON.parse(readFileSync(lockFile, "utf8")) : { deck: spec.deck, cards: {} }
 
 if (!spec.deck?.trim()) bad("spec: missing deck name")
-if (!Array.isArray(spec.chapters) || spec.chapters.length === 0) bad("spec: no chapters")
+if (spec.chapters != null && !Array.isArray(spec.chapters)) bad("spec: chapters must be a list")
+if (spec.cards != null && !Array.isArray(spec.cards)) bad("spec: cards must be a list")
+if (!(spec.chapters?.length > 0) && !(spec.cards?.length > 0)) bad("spec: no chapters and no cards")
 
 // build + validate everything before touching the database
 const specIds = new Set()
 // undefined (not in the spec) is left alone, null removes
 const introOf = (holder, label) => holder.intro == null ? holder.intro : buildIntro(holder.intro, label)
 const deckIntro = introOf(spec, "deck intro")
+const buildCards = (cards, here) => (cards ?? []).map((card, i) => {
+	const label = `"${here}" card ${i + 1}`
+	if (card.keep != null) {
+		if (typeof card.keep !== "string" || !/^[0-9a-f-]{36}$/i.test(card.keep)) bad(`${label}: keep must be a card's uuid`)
+		return { keep: card.keep }
+	}
+	const type = card.type ?? "basic"
+	if (!["basic", "tactic"].includes(type)) bad(`${label}: unknown type "${type}"`)
+	if (card.id != null) {
+		if (typeof card.id !== "string" || !card.id.trim()) bad(`${label}: id must be a non-empty string`)
+		else if (specIds.has(card.id)) bad(`${label}: duplicate id "${card.id}"`)
+		else specIds.add(card.id)
+	}
+	return { id: card.id ?? null, type, ...buildCard(card, label) }
+})
+// the chapters inside a deck or a chapter, their names said once among them
+const buildChapters = (list, here, path) => {
+	const names = new Set()
+	for (const child of list ?? []) {
+		if (names.has(child.name)) bad(`"${here}": two chapters named "${child.name}"`)
+		names.add(child.name)
+	}
+	return (list ?? []).map((child, i) => buildChapter(child, i, path))
+}
 const buildChapter = (chapter, ci, path) => {
 	if (!chapter.name?.trim()) bad(`${path}chapter ${ci + 1}: missing name`)
 	const here = `${path}${chapter.name}`
-	const intro = introOf(chapter, `"${here}" intro`)
-	if (chapter.chapters != null) {
-		if (!Array.isArray(chapter.chapters) || chapter.chapters.length === 0) bad(`"${here}": chapters must be a non-empty list`)
-		if ((chapter.cards ?? []).length > 0) bad(`"${here}": holds both cards and chapters — a subdeck holds one or the other`)
-		const names = new Set()
-		for (const child of chapter.chapters ?? []) {
-			if (names.has(child.name)) bad(`"${here}": two chapters named "${child.name}"`)
-			names.add(child.name)
-		}
-		return {
-			name: chapter.name,
-			intro,
-			cards: [],
-			chapters: (Array.isArray(chapter.chapters) ? chapter.chapters : []).map((child, i) => buildChapter(child, i, `${here} / `))
-		}
-	}
+	if (chapter.chapters != null && (!Array.isArray(chapter.chapters) || chapter.chapters.length === 0)) bad(`"${here}": chapters must be a non-empty list`)
 	return {
 		name: chapter.name,
-		intro,
-		chapters: [],
-		cards: (chapter.cards ?? []).map((card, i) => {
-			const label = `"${here}" card ${i + 1}`
-			if (card.keep != null) {
-				if (typeof card.keep !== "string" || !/^[0-9a-f-]{36}$/i.test(card.keep)) bad(`${label}: keep must be a card's uuid`)
-				return { keep: card.keep }
-			}
-			const type = card.type ?? "basic"
-			if (!["basic", "tactic"].includes(type)) bad(`${label}: unknown type "${type}"`)
-			if (card.id != null) {
-				if (typeof card.id !== "string" || !card.id.trim()) bad(`${label}: id must be a non-empty string`)
-				else if (specIds.has(card.id)) bad(`${label}: duplicate id "${card.id}"`)
-				else specIds.add(card.id)
-			}
-			return { id: card.id ?? null, type, ...buildCard(card, label) }
-		})
+		intro: introOf(chapter, `"${here}" intro`),
+		cards: buildCards(chapter.cards, here),
+		chapters: Array.isArray(chapter.chapters) ? buildChapters(chapter.chapters, here, `${here} / `) : []
 	}
 }
-const chapters = (spec.chapters ?? []).map((chapter, ci) => buildChapter(chapter, ci, ""))
+const root = { name: spec.deck, intro: deckIntro, cards: buildCards(spec.cards, spec.deck), chapters: buildChapters(spec.chapters, spec.deck, "") }
 
 const countCards = chapter => chapter.cards.length + chapter.chapters.reduce((n, c) => n + countCards(c), 0)
-const total = chapters.reduce((n, c) => n + countCards(c), 0)
+const total = countCards(root)
 
 if (problems.length > 0) {
 	console.error(`\n${problems.length} validation problem(s) — nothing written:\n`)
@@ -237,30 +238,38 @@ try {
 	const { rows: [user] } = await client.query('select id from "user" where email = $1', [email])
 	if (!user) throw new Error(`no user with email ${email}`)
 
-	// deck: reuse by name, else create (with its implicit first subdeck)
-	let { rows: [deck] } = await client.query(
-		"select id, intro, uses_subdecks from decks where user_id = $1 and name = $2", [user.id, spec.deck])
+	// deck: reuse by name — the one at the top of the list, or the one of
+	// that name wherever it was put — else create one at the end of the top
+	// (where the user's decks and the marketplace decks they have taken share
+	// the places)
+	const { rows: named } = await client.query(
+		"select id, name, position, intro, parent_id from decks where user_id = $1 and name = $2 order by parent_id is not null",
+		[user.id, spec.deck])
+	if (named.length > 1 && named[0].parent_id != null)
+		throw new Error(`${named.length} decks are named "${spec.deck}", none at the top: rename all but the one to import into`)
+	let deck = named[0]
 	const deckExisted = Boolean(deck)
 	if (!deck) {
-		// the implicit first subdeck is named for the spec's first chapter:
-		// subdecks.name is NOT NULL, and the app names its own "Subdeck 1"
 		({ rows: [deck] } = await client.query(`
-			with d as (insert into decks(user_id, name) values($1, $2) returning id),
-			s as (insert into subdecks(deck_id, name, position) select id, $3, 1 from d)
-			select id from d`, [user.id, spec.deck, chapters[0].name]))
+			insert into decks(user_id, name, position) values($1, $2, (select coalesce(max(position), 0) + 1 from (
+				select position from decks where user_id = $1 and parent_id is null
+				union all
+				select position from marketplace_deck_instances where user_id = $1 and parent_id is null) top))
+			returning id, name, position, intro`, [user.id, spec.deck]))
 	}
 
 	// an intro the spec names is written where it differs from the deck's
-	const importIntro = async (table, row, intro, said) => {
+	const importIntro = async (row, intro, said) => {
 		if (intro === undefined || canonical(row.intro ?? null) === canonical(intro)) return
-		await client.query(`update ${table} set intro = $2 where id = $1`, [row.id, intro && JSON.stringify(intro)])
+		await client.query("update decks set intro = $2 where id = $1", [row.id, intro && JSON.stringify(intro)])
 		console.log(`${said}: intro ${!intro ? "removed" : row.intro ? "updated" : "new"}`)
 		intros++
 	}
-	await importIntro("decks", deck, deckIntro, `  deck "${spec.deck}"`)
 
-	const { rows: existingCards } = await client.query(
-		"select id, subdeck_id, position, front, back, card_type, reps from cards where deck_id = $1", [deck.id])
+	// every card under the deck, wherever inside it it stands
+	const { rows: existingCards } = await client.query(`
+		with recursive under(id) as (select $1::uuid union all select d.id from decks d join under on d.parent_id = under.id)
+		select id, deck_id, position, front, back, card_type, reps from cards where deck_id in (select id from under)`, [deck.id])
 	const byId = new Map(existingCards.map(c => [c.id, c]))
 	// fallback match for cards that predate ids, or were added in the app
 	const byFront = new Map()
@@ -271,53 +280,28 @@ try {
 	}
 	const claimed = new Set()
 
-	// a spec chapter is a subdeck of the deck: top-level, or inside the subdeck
-	// of the chapter that holds it. Matched by name among its siblings.
-	const { rows: existingSubdecks } = await client.query(
-		"select id, name, position, parent_id, intro from subdecks where deck_id = $1 order by position", [deck.id])
-	const subdeckKey = (parentId, name) => `${parentId ?? ""}/${name}`
-	const subdeckByName = new Map(existingSubdecks.filter(s => s.name).map(s => [subdeckKey(s.parent_id, s.name), s]))
-	// legacy decks may still carry an unnamed subdeck; adopt it for the first
-	// chapter (new decks get their first chapter's name at creation above)
-	let unnamed = existingSubdecks.find(s => !s.name && s.parent_id == null) ?? null
+	// a spec chapter is a deck inside the deck of the chapter that holds it
+	// (the spec's deck at the top), matched by name among its siblings
+	const childByName = async (parentId, name) => {
+		const { rows: [found] } = await client.query(
+			"select id, name, position, intro from decks where user_id = $1 and parent_id = $2 and name = $3", [user.id, parentId, name])
+		return found
+	}
 
-	const importChapter = async (chapter, parentId, depth) => {
+	// The cards of a deck in spec order, then its chapters.
+	const importDeck = async (spot, target, depth) => {
 		const indent = "  ".repeat(depth + 1)
-		let subdeck = subdeckByName.get(subdeckKey(parentId, chapter.name))
-		if (!subdeck && unnamed && parentId == null) {
-			await client.query("update subdecks set name = $2 where id = $1", [unnamed.id, chapter.name])
-			subdeck = unnamed
-			unnamed = null
-			console.log(`${indent}chapter "${chapter.name}" (named the deck's first chapter)`)
-		} else if (!subdeck) {
-			({ rows: [subdeck] } = await client.query(`
-				insert into subdecks(deck_id, name, parent_id, position)
-				select $1, $2, $3, coalesce((select max(position) from subdecks
-					where deck_id = $1 and parent_id is not distinct from $3), 0) + 1
-				returning id, name, position, parent_id`, [deck.id, chapter.name, parentId]))
-			console.log(`${indent}chapter "${chapter.name}" (new)`)
-		} else {
-			console.log(`${indent}chapter "${chapter.name}" (existing)`)
-		}
-		subdeckByName.set(subdeckKey(parentId, chapter.name), subdeck)
-		await importIntro("subdecks", subdeck, chapter.intro, `${indent}  "${chapter.name}"`)
-
-		if (chapter.chapters.length > 0) {
-			await importChapters(chapter.chapters, subdeck.id, depth + 1)
-			return subdeck
-		}
-
-		for (const [index, card] of chapter.cards.entries()) {
+		for (const [index, card] of spot.cards.entries()) {
 			const position = index + 1
 
 			// a card made by hand in the app: only its place is ours to set
 			if (card.keep) {
 				const own = byId.get(card.keep)
-				if (!own) throw new Error(`"${chapter.name}" card ${position}: no card ${card.keep} in this deck to keep`)
+				if (!own) throw new Error(`"${spot.name}" card ${position}: no card ${card.keep} in this deck to keep`)
 				claimed.add(own.id)
 				kept++
-				if (own.subdeck_id !== subdeck.id || own.position !== position) {
-					await client.query("update cards set subdeck_id=$2, position=$3 where id=$1", [own.id, subdeck.id, position])
+				if (own.deck_id !== target.id || own.position !== position) {
+					await client.query("update cards set deck_id=$2, position=$3 where id=$1", [own.id, target.id, position])
 					moved++
 				}
 				continue
@@ -339,7 +323,7 @@ try {
 				const same = canonical(row.front) === frontKey
 					&& canonical(row.back) === canonical(card.back)
 					&& row.card_type === card.type
-					&& row.subdeck_id === subdeck.id
+					&& row.deck_id === target.id
 					&& row.position === position
 				if (same) { unchanged++; continue }
 				// a type flip must satisfy tactic_cards_have_no_fsrs_state, which
@@ -349,18 +333,18 @@ try {
 					const fsrs = card.type === "tactic"
 						? [new Date(), null, null, null, null, null, null, null, null, null]
 						: Object.values(createEmptyCard())
-					await client.query(`update cards set front=$2, back=$3, card_type=$4, subdeck_id=$5, position=$6,
+					await client.query(`update cards set front=$2, back=$3, card_type=$4, deck_id=$5, position=$6,
 						due=$7, stability=$8, difficulty=$9, elapsed_days=$10, scheduled_days=$11,
 						reps=$12, lapses=$13, learning_steps=$14, state=$15, last_review=$16 where id=$1`,
 						[row.id, JSON.stringify(card.front), card.back ? JSON.stringify(card.back) : null,
-							card.type, subdeck.id, position, ...fsrs])
+							card.type, target.id, position, ...fsrs])
 				} else {
 					// content only: the FSRS columns are untouched, so the card
 					// keeps its due date, stability and review history
 					await client.query(
-						"update cards set front=$2, back=$3, subdeck_id=$4, position=$5 where id=$1",
+						"update cards set front=$2, back=$3, deck_id=$4, position=$5 where id=$1",
 						[row.id, JSON.stringify(card.front), card.back ? JSON.stringify(card.back) : null,
-							subdeck.id, position])
+							target.id, position])
 				}
 				updated++
 				continue
@@ -370,41 +354,57 @@ try {
 				? [new Date(), null, null, null, null, null, null, null, null, null]
 				: Object.values(createEmptyCard())
 			const { rows: [made] } = await client.query(`insert into cards(
-					deck_id, subdeck_id, position, front, back, card_type,
+					deck_id, position, front, back, card_type,
 					due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review)
-				values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+				values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 				returning id`,
-				[deck.id, subdeck.id, position, JSON.stringify(card.front),
+				[target.id, position, JSON.stringify(card.front),
 					card.back ? JSON.stringify(card.back) : null, card.type, ...fsrs])
 			claimed.add(made.id)
 			if (card.id) nextLock.cards[card.id] = made.id
 			inserted++
 		}
-		return subdeck
-	}
-	// sibling chapters take spec order, sharing out the places they already
-	// hold between them, so a subdeck made in the app is not pushed aside
-	const importChapters = async (siblings, parentId, depth) => {
-		const subdecks = []
-		for (const chapter of siblings) subdecks.push(await importChapter(chapter, parentId, depth))
-		const places = subdecks.map(s => s.position).sort((a, b) => a - b)
-		for (const [i, subdeck] of subdecks.entries()) {
-			if (subdeck.position === places[i]) continue
-			await client.query("update subdecks set position = $2 where id = $1", [subdeck.id, places[i]])
-			subdeck.position = places[i]
+
+		// the chapters inside it take spec order, sharing out the places they
+		// already hold between them, so a deck made in the app is not pushed
+		// aside
+		const decks = []
+		for (const chapter of spot.chapters) {
+			let child = await childByName(target.id, chapter.name)
+			if (!child) {
+				({ rows: [child] } = await client.query(`
+					insert into decks(user_id, name, parent_id, position)
+					values ($1, $2, $3, (select coalesce(max(position), 0) + 1 from (
+						select position from decks where parent_id = $3
+						union all
+						select position from marketplace_deck_instances where parent_id = $3) siblings))
+					returning id, name, position, intro`, [user.id, chapter.name, target.id]))
+				console.log(`${indent}chapter "${chapter.name}" (new)`)
+			} else {
+				console.log(`${indent}chapter "${chapter.name}" (existing)`)
+			}
+			await importIntro(child, chapter.intro, `${indent}  "${chapter.name}"`)
+			await importDeck(chapter, child, depth + 1)
+			decks.push(child)
+		}
+		const places = decks.map(d => d.position).sort((a, b) => a - b)
+		for (const [i, child] of decks.entries()) {
+			if (child.position === places[i]) continue
+			await client.query("update decks set position = $2 where id = $1", [child.id, places[i]])
+			child.position = places[i]
 		}
 	}
-	await importChapters(chapters, null, 0)
+	await importIntro(deck, deckIntro, `  deck "${spec.deck}"`)
+	await importDeck(root, deck, 0)
 
-	// a subdeck holds cards or subdecks, never both. Checked once every card
-	// stands where the spec puts it, so a chapter being split into subdecks
-	// passes as long as none of its cards is left behind
-	const { rows: mixed } = await client.query(`
-		select s.name from subdecks s where s.deck_id = $1
-			and exists (select 1 from cards c where c.subdeck_id = s.id)
-			and exists (select 1 from subdecks k where k.parent_id = s.id)`, [deck.id])
-	if (mixed.length > 0)
-		throw new Error(`${mixed.map(s => `"${s.name}"`).join(", ")} would hold both cards and subdecks`)
+	// a card the spec moved out of a deck leaves a gap behind it: every deck
+	// under this one is numbered 1..n again, in the order its cards stand
+	await client.query(`
+		with recursive under(id) as (select $1::uuid union all select d.id from decks d join under on d.parent_id = under.id)
+		update cards c set position = r.position
+		from (select id, row_number() over (partition by deck_id order by position) position
+			from cards where deck_id in (select id from under)) r
+		where c.id = r.id and c.position <> r.position`, [deck.id])
 
 	// cards this spec used to own but no longer lists
 	for (const [id, cardId] of Object.entries(lock.cards ?? {})) {
@@ -418,11 +418,6 @@ try {
 	console.log(`\n${spec.deck}: ${inserted} new, ${updated} updated, ${unchanged} unchanged ` +
 		`(${total} in spec, deck ${deckExisted ? "existed" : "created"})`)
 	if (intros > 0) console.log(`  ${intros} intro page(s) written`)
-	// a subdeck's intro shows only where the deck shows its subdecks, and
-	// that is the deck's own switch (Cards, or its settings), not set here
-	const hasSubdeckIntro = list => list.some(chapter => chapter.intro || hasSubdeckIntro(chapter.chapters))
-	if (!deck.uses_subdecks && hasSubdeckIntro(chapters))
-		console.log("  note: this deck has its subdecks switched off, so its subdecks' intro pages will not show in study")
 	if (kept > 0) console.log(`  ${kept} hand-made card(s) kept as they are` + (moved > 0 ? `, ${moved} of them moved to their place` : ""))
 	if (adopted > 0) console.log(`  ${adopted} pre-existing card(s) adopted by id — their history is preserved`)
 	if (retyped > 0) console.log(`  ${retyped} card(s) changed type, which resets their schedule`)

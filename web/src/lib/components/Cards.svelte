@@ -913,7 +913,7 @@
 					     plain number, and nothing invited the drag. -->
 					<td
 						class="col-order"
-						class:order-handle={canReorder}
+						class:order-handle={canReorder && !isBought(card)}
 						onmousedown={orderEdit?.cardId === card.id ? undefined : e => handleOrderMouseDown(e, card)}
 					>
 						{#if orderEdit?.cardId === card.id}
@@ -931,7 +931,7 @@
 								}}
 							/>
 						{:else}
-							{#if canReorder}
+							{#if canReorder && !isBought(card)}
 								<svg class="grip" viewBox="0 0 6 10" aria-hidden="true">
 									<circle cx="1" cy="1" r="1"/><circle cx="5" cy="1" r="1"/>
 									<circle cx="1" cy="5" r="1"/><circle cx="5" cy="5" r="1"/>

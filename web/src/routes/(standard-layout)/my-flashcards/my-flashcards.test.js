@@ -78,7 +78,7 @@ describe("My flashcards", () => {
 		// user's own, say nothing
 		page.rowEl("Taken").querySelector(".expander").click();
 		await tick();
-		expect(page.rowEl("Taken").querySelector(".author")?.textContent).toBe("· Sielecki");
+		expect(page.rowEl("Taken").querySelector(".author")?.textContent).toBe("Sielecki");
 		expect(page.rowEl("Inside").querySelector(".author")).toBeFalsy();
 		expect(page.rowEl("Course").querySelector(".author")).toBeFalsy();
 		// no lock on a deck progression holds shut

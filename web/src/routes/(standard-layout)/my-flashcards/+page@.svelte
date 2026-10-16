@@ -444,11 +444,11 @@
 						>
 							{row.name}
 						</a>
-						<!-- taken from the marketplace: who made it, in grey after
-						     the name (not on the decks inside it, which are the same
+						<!-- taken from the marketplace: who made it, in a grey pill
+						     after the name (not on the decks inside it, which are the same
 						     author's); a deck of the user's own says nothing -->
 						{#if isTaken(row) && row.author}
-							<span class="author">· {row.author}</span>
+							<span class="author">{row.author}</span>
 						{/if}
 					</td>
 					{@render counts(row)}
@@ -555,10 +555,17 @@
 	.expander.empty {
 		visibility: hidden;
 	}
-	/* a marketplace deck's author, after its name */
+	/* a marketplace deck's author, in a grey pill after its name */
 	.author {
-		margin-left: 4px;
-		color: rgba(0, 0, 0, 0.45);
+		display: inline-block;
+		margin-left: 6px;
+		padding: 0 7px;
+		border-radius: 999px;
+		background-color: #ececec;
+		font-size: 0.75rem;
+		line-height: 1.5;
+		color: rgba(0, 0, 0, 0.55);
+		vertical-align: 1px;
 	}
 	/* The wheel that opens a deck's menu: grey, always there (a phone has no
 	   hover to find it by), above the row-filling link so it takes its own

@@ -73,8 +73,8 @@ const monthLabels = columns => columns.map(column => {
 // a day as it is said in a square's tooltip: 8 Oct 2026
 const sayDay = day => `${Number(day.slice(8))} ${MONTHS[Number(day.slice(5, 7)) - 1]} ${day.slice(0, 4)}`;
 
-// What the line under the squares says: how much was answered in the year
-// shown, the run of days in a row that is still going (a day not yet
+// What the line under the squares says: how much is answered on a day that
+// has any, over all of them (rounded; 0 with none), the run of days in a row that is still going (a day not yet
 // studied does not break it until it is over), and the longest there has
 // been.
 const streaks = (counts, today) => {
@@ -88,9 +88,9 @@ const streaks = (counts, today) => {
 	}
 	let current = 0;
 	for (let day = days.has(today) ? today : addDays(today, -1); days.has(day); day = addDays(day, -1)) current++;
-	const yearAgo = addDays(today, -365);
-	const total = counts.reduce((sum, { day, count }) => day > yearAgo && day <= today ? sum + count : sum, 0);
-	return { total, current, longest };
+	const total = counts.reduce((sum, { count }) => sum + Math.max(count, 0), 0);
+	const average = active.length ? Math.round(total / active.length) : 0;
+	return { average, current, longest };
 }
 
 export { levelOf, usualDay, heatmapWeeks, monthLabels, sayDay, streaks }

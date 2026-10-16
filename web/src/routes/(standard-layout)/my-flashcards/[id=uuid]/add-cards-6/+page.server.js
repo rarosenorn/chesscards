@@ -19,10 +19,16 @@ const actions = {
 		// the deck the card goes in: this one, or one inside it
 		const deckId = data.get("deckId") || params.id;
 		if (!isUuid(deckId)) error(400, "Bad request");
-		const card = await decks.addCard(
-			locals.userId, deckId, data.get("front"), data.get("back"), cardType, FSRSValues
-		)
-		return { card };
+		try {
+			const card = await decks.addCard(
+				locals.userId, deckId, data.get("front"), data.get("back"), cardType, FSRSValues
+			)
+			return { card };
+		} catch (err) {
+			// not a deck of the user's own (a marketplace deck's is never one)
+			if (err.message === "Unauthorized") error(403, "Unauthorized");
+			throw err;
+		}
 	}
 }
 

@@ -120,12 +120,13 @@
 
 	// The order new cards come in, ranked once over the cards still new, so
 	// the turns a mixed deck gives its decks hold still while the cards ahead
-	// leave them. Ranked again when the deck changes, or when cards turn up
-	// new that were not (a reset, cards moved in).
-	let ranking = { deckId: null, ranks: new Map() };
+	// leave them. Ranked again when the decks change (another deck, in order
+	// or mixed switched, cards moved: each comes back as a fresh deck.decks),
+	// or when cards turn up new that were not (a reset).
+	let ranking = { decks: null, ranks: new Map() };
 	const newRanks = newCards => {
-		if (ranking.deckId !== deck.id || newCards.some(card => !ranking.ranks.has(card.id))) {
-			ranking = { deckId: deck.id, ranks: newCardRanks(deck.decks, newCards) };
+		if (ranking.decks !== deck.decks || newCards.some(card => !ranking.ranks.has(card.id))) {
+			ranking = { decks: deck.decks, ranks: newCardRanks(deck.decks, newCards) };
 		}
 		return ranking.ranks;
 	}

@@ -212,4 +212,23 @@ describe("My flashcards", () => {
 		expect(remote.moveDeck.mock.calls.length).toBe(calls);
 		page.close();
 	})
+
+	it("drops just under an open marketplace deck before it, not after all it holds", async () => {
+		const page = await open();
+		page.rowEl("Taken").querySelector(".expander").click();
+		await tick();
+		const rows = page.shown();
+		for (const [index, id] of rows.entries()) {
+			page.rowEl(id).getBoundingClientRect = () => ({ top: index * 20, bottom: index * 20 + 20, height: 20, left: 0, right: 500 });
+		}
+		document.elementFromPoint = (x, y) => page.rowEl(rows[Math.floor(y / 20)])?.querySelector("td") ?? null;
+		const from = rows.indexOf("Empty") * 20 + 10;
+		page.rowEl("Empty").dispatchEvent(new MouseEvent("mousedown", { button: 0, clientX: 10, clientY: from, bubbles: true }));
+		window.dispatchEvent(new MouseEvent("mousemove", { clientX: 10, clientY: from + 8 }));
+		window.dispatchEvent(new MouseEvent("mousemove", { clientX: 10, clientY: rows.indexOf("Taken") * 20 + 18 }));
+		window.dispatchEvent(new MouseEvent("mouseup", {}));
+		await page.settle();
+		expect(remote.moveDeck).toHaveBeenLastCalledWith({ id: "Empty", parentId: null, index: 1 });
+		page.close();
+	})
 })

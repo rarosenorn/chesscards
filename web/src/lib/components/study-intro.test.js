@@ -228,6 +228,31 @@ describe("an intro page in study", () => {
 		page.close();
 	})
 
+	it("orders new cards afresh when the decks change: cards moved between them", async () => {
+		const decks = [
+			{ id: "all", name: "All", position: 1, parent_id: null, in_order: false, intro: null },
+			{ id: "a", name: "A", position: 1, parent_id: "all", in_order: true, intro: null },
+			{ id: "b", name: "B", position: 2, parent_id: "all", in_order: true, intro: null }
+		];
+		const deck = reactiveProps({
+			id: "all", name: "All", inOrder: false, intro: null, ancestors: [], decks,
+			cards: [card("a1", "a"), { ...card("b1", "b"), position: 1 }, { ...card("b2", "b"), position: 2 }]
+		});
+		const target = document.createElement("div");
+		document.body.append(target);
+		const app = mount(Study, { target, context: new Map([["deck", deck], ["studyState", reactiveProps({ turnedCardId: null, cram: null })]]) });
+		await tick();
+		const question = () => target.querySelector(".flashcard.card-surface .text-block")?.textContent.trim() ?? null;
+		expect(question()).toBe("Question a1");
+		// a1 moved to the end of B, as the server answers a move: a fresh deck
+		deck.cards = deck.cards.map(each => each.id === "a1" ? { ...each, deck_id: "b", position: 3 } : each);
+		deck.decks = decks.map(each => ({ ...each }));
+		await tick();
+		expect(question()).toBe("Question b1");
+		unmount(app);
+		target.remove();
+	})
+
 	it("can be read with no card up, and closed", async () => {
 		// nothing due: the deck is done for now
 		const page = await study(deckOf([card("one", "a", true)]));

@@ -223,8 +223,11 @@
 
 	// where letting go over this row would put the deck in hand
 	const dropOn = (target, part) => {
+		// a marketplace deck takes nothing inside: before or after it — but
+		// only before it while it is open, where just under it is the first
+		// of its own decks, not the place after it
 		const zone = target.bought
-			? (part < 0.5 ? "before" : "after")
+			? (part < 0.5 || (target.holdsDecks && expanded.has(target.id)) ? "before" : "after")
 			: part < 0.25 ? "before" : part > 0.75 ? "after" : "inside";
 		if (zone === "inside") return { targetId: target.id, zone, parentId: target.id, index: null };
 		// just under an open deck that holds decks reads as the first deck inside it

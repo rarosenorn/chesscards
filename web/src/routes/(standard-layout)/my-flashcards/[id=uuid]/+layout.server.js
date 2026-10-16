@@ -1,20 +1,12 @@
 import { error } from "@sveltejs/kit"
 import * as decks from "$lib/server/decks.js"
-import * as marketplace from "$lib/server/marketplace.js"
 
+// The id is any deck of the user's library: one of their own, a marketplace
+// deck they have taken, or a deck inside one (decks.getDeck).
 const load = async ({ locals, params }) => {
-	// the id is either a personal deck or a marketplace deck instance
-	const deck = await decks.getById(locals.userId, params.id);
-	if (deck) {
-		return { deck: { ...deck, isMarketplace: false } };
-	}
-
-	const instance = await marketplace.getInstanceById(locals.userId, params.id);
-	if (instance) {
-		return { deck: { ...instance, isMarketplace: true } };
-	}
-
-	error(404);
+	const deck = await decks.getDeck(locals.userId, params.id);
+	if (!deck) error(404);
+	return { deck };
 };
 
 export { load }

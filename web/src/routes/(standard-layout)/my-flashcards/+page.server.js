@@ -1,9 +1,5 @@
-import { fail } from "@sveltejs/kit"
 import * as decks from "$lib/server/decks.js"
-import * as marketplace from "$lib/server/marketplace.js"
-import * as metadecks from "$lib/server/metadecks.js"
 import * as activity from "$lib/server/activity.js"
-import * as zod from "$lib/zod-schemas.js"
 import { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE } from "$lib/rollover.js"
 
 const load = async ({ locals, cookies }) => {
@@ -15,59 +11,13 @@ const load = async ({ locals, cookies }) => {
 		rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR
 	};
 	return {
-		decks: await decks.getMineWithoutCards(locals.userId, when),
-		marketplaceDecks: await marketplace.getInstancesWithoutCards(locals.userId, when),
-		metadecks: await metadecks.getMine(locals.userId),
+		// every deck of the user's, their own and the marketplace decks they
+		// have taken, as one tree in reading order (decks.getListing); they
+		// are made and arranged through decks.remote.js
+		decks: await decks.getListing(locals.userId, when),
 		activity: await activity.getDailyCounts(locals.userId, when),
 		pageTitle: "My flashcards"
 	}
 }
 
-const actions = {
-	create: async ({ request, locals }) => {
-		const data = await request.formData();
-		const result = zod.deck.safeParse(data.get("name"));
-		if (!result.success) {
-			return fail(400, {
-				name: data.get("name"),
-				errors: result.error.flatten().formErrors
-			});
-		}
-		try {
-			await decks.create(locals.userId, result.data);
-		} catch (err) {
-			if (err.code === "23505") {
-				return fail(409, {
-					name: data.get("name"),
-					errors: ["You already have a deck with this name"]
-				})
-			}
-			throw err;
-		}
-	},
-	createMetadeck: async ({ request, locals }) => {
-		const data = await request.formData();
-		const result = zod.metadeck.safeParse(data.get("name"));
-		if (!result.success) {
-			return fail(400, {
-				metadeck: true,
-				name: data.get("name"),
-				errors: result.error.flatten().formErrors
-			});
-		}
-		try {
-			await metadecks.create(locals.userId, result.data);
-		} catch (err) {
-			if (err.code === "23505") {
-				return fail(409, {
-					metadeck: true,
-					name: data.get("name"),
-					errors: ["You already have a metadeck with this name"]
-				})
-			}
-			throw err;
-		}
-	}
-}
-
-export { actions, load }
+export { load }

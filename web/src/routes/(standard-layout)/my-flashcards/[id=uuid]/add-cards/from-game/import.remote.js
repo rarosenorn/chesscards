@@ -4,12 +4,13 @@ import { pool } from "$lib/server/pool.js"
 import * as decks from "$lib/server/decks.js"
 import * as gameImport from "$lib/server/game-import.js"
 
-// the game goes into the line; the page asks after it with importStatus
+// the game goes into the line, its cards to go in targetDeckId (the deck the
+// page is on, or one inside it); the page asks after it with importStatus
 export const startImport =
-	command("unchecked", async ({ deckId, subdeckId, pgn, color, kinds, url }) => {
+	command("unchecked", async ({ targetDeckId, pgn, color, kinds, url }) => {
 		const { locals } = getRequestEvent();
 		try {
-			return { jobId: await gameImport.start(locals.userId, { deckId, subdeckId, pgn, color, kinds, url }) };
+			return { jobId: await gameImport.start(locals.userId, { deckId: targetDeckId, pgn, color, kinds, url }) };
 		} catch (err) {
 			error(400, err.message);
 		}
@@ -23,7 +24,7 @@ export const importStatus =
 		const status = gameImport.status(locals.userId, jobId);
 		if (!status) error(404, "The import is gone: the server restarted, or it finished a while ago");
 		if (status.phase !== "done") return status;
-		return { ...status, deck: await decks.getById(locals.userId, deckId) };
+		return { ...status, deck: await decks.getDeck(locals.userId, deckId) };
 	})
 
 export const cancelImport =

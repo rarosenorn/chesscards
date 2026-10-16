@@ -1,6 +1,5 @@
 import { pool } from "./pool.js"
-import { BOUNDS, listCounts, withListing, inDeckOrder } from "./decks.js"
-import { subdeckOutline, subdeckTrail } from "../subdecks.js"
+import { deckOutline, deckTrail } from "../deck-tree.js"
 import { createEmptyCard } from "ts-fsrs"
 
 const themes = ["openings", "endgames", "tactics", "strategy", "checkmates"];
@@ -25,17 +24,40 @@ const getUploadRequestForDeck = async (userId, deckId) => {
 	return rows[0];
 }
 
+// The decks a request would publish: the deck asked for and every deck of
+// the user's own inside it, as a recursive CTE named `under` over the deck
+// id given as `deck` (an SQL expression).
+const under = deck => `under(id) as (
+	select ${deck}
+	union all
+	select d.id from decks d join under on d.parent_id = under.id
+)`;
+
+// What publishing a deck would take with it: how many cards are under it,
+// and whether a marketplace deck taken sits anywhere inside it, which is not
+// the user's to publish.
+const publishable = async (client, deckId) => {
+	const { rows: [found] } = await client.query(`
+		with recursive ${under("$1::uuid")}
+		select (select count(*) from cards c where c.deck_id in (select id from under))::int "cardCount",
+			exists (select 1 from marketplace_deck_instances i where i.parent_id in (select id from under)) "holdsTaken"`,
+		[deckId]);
+	return found;
+}
+
 // Creates a pending upload request. A null image is the deck's own
-// thumbnail. Throws if the user doesn't own the deck, the deck is empty, or a
-// pending/approved request already exists.
+// thumbnail. Throws if the user doesn't own the deck, nothing is under it, a
+// marketplace deck taken sits inside it, or a pending/approved request
+// already exists.
 const createUploadRequest = async (userId, deckId, { name, description, theme, price, image, imageType, previewCardIds }) => {
 	const { rows } = await pool.query(
-		`select (select count(*) from cards where deck_id = d.id) card_count, d.image is not null has_image
-		from decks d where d.id = $1 and d.user_id = $2`,
+		"select d.image is not null has_image from decks d where d.id = $1 and d.user_id = $2",
 		[deckId, userId]
 	);
 	if (!rows[0]) throw new Error("Unauthorized");
-	if (rows[0].card_count === "0") throw new Error("Deck has no cards");
+	const { cardCount, holdsTaken } = await publishable(pool, deckId);
+	if (cardCount === 0) throw new Error("Deck has no cards");
+	if (holdsTaken) throw new Error("A deck with a marketplace deck inside it cannot be published");
 	if (!image && !rows[0].has_image) throw new Error("A thumbnail image is required");
 
 	const existing = await getUploadRequestForDeck(userId, deckId);
@@ -43,9 +65,9 @@ const createUploadRequest = async (userId, deckId, { name, description, theme, p
 		throw new Error("A request already exists for this deck");
 	}
 
-	// keep only ids that are cards of this deck, preserving the given order
+	// keep only ids that are cards under this deck, preserving the given order
 	const { rows: deckCards } = await pool.query(
-		"select id from cards where deck_id = $1",
+		`with recursive ${under("$1::uuid")} select id from cards where deck_id in (select id from under)`,
 		[deckId]
 	);
 	const deckCardIds = new Set(deckCards.map(row => row.id));
@@ -65,13 +87,11 @@ const createUploadRequest = async (userId, deckId, { name, description, theme, p
 
 const getPendingUploadRequests = async () => {
 	const { rows } = await pool.query(`
-		select r.id, r.name, r.theme, r.price, r.created_at "createdAt", u.email, count(c.id) "cardCount"
+		select r.id, r.name, r.theme, r.price, r.created_at "createdAt", u.email,
+			(with recursive ${under("r.deck_id")} select count(*) from cards c where c.deck_id in (select id from under))::int "cardCount"
 		from marketplace_upload_requests r
-		join decks d on d.id = r.deck_id
 		join "user" u on u.id = r.user_id
-		left join cards c on c.deck_id = d.id
 		where r.status = 'pending'
-		group by r.id, r.name, r.theme, r.price, r.created_at, u.email
 		order by r.created_at`
 	);
 
@@ -79,39 +99,40 @@ const getPendingUploadRequests = async () => {
 }
 
 // The request with what approving it would publish, for the admin to look
-// through: the deck's cards, and its intro pages (intros: the deck's, then
-// each subdeck's in the deck's order, each { crumbs, blocks } as IntroView
-// takes them) — the ones approveUploadRequest copies.
+// through: the cards under the deck, in its reading order, and its intro
+// pages (intros: the deck's, then those of the decks inside it in reading
+// order, each { crumbs, blocks } as IntroView takes them) — the ones
+// approveUploadRequest copies.
 const getUploadRequestWithCards = async requestId => {
-	const { rows } = await pool.query(`
-		select r.id, r.status, r.theme, r.name, r.description, r.price, r.preview_card_ids "previewCardIds", u.email,
-			json_agg(json_build_object('id', c.id, 'front', c.front, 'back', c.back)) cards,
-			d.intro, d.uses_subdecks "usesSubdecks",
-			coalesce((select json_agg(json_build_object('id', s.id, 'parent_id', s.parent_id, 'name', s.name, 'position', s.position, 'intro', s.intro))
-				from subdecks s where s.deck_id = d.id), '[]'::json) subdecks
+	const { rows: [request] } = await pool.query(`
+		select r.id, r.deck_id, r.status, r.theme, r.name, r.description, r.price, r.preview_card_ids "previewCardIds", u.email
 		from marketplace_upload_requests r
-		join decks d on d.id = r.deck_id
 		join "user" u on u.id = r.user_id
-		left join cards c on c.deck_id = d.id
-		where r.id = $1
-		group by r.id, r.status, r.theme, r.name, r.description, r.price, r.preview_card_ids, u.email, d.id`,
+		where r.id = $1`,
 		[requestId]
 	);
-	if (!rows[0]) return undefined;
+	if (!request) return undefined;
 
-	const { intro, usesSubdecks, subdecks, ...request } = rows[0];
-	if (request.cards[0]?.id === null) request.cards = [];
-	request.intros = [
-		...(intro ? [{ crumbs: [{ name: request.name }], blocks: intro }] : []),
-		...(!usesSubdecks ? [] : subdeckOutline(subdecks)
-			.filter(({ subdeck }) => subdeck.intro)
-			.map(({ subdeck }) => ({
-				crumbs: [request.name, ...subdeckTrail(subdecks, subdeck.id)].map(name => ({ name })),
-				blocks: subdeck.intro
-			})))
-	];
+	const { rows: decks } = await pool.query(`
+		with recursive ${under("$1::uuid")}
+		select d.id, case when d.id = $1 then null else d.parent_id end parent_id, d.name, d.position, d.intro
+		from decks d where d.id in (select id from under)`, [request.deck_id]);
+	const outline = deckOutline(decks);
+	const order = new Map(outline.map(({ deck }, index) => [deck.id, index]));
+	const { rows: cards } = await pool.query(`
+		select c.id, c.deck_id, c.position, c.front, c.back from cards c where c.deck_id = any($1::uuid[])`,
+		[decks.map(deck => deck.id)]);
+	cards.sort((a, b) => order.get(a.deck_id) - order.get(b.deck_id) || a.position - b.position);
 
-	return request;
+	const { deck_id, ...shown } = request;
+	return {
+		...shown,
+		cards: cards.map(({ id, front, back }) => ({ id, front, back })),
+		intros: outline.filter(({ deck }) => deck.intro).map(({ deck }) => ({
+			crumbs: [request.name, ...deckTrail(decks, deck.id).slice(1)].map(name => ({ name })),
+			blocks: deck.intro
+		}))
+	};
 }
 
 // The pending request's thumbnail, for the admin review page
@@ -137,15 +158,14 @@ const getDeckPreviewCards = async marketplaceDeckId => {
 	return rows;
 }
 
-// A marketplace deck's subdecks, each with the count of its own cards, for
-// the contents outline on its page; none for a deck that does not use them
+// The decks inside a marketplace deck, each with the count of its own
+// cards, for the contents outline on its page
 const getDeckContents = async marketplaceDeckId => {
 	const { rows } = await pool.query(`
 		select ms.id, ms.parent_id, ms.name, ms.position,
 			(select count(*) from marketplace_cards mc where mc.subdeck_id = ms.id)::int cards
 		from marketplace_subdecks ms
-		join marketplace_decks md on md.id = ms.marketplace_deck_id
-		where md.id = $1 and md.uses_subdecks`,
+		where ms.marketplace_deck_id = $1`,
 		[marketplaceDeckId]
 	);
 
@@ -176,37 +196,42 @@ const approveUploadRequest = async requestId => {
 			[requestId]
 		);
 		if (!request) throw new Error("Request not found or not pending");
+		// the deck may have taken one in since it was asked for
+		if ((await publishable(client, request.deck_id)).holdsTaken) {
+			throw new Error("A deck with a marketplace deck inside it cannot be published");
+		}
 
 		const { rows: [mpDeck] } = await client.query(
-			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, uses_subdecks, progression_depth, intro)
-			 select $1, $2, $3, $4, $5, $6, $7, d.uses_subdecks, d.progression_depth, d.intro from decks d where d.id = $8 returning id`,
+			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, intro)
+			 select $1, $2, $3, $4, $5, $6, $7, d.in_order, d.intro from decks d where d.id = $8 returning id`,
 			// the description as JSON text, as pg would send its blocks array as a postgres array
 			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id]
 		);
-		// The subdeck tree travels with the cards, and each subdeck's intro
-		// with it — unless the deck does not use its subdecks: nobody who
-		// takes it would ever be shown those pages, and the admin was not.
-		// Every subdeck gets its new id
-		// up front (copies), so a copy can name its parent's copy and each
-		// card its subdeck's, all in the one statement. array_position gives
-		// the preview cards their requested order and leaves non-preview
-		// cards (and since-deleted preview ids) at null.
+		// The decks inside it travel with the cards, each with its intro and
+		// its in order / mixed. Every one gets its new id up front (copies),
+		// so a copy can name its parent's copy (none for those directly
+		// inside the published deck) and each card its deck's (none for the
+		// published deck's own), all in the one statement. array_position
+		// gives the preview cards their requested order and leaves
+		// non-preview cards (and since-deleted preview ids) at null.
 		await client.query(`
-			with copies as (
-				select s.id source_id, gen_random_uuid() id, s.parent_id, s.name, s.position,
-					case when d.uses_subdecks then s.intro end intro
-				from subdecks s join decks d on d.id = s.deck_id where s.deck_id = $2
-			), copied_subdecks as (
-				insert into marketplace_subdecks(id, marketplace_deck_id, parent_id, name, position, intro)
-				select copy.id, $1, parent.id, copy.name, copy.position, copy.intro
+			with recursive inside(id, parent_id, name, position, in_order, intro) as (
+				select id, null::uuid, name, position, in_order, intro from decks where parent_id = $2
+				union all
+				select d.id, d.parent_id, d.name, d.position, d.in_order, d.intro from decks d join inside on d.parent_id = inside.id
+			), copies as (
+				select inside.*, gen_random_uuid() copy_id from inside
+			), copied_decks as (
+				insert into marketplace_subdecks(id, marketplace_deck_id, parent_id, name, position, in_order, intro)
+				select copy.copy_id, $1, parent.copy_id, copy.name, copy.position, copy.in_order, copy.intro
 				from copies copy
-				left join copies parent on parent.source_id = copy.parent_id
+				left join copies parent on parent.id = copy.parent_id
 			)
 			insert into marketplace_cards(marketplace_deck_id, subdeck_id, position, front, back, preview_order, card_type)
-			select $1, copy.id, c.position, c.front, c.back, array_position($3::uuid[], c.id), c.card_type
+			select $1, copy.copy_id, c.position, c.front, c.back, array_position($3::uuid[], c.id), c.card_type
 			from cards c
-			join copies copy on copy.source_id = c.subdeck_id
-			where c.deck_id = $2`,
+			left join copies copy on copy.id = c.deck_id
+			where c.deck_id = $2 or copy.id is not null`,
 			[mpDeck.id, request.deck_id, request.preview_card_ids]
 		);
 		await client.query(
@@ -251,11 +276,14 @@ const createDeckInstance = async (userId, marketplaceDeckId) => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
+		// it joins the end of the top of the user's list, where their own
+		// decks and the marketplace decks they have taken share the places
 		const { rows: [instance] } = await client.query(
-			`insert into marketplace_deck_instances(user_id, marketplace_deck_id, position, progression_depth)
-			values($1, $2,
-				(select coalesce(max(position), 0) + 1 from marketplace_deck_instances where user_id = $1),
-				(select progression_depth from marketplace_decks where id = $2))
+			`insert into marketplace_deck_instances(user_id, marketplace_deck_id, position)
+			values($1, $2, (select coalesce(max(position), 0) + 1 from (
+				select position from decks where user_id = $1 and parent_id is null
+				union all
+				select position from marketplace_deck_instances where user_id = $1 and parent_id is null) top))
 			returning id`,
 			[userId, marketplaceDeckId]
 		);
@@ -295,85 +323,6 @@ const createDeckInstance = async (userId, marketplaceDeckId) => {
 	}
 }
 
-// The user's marketplace deck instances for the My flashcards listing,
-// same shape as decks.getMineWithoutCards
-// due and still in play — the day-boundary rule, as in decks.getMineWithoutCards
-const DUE = `ci.finished_at is null and (
-	ci.due <= now()
-	or (ci.last_review is not null
-		and ci.due - ci.last_review >= interval '1 day'
-		and ci.due < bounds.day_end)
-)`;
-
-const getInstancesWithoutCards = async (userId, { timeZone, rolloverHour }) => {
-	const { rows: decks } = await pool.query(`
-		select i.id, md.name, md.uses_subdecks "usesSubdecks", i.progression_depth "progressionDepth"
-		from marketplace_deck_instances i
-		join marketplace_decks md on md.id = i.marketplace_deck_id
-		where i.user_id = $1 order by i.position`, [userId]);
-	// the subdecks are the marketplace deck's, said once for each copy of it
-	const { rows: subdecks } = await pool.query(`
-		select ms.id, i.id deck_id, ms.parent_id, ms.name, ms.position
-		from marketplace_subdecks ms
-		join marketplace_deck_instances i on i.marketplace_deck_id = ms.marketplace_deck_id
-		where i.user_id = $1`, [userId]);
-	const { rows: counted } = await pool.query(`
-		with bounds as (${BOUNDS})
-		select i.id deck_id, mc.subdeck_id, ${listCounts("ci", DUE)}
-		from marketplace_card_instances ci
-		join marketplace_cards mc on mc.id = ci.marketplace_card_id
-		join marketplace_deck_instances i on i.id = ci.marketplace_deck_instance_id
-		cross join bounds
-		where i.user_id = $1
-		group by i.id, mc.subdeck_id`, [userId, timeZone, rolloverHour]);
-
-	return withListing(decks, subdecks, counted);
-}
-
-// the user's marketplace decks in the order given (see decks.reorder)
-const reorderInstances = async (userId, ids) => {
-	const { rowCount } = await pool.query(`
-		update marketplace_deck_instances i set position = u.n
-		from unnest($2::uuid[]) with ordinality u(id, n)
-		where i.id = u.id and i.user_id = $1
-			and (select count(*) from marketplace_deck_instances where user_id = $1) = cardinality($2::uuid[])`,
-		[userId, ids]);
-
-	return rowCount === ids.length;
-}
-
-// An instance with its cards shaped like decks.getById's cards (content from
-// marketplace_cards, FSRS state from the instance rows) so study/browse can
-// render them unchanged
-const getInstanceById = async (userId, instanceId) => {
-	const { rows } = await pool.query(`
-		select i.id, md.name, md.uses_subdecks "usesSubdecks", i.progression_depth "progressionDepth", md.intro,
-			coalesce((select json_agg(json_build_object('id', ms.id, 'parent_id', ms.parent_id, 'name', ms.name, 'position', ms.position, 'intro', ms.intro) order by ms.position)
-				from marketplace_subdecks ms where ms.marketplace_deck_id = md.id), '[]'::json) subdecks,
-			coalesce(json_agg(json_build_object(
-				'id', ci.id,
-				'marketplace_deck_instance_id', ci.marketplace_deck_instance_id,
-				'subdeck_id', mc.subdeck_id, 'position', mc.position,
-				'front', mc.front, 'back', mc.back,
-				'due', ci.due, 'stability', ci.stability, 'difficulty', ci.difficulty,
-				'elapsed_days', ci.elapsed_days, 'scheduled_days', ci.scheduled_days,
-				'reps', ci.reps, 'lapses', ci.lapses, 'learning_steps', ci.learning_steps,
-				'state', ci.state, 'last_review', ci.last_review,
-				'card_type', ci.card_type, 'finished_at', ci.finished_at
-			)) filter (where ci.id is not null), '[]'::json) cards
-		from marketplace_deck_instances i
-		join marketplace_decks md on md.id = i.marketplace_deck_id
-		left join marketplace_card_instances ci on ci.marketplace_deck_instance_id = i.id
-		left join marketplace_cards mc on mc.id = ci.marketplace_card_id
-		where i.user_id = $1 and i.id = $2
-		group by i.id, md.id, md.name, md.uses_subdecks`,
-		[userId, instanceId]
-	);
-	if (rows[0]) inDeckOrder(rows[0]);
-
-	return rows[0];
-}
-
 // A marketplace deck instance's Deck tab: the listing as the marketplace
 // shows it, which is the author's and read-only here
 const getInstanceListing = async (userId, instanceId) => {
@@ -392,19 +341,6 @@ const getInstanceListing = async (userId, instanceId) => {
 	return rows[0];
 }
 
-// the studier's own progression depth; setting it is the same kind of
-// per-deck exception a personal deck's is
-const updateInstanceProgressionDepth = async (userId, instanceId, depth) => {
-	const { rowCount } = await pool.query(
-		"update marketplace_deck_instances set progression_depth = $3 where id = $2 and user_id = $1",
-		[userId, instanceId, depth]);
-	if (rowCount === 1) {
-		await pool.query(`update "user" set "subdeckProgressionMode" = 'per-deck' where id = $1`, [userId]);
-	}
-
-	return rowCount === 1;
-}
-
 // Updates FSRS state on a card instance; the join enforces ownership
 const updateInstanceCardStudyState = async (userId, card) => {
 	const { rowCount } = await pool.query(`
@@ -416,33 +352,6 @@ const updateInstanceCardStudyState = async (userId, card) => {
 	);
 
 	return rowCount === 1;
-}
-
-// the instance's own copy of decks.resetDeckSchedule: the cards belong to the
-// marketplace deck, but the progress over them is the user's to restart
-const resetInstanceSchedule = async (userId, instanceId, FSRSValues) => {
-	const basic = await pool.query(`
-		update marketplace_card_instances ci set
-			finished_at = null,
-			due = $3, stability = $4, difficulty = $5, elapsed_days = $6, scheduled_days = $7,
-			reps = $8, lapses = $9, learning_steps = $10, state = $11, last_review = $12
-		from marketplace_deck_instances i
-		where ci.marketplace_deck_instance_id = i.id and i.id = $2 and i.user_id = $1
-			and ci.card_type = 'basic'`,
-		[userId, instanceId, ...FSRSValues]
-	);
-	const tactic = await pool.query(`
-		update marketplace_card_instances ci set
-			finished_at = null, due = now(),
-			stability = null, difficulty = null, elapsed_days = null, scheduled_days = null,
-			reps = null, lapses = null, learning_steps = null, state = null, last_review = null
-		from marketplace_deck_instances i
-		where ci.marketplace_deck_instance_id = i.id and i.id = $2 and i.user_id = $1
-			and ci.card_type = 'tactic'`,
-		[userId, instanceId]
-	);
-
-	return basic.rowCount + tactic.rowCount;
 }
 
 const createInstanceReviewLog = async (userId, instanceCardId, log) => {
@@ -584,4 +493,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstancesWithoutCards, reorderInstances, getInstanceById, getInstanceListing, updateInstanceCardStudyState, updateInstanceProgressionDepth, resetInstanceSchedule, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstanceListing, updateInstanceCardStudyState, createInstanceReviewLog }

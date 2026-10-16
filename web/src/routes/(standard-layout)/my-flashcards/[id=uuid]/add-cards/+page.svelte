@@ -5,21 +5,20 @@
 	// the blocks, and boards are managed with buttons and svelte-dnd
 	// dragging (within and between blocks). Submit converts each doc to the
 	// stored block-array format, so study/browse need no changes.
-	import { getContext, onMount, tick } from "svelte"
+	import { getContext, onMount } from "svelte"
 	import { enhance } from "$app/forms"
 	import { beforeNavigate } from "$app/navigation"
 	import { browser } from "$app/environment"
 	import { page } from "$app/state"
 	import { blockDnd } from "$lib/block-dnd-state.svelte.js"
-	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft, loadFrozenSides, saveFrozenSides, loadFrozenBoards, saveFrozenBoards, loadSubdeckId, saveSubdeckId } from "$lib/add-cards-draft.js"
-	import { subdeckChoices } from "$lib/subdecks.js"
+	import { DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft, loadFrozenSides, saveFrozenSides, loadFrozenBoards, saveFrozenBoards, loadTargetDeckId, saveTargetDeckId } from "$lib/add-cards-draft.js"
+	import { deckChoices } from "$lib/deck-tree.js"
 	import Snowflake from "$lib/icons/Snowflake.svelte"
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import MoveRefDialog from "$lib/components/MoveRefDialog.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
 	import { createTabTrap } from "$lib/tab-trap.js"
-	import { createSubdeck } from "$lib/deck.remote.js"
 	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docHasBoardPairBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage, docPuzzlesWithoutBackBlocks, puzzleWithoutBackMessage } from "$lib/card-utils.js"
 
 	// the shared deck context (layout); new cards are pushed into it so
@@ -40,55 +39,17 @@
 		saveCardType(deckId, value);
 	}
 
-	// which subdeck the cards are filed into — like the type, a sticky mode of
-	// writing the deck; a stored subdeck that has since been deleted falls back
-	// to the last one
-	// the picker lists the deck's outline; cards go only into the subdecks
-	// that hold cards, so those are the ones it lets through
-	let choices = $derived(subdeckChoices(deck.subdecks));
-	let cardSubdecks = $derived(choices.filter(choice => !choice.disabled));
-	let subdeckId = $state(browser ? loadSubdeckId(deckId) : null);
-	let validSubdeckId = $derived(
-		cardSubdecks.some(choice => choice.id === subdeckId)
-			? subdeckId
-			: cardSubdecks[cardSubdecks.length - 1]?.id
+	// which deck the cards are filed into — the deck itself, or one inside it
+	// (never a marketplace deck's) — like the type, a sticky mode of writing
+	// the deck; a stored one that has since gone falls back to the deck itself
+	let choices = $derived(deckChoices(deck.decks));
+	let targetId = $state(browser ? loadTargetDeckId(deckId) : null);
+	let validTargetId = $derived(
+		choices.some(choice => choice.id === targetId && !choice.disabled) ? targetId : deck.id
 	);
-	// A subdeck can be started from here, so a run of cards that belongs in a
-	// new one does not send you to the Cards tab and back. The + opens a
-	// field beside the picker rather than in place of it: the subdeck the
-	// cards are filing into stays readable while the next one is named.
-	//
-	// Creating is committed by Add (or Enter), never by losing focus: a
-	// click elsewhere used to make the subdeck, or throw away what had been
-	// typed, depending on how far the name had got. Blur now does nothing,
-	// and only the x discards.
-	let subdeckAdd = $state(null);
-
-	const chooseSubdeck = value => {
-		subdeckId = value;
-		saveSubdeckId(deckId, value);
-	}
-
-	// focused by hand, not by autofocus: the front editor holds focus while
-	// the card is being written, and autofocus on the freshly rendered field
-	// does not take it away
-	let subdeckAddInput = $state(null);
-	const startAddSubdeck = async () => {
-		subdeckAdd = { value: "" };
-		await tick();
-		subdeckAddInput?.focus();
-	}
-
-	const cancelAddSubdeck = () => { subdeckAdd = null };
-
-	const commitAddSubdeck = async () => {
-		const name = subdeckAdd?.value.trim();
-		if (!name) return;
-		subdeckAdd = null;
-		const before = new Set(deck.subdecks.map(subdeck => subdeck.id));
-		Object.assign(deck, await createSubdeck({ deckId, name }));
-		const made = deck.subdecks.find(subdeck => !before.has(subdeck.id));
-		if (made) chooseSubdeck(made.id);
+	const chooseTarget = value => {
+		targetId = value;
+		saveTargetDeckId(deckId, value);
 	}
 
 	// a frozen side keeps its content through the submit, for a run of cards
@@ -385,57 +346,17 @@
 			</button>
 		{/each}
 	</div>
-	<!-- no subdecks, nothing to file into: the cards go to the deck's one
-	     subdeck, which validSubdeckId already falls back to -->
-	{#if deck.usesSubdecks}
+	<!-- no decks inside, nothing to file into: the cards go in the deck -->
+	{#if choices.length > 1}
 	<div class="subdeck-picker">
 		<label>
-			Subdeck
-			<select value={validSubdeckId} onchange={e => chooseSubdeck(e.currentTarget.value)}>
+			Deck
+			<select value={validTargetId} onchange={e => chooseTarget(e.currentTarget.value)}>
 				{#each choices as choice (choice.id)}
 					<option value={choice.id} disabled={choice.disabled}>{choice.label}</option>
 				{/each}
 			</select>
 		</label>
-		<div class="subdeck-add" class:open={subdeckAdd}>
-			<button
-				type="button"
-				class="subdeck-add-toggle"
-				aria-label={subdeckAdd ? "Cancel new subdeck" : "New subdeck"}
-				aria-expanded={!!subdeckAdd}
-				onclick={() => subdeckAdd ? cancelAddSubdeck() : startAddSubdeck()}
-			>
-				<!-- drawn, not typed: a + and a x set as text sit off-centre
-				     in the button by the font's own metrics -->
-				<svg viewBox="0 0 16 16" aria-hidden="true">
-					{#if subdeckAdd}
-						<path d="M4 4 L12 12 M12 4 L4 12" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-					{:else}
-						<path d="M8 3 V13 M3 8 H13" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-					{/if}
-				</svg>
-			</button>
-			{#if subdeckAdd}
-				<input
-					class="subdeck-add-input"
-					bind:this={subdeckAddInput}
-					maxlength="100"
-					placeholder="Subdeck name"
-					bind:value={subdeckAdd.value}
-					onkeydown={e => {
-						if (e.key === "Enter") commitAddSubdeck();
-						if (e.key === "Escape") cancelAddSubdeck();
-						e.stopPropagation();
-					}}
-				/>
-				<button
-					type="button"
-					class="subdeck-add-commit"
-					disabled={!subdeckAdd.value.trim()}
-					onclick={commitAddSubdeck}
-				>Add</button>
-			{/if}
-		</div>
 	</div>
 	{/if}
 	<!-- the other way to add cards: a game's mistakes, made into cards -->
@@ -532,7 +453,7 @@
 			formData.set("front", docSideJsonBlocks(front));
 			formData.set("back", docSideJsonBlocks(back));
 			formData.set("cardType", cardType);
-			formData.set("subdeckId", validSubdeckId ?? "");
+			formData.set("deckId", validTargetId);
 
 			return async ({ result, update }) => {
 				// no invalidation: the deck context is updated by the push
@@ -617,7 +538,7 @@
 		color: inherit;
 		text-decoration: none;
 	}
-	/* the subdeck the cards file into, trailing the type it pairs with */
+	/* the deck the cards file into, trailing the type it pairs with */
 	.subdeck-picker {
 		margin-left: 4px;
 		display: flex;
@@ -633,76 +554,6 @@
 	/* One box that grows: closed it is the +, open it holds the field and
 	   its Add. It wears the select's border so the two read as one control,
 	   and stretches to the select's height whatever that works out to. */
-	.subdeck-add {
-		display: flex;
-		align-items: center;
-		align-self: stretch;
-		border: 1px solid rgba(0, 0, 0, 0.25);
-		border-radius: 4px;
-		background-color: white;
-		overflow: hidden;
-	}
-	.subdeck-add.open {
-		border-color: var(--accent);
-	}
-	.subdeck-add-toggle {
-		align-self: stretch;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 24px;
-		padding: 0;
-		border: none;
-		background: none;
-		color: rgba(0, 0, 0, 0.6);
-		cursor: pointer;
-	}
-	.subdeck-add-toggle svg {
-		display: block;
-		width: 13px;
-		height: 13px;
-	}
-	.subdeck-add-toggle:hover {
-		background-color: #f6f6f6;
-		color: rgba(0, 0, 0, 0.85);
-	}
-	/* the inner edges are hairlines, not the box's own border: the parts
-	   are divisions of one control rather than three controls in a row */
-	.subdeck-add-input {
-		/* no vertical padding, stretched instead: the field must not make
-		   the box taller than the select it sits against */
-		align-self: stretch;
-		width: 150px;
-		padding: 0 6px;
-		border: none;
-		border-left: 1px solid rgba(0, 0, 0, 0.15);
-		background: none;
-		font-size: 0.85rem;
-	}
-	.subdeck-add-input:focus {
-		outline: none;
-	}
-	/* the app's neutral button, not the accent: adding a subdeck is an
-	   ordinary action on this row, not the row's primary one */
-	.subdeck-add-commit {
-		align-self: stretch;
-		padding: 0 10px;
-		border: none;
-		border-left: 1px solid rgba(0, 0, 0, 0.15);
-		background-color: #f5f5f5;
-		color: #404040;
-		font-size: 0.8rem;
-		font-weight: 500;
-		cursor: pointer;
-	}
-	.subdeck-add-commit:hover:enabled {
-		background-color: #ececec;
-	}
-	.subdeck-add-commit:disabled {
-		background-color: #f0f0f0;
-		color: rgba(0, 0, 0, 0.35);
-		cursor: default;
-	}
 	.subdeck-picker select {
 		font-size: 0.85rem;
 		padding: 3px 6px;

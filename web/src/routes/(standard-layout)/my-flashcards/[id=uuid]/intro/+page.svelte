@@ -1,22 +1,19 @@
 <script>
 	import { getContext } from "svelte"
-	import { page } from "$app/state"
 	import IntroView from "$lib/components/IntroView.svelte"
 	import { introPlaces } from "$lib/intros.js"
 	import { saveIntro } from "$lib/deck.remote.js"
 
-	// The intro page of a deck, or of one of its subdecks (?subdeck=<id>): the
-	// page study shows before the first card there, and where the deck's
-	// owner writes it.
+	// The intro page of a deck: the page study shows before the first card
+	// under it, and where the deck's owner writes it.
 	let deck = getContext("deck");
 	// a marketplace deck instance's intros are its author's: read, not written
 	let editable = $derived(!deck.isMarketplace);
-	let base = $derived(`/my-flashcards/${page.params.id}`);
 
-	// the deck's own, the last of the places, unless a subdeck is named
-	let places = $derived(introPlaces(deck, page.url.searchParams.get("subdeck")));
+	// the decks around it, then the deck itself, the last of the places
+	let places = $derived(introPlaces(deck));
 	let place = $derived(places.at(-1));
-	const hrefOf = (path, at) => `${base}/${path}${at.subdeckId ? `?subdeck=${at.subdeckId}` : ""}`;
+	const hrefOf = (path, at) => `/my-flashcards/${at.deckId}/${path}`;
 	// The names above the title lead to their own intro pages: all of them
 	// for the owner, who may be on the way to write one; a reader only to
 	// the ones there are.
@@ -59,10 +56,10 @@
 		if (errors.length > 0) return;
 		const at = place;
 		try {
-			const blocks = await saveIntro({ deckId: deck.id, subdeckId: at.subdeckId, intro: intro.blocks });
+			const blocks = await saveIntro({ deckId: at.deckId, intro: intro.blocks });
 			// into the shared deck, where study and this page read it
-			if (at.subdeckId) deck.subdecks.find(subdeck => subdeck.id === at.subdeckId).intro = blocks;
-			else deck.intro = blocks;
+			deck.intro = blocks;
+			deck.decks.find(entry => entry.id === at.deckId).intro = blocks;
 			editing = false;
 		} catch (err) {
 			console.error(err);

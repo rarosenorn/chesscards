@@ -1,58 +1,29 @@
 import { pool } from "./pool.js"
-import { childrenByParent, subdeckOrder, leafSubdecks, subdeckSubtree, deckListing } from "../subdecks.js"
+import { childrenByParent, deckSubtree, readingOrder, byReadingOrder, deckListing, deckOutline } from "../deck-tree.js"
 import { LEARN_AHEAD_MS } from "../rollover.js"
 
-// a deck is born with its Subdeck 1: every card belongs to a subdeck, so there is
-// always one to put the first card in. Subdecks are named, so the first one
-// carries the name the user would have typed anyway.
-const FIRST_SUBDECK_NAME = "Subdeck 1";
-
-const create = async (userId, name) => {
-	const { rows } = await pool.query(`
-		with d as (insert into decks(user_id, name, position)
-			values($1, $2, (select coalesce(max(position), 0) + 1 from decks where user_id = $1))
-			returning id, user_id, name),
-		s as (insert into subdecks(deck_id, name, position) select id, $3, 1 from d)
-		select id, user_id "userId", name from d`, [userId, name, FIRST_SUBDECK_NAME]);
-
-	return rows[0]
-}
-
-// A deck with its subdecks (a tree: see lib/subdecks.js) and its cards, the
-// cards in the deck's reading order. The intros come along, the deck's and
-// each subdeck's: study shows them before the first card (lib/intros.js).
-const getById = async (userId, id) => {
-	const { rows } =
-		await pool.query(`
-			select d.id, d.name, d.uses_subdecks "usesSubdecks", d.progression_depth "progressionDepth", d.intro,
-				coalesce((select json_agg(json_build_object('id', s.id, 'parent_id', s.parent_id, 'name', s.name, 'position', s.position, 'intro', s.intro) order by s.position)
-					from subdecks s where s.deck_id = d.id), '[]'::json) subdecks,
-				coalesce((select json_agg(to_jsonb(c)) from cards c where c.deck_id = d.id), '[]'::json) cards
-			from decks d
-			where d.user_id = $1 and d.id = $2`, [userId, id]
-		);
-	if (rows[0]) inDeckOrder(rows[0]);
-
-	return rows[0];
-}
-
-// a deck's cards put in its reading order: subdeck by subdeck as the tree reads,
-// then by their place in the subdeck
-const inDeckOrder = deck => {
-	const order = subdeckOrder(deck.subdecks);
-	deck.cards.sort((a, b) => order.get(a.subdeck_id) - order.get(b.subdeck_id) || a.position - b.position);
-}
+// A user's decks nest, as Anki's do (see lib/deck-tree.js for the tree and
+// sql/init.sql for the tables). Their library is one tree of three kinds of
+// deck, all shaped alike ({ id, parent_id, name, position, in_order, bought,
+// instance_id }):
+// - their own (decks),
+// - the marketplace decks they have taken (marketplace_deck_instances: the
+//   instance's id is the deck's, and it may sit inside a deck of their own),
+// - and the decks inside those (marketplace_subdecks, each said once for the
+//   copy of it this user has).
+// A bought deck and the decks inside it carry its instance_id. Their in
+// order / mixed is the author's unless the studier has chosen otherwise.
 
 // Due and still in play — the shared condition behind every count below, and
 // the SQL twin of isDueAt (lib/rollover.js). An interval of a day or more is
 // read against the day boundary rather than the clock time it was graded at,
 // so a card graded at 10pm is waiting at 4am; the short learning steps keep
 // their exact times. bounds.day_end is the end of the rollover day we are in.
-const DUE = `c.finished_at is null and (
-	c.due <= now()
-	or (c.last_review is not null
-		and c.due - c.last_review >= interval '1 day'
-		and c.due < bounds.day_end)
+const due = c => `${c}.finished_at is null and (
+	${c}.due <= now()
+	or (${c}.last_review is not null
+		and ${c}.due - ${c}.last_review >= interval '1 day'
+		and ${c}.due < bounds.day_end)
 )`;
 
 // The end of the current rollover day, from the user's hour ($3) and the zone
@@ -71,103 +42,386 @@ const dueSoon = c => `(${c}.finished_at is null
 	and (${c}.last_review is null or ${c}.due - ${c}.last_review < interval '1 day')
 	and ${c}.due <= now() + make_interval(secs => ${LEARN_AHEAD_MS / 1000}))`;
 
+// What is seen of a card (alias c) — the SQL twin of isSeen (lib/deck-tree.js).
+// A tactic card carries no FSRS state, so its last_review stands in.
+const seen = c => `case when ${c}.card_type = 'tactic'
+	then ${c}.finished_at is not null or ${c}.last_review is not null
+	else ${c}.state <> 0 end`;
+
 // The list's raw numbers for a group of cards (alias c): what progression
-// goes by — the SQL twins of isSeen and isGraduated (lib/subdecks.js) — and
-// what is due, in anki's three columns. A tactic card carries no FSRS state,
-// so its last_review stands in: never answered is new, otherwise it is a
-// card coming round again (no learning step).
-const listCounts = (c, due) => `
+// goes by — the SQL twins of isSeen and isGraduated — and what is due, in
+// anki's three columns. A tactic card never answered is new, otherwise it is
+// a card coming round again (no learning step).
+const listCounts = c => `
 	count(*)::int total,
-	count(*) filter (where case when ${c}.card_type = 'tactic'
-		then ${c}.finished_at is not null or ${c}.last_review is not null
-		else ${c}.state <> 0 end)::int seen,
+	count(*) filter (where ${seen(c)})::int seen,
 	count(*) filter (where case when ${c}.card_type = 'tactic'
 		then ${c}.finished_at is not null or coalesce(${c}.reps, 0) > 0
 		else ${c}.state in (2, 3) end)::int graduated,
-	count(*) filter (where ${due} and (${c}.state = 0 or (${c}.state is null and ${c}.last_review is null)))::int "new",
-	count(*) filter (where (${due} or ${dueSoon(c)}) and ${c}.state in (1, 3))::int learn,
-	count(*) filter (where ${due} and (${c}.state = 2 or (${c}.state is null and ${c}.last_review is not null)))::int review`;
+	count(*) filter (where ${due(c)} and (${c}.state = 0 or (${c}.state is null and ${c}.last_review is null)))::int "new",
+	count(*) filter (where (${due(c)} or ${dueSoon(c)}) and ${c}.state in (1, 3))::int learn,
+	count(*) filter (where ${due(c)} and (${c}.state = 2 or (${c}.state is null and ${c}.last_review is not null)))::int review`;
 
-// The list's decks, each with its numbers and its subdecks' (deckListing).
-// subdecks and counted carry the deck_id they belong to; counted is one
-// listCounts row per subdeck that holds cards.
-const withListing = (decks, subdecks, counted) => decks.map(deck => {
-	const stats = new Map(counted.filter(row => row.deck_id === deck.id).map(row => [row.subdeck_id, row]));
-	const own = subdecks.filter(subdeck => subdeck.deck_id === deck.id);
-	return { id: deck.id, name: deck.name, ...deckListing({ ...deck, subdecks: own }, stats) };
-});
+// the deck a bought card sits in: the one inside the marketplace deck, or
+// the marketplace deck itself (its instance)
+const BOUGHT_DECK = "coalesce(mc.subdeck_id, i.id)";
 
-const getMineWithoutCards = async (userId, { timeZone, rolloverHour }) => {
-	const { rows: decks } = await pool.query(`
-		select id, name, uses_subdecks "usesSubdecks", progression_depth "progressionDepth"
-		from decks where user_id = $1 order by position`, [userId]);
-	const { rows: subdecks } = await pool.query(`
-		select s.id, s.deck_id, s.parent_id, s.name, s.position
-		from subdecks s join decks d on d.id = s.deck_id where d.user_id = $1`, [userId]);
-	const { rows: counted } = await pool.query(`
-		with bounds as (${BOUNDS})
-		select c.deck_id, c.subdeck_id, ${listCounts("c", DUE)}
-		from cards c join decks d on d.id = c.deck_id cross join bounds
-		where d.user_id = $1
-		group by c.deck_id, c.subdeck_id`, [userId, timeZone, rolloverHour]);
+// --- the library ---
 
-	return withListing(decks, subdecks, counted);
-}
-
-// The user's decks in the order given: ids must be exactly their decks, or
-// nothing moves (a stale list from another tab would drop some off the end)
-const reorder = async (userId, ids) => {
-	const { rowCount } = await pool.query(`
-		update decks d set position = u.n
-		from unnest($2::uuid[]) with ordinality u(id, n)
-		where d.id = u.id and d.user_id = $1
-			and (select count(*) from decks where user_id = $1) = cardinality($2::uuid[])`,
-		[userId, ids]);
-
-	return rowCount === ids.length;
-}
-
-const getMineWithCards = async userId => {
-	const { rows } =
-		await pool.query("select d.id, d.name, json_agg(c) cards from decks d left join cards c on d.id = c.deck_id where d.user_id = $1 group by d.id, d.name", [userId]
-		);
-	
-	// If a deck has no cards, json_build_object builds 1 card with null values - if thats the case, set cards to empty array
-	for (let i = 0; i < rows.length; i++) {
-		if (rows[i].cards[0].id === null) {
-			rows[i].cards = []
-		}
-	}
-
+// Every deck of the user's, of the three kinds, without cards.
+const getLibrary = async (userId, client = pool) => {
+	const { rows } = await client.query(`
+		select d.id, d.parent_id, d.name, d.position, d.in_order, false bought, null::uuid instance_id
+		from decks d where d.user_id = $1
+		union all
+		select i.id, i.parent_id, md.name, i.position,
+			coalesce((i.in_order_overrides ->> i.id::text)::boolean, md.in_order), true, i.id
+		from marketplace_deck_instances i
+		join marketplace_decks md on md.id = i.marketplace_deck_id
+		where i.user_id = $1
+		union all
+		select ms.id, coalesce(ms.parent_id, i.id), ms.name, ms.position,
+			coalesce((i.in_order_overrides ->> ms.id::text)::boolean, ms.in_order), true, i.id
+		from marketplace_subdecks ms
+		join marketplace_deck_instances i on i.marketplace_deck_id = ms.marketplace_deck_id
+		where i.user_id = $1`, [userId]);
 	return rows;
 }
 
-const updateName = async (id, name, userId) => {
-	const { rows } = await pool.query(`update decks set name = $2 where id = $1 and user_id = $3 returning id, name, user_id "userId"`, [id, name, userId]);
+// each deck's own numbers (listCounts), for the cards sitting in it
+const countsByDeck = async (userId, { timeZone, rolloverHour }) => {
+	const { rows } = await pool.query(`
+		with bounds as (${BOUNDS})
+		select c.deck_id, ${listCounts("c")}
+		from cards c join decks d on d.id = c.deck_id cross join bounds
+		where d.user_id = $1
+		group by c.deck_id
+		union all
+		select ${BOUGHT_DECK} deck_id, ${listCounts("ci")}
+		from marketplace_card_instances ci
+		join marketplace_cards mc on mc.id = ci.marketplace_card_id
+		join marketplace_deck_instances i on i.id = ci.marketplace_deck_instance_id
+		cross join bounds
+		where i.user_id = $1
+		group by 1`, [userId, timeZone, rolloverHour]);
+	return new Map(rows.map(row => [row.deck_id, row]));
+}
 
-	return rows[0];
+// The My flashcards list: every deck in reading order, each with the counts
+// of everything under it and whether progression has it locked (deckListing).
+const getListing = async (userId, when) => {
+	const library = await getLibrary(userId);
+	return deckListing(library, await countsByDeck(userId, when)).map(({ deck, ...row }) => ({
+		id: deck.id, parent_id: deck.parent_id, name: deck.name, in_order: deck.in_order,
+		bought: deck.bought, instance_id: deck.instance_id, ...row
+	}));
+}
+
+// the intros of these decks, by id (instanceIds: the ones that are
+// marketplace decks taken, whose intro is the marketplace deck's)
+const introsOf = async (ids, instanceIds) => {
+	const { rows } = await pool.query(`
+		select id, intro from decks where id = any($1::uuid[])
+		union all
+		select i.id, md.intro from marketplace_deck_instances i
+		join marketplace_decks md on md.id = i.marketplace_deck_id where i.id = any($2::uuid[])
+		union all
+		select ms.id, ms.intro from marketplace_subdecks ms where ms.id = any($1::uuid[])`, [ids, instanceIds]);
+	return new Map(rows.map(row => [row.id, row.intro]));
+}
+
+// A bought card as study and the Cards tab take it, shaped as a card of the
+// user's own: content from marketplace_cards, progress from the instance,
+// deck_id the deck it sits in.
+const BOUGHT_CARD = `json_build_object(
+	'id', ci.id,
+	'marketplace_deck_instance_id', ci.marketplace_deck_instance_id,
+	'deck_id', ${BOUGHT_DECK}, 'position', mc.position,
+	'front', mc.front, 'back', mc.back,
+	'due', ci.due, 'stability', ci.stability, 'difficulty', ci.difficulty,
+	'elapsed_days', ci.elapsed_days, 'scheduled_days', ci.scheduled_days,
+	'reps', ci.reps, 'lapses', ci.lapses, 'learning_steps', ci.learning_steps,
+	'state', ci.state, 'last_review', ci.last_review,
+	'card_type', ci.card_type, 'finished_at', ci.finished_at)`;
+
+// A deck of the library as its pages take it: the deck, everything inside it
+// (decks: it first, then the rest in reading order, each with its intro), the
+// cards of all of them in reading order, and the decks it sits inside
+// (ancestors, outermost first, each with its intro and whether anything
+// under it has been studied, which is what decides its intro). Undefined
+// when the id is none of the user's.
+const getDeck = async (userId, id) => {
+	const library = await getLibrary(userId);
+	const deck = library.find(entry => entry.id === id);
+	if (!deck) return undefined;
+
+	const inside = deckSubtree(library, id);
+	const decks = deckOutline(library.filter(entry => inside.has(entry.id)).map(entry =>
+		entry.id === id ? { ...entry, parent_id: null } : entry)).map(({ deck: entry }) => entry);
+	const byId = new Map(library.map(entry => [entry.id, entry]));
+	const ancestors = [];
+	for (let at = byId.get(deck.parent_id); at; at = byId.get(at.parent_id)) ancestors.unshift(at);
+
+	const own = decks.filter(entry => !entry.bought).map(entry => entry.id);
+	const instances = [...new Set(decks.filter(entry => entry.bought).map(entry => entry.instance_id))];
+	const { rows: [{ cards }] } = await pool.query(`
+		select coalesce((select json_agg(to_jsonb(c)) from cards c where c.deck_id = any($1::uuid[])), '[]'::json)::jsonb
+			|| coalesce((select json_agg(${BOUGHT_CARD})
+				from marketplace_card_instances ci
+				join marketplace_cards mc on mc.id = ci.marketplace_card_id
+				join marketplace_deck_instances i on i.id = ci.marketplace_deck_instance_id
+				where i.user_id = $3 and i.id = any($2::uuid[]) and ${BOUGHT_DECK} = any($4::uuid[])), '[]'::json)::jsonb cards`,
+		[own, instances, userId, [...inside]]);
+	cards.sort(byReadingOrder(readingOrder(decks)));
+
+	// what has been studied under each of the decks around it
+	let begun = new Set();
+	if (ancestors.length) {
+		const { rows } = await pool.query(`
+			select c.deck_id from cards c join decks d on d.id = c.deck_id
+			where d.user_id = $1 and ${seen("c")} group by c.deck_id
+			union
+			select ${BOUGHT_DECK} from marketplace_card_instances ci
+			join marketplace_cards mc on mc.id = ci.marketplace_card_id
+			join marketplace_deck_instances i on i.id = ci.marketplace_deck_instance_id
+			where i.user_id = $1 and ${seen("ci")} group by 1`, [userId]);
+		begun = new Set(rows.map(row => row.deck_id));
+	}
+
+	const around = [...decks, ...ancestors];
+	const intros = await introsOf(around.map(entry => entry.id),
+		around.filter(entry => entry.bought && entry.id === entry.instance_id).map(entry => entry.id));
+	return {
+		id: deck.id,
+		name: deck.name,
+		inOrder: deck.in_order,
+		isMarketplace: deck.bought,
+		instanceId: deck.instance_id,
+		intro: intros.get(deck.id) ?? null,
+		ancestors: ancestors.map(entry => ({
+			id: entry.id, name: entry.name, bought: entry.bought, intro: intros.get(entry.id) ?? null,
+			begun: [...deckSubtree(library, entry.id)].some(under => begun.has(under))
+		})),
+		decks: decks.map(entry => ({ ...entry, intro: intros.get(entry.id) ?? null })),
+		cards
+	};
+}
+
+// The user's own decks and the marketplace decks taken that sit among them,
+// locked for the write that follows: what the moves below rearrange.
+const lockLibrary = async (client, userId) => {
+	const { rows: own } = await client.query(
+		"select id, parent_id, position, false bought from decks where user_id = $1 for update", [userId]);
+	const { rows: taken } = await client.query(
+		"select id, parent_id, position, true bought from marketplace_deck_instances where user_id = $1 for update", [userId]);
+	return [...own, ...taken];
+}
+
+// Siblings numbered 1..n in the order given, whichever of the two tables each
+// sits in: decks of the user's own and marketplace decks taken share their
+// places.
+const numberSiblings = async (client, siblings) => {
+	const ids = siblings.map(sibling => sibling.id);
+	await client.query(`
+		update decks d set position = u.n from unnest($1::uuid[]) with ordinality u(id, n)
+		where d.id = u.id and d.position <> u.n`, [ids]);
+	await client.query(`
+		update marketplace_deck_instances i set position = u.n from unnest($1::uuid[]) with ordinality u(id, n)
+		where i.id = u.id and i.position <> u.n`, [ids]);
+}
+
+const inTransaction = async work => {
+	const client = await pool.connect();
+	try {
+		await client.query("begin");
+		const result = await work(client);
+		await client.query("commit");
+		return result;
+	} catch (err) {
+		await client.query("rollback");
+		throw err;
+	} finally {
+		client.release();
+	}
+}
+
+// A new deck at the end of the top of the list, or inside a deck of the
+// user's own. A name already among its siblings is refused (23505).
+const create = (userId, name, parentId = null) => inTransaction(async client => {
+	const library = await lockLibrary(client, userId);
+	if (parentId && !library.some(entry => entry.id === parentId && !entry.bought)) throw new Error("Unauthorized");
+	const siblings = childrenByParent(library).get(parentId) ?? [];
+	const { rows: [deck] } = await client.query(`
+		insert into decks(user_id, name, parent_id, position) values ($1, $2, $3, $4)
+		returning id, name`, [userId, name, parentId, siblings.length + 1]);
+	return deck;
+});
+
+const rename = async (userId, id, name) => {
+	const { rowCount } = await pool.query("update decks set name = $3 where id = $2 and user_id = $1", [userId, id, name]);
+	return rowCount === 1;
+}
+
+// A deck of the user's own, or a marketplace deck they have taken, moves
+// with everything inside it to sit at index (0-based; null appends) among
+// the decks inside parentId — the top of the list when that is null. Only
+// into a deck of their own, and never into itself or anything inside it.
+// A name already there is refused (23505).
+const move = (userId, id, parentId, index) => inTransaction(async client => {
+	const library = await lockLibrary(client, userId);
+	const moving = library.find(entry => entry.id === id);
+	if (!moving) throw new Error("Unauthorized");
+	if (parentId && !library.some(entry => entry.id === parentId && !entry.bought)) throw new Error("Unauthorized");
+	if (parentId && deckSubtree(library, id).has(parentId)) throw new Error("A deck cannot go inside itself");
+
+	const children = childrenByParent(library);
+	const from = moving.parent_id ?? null;
+	const left = (children.get(from) ?? []).filter(entry => entry.id !== id);
+	const joined = from === parentId ? left : [...(children.get(parentId) ?? [])];
+	joined.splice(Math.max(0, Math.min(index ?? joined.length, joined.length)), 0, moving);
+
+	await client.query(`update ${moving.bought ? "marketplace_deck_instances" : "decks"} set parent_id = $2 where id = $1`, [id, parentId]);
+	await numberSiblings(client, joined);
+	if (from !== parentId) await numberSiblings(client, left);
+});
+
+// A deck goes with every deck and card inside it (the caller has asked the
+// user first when there are cards). What was answered on them stays in
+// review_logs, as study done. A marketplace deck taken that sat inside it was
+// not the user's to delete: it comes to the end of the top of the list.
+const remove = (userId, id) => inTransaction(async client => {
+	const library = await lockLibrary(client, userId);
+	const deck = library.find(entry => entry.id === id && !entry.bought);
+	if (!deck) return false;
+	const inside = deckSubtree(library, id);
+	const rescued = library.filter(entry => entry.bought && inside.has(entry.parent_id));
+	const children = childrenByParent(library);
+	const left = (children.get(deck.parent_id ?? null) ?? []).filter(entry => entry.id !== id);
+	const top = deck.parent_id ? (children.get(null) ?? []) : left;
+
+	await client.query("update marketplace_deck_instances set parent_id = null where id = any($1::uuid[])", [rescued.map(entry => entry.id)]);
+	await client.query("delete from decks where id = $1", [id]);
+	await numberSiblings(client, [...top, ...rescued]);
+	if (deck.parent_id) await numberSiblings(client, left);
+	return true;
+});
+
+// A marketplace deck taken leaves the library, and the user's progress on it
+// with it (they can take it again from the marketplace). What was answered on
+// it stays in review_logs, as study done.
+const removeTaken = (userId, id) => inTransaction(async client => {
+	const library = await lockLibrary(client, userId);
+	const taken = library.find(entry => entry.id === id && entry.bought);
+	if (!taken) return false;
+	const left = (childrenByParent(library).get(taken.parent_id ?? null) ?? []).filter(entry => entry.id !== id);
+	await client.query("delete from marketplace_deck_instances where id = $1", [id]);
+	await numberSiblings(client, left);
+	return true;
+});
+
+// The decks inside a deck are taken away and their cards stay: every card
+// under it, in reading order, becomes a card of the deck itself, after its
+// own. A marketplace deck taken that sat in there is kept, now directly
+// inside it.
+const flatten = (userId, id) => inTransaction(async client => {
+	const library = await lockLibrary(client, userId);
+	if (!library.some(entry => entry.id === id && !entry.bought)) throw new Error("Unauthorized");
+	const inside = deckSubtree(library, id);
+	const under = library.filter(entry => inside.has(entry.id)).map(entry => entry.id === id ? { ...entry, parent_id: null } : entry);
+	const own = under.filter(entry => !entry.bought);
+	const { rows: cards } = await client.query(
+		"select id, deck_id, position from cards where deck_id = any($1::uuid[])", [own.map(entry => entry.id)]);
+	cards.sort(byReadingOrder(readingOrder(under)));
+	await client.query(`
+		update cards c set deck_id = $1, position = u.n
+		from unnest($2::uuid[]) with ordinality u(id, n)
+		where c.id = u.id`, [id, cards.map(card => card.id)]);
+	const kept = deckOutline(under).map(({ deck }) => deck).filter(entry => entry.bought);
+	await client.query("update marketplace_deck_instances set parent_id = $1 where id = any($2::uuid[])", [id, kept.map(entry => entry.id)]);
+	await numberSiblings(client, kept);
+	await client.query("delete from decks where parent_id = $1", [id]);
+});
+
+// How the decks inside a deck are studied. A deck of the user's own keeps it
+// on the deck; a marketplace deck taken, or one inside it, keeps it as the
+// studier's own choice beside the author's.
+const setInOrder = async (userId, id, inOrder) => {
+	const { rowCount } = await pool.query(
+		"update decks set in_order = $3 where id = $2 and user_id = $1", [userId, id, inOrder]);
+	if (rowCount === 1) return true;
+	const deck = (await getLibrary(userId)).find(entry => entry.id === id && entry.bought);
+	if (!deck) return false;
+	await pool.query(`
+		update marketplace_deck_instances set in_order_overrides = in_order_overrides || jsonb_build_object($3::text, $4::boolean)
+		where id = $2 and user_id = $1`, [userId, deck.instance_id, id, inOrder]);
+	return true;
+}
+
+// Every card under a deck back to new, its type kept (that is content, not
+// progress), the marketplace decks taken inside it as well. Review history is
+// untouched: it lives in review_logs, keyed by card.
+const reset = async (userId, id, FSRSValues) => {
+	const library = await getLibrary(userId);
+	if (!library.some(entry => entry.id === id)) return 0;
+	const inside = [...deckSubtree(library, id)];
+	const own = library.filter(entry => !entry.bought && inside.includes(entry.id)).map(entry => entry.id);
+	const basicSet = `finished_at = null,
+		due = $3, stability = $4, difficulty = $5, elapsed_days = $6, scheduled_days = $7,
+		reps = $8, lapses = $9, learning_steps = $10, state = $11, last_review = $12`;
+	const tacticSet = `finished_at = null, due = now(),
+		stability = null, difficulty = null, elapsed_days = null, scheduled_days = null,
+		reps = null, lapses = null, learning_steps = null, state = null, last_review = null`;
+	const ownCards = (set, type) => `
+		update cards c set ${set} from decks d
+		where c.deck_id = d.id and d.user_id = $1 and d.id = any($2::uuid[]) and c.card_type = '${type}'`;
+	const boughtCards = (set, type) => `
+		update marketplace_card_instances ci set ${set}
+		from marketplace_cards mc, marketplace_deck_instances i
+		where mc.id = ci.marketplace_card_id and i.id = ci.marketplace_deck_instance_id
+			and i.user_id = $1 and ${BOUGHT_DECK} = any($2::uuid[]) and ci.card_type = '${type}'`;
+	const counts = await Promise.all([
+		pool.query(ownCards(basicSet, "basic"), [userId, own, ...FSRSValues]),
+		pool.query(ownCards(tacticSet, "tactic"), [userId, own]),
+		pool.query(boughtCards(basicSet, "basic"), [userId, inside, ...FSRSValues]),
+		pool.query(boughtCards(tacticSet, "tactic"), [userId, inside])
+	]);
+	return counts.reduce((sum, result) => sum + result.rowCount, 0);
+}
+
+// A deck's intro: blocks, or null to have none. It goes as JSON text, as a
+// description does.
+const updateIntro = async (userId, id, intro) => {
+	const { rowCount } = await pool.query(
+		"update decks set intro = $3 where user_id = $1 and id = $2", [userId, id, intro && JSON.stringify(intro)]);
+	return rowCount === 1;
 }
 
 const userIdOwnsDeckId = async (userId, deckId) => {
 	const { rowCount } = await pool.query("select id from decks where id = $1 and user_id = $2", [deckId, userId]);
-
-	return rowCount === 1
-}
-
-const remove = async (id, userId) => {
-	const { rowCount } = await pool.query("delete from decks where id = $1 and user_id = $2", [id, userId]);
-
 	return rowCount === 1;
 }
 
+// the ids of a deck of the user's own ($2; the user $1) and of their decks
+// inside it, as a recursive CTE named `under`
+const UNDER = `under(id) as (
+	select id from decks where id = $2 and user_id = $1
+	union all
+	select d.id from decks d join under on d.parent_id = under.id
+)`;
+
 // The deck's own listing for its Deck tab, shaped like a marketplace deck's.
 // The image itself goes out through the deck's thumbnail route; only a hash
-// of it travels here, for the tab to put in that route's url
-const getListing = async (userId, id) => {
+// of it travels here, for the tab to put in that route's url. Its cards are
+// every card under it, as publishing it would publish them; holdsTaken says
+// a marketplace deck taken sits somewhere inside it, which keeps it off the
+// marketplace.
+const getOwnListing = async (userId, id) => {
 	const { rows } = await pool.query(`
+		with recursive ${UNDER}
 		select d.id, d.name, d.description, d.theme, left(md5(d.image), 8) "imageVersion", u.name author,
 			d.preview_card_ids "previewCardIds",
-			(select count(*) from cards c where c.deck_id = d.id)::int "cardCount"
+			(select count(*) from cards c where c.deck_id in (select id from under))::int "cardCount",
+			exists (select 1 from marketplace_deck_instances i where i.parent_id in (select id from under)) "holdsTaken"
 		from decks d
 		join "user" u on u.id = d.user_id
 		where d.user_id = $1 and d.id = $2`,
@@ -199,13 +453,14 @@ const updateListing = async (userId, id, { name, description, theme, image, imag
 	return rowCount === 1;
 }
 
-// the deck's sample cards, in the given order; ids that are not the deck's
-// cards are dropped
+// the deck's sample cards, in the given order; ids that are not cards under
+// it are dropped
 const updatePreviewCards = async (userId, id, cardIds) => {
 	const { rowCount } = await pool.query(`
+		with recursive ${UNDER}
 		update decks d set preview_card_ids = array(
 			select c.id from unnest($3::uuid[]) with ordinality ids(id, n)
-			join cards c on c.id = ids.id and c.deck_id = d.id
+			join cards c on c.id = ids.id and c.deck_id in (select id from under)
 			order by ids.n
 		)
 		where d.user_id = $1 and d.id = $2`,
@@ -214,6 +469,8 @@ const updatePreviewCards = async (userId, id, cardIds) => {
 
 	return rowCount === 1;
 }
+
+// --- cards ---
 
 // pg returns numeric as string and timestamptz as Date; normalize to the
 // shape the json_agg deck load produces (ts-fsrs treats a truthy string
@@ -233,55 +490,41 @@ const scheduleValues = (cardType, FSRSValues) => cardType === "tactic"
 	? [new Date(), null, null, null, null, null, null, null, null, null]
 	: FSRSValues;
 
-// the card lands at the end of the given subdeck — or of the deck's last subdeck
-// when none is named (the trial editors have no picker)
-// One card, at the end of the named subdeck — or of the deck's last one that
-// holds cards, when none is named or the named one cannot take it.
-const addCard = async (userId, deckId, front, back, cardType, FSRSValues, subdeckId = null) => {
-	const client = await pool.connect();
-	try {
-		await client.query("begin");
-		const subdeck = await landingSubdeck(client, userId, deckId, subdeckId);
-		const { rows } = await client.query(`insert into cards(
-				deck_id, subdeck_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
-			) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-			returning *`, [deckId, subdeck.id, subdeck.last + 1, front, back, cardType, ...scheduleValues(cardType, FSRSValues)]);
-		await client.query("commit");
-		return normalizeCard(rows[0]);
-	} catch (err) {
-		await client.query("rollback");
-		throw err;
-	} finally {
-		client.release();
-	}
+// The deck of the user's own that cards are about to land at the end of,
+// locked so two arrivals cannot take the same places. `last` is the place of
+// its last card.
+const landing = async (client, userId, deckId) => {
+	const { rowCount } = await client.query("select 1 from decks where id = $1 and user_id = $2 for update", [deckId, userId]);
+	if (rowCount !== 1) throw new Error("Unauthorized");
+	const { rows: [{ last }] } = await client.query(
+		"select coalesce(max(position), 0)::int last from cards where deck_id = $1", [deckId]);
+	return last;
 }
 
-// Several basic cards at once, in the order given, at the end of the named
-// subdeck — or of the deck's last one, when none is named or the named one has
-// gone since. All of them or none.
-const addCards = async (userId, deckId, subdeckId, cards, FSRSValues) => {
-	const client = await pool.connect();
-	try {
-		await client.query("begin");
-		const subdeck = await landingSubdeck(client, userId, deckId, subdeckId);
-		const ids = [];
-		for (const [index, card] of cards.entries()) {
-			const { rows } = await client.query(`insert into cards(
-					deck_id, subdeck_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
-				) values ($1, $2, $3, $4, $5, 'basic', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-				returning id`,
-				[deckId, subdeck.id, subdeck.last + index + 1, JSON.stringify(card.front), JSON.stringify(card.back), ...FSRSValues]);
-			ids.push(rows[0].id);
-		}
-		await client.query("commit");
-		return ids;
-	} catch (error) {
-		await client.query("rollback");
-		throw error;
-	} finally {
-		client.release();
+const INSERT_CARD = `insert into cards(
+		deck_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
+	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`;
+
+// one card, at the end of the deck
+const addCard = (userId, deckId, front, back, cardType, FSRSValues) => inTransaction(async client => {
+	const last = await landing(client, userId, deckId);
+	const { rows } = await client.query(`${INSERT_CARD} returning *`,
+		[deckId, last + 1, front, back, cardType, ...scheduleValues(cardType, FSRSValues)]);
+	return normalizeCard(rows[0]);
+});
+
+// Several basic cards at once, in the order given, at the end of the deck.
+// All of them or none.
+const addCards = (userId, deckId, cards, FSRSValues) => inTransaction(async client => {
+	const last = await landing(client, userId, deckId);
+	const ids = [];
+	for (const [index, card] of cards.entries()) {
+		const { rows } = await client.query(`${INSERT_CARD} returning id`,
+			[deckId, last + index + 1, JSON.stringify(card.front), JSON.stringify(card.back), "basic", ...FSRSValues]);
+		ids.push(rows[0].id);
 	}
-}
+	return ids;
+});
 
 // Switching type restarts the card: the two types keep incompatible
 // scheduling (a tactic card has no FSRS state at all), so there is nothing to
@@ -313,45 +556,66 @@ const updateCardContent = async (userId, cardId, front, back) => {
 	return rowCount === 1;
 }
 
-const deleteCards = async (userId, cardIds) => {
-	const { rowCount } = await pool.query(`
+// the cards of these decks numbered 1..n again, in the order they stand
+const closeRanks = (client, deckIds) => client.query(`
+	update cards c set position = r.position
+	from (select id, row_number() over (partition by deck_id order by position) position
+		from cards where deck_id = any($1::uuid[])) r
+	where c.id = r.id and c.position <> r.position`, [deckIds]);
+
+// the decks they leave close ranks behind them
+const deleteCards = (userId, cardIds) => inTransaction(async client => {
+	const { rows } = await client.query(`
 		delete from cards c
 		using decks d
-		where c.id = any($2::uuid[]) and c.deck_id = d.id and d.user_id = $1`,
+		where c.id = any($2::uuid[]) and c.deck_id = d.id and d.user_id = $1
+		returning c.deck_id`,
 		[userId, cardIds]
 	);
+	await closeRanks(client, [...new Set(rows.map(row => row.deck_id))]);
+	return rows.length;
+});
 
-	return rowCount;
-}
+// The one write behind every reordering gesture — a drag, a typed "3.3", a
+// context-menu move, sending cards to another deck: the given cards leave
+// where they were and sit down, in the given order, at index (0-based; null
+// appends) of the target deck. They are the same cards: schedule and review
+// history go with them.
+const moveCards = (userId, cardIds, targetDeckId, targetIndex = null) => inTransaction(async client => {
+	await landing(client, userId, targetDeckId);
+	const { rows: moving } = await client.query(`
+		select c.id, c.deck_id from cards c join decks d on d.id = c.deck_id
+		where d.user_id = $1 and c.id = any($2::uuid[])`, [userId, cardIds]);
+	if (moving.length !== new Set(cardIds).size) throw new Error("Unauthorized");
 
-// Every card in the deck back to new — the reset updateCardType performs on a
-// single card, applied to the whole deck (and holding each card's own type,
-// which is content rather than progress). Review history is untouched: it
-// lives in review_logs, keyed by card, and outlives the card's own progress.
-// The two statements are the tactic/basic split scheduleValues makes, in
-// update form: a tactic card is due immediately and carries no FSRS state.
-const resetDeckSchedule = async (userId, deckId, FSRSValues) => {
-	const basic = await pool.query(`
-		update cards c set
-			finished_at = null,
-			due = $3, stability = $4, difficulty = $5, elapsed_days = $6, scheduled_days = $7,
-			reps = $8, lapses = $9, learning_steps = $10, state = $11, last_review = $12
-		from decks d
-		where c.deck_id = d.id and d.id = $2 and d.user_id = $1 and c.card_type = 'basic'`,
-		[userId, deckId, ...FSRSValues]
-	);
-	const tactic = await pool.query(`
-		update cards c set
-			finished_at = null, due = now(),
-			stability = null, difficulty = null, elapsed_days = null, scheduled_days = null,
-			reps = null, lapses = null, learning_steps = null, state = null, last_review = null
-		from decks d
-		where c.deck_id = d.id and d.id = $2 and d.user_id = $1 and c.card_type = 'tactic'`,
-		[userId, deckId]
-	);
+	const { rows: staying } = await client.query(
+		"select id from cards where deck_id = $1 and id <> all($2::uuid[]) order by position", [targetDeckId, cardIds]);
+	const order = staying.map(card => card.id);
+	order.splice(Math.max(0, Math.min(targetIndex ?? order.length, order.length)), 0, ...new Set(cardIds));
+	await client.query(`
+		update cards c set deck_id = $1, position = u.n
+		from unnest($2::uuid[]) with ordinality u(id, n)
+		where c.id = u.id`, [targetDeckId, order]);
+	await closeRanks(client, [...new Set(moving.map(card => card.deck_id))].filter(id => id !== targetDeckId));
+});
 
-	return basic.rowCount + tactic.rowCount;
-}
+// Copies of cards of the user's own, as new cards: the content and the type,
+// none of the progress. They go to the end of the target deck, in the order
+// given.
+const copyCards = (userId, cardIds, targetDeckId, FSRSValues) => inTransaction(async client => {
+	const last = await landing(client, userId, targetDeckId);
+	const { rows: cards } = await client.query(`
+		select c.id, c.front, c.back, c.card_type from cards c join decks d on d.id = c.deck_id
+		where d.user_id = $1 and c.id = any($2::uuid[])`, [userId, cardIds]);
+	if (cards.length !== new Set(cardIds).size) throw new Error("Unauthorized");
+	const byId = new Map(cards.map(card => [card.id, card]));
+	for (const [index, id] of [...new Set(cardIds)].entries()) {
+		const card = byId.get(id);
+		await client.query(INSERT_CARD,
+			[targetDeckId, last + index + 1, JSON.stringify(card.front), card.back == null ? null : JSON.stringify(card.back),
+				card.card_type, ...scheduleValues(card.card_type, FSRSValues)]);
+	}
+});
 
 // Only a card in a deck of the user's own: which deck that is comes from the
 // card's row, never from what the caller says of it.
@@ -367,412 +631,11 @@ const updateCardStudyState = async (userId, card) => {
 	return rowCount === 1;
 }
 
-// --- subdecks ---
-// Positions (subdecks in a deck, cards in a subdeck) are kept dense 1..n here, so
-// the client can show "2.17" straight off the stored numbers. Every op ends
-// by renumbering what it disturbed.
-
-// The deck's subdecks, locked for the write that follows. Throws unless the
-// deck is the user's (a deck always has at least one subdeck).
-const lockSubdecks = async (client, userId, deckId) => {
-	const { rows } = await client.query(`
-		select s.id, s.parent_id, s.name, s.position
-		from subdecks s join decks d on d.id = s.deck_id
-		where d.id = $2 and d.user_id = $1
-		order by s.position for update of s`, [userId, deckId]);
-	if (rows.length === 0) throw new Error("Unauthorized");
-	return rows;
-}
-
-// A subdeck holds cards or subdecks, never both. So before one that holds
-// cards takes its first subdeck, the cards move into a subdeck of their own
-// inside it, named Temp for the user to rename or empty. Answers with that
-// subdeck, or null when there were no cards to rehouse.
-const TEMP_NAME = "Temp";
-const rehouseCards = async (client, deckId, subdeckId) => {
-	const { rowCount } = await client.query("select 1 from cards where subdeck_id = $1 limit 1", [subdeckId]);
-	if (rowCount === 0) return null;
-	const { rows: [temp] } = await client.query(`
-		insert into subdecks(deck_id, parent_id, name, position) values ($1, $2, $3, 1)
-		returning id, parent_id, name, position`, [deckId, subdeckId, TEMP_NAME]);
-	await client.query("update cards set subdeck_id = $2 where subdeck_id = $1", [subdeckId, temp.id]);
-	return temp;
-}
-
-// siblings numbered 1..n in the order given
-const numberSubdecks = (client, siblings) => client.query(`
-	update subdecks s set position = u.n
-	from unnest($1::uuid[]) with ordinality u(id, n)
-	where s.id = u.id and s.position <> u.n`, [siblings.map(subdeck => subdeck.id)]);
-
-// A plain deck takes its first subdeck, and from here on uses them. Its
-// cards have been sitting in the one subdeck every deck keeps, unseen. With
-// cards in it, that one comes into view beside the new subdeck, as Temp
-// unless it carries a name of its own (cards and subdecks never share a
-// level, the deck's own included); empty, it simply becomes the new subdeck.
-// A deck whose subdecks were hidden rather than never made has them come
-// back as they were.
-const firstSubdeck = async (client, deckId, subdecks, name) => {
-	await client.query("update decks set uses_subdecks = true where id = $1", [deckId]);
-	if (subdecks.length === 1) {
-		const [unseen] = subdecks;
-		const { rowCount: holdsCards } = await client.query(
-			"select 1 from cards where subdeck_id = $1 limit 1", [unseen.id]);
-		if (!holdsCards || unseen.name === FIRST_SUBDECK_NAME) {
-			await client.query("update subdecks set name = $2 where id = $1", [unseen.id, holdsCards ? TEMP_NAME : name]);
-		}
-		if (!holdsCards) return { ...unseen, name };
-	}
-	const { rows } = await client.query(`
-		insert into subdecks(deck_id, name, position) values ($1, $2, $3)
-		returning id, parent_id, name, position`,
-		[deckId, name, (childrenByParent(subdecks).get(null) ?? []).length + 1]);
-	return rows[0];
-}
-
-// A new subdeck at the end of the deck's top level, or of the subdeck named
-// as its parent (whose cards, if it holds any, are rehoused first). On a
-// deck that has not used subdecks so far, it is the deck's first.
-const createSubdeck = async (userId, deckId, name, parentId = null) => {
-	const client = await pool.connect();
-	try {
-		await client.query("begin");
-		const subdecks = await lockSubdecks(client, userId, deckId);
-		if (parentId && !subdecks.some(subdeck => subdeck.id === parentId)) throw new Error("Unauthorized");
-		const { rows: [deck] } = await client.query("select uses_subdecks from decks where id = $1", [deckId]);
-		if (!deck.uses_subdecks) {
-			if (parentId) throw new Error("Unauthorized");
-			const first = await firstSubdeck(client, deckId, subdecks, name);
-			await client.query("commit");
-			return first;
-		}
-		const siblings = childrenByParent(subdecks).get(parentId) ?? [];
-		const temp = parentId && siblings.length === 0 ? await rehouseCards(client, deckId, parentId) : null;
-		const { rows } = await client.query(`
-			insert into subdecks(deck_id, parent_id, name, position) values ($1, $2, $3, $4)
-			returning id, parent_id, name, position`,
-			[deckId, parentId, name, siblings.length + (temp ? 1 : 0) + 1]);
-		await client.query("commit");
-		return rows[0];
-	} catch (err) {
-		await client.query("rollback");
-		throw err;
-	} finally {
-		client.release();
-	}
-}
-
-// A deck's intro, or one of its subdecks' when subdeckId names it: blocks,
-// or null to have none. It goes as JSON text, as a description does.
-const updateIntro = async (userId, deckId, subdeckId, intro) => {
-	const json = intro && JSON.stringify(intro);
-	const { rowCount } = subdeckId
-		? await pool.query(`
-			update subdecks s set intro = $4
-			from decks d where s.id = $3 and s.deck_id = d.id and d.id = $2 and d.user_id = $1`,
-			[userId, deckId, subdeckId, json])
-		: await pool.query("update decks set intro = $3 where user_id = $1 and id = $2", [userId, deckId, json]);
-
-	return rowCount === 1;
-}
-
-const renameSubdeck = async (userId, subdeckId, name) => {
-	const { rowCount } = await pool.query(`
-		update subdecks s set name = $3
-		from decks d where s.id = $2 and s.deck_id = d.id and d.user_id = $1`,
-		[userId, subdeckId, name]);
-
-	return rowCount === 1;
-}
-
-// A subdeck moves, with everything inside it, to sit at index (0-based; null
-// appends) among the subdecks of parentId — the deck's top level when that
-// is null. Never into itself or anything inside it. A parent that holds
-// cards has them rehoused first, as when a subdeck is created in it.
-const moveSubdeck = async (userId, deckId, subdeckId, parentId, index) => {
-	const client = await pool.connect();
-	try {
-		await client.query("begin");
-		const subdecks = await lockSubdecks(client, userId, deckId);
-		const moving = subdecks.find(subdeck => subdeck.id === subdeckId);
-		if (!moving) throw new Error("Unauthorized");
-		if (parentId && !subdecks.some(subdeck => subdeck.id === parentId)) throw new Error("Unauthorized");
-		if (parentId && subdeckSubtree(subdecks, subdeckId).has(parentId)) throw new Error("A subdeck cannot go inside itself");
-
-		const children = childrenByParent(subdecks);
-		const from = moving.parent_id ?? null;
-		const left = (children.get(from) ?? []).filter(subdeck => subdeck.id !== subdeckId);
-		const joined = from === parentId ? left : [...(children.get(parentId) ?? [])];
-		if (parentId && joined.length === 0 && from !== parentId) {
-			const temp = await rehouseCards(client, deckId, parentId);
-			if (temp) joined.push(temp);
-		}
-		joined.splice(Math.max(0, Math.min(index ?? joined.length, joined.length)), 0, moving);
-
-		await client.query("update subdecks set parent_id = $2 where id = $1", [subdeckId, parentId]);
-		await numberSubdecks(client, joined);
-		if (from !== parentId) await numberSubdecks(client, left);
-		await client.query("commit");
-	} catch (err) {
-		await client.query("rollback");
-		throw err;
-	} finally {
-		client.release();
-	}
-}
-
-// The subdecks inside a subdeck are taken away and their cards stay: every
-// card under it, in reading order, becomes a card of the subdeck itself.
-// Without a subdeck named it is the whole deck that is flattened, into the
-// plain list a deck without subdecks is: the cards gather in its first
-// subdeck, which stays on unseen as the one every deck keeps (under the name
-// a new deck's has, so a later first subdeck finds them in Temp).
-const flattenSubdecks = async (userId, deckId, subdeckId = null) => {
-	const client = await pool.connect();
-	try {
-		await client.query("begin");
-		const subdecks = await lockSubdecks(client, userId, deckId);
-		const keeper = subdeckId
-			? subdecks.find(subdeck => subdeck.id === subdeckId)
-			: (childrenByParent(subdecks).get(null) ?? [])[0];
-		if (!keeper) throw new Error("Unauthorized");
-		const going = subdeckId ? subdeckSubtree(subdecks, subdeckId) : new Set(subdecks.map(subdeck => subdeck.id));
-		going.delete(keeper.id);
-		const { rows: cards } = await client.query(
-			"select id, subdeck_id, position from cards where subdeck_id = any($1::uuid[])", [[keeper.id, ...going]]);
-		inDeckOrder({ subdecks, cards });
-		await client.query(`
-			update cards c set subdeck_id = $1, position = u.n
-			from unnest($2::uuid[]) with ordinality u(id, n)
-			where c.id = u.id`, [keeper.id, cards.map(card => card.id)]);
-		await client.query("delete from subdecks where id = any($1::uuid[])", [[...going]]);
-		if (!subdeckId) {
-			await client.query("update subdecks set name = $2, position = 1 where id = $1", [keeper.id, FIRST_SUBDECK_NAME]);
-			await client.query("update decks set uses_subdecks = false where id = $1", [deckId]);
-		}
-		await client.query("commit");
-	} catch (err) {
-		await client.query("rollback");
-		throw err;
-	} finally {
-		client.release();
-	}
-}
-
-// A subdeck goes with everything inside it: its subdecks, and every card
-// under it with its progress (the caller has asked the user first). What
-// was answered on those cards stays in review_logs, as study done.
-// When the last one goes the deck stops using subdecks: it is a plain list
-// again, with the one unseen subdeck every deck keeps for its cards to sit
-// in (fresh and empty, as a new deck is born with).
-const deleteSubdeck = async (userId, subdeckId) => {
-	const client = await pool.connect();
-	try {
-		await client.query("begin");
-		const { rows: [found] } = await client.query(`
-			select s.deck_id from subdecks s join decks d on d.id = s.deck_id
-			where s.id = $2 and d.user_id = $1`, [userId, subdeckId]);
-		if (!found) throw new Error("Unauthorized");
-		const subdecks = await lockSubdecks(client, userId, found.deck_id);
-		const going = subdeckSubtree(subdecks, subdeckId);
-		const { rows: cards } = await client.query(
-			"delete from cards where subdeck_id = any($1::uuid[]) returning id", [[...going]]);
-		await client.query(`
-			update decks set preview_card_ids = array(
-				select id from unnest(preview_card_ids) with ordinality p(id, n)
-				where id <> all($2::uuid[]) order by n)
-			where id = $1`, [found.deck_id, cards.map(card => card.id)]);
-		// its subdecks go with it (parent_id cascades)
-		await client.query("delete from subdecks where id = $1", [subdeckId]);
-		const deleted = subdecks.find(subdeck => subdeck.id === subdeckId);
-		await numberSubdecks(client, (childrenByParent(subdecks).get(deleted.parent_id ?? null) ?? [])
-			.filter(subdeck => subdeck.id !== subdeckId));
-		if (subdecks.every(subdeck => going.has(subdeck.id))) {
-			await client.query(
-				"insert into subdecks(deck_id, name, position) values ($1, $2, 1)", [found.deck_id, FIRST_SUBDECK_NAME]);
-			await client.query("update decks set uses_subdecks = false where id = $1", [found.deck_id]);
-		}
-		await client.query("commit");
-	} catch (err) {
-		await client.query("rollback");
-		throw err;
-	} finally {
-		client.release();
-	}
-}
-
-// The one write behind every reordering gesture — a drag, a typed "3.3", a
-// context-menu move: the given cards leave where they were and sit down, in
-// the given order, at index (0-based; null appends) of the target subdeck,
-// which has to be one that holds cards. The whole deck's layout is recomputed
-// here and written in one statement.
-const moveCards = async (userId, deckId, cardIds, targetSubdeckId, targetIndex) => {
-	const client = await pool.connect();
-	try {
-		await client.query("begin");
-		const subdecks = await lockSubdecks(client, userId, deckId);
-		if (!leafSubdecks(subdecks).some(s => s.id === targetSubdeckId)) throw new Error("Unauthorized");
-		const { rows: cards } = await client.query(
-			"select id, subdeck_id from cards where deck_id = $1 order by position", [deckId]);
-		const deckCardIds = new Set(cards.map(c => c.id));
-		if (!cardIds.every(id => deckCardIds.has(id))) throw new Error("Unauthorized");
-
-		const moving = new Set(cardIds);
-		const bySubdeck = new Map(subdecks.map(s => [s.id, []]));
-		for (const card of cards) {
-			if (!moving.has(card.id)) bySubdeck.get(card.subdeck_id).push(card.id);
-		}
-		const target = bySubdeck.get(targetSubdeckId);
-		const index = Math.max(0, Math.min(targetIndex ?? target.length, target.length));
-		target.splice(index, 0, ...cardIds);
-
-		const ids = [], subdeckIds = [], positions = [];
-		for (const [subdeckId, list] of bySubdeck) {
-			list.forEach((id, i) => { ids.push(id); subdeckIds.push(subdeckId); positions.push(i + 1); });
-		}
-		await client.query(`
-			update cards c set subdeck_id = u.subdeck_id, position = u.position
-			from unnest($1::uuid[], $2::uuid[], $3::smallint[]) u(id, subdeck_id, position)
-			where c.id = u.id`, [ids, subdeckIds, positions]);
-		await client.query("commit");
-	} catch (err) {
-		await client.query("rollback");
-		throw err;
-	} finally {
-		client.release();
-	}
-}
-
-// the user's decks by name, for the pickers that send cards to another one
-const getNames = async userId => {
-	const { rows } = await pool.query(
-		"select id, name from decks where user_id = $1 order by position, name", [userId]);
-	return rows;
-}
-
-// The subdeck cards sent to a deck land in: the one named, when it is that
-// deck's and holds cards, else the last of the deck's that does. Locked, so
-// two arrivals cannot take the same places. `last` is the place of its last
-// card.
-const landingSubdeck = async (client, userId, deckId, subdeckId) => {
-	const leaves = leafSubdecks(await lockSubdecks(client, userId, deckId));
-	const subdeck = leaves.find(leaf => leaf.id === subdeckId) ?? leaves[leaves.length - 1];
-	const { rows: [{ last }] } = await client.query(
-		"select coalesce(max(position), 0)::int last from cards where subdeck_id = $1", [subdeck.id]);
-	return { id: subdeck.id, last };
-}
-
-// the cards among `cardIds` that are in this deck of the user's, in deck order
-const cardsOfDeck = async (client, userId, deckId, cardIds) => {
-	const { rows: cards } = await client.query(`
-		select c.id, c.subdeck_id, c.position, c.front, c.back, c.card_type
-		from cards c join decks d on d.id = c.deck_id
-		where d.user_id = $1 and c.deck_id = $2 and c.id = any($3::uuid[])`, [userId, deckId, cardIds]);
-	if (cards.length !== new Set(cardIds).size) throw new Error("Unauthorized");
-	const { rows: subdecks } = await client.query(
-		"select id, parent_id, position from subdecks where deck_id = $1", [deckId]);
-	inDeckOrder({ subdecks, cards });
-	return cards;
-}
-
-// Cards leave one deck for another, to the end of its last subdeck, in the
-// order they stood in. They are the same cards — schedule and review history
-// go with them — so the deck they left closes ranks behind them, and stops
-// listing any of them among its sample cards.
-const moveCardsToDeck = async (userId, deckId, cardIds, targetDeckId) => {
-	if (deckId === targetDeckId) return;
-	const client = await pool.connect();
-	try {
-		await client.query("begin");
-		const cards = await cardsOfDeck(client, userId, deckId, cardIds);
-		const subdeck = await landingSubdeck(client, userId, targetDeckId, null);
-		const ids = cards.map(card => card.id);
-		await client.query(`
-			update cards c set deck_id = $1, subdeck_id = $2, position = $3 + u.n
-			from unnest($4::uuid[]) with ordinality u(id, n)
-			where c.id = u.id`, [targetDeckId, subdeck.id, subdeck.last, ids]);
-		await client.query(`
-			update cards c set position = r.position
-			from (select id, row_number() over (partition by subdeck_id order by position) position
-				from cards where deck_id = $1) r
-			where c.id = r.id and c.position <> r.position`, [deckId]);
-		await client.query(`
-			update decks set preview_card_ids = array(
-				select id from unnest(preview_card_ids) with ordinality p(id, n)
-				where id <> all($2::uuid[]) order by n)
-			where id = $1`, [deckId, ids]);
-		await client.query("commit");
-	} catch (err) {
-		await client.query("rollback");
-		throw err;
-	} finally {
-		client.release();
-	}
-}
-
-// Copies of cards, as new cards: the content and the type, none of the
-// progress. They go to the end of the named subdeck of the target deck, or
-// of its last one, in the order the originals stand in.
-const copyCards = async (userId, deckId, cardIds, targetDeckId, targetSubdeckId, FSRSValues) => {
-	const client = await pool.connect();
-	try {
-		await client.query("begin");
-		const cards = await cardsOfDeck(client, userId, deckId, cardIds);
-		const subdeck = await landingSubdeck(client, userId, targetDeckId, targetSubdeckId);
-		for (const [index, card] of cards.entries()) {
-			await client.query(`insert into cards(
-					deck_id, subdeck_id, position, front, back, card_type, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
-				) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
-				[targetDeckId, subdeck.id, subdeck.last + index + 1, JSON.stringify(card.front), card.back == null ? null : JSON.stringify(card.back),
-					card.card_type, ...scheduleValues(card.card_type, FSRSValues)]);
-		}
-		await client.query("commit");
-	} catch (err) {
-		await client.query("rollback");
-		throw err;
-	} finally {
-		client.release();
-	}
-}
-
-// How deep the deck's progression runs (0 = none, null = every level; see
-// decks.progression_depth). Touching a single deck's setting also puts the
-// profile's three-way back to "per deck" — the bulk modes only mean anything
-// until the next exception.
-const updateProgressionDepth = async (userId, deckId, depth) => {
-	const { rowCount } = await pool.query(
-		"update decks set progression_depth = $3 where id = $2 and user_id = $1",
-		[userId, deckId, depth]);
-	if (rowCount === 1) {
-		await pool.query(`update "user" set "subdeckProgressionMode" = 'per-deck' where id = $1`, [userId]);
-	}
-
-	return rowCount === 1;
-}
-
-const getSubdeckProgressionMode = async userId => {
-	const { rows } = await pool.query(
-		'select "subdeckProgressionMode" mode from "user" where id = $1', [userId]);
-
-	return rows[0]?.mode;
-}
-
-// 'all'/'none' are bulk writes over every deck and instance the user studies;
-// 'per-deck' just hands control back to the decks' own flags as they stand
-const setSubdeckProgressionMode = async (userId, mode) => {
-	await pool.query('update "user" set "subdeckProgressionMode" = $2 where id = $1', [userId, mode]);
-	if (mode === "per-deck") return;
-	// every level, or none
-	const depth = mode === "all" ? null : 0;
-	await pool.query("update decks set progression_depth = $2 where user_id = $1", [userId, depth]);
-	await pool.query("update marketplace_deck_instances set progression_depth = $2 where user_id = $1", [userId, depth]);
-}
-
 const createReviewLog = async (userId, cardId, log) => {
-	const { rows } = await pool.query(`
+	await pool.query(`
 		insert into review_logs(user_id, card_id, rating, state, due, stability, difficulty, elapsed_days, last_elapsed_days, scheduled_days, learning_steps, review)
 		values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, listCounts, withListing, inDeckOrder, create, reorder, getMineWithCards, getMineWithoutCards, getById, updateName, remove, getListing, getImage, updateListing, updatePreviewCards, addCard, addCards, userIdOwnsDeckId, updateCardContent, updateCardType, deleteCards, updateCardStudyState, resetDeckSchedule, createReviewLog, createSubdeck, renameSubdeck, updateIntro, moveSubdeck, flattenSubdecks, deleteSubdeck, moveCards, getNames, moveCardsToDeck, copyCards, updateProgressionDepth, getSubdeckProgressionMode, setSubdeckProgressionMode }
+export { BOUNDS, due, listCounts, BOUGHT_DECK, getLibrary, getListing, getDeck, create, rename, move, remove, removeTaken, flatten, setInOrder, reset, updateIntro, userIdOwnsDeckId, getOwnListing, getImage, updateListing, updatePreviewCards, addCard, addCards, updateCardType, updateCardContent, deleteCards, moveCards, copyCards, updateCardStudyState, createReviewLog }

@@ -8,9 +8,9 @@ const heading = (level, words) => ({ type: "heading", attrs: { level }, content:
 const paragraph = words => ({ type: "paragraph", content: [{ type: "text", text: words }] });
 const page = [text(paragraph("Read this first."))];
 
-const subdeck = (id, position, parent_id = null, intro = null) => ({ id, name: id, position, parent_id, intro });
-const fresh = subdeck_id => ({ subdeck_id, card_type: "basic", state: 0 });
-const learning = subdeck_id => ({ subdeck_id, card_type: "basic", state: 1 });
+const deckOf = (id, position, parent_id = null, intro = null) => ({ id, name: id, position, parent_id, intro, in_order: true });
+const fresh = deck_id => ({ deck_id, card_type: "basic", state: 0 });
+const learning = deck_id => ({ deck_id, card_type: "basic", state: 1 });
 
 describe("an intro's headings", () => {
 	it("are listed in order with their level, across its text blocks", () => {
@@ -106,19 +106,18 @@ describe("an intro written in a deck spec", () => {
 	})
 })
 
-describe("the intros on the way to a subdeck", () => {
+describe("the intros on the way to a deck", () => {
+	// the deck the page is on, with the decks inside it: a (a1, a2), b
 	const deck = {
-		id: "deck", name: "Deck", usesSubdecks: true, intro: page,
-		subdecks: [subdeck("a", 1, null, page), subdeck("a1", 1, "a"), subdeck("a2", 2, "a", page), subdeck("b", 2)]
+		id: "deck", name: "Deck", ancestors: [],
+		decks: [deckOf("deck", 1, null, page), deckOf("a", 1, "deck", page), deckOf("a1", 1, "a"), deckOf("a2", 2, "a", page), deckOf("b", 2, "deck")]
 	};
+	const without = intro => ({ ...deck, decks: deck.decks.map(entry => entry.id === "deck" ? { ...entry, intro } : entry) });
 
-	it("are the deck's, then each subdeck's down to it", () => {
+	it("are the deck's, then each one's inside it down to the one asked for", () => {
 		expect(introPlaces(deck, "a2").map(place => place.key)).toEqual(["deck", "a", "a2"]);
 		expect(introPlaces(deck, "a1").map(place => place.blocks)).toEqual([page, page, null]);
-	})
-
-	it("are the deck's alone when it does not use its subdecks", () => {
-		expect(introPlaces({ ...deck, usesSubdecks: false }, "a2").map(place => place.key)).toEqual(["deck"]);
+		expect(introPlaces(deck).map(place => place.key)).toEqual(["deck"]);
 	})
 
 	it("come up outermost first, each until it is passed", () => {
@@ -136,8 +135,30 @@ describe("the intros on the way to a subdeck", () => {
 		expect(pendingIntro(deck, cards, "a2", new Set()).key).toBe("a2");
 	})
 
+	it("count a deck's own cards as begun for it", () => {
+		const cards = [learning("deck"), fresh("a1")];
+		expect(pendingIntro(deck, cards, "a1", new Set()).key).toBe("a");
+	})
+
 	it("skip a place that has no intro, or one with nothing on it", () => {
-		expect(pendingIntro({ ...deck, intro: null }, [fresh("b")], "b", new Set())).toBe(null);
-		expect(pendingIntro({ ...deck, intro: [] }, [fresh("b")], "b", new Set())).toBe(null);
+		expect(pendingIntro(without(null), [fresh("b")], "b", new Set())).toBe(null);
+		expect(pendingIntro(without([]), [fresh("b")], "b", new Set())).toBe(null);
+	})
+
+	it("start from the decks around the one the page is on, outermost first", () => {
+		const inside = {
+			...deck,
+			ancestors: [{ id: "top", name: "Top", intro: page, begun: false }, { id: "mid", name: "Mid", intro: null, begun: false }]
+		};
+		expect(introPlaces(inside, "a1").map(place => place.key)).toEqual(["top", "mid", "deck", "a", "a1"]);
+		expect(pendingIntro(inside, [fresh("a1")], "a1", new Set()).key).toBe("top");
+		expect(pendingIntro(inside, [fresh("a1")], "a1", new Set(["top"])).key).toBe("deck");
+	})
+
+	it("leave out a deck around it that was begun elsewhere, or here", () => {
+		const begunElsewhere = { ...deck, ancestors: [{ id: "top", name: "Top", intro: page, begun: true }] };
+		expect(pendingIntro(begunElsewhere, [fresh("a1")], "a1", new Set()).key).toBe("deck");
+		const notYet = { ...deck, ancestors: [{ id: "top", name: "Top", intro: page, begun: false }] };
+		expect(pendingIntro(notYet, [learning("b"), fresh("a1")], "a1", new Set()).key).toBe("a");
 	})
 })

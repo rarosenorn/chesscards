@@ -42,16 +42,15 @@ export const logPractice =
 		}
 	})
 
-// a cram session gone through to the end, on a deck (or a marketplace deck
-// taken, or a metadeck) or one subdeck of it: the answer is how many that
-// makes there today, by the user's own day (their zone and rollover hour, as
-// the deck list reads them)
+// a cram session gone through to the end, on a deck: the answer is how many
+// that makes there today, by the user's own day (their zone and rollover
+// hour, as the deck list reads them)
 export const completeCramSession =
-	command("unchecked", async ({ studiedId, subdeckId }) => {
+	command("unchecked", async ({ studiedId }) => {
 		const { locals, cookies } = getRequestEvent();
 		if (!locals.userId) error(403, "Unauthorized");
-		checkIds(studiedId, subdeckId ?? []);
-		return activity.completeCramSession(locals.userId, studiedId, subdeckId ?? null, {
+		checkIds(studiedId);
+		return activity.completeCramSession(locals.userId, studiedId, {
 			timeZone: cookies.get(TZ_COOKIE) || Intl.DateTimeFormat().resolvedOptions().timeZone,
 			rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR
 		});

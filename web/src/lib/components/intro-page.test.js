@@ -2,32 +2,33 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 import { mount, unmount, tick } from "svelte"
 import { reactiveProps } from "./move-ref-click.svelte.js"
 
-// The intro page is mounted outside the app: the address it reads and the
-// server it saves to are stand-ins
-const { page, saveIntro } = vi.hoisted(() => ({
-	page: { url: new URL("http://localhost/my-flashcards/deck/intro"), params: { id: "deck" } },
+// The intro page is mounted outside the app: the server it saves to is a
+// stand-in
+const { saveIntro } = vi.hoisted(() => ({
 	// the server's answer: what was stored, null for a page with nothing on it
 	saveIntro: vi.fn(async ({ intro }) => intro.length > 0 ? intro : null)
 }));
-vi.mock("$app/state", () => ({ page }));
 vi.mock("$lib/deck.remote.js", () => ({ saveIntro }));
 
 const { default: IntroPage } = await import("../../routes/(standard-layout)/my-flashcards/[id=uuid]/intro/+page.svelte");
 
-// The intro page of a deck and of a subdeck: read by anyone who has the deck,
-// written by its owner.
+// The intro page of a deck, and of a deck inside another: read by anyone who
+// has the deck, written by its owner.
 
 const paragraph = words => ({ type: "paragraph", content: [{ type: "text", text: words }] });
 const heading = (level, words) => ({ type: "heading", attrs: { level }, content: [{ type: "text", text: words }] });
 const text = (...nodes) => [{ type: "text", content: { type: "doc", content: nodes } }];
-const deckOf = (overrides = {}) => ({
-	id: "deck", name: "The deck", usesSubdecks: true, isMarketplace: false,
-	intro: text(heading(1, "Why"), paragraph("The deck's page"), heading(2, "How"), paragraph("More")),
-	subdecks: [
-		{ id: "a", name: "First", position: 1, parent_id: null, intro: text(paragraph("First's page")) },
-		{ id: "b", name: "Second", position: 2, parent_id: null, intro: null }
-	],
-	cards: [],
+const deckPage = text(heading(1, "Why"), paragraph("The deck's page"), heading(2, "How"), paragraph("More"));
+// a deck as the layout loads it: itself first among its decks, the decks it
+// sits inside as ancestors
+const deckOf = ({ id = "deck", name = "The deck", intro = deckPage, ancestors = [], isMarketplace = false } = {}) => ({
+	id, name, intro, ancestors, isMarketplace,
+	decks: [{ id, name, position: 1, parent_id: null, in_order: true, intro }],
+	cards: []
+});
+const inside = (overrides = {}) => deckOf({
+	id: "a", name: "First", intro: text(paragraph("First's page")),
+	ancestors: [{ id: "deck", name: "The deck", intro: deckPage, begun: false }],
 	...overrides
 });
 
@@ -37,8 +38,7 @@ describe("the intro page", () => {
 		saveIntro.mockClear();
 	});
 
-	const open = async (deck, subdeck = null) => {
-		page.url = new URL(`http://localhost/my-flashcards/deck/intro${subdeck ? `?subdeck=${subdeck}` : ""}`);
+	const open = async deck => {
 		const target = document.createElement("div");
 		document.body.append(target);
 		const shared = reactiveProps(deck);
@@ -70,17 +70,17 @@ describe("the intro page", () => {
 		view.close();
 	})
 
-	it("shows a subdeck's page under the deck's name, which leads to the deck's", async () => {
-		const view = await open(deckOf(), "a");
+	it("shows a deck inside another under that one's name, which leads to its page", async () => {
+		const view = await open(inside());
 		expect(view.title()).toBe("First");
 		expect(view.body()).toContain("First's page");
 		expect(view.links()).toContainEqual(["The deck", "/my-flashcards/deck/intro"]);
-		expect(view.links()).toContainEqual(["Study", "/my-flashcards/deck/study?subdeck=a"]);
+		expect(view.links()).toContainEqual(["Study", "/my-flashcards/a/study"]);
 		view.close();
 	})
 
 	it("is read only on a deck taken from the marketplace", async () => {
-		const view = await open(deckOf({ isMarketplace: true }), "b");
+		const view = await open(inside({ id: "b", name: "Second", intro: null, isMarketplace: true }));
 		expect(view.title()).toBe("Second");
 		expect(view.body()).toBe("");
 		expect(view.target.textContent).toContain("No intro");
@@ -89,15 +89,10 @@ describe("the intro page", () => {
 		// a name above leads to a page only where there is one to read
 		expect(view.links()).toContainEqual(["The deck", "/my-flashcards/deck/intro"]);
 		view.close();
-	})
-
-	it("falls back to the deck's page for a subdeck the deck does not have, or does not show", async () => {
-		let view = await open(deckOf(), "nope");
-		expect(view.title()).toBe("The deck");
-		view.close();
-		view = await open(deckOf({ usesSubdecks: false }), "a");
-		expect(view.title()).toBe("The deck");
-		view.close();
+		const bare = await open(inside({ id: "b", name: "Second", intro: null, isMarketplace: true,
+			ancestors: [{ id: "deck", name: "The deck", intro: null, begun: false }] }));
+		expect(bare.links().map(([name]) => name)).not.toContain("The deck");
+		bare.close();
 	})
 
 	it("saves what was written, headings and all, into the shared deck", async () => {
@@ -114,7 +109,6 @@ describe("the intro page", () => {
 		expect(saveIntro).toHaveBeenCalledTimes(1);
 		const sent = saveIntro.mock.calls[0][0];
 		expect(sent.deckId).toBe("deck");
-		expect(sent.subdeckId).toBe(null);
 		// unchanged in the editor, so unchanged on the way out
 		expect(sent.intro).toEqual(before);
 		expect(view.title()).toBe("The deck");
@@ -123,19 +117,19 @@ describe("the intro page", () => {
 	})
 
 	it("opens a page with nothing on it for writing, and an empty one saved is no intro", async () => {
-		const view = await open(deckOf(), "b");
+		const view = await open(inside({ id: "b", name: "Second", intro: null }));
 		expect(await view.editor()).toBeTruthy();
 		expect(view.button("Cancel")).toBeFalsy();
 		await view.press("Save");
 		await tick();
-		expect(saveIntro).toHaveBeenCalledWith({ deckId: "deck", subdeckId: "b", intro: [] });
-		expect(view.deck.subdecks[1].intro).toBe(null);
+		expect(saveIntro).toHaveBeenCalledWith({ deckId: "b", intro: [] });
+		expect(view.deck.decks[0].intro).toBe(null);
 		expect(view.target.textContent).toContain("No intro");
 		view.close();
 	})
 
 	it("leaves the page as it was on Cancel", async () => {
-		const view = await open(deckOf(), "a");
+		const view = await open(inside());
 		await view.press("Edit");
 		expect(await view.editor()).toBeTruthy();
 		await view.press("Cancel");

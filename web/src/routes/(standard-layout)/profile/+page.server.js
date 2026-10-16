@@ -1,13 +1,11 @@
 import { fail } from "@sveltejs/kit"
 import { pool } from "$lib/server/pool.js"
 import { cleanName } from "$lib/display-name.js"
-import * as decks from "$lib/server/decks.js"
 import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS } from "$lib/board-prefs.js"
 import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 
 export const load = async ({ locals }) => ({
 	pageTitle: "Settings",
-	subdeckProgressionMode: await decks.getSubdeckProgressionMode(locals.userId),
 	rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR
 });
 
@@ -63,16 +61,5 @@ export const actions = {
 		}
 		await pool.query('update "user" set "rolloverHour" = $1 where id = $2', [rolloverHour, locals.userId]);
 		return { saved: "rollover" };
-	},
-	// "all"/"none" write every deck's flag right away; "per deck" leaves the
-	// decks as they are and just hands the say back to their own toggles
-	subdeckProgression: async ({ request, locals }) => {
-		const data = await request.formData();
-		const mode = data.get("subdeck-progression-mode");
-		if (!["per-deck", "all", "none"].includes(mode)) {
-			return fail(400, { errors: ["Invalid subdeck progression setting"] });
-		}
-		await decks.setSubdeckProgressionMode(locals.userId, mode);
-		return { saved: "subdeck-progression" };
 	}
 }

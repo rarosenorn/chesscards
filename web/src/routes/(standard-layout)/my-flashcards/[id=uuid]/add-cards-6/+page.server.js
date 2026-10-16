@@ -1,6 +1,7 @@
 import { error } from "@sveltejs/kit"
 import { createEmptyCard } from "ts-fsrs"
 import * as decks from "$lib/server/decks.js"
+import { isUuid } from "$lib/uuid.js"
 
 // marketplace deck instances are readonly: no add-cards page for them
 const load = async ({ parent }) => {
@@ -15,9 +16,11 @@ const actions = {
 		const FSRSValues = Object.values(createEmptyCard());
 		// returned so the client can add it to the shared deck context, making
 		// it visible in browse/study without a reload
+		// the deck the card goes in: this one, or one inside it
+		const deckId = data.get("deckId") || params.id;
+		if (!isUuid(deckId)) error(400, "Bad request");
 		const card = await decks.addCard(
-			locals.userId, params.id, data.get("front"), data.get("back"), cardType, FSRSValues,
-			data.get("subdeckId") || null
+			locals.userId, deckId, data.get("front"), data.get("back"), cardType, FSRSValues
 		)
 		return { card };
 	}

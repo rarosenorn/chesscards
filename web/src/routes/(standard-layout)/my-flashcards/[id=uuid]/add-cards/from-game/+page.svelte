@@ -1,7 +1,7 @@
 <script>
 	import { getContext, onMount } from "svelte"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
-	import { subdeckChoices } from "$lib/subdecks.js"
+	import { deckChoices } from "$lib/deck-tree.js"
 	import { startImport, saveUsername } from "./import.remote.js"
 	import { current, follow, resume, cancel } from "./import-state.svelte.js"
 	import { SPEED_ICON_PATHS } from "$lib/lichess-speed-icons.js"
@@ -14,12 +14,12 @@
 	const KINDS = [["blunder", "Blunders"], ["mistake", "Mistakes"], ["inaccuracy", "Inaccuracies"]];
 	let kinds = $state({ blunder: true, mistake: true, inaccuracy: true });
 
-	// the deck's outline; cards go only into the subdecks that hold cards
-	let choices = $derived(subdeckChoices(deck.subdecks));
-	let cardSubdecks = $derived(choices.filter(choice => !choice.disabled));
-	let subdeckId = $state(null);
-	let validSubdeckId = $derived(
-		cardSubdecks.some(choice => choice.id === subdeckId) ? subdeckId : cardSubdecks.at(-1)?.id
+	// the deck and the decks inside it, as an outline: the cards go in the
+	// deck itself unless one inside it is chosen (not a marketplace deck's)
+	let choices = $derived(deckChoices(deck.decks));
+	let targetId = $state(null);
+	let validTargetId = $derived(
+		choices.some(choice => choice.id === targetId && !choice.disabled) ? targetId : deck.id
 	);
 
 	// a busy month is hundreds of games: the list opens on the newest few —
@@ -231,8 +231,7 @@
 		startError = null;
 		try {
 			const { jobId } = await startImport({
-				deckId: deck.id,
-				subdeckId: deck.usesSubdecks ? validSubdeckId : null,
+				targetDeckId: validTargetId,
 				pgn: game.pgn,
 				color: game.color,
 				kinds: KINDS.map(([kind]) => kind).filter(kind => kinds[kind]),
@@ -265,10 +264,10 @@
 		{#each KINDS as [kind, label]}
 			<label><input type="checkbox" bind:checked={kinds[kind]} /> {label}</label>
 		{/each}
-		{#if deck.usesSubdecks}
+		{#if choices.length > 1}
 			<label class="subdeck">
-				Subdeck
-				<select value={validSubdeckId} onchange={e => subdeckId = e.currentTarget.value}>
+				Deck
+				<select value={validTargetId} onchange={e => targetId = e.currentTarget.value}>
 					{#each choices as choice (choice.id)}
 						<option value={choice.id} disabled={choice.disabled}>{choice.label}</option>
 					{/each}

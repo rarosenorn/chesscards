@@ -1,82 +1,239 @@
 <script>
-	import { deserialize } from "$app/forms"
-	import { flip } from "svelte/animate"
 	import { SvelteSet } from "svelte/reactivity"
 	import { confirmModal, settleModal } from "$lib/modals.svelte.js"
 	import Heatmap from "$lib/components/Heatmap.svelte"
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
-	import Info from "$lib/icons/Info.svelte"
 	import { invalidateAll } from "$app/navigation"
-	import { resolveDecks, holders } from "$lib/metadecks.js"
-	import { reorderDecks, reorderMetadecks, addToMetadeck, removeFromMetadeck } from "./decks.remote.js"
+	import { deckSubtree } from "$lib/deck-tree.js"
+	import { createDeck, renameDeck, moveDeck, deleteDeck, flattenDeck, setInOrder } from "./decks.remote.js"
 	let { data } = $props();
 
-	// the three lists as shown: a drop reorders them here at once, and a
-	// fresh load (a deck created) replaces them
-	// svelte-ignore state_referenced_locally -- seeded here, kept in step below
-	let lists = $state({ meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks });
-	$effect(() => { lists = { meta: data.metadecks, market: data.marketplaceDecks, mine: data.decks } });
+	// Every deck of the user's as one tree, in reading order (decks.getListing):
+	// their own, the marketplace decks they have taken, and the decks inside
+	// those. A row knows its level, whether it holds decks, whether
+	// progression has it locked, and the counts of everything under it.
+	let rows = $derived(data.decks);
+	let byId = $derived(new Map(rows.map(row => [row.id, row])));
+	// a marketplace deck taken, and a deck inside one, which is not the
+	// user's to rearrange
+	const isTaken = row => row.bought && row.id === row.instance_id;
+	const isInsideTaken = row => row.bought && row.id !== row.instance_id;
+	const childrenOf = row => rows.filter(other => other.parent_id === row.id);
 
-	// The Create buttons at the foot of the page ask for a name and make a deck (or a
-	// metadeck) of it. A name the server refuses is asked for again, with
-	// what was wrong said under the field and what was typed still in it.
+	// A deck that holds decks opens to show them, and they open the same way,
+	// level by level. Which ones are open is the reader's own business, kept
+	// in this browser from one visit to the next.
+	const EXPANDED_KEY = "chesscards:expanded-decks";
+	const storedExpanded = () => {
+		try { return JSON.parse(localStorage.getItem(EXPANDED_KEY) ?? "[]"); } catch { return []; }
+	}
+	let expanded = $state(new SvelteSet());
+	// read after mount: the server renders every deck closed
+	$effect(() => { expanded = new SvelteSet(storedExpanded()); });
+	const keepExpanded = () => {
+		try { localStorage.setItem(EXPANDED_KEY, JSON.stringify([...expanded])); } catch {}
+	}
+	const toggleExpanded = id => {
+		if (!expanded.delete(id)) expanded.add(id);
+		keepExpanded();
+	}
+	const expand = id => {
+		expanded.add(id);
+		keepExpanded();
+	}
+
+	// the rows that show: each level only under an open row, so a closed deck
+	// keeps everything inside it out of the list
+	let visible = $derived.by(() => {
+		const shown = [];
+		let closedAt = null;
+		for (const row of rows) {
+			if (closedAt !== null && row.level > closedAt) continue;
+			closedAt = row.holdsDecks && !expanded.has(row.id) ? row.level : null;
+			shown.push(row);
+		}
+		return shown;
+	});
+
+	// --- names ---
+	// A deck is named at birth and when renamed through the same field in a
+	// modal: a name the server refuses (taken among its siblings, too long)
+	// is asked for again, with what was wrong said under the field and what
+	// was typed still in it.
 	let naming = $state({ value: "", error: null });
-	const createNew = async list => {
-		const isMeta = list === "meta";
-		naming.value = "";
+	const askName = async ({ title, value = "", confirmLabel, save }) => {
+		naming.value = value;
 		naming.error = null;
-		while (await confirmModal({ title: isMeta ? "New metadeck" : "New deck", body: nameField, confirmLabel: "Create" })) {
-			const body = new FormData();
-			body.set("name", naming.value);
-			const response = await fetch(isMeta ? "?/createMetadeck" : "?/create", {
-				method: "POST", body, headers: { "x-sveltekit-action": "true" }
-			});
-			const result = deserialize(await response.text());
-			if (result.type === "success") return invalidateAll();
-			naming.error = (result.type === "failure" && result.data?.errors?.[0]) || "That did not work. Try again.";
+		while (await confirmModal({ title, body: nameField, confirmLabel })) {
+			try {
+				await save(naming.value);
+				return;
+			} catch (err) {
+				naming.error = err?.body?.message ?? "That did not work. Try again.";
+			}
 		}
 	}
 
-	// A row is dragged to reorder its own list, or onto a metadeck to go
-	// inside it; a row inside a metadeck is dragged out of it to leave it, or
-	// onto another metadeck to move there. A press only becomes a drag once
-	// the pointer has moved, so a click still opens the deck. While a row of
-	// a list is carried it is lifted out, and a placeholder holds the slot it
-	// would drop into.
+	const createAtTop = () => askName({
+		title: "New deck", confirmLabel: "Create",
+		save: async name => { await createDeck({ name }); await invalidateAll(); }
+	});
+	const createInside = row => askName({
+		title: `New deck in ${row.name}`, confirmLabel: "Create",
+		save: async name => { await createDeck({ name, parentId: row.id }); expand(row.id); await invalidateAll(); }
+	});
+	const rename = row => askName({
+		title: "Rename deck", value: row.name, confirmLabel: "Rename",
+		save: async name => { await renameDeck({ id: row.id, name }); await invalidateAll(); }
+	});
+
+	// --- what goes, and what stays ---
+	const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+	// the marketplace decks taken that sit under a deck, which are not its
+	// to delete or flatten away
+	const takenUnder = row => rows.filter(other => isTaken(other) && other.id !== row.id && deckSubtree(rows, row.id).has(other.id));
+	// the cards under a deck that are the user's own
+	const ownCardsUnder = row => row.total - takenUnder(row).reduce((sum, taken) => sum + taken.total, 0);
+	const ownDecksInside = row => rows.filter(other => !other.bought && other.id !== row.id && deckSubtree(rows, row.id).has(other.id)).length;
+
+	// A deck goes with every deck and card inside it, which is asked about
+	// first only when there are cards to lose. A marketplace deck taken leaves
+	// with the user's progress on it, so that is always asked.
+	const remove = async row => {
+		if (isTaken(row)) {
+			const confirmed = await confirmModal({
+				title: "Remove deck",
+				message: `This removes "${row.name}" from your decks, and your progress on it. You can take it again from the marketplace.`,
+				confirmLabel: "Remove",
+				danger: true
+			});
+			if (!confirmed) return;
+		} else if (ownCardsUnder(row) > 0) {
+			const inside = ownDecksInside(row);
+			const taken = takenUnder(row).length;
+			const confirmed = await confirmModal({
+				title: "Delete deck",
+				message: `This permanently deletes "${row.name}"${inside ? `, the ${plural(inside, "deck")} inside it` : ""} and the ${plural(ownCardsUnder(row), "card")} in ${inside ? "them" : "it"}, with their progress.`
+					+ (taken ? ` The marketplace ${taken === 1 ? "deck" : "decks"} inside it move${taken === 1 ? "s" : ""} to the top of your list.` : ""),
+				confirmLabel: "Delete",
+				danger: true
+			});
+			if (!confirmed) return;
+		}
+		await deleteDeck({ id: row.id });
+		await invalidateAll();
+	}
+
+	// Flattening: the decks inside a deck are taken away and every card in
+	// them becomes the deck's own, in order. The grouping cannot be put back,
+	// so it is always asked about first, in words that say what goes and what
+	// stays.
+	const flatten = async row => {
+		const inside = ownDecksInside(row);
+		const ownCards = row.total - childrenOf(row).reduce((sum, child) => sum + child.total, 0);
+		const moving = ownCardsUnder(row) - ownCards;
+		const taken = takenUnder(row).length;
+		const confirmed = await confirmModal({
+			title: "Flatten deck",
+			message: `This removes the ${plural(inside, "deck")} inside "${row.name}". `
+				+ (moving === 0 ? "There are no cards in them." : `The ${plural(moving, "card")} in them stay${moving === 1 ? "s" : ""}, in the same order, directly in "${row.name}".`)
+				+ (taken ? ` The marketplace ${taken === 1 ? "deck" : "decks"} inside stay${taken === 1 ? "s" : ""}, directly in it.` : ""),
+			confirmLabel: "Flatten"
+		});
+		if (!confirmed) return;
+		await flattenDeck({ id: row.id });
+		await invalidateAll();
+	}
+
+	const chooseInOrder = async (row, inOrder) => {
+		if (row.in_order === inOrder) return;
+		await setInOrder({ id: row.id, inOrder });
+		await invalidateAll();
+	}
+
+	// Move to…: the same move as a drag, picked from the tree — for a long
+	// list, and for a phone, where dragging is awkward. Anywhere of the
+	// user's own but inside the deck itself.
+	let moving = $state({ row: null, to: null });
+	let destinations = $derived(moving.row
+		? rows.filter(row => !row.bought && !deckSubtree(rows, moving.row.id).has(row.id))
+		: []);
+	const moveTo = async row => {
+		moving = { row, to: undefined };
+		if (!await confirmModal({ title: `Move ${row.name}`, body: destinationField, confirmLabel: "Move" })) return;
+		if (moving.to === undefined) return;
+		try {
+			await moveDeck({ id: row.id, parentId: moving.to, index: null });
+		} catch (err) {
+			await confirmModal({ title: "Could not move the deck", message: err?.body?.message ?? "That did not work. Try again.", confirmLabel: "OK" });
+			return;
+		}
+		if (moving.to) expand(moving.to);
+		await invalidateAll();
+	}
+
+	// --- the deck's menu ---
+	// The wheel at the end of a row opens it, and so does a right-click on
+	// the row. What a row offers depends on whose it is: a deck of the user's
+	// own all of it, a marketplace deck taken what is theirs to do with it,
+	// and a deck inside one only how its own decks are taken.
+	let menu = $state(null);
+	const menuItems = row => {
+		if (isInsideTaken(row)) return row.holdsDecks ? ["order"] : [];
+		if (isTaken(row)) return ["move", ...(row.holdsDecks ? ["order"] : []), "remove"];
+		return ["create", "rename", ...(row.holdsDecks ? ["order", "flatten"] : []), "move", "delete"];
+	}
+	const openMenu = (row, x, y) => {
+		if (menuItems(row).length === 0) return;
+		menu = { row, x, y };
+	}
+	const handleRowContextMenu = (e, row) => {
+		if (menuItems(row).length === 0) return;
+		e.preventDefault();
+		openMenu(row, e.clientX, e.clientY);
+	}
+	const fromMenu = act => {
+		const { row } = menu;
+		menu = null;
+		act(row);
+	}
+
+	// --- dragging ---
+	// A row is dragged to another place: onto a deck of the user's own to go
+	// inside it (the deck lights up), or between rows to sit there at their
+	// level (a line shows where) — between the top-level rows, at the top of
+	// the list. Past the last row is the end of the top. Never into itself or
+	// anything inside it, and nothing goes inside a marketplace deck. A press
+	// only becomes a drag once the pointer has moved, so a click still opens
+	// the deck.
 	let drag = $state(null);
 	let justDragged = false;
 
-	// The metadecks a deck, a marketplace deck or a metadeck can still go
-	// into: not one that holds it already, and for a metadeck never itself
-	// or one it holds, which would close a loop.
-	const canHold = (metadeck, kind, ref) =>
-		!metadeck.items.some(item => item.id === ref)
-		&& !(kind === "metadeck" && holders(data.metadecks, metadeck.id).has(ref));
-
-	const addTo = async (metadeck, row, from = null) => {
-		await addToMetadeck({ metadeckId: metadeck.id, kind: row.kind, id: row.ref, fromMetadeckId: from?.id });
-		await invalidateAll();
-	}
-	const removeFrom = async (metadeck, row) => {
-		await removeFromMetadeck({ metadeckId: metadeck.id, kind: row.kind, id: row.ref });
-		await invalidateAll();
-	}
-
 	const handleRowMouseDown = (e, row) => {
-		if (e.button !== 0) return;
+		if (e.button !== 0 || isInsideTaken(row)) return;
 		// no native link drag or text selection; the click still lands
 		e.preventDefault();
-		const index = row.list ? lists[row.list].indexOf(row.item) : -1;
 		drag = {
-			row, list: row.list ?? null, deck: row.item, started: false,
+			row, started: false, within: deckSubtree(rows, row.id),
 			startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY,
-			rowHeight: e.currentTarget.getBoundingClientRect().height,
-			from: index, over: index,
-			// the metadeck it would go into and the row of it under the pointer
-			target: null, targetRowId: null,
-			// a row inside a metadeck, carried clear of it: let go, it leaves
-			out: false
+			// { targetId, zone: "before" | "after" | "inside" | "end", parentId, index }
+			drop: null
 		};
+	}
+
+	// where letting go over this row would put the deck in hand
+	const dropOn = (target, part) => {
+		const zone = target.bought
+			? (part < 0.5 ? "before" : "after")
+			: part < 0.25 ? "before" : part > 0.75 ? "after" : "inside";
+		if (zone === "inside") return { targetId: target.id, zone, parentId: target.id, index: null };
+		// just under an open deck that holds decks reads as the first deck inside it
+		if (zone === "after" && !target.bought && target.holdsDecks && expanded.has(target.id)) {
+			return { targetId: target.id, zone, parentId: target.id, index: 0 };
+		}
+		const parentId = target.parent_id ?? null;
+		const siblings = rows.filter(row => (row.parent_id ?? null) === parentId && row.id !== drag.row.id);
+		return { targetId: target.id, zone, parentId, index: siblings.indexOf(target) + (zone === "after" ? 1 : 0) };
 	}
 
 	const handleWindowMouseMove = e => {
@@ -87,48 +244,25 @@
 			if (Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) <= 5) return;
 			drag.started = true;
 		}
-
-		// The metadeck under the pointer, when the row can go into it. Among
-		// the metadecks themselves a drag also reorders, so there only the
-		// middle of a row means inside (as a subdeck is dropped in Cards).
 		const under = document.elementFromPoint(e.clientX, e.clientY)?.closest("tr[data-row-id]");
-		const metadeck = under?.dataset.metadeck && lists.meta.find(candidate => candidate.id === under.dataset.metadeck);
-		let target = metadeck && canHold(metadeck, drag.row.kind, drag.row.ref) ? metadeck : null;
-		if (target && drag.list === "meta") {
+		const target = under && byId.get(under.dataset.rowId);
+		if (target) {
+			if (drag.within.has(target.id) || isInsideTaken(target)) {
+				drag.drop = null;
+				return;
+			}
 			const rect = under.getBoundingClientRect();
-			const part = (e.clientY - rect.top) / rect.height;
-			if (part < 0.25 || part > 0.75) target = null;
-		}
-		drag.target = target;
-		drag.targetRowId = target ? under.dataset.rowId : null;
-		// The slot stays where it was while a metadeck is aimed at: moving it
-		// would shift the rows under the pointer and the aim with them.
-		if (target) return;
-
-		if (!drag.list) {
-			// clear of its metadeck: not over that metadeck's row or anything under it
-			const home = drag.row.parentRowId;
-			const at = under?.dataset.rowId;
-			drag.out = !(at && (at === home || at.startsWith(home + "/")));
+			drag.drop = dropOn(target, (e.clientY - rect.top) / rect.height);
 			return;
 		}
-
-		// the slot is read against the rows still standing, from their
-		// layout positions (a row mid-flip is translated): before the first
-		// row whose middle is below the cursor. Off the table, it goes home.
-		const table = document.querySelector(`table[data-list="${drag.list}"]`);
-		const box = table.getBoundingClientRect();
-		if (e.clientY < box.top - 20 || e.clientY > box.bottom + 20 || e.clientX < box.left || e.clientX > box.right) {
-			drag.over = drag.from;
-			return;
-		}
-		const rows = [...table.querySelectorAll("tr[data-deck-row]")];
-		const index = rows.findIndex(row => {
-			const rect = row.getBoundingClientRect();
-			const top = rect.top - new DOMMatrixReadOnly(getComputedStyle(row).transform).m42;
-			return e.clientY < top + rect.height / 2;
-		});
-		drag.over = index === -1 ? rows.length : index;
+		// past the last row, within the table's width: the end of the top
+		const table = document.querySelector("table.decks");
+		const last = table?.querySelector("tbody tr:last-child")?.getBoundingClientRect();
+		const box = table?.getBoundingClientRect();
+		drag.drop = last && box && e.clientY > last.bottom && e.clientY < last.bottom + 60
+			&& e.clientX > box.left && e.clientX < box.right
+			? { targetId: null, zone: "end", parentId: null, index: null }
+			: null;
 	}
 
 	const handleWindowMouseUp = async () => {
@@ -139,136 +273,15 @@
 		// the mouseup can still turn into a click on the row it ends over
 		justDragged = true;
 		setTimeout(() => justDragged = false);
-		if (d.target) return addTo(d.target, d.row, d.row.parent);
-		if (!d.list) {
-			if (d.out) await removeFrom(d.row.parent, d.row);
+		if (!d.drop) return;
+		try {
+			await moveDeck({ id: d.row.id, parentId: d.drop.parentId, index: d.drop.index });
+		} catch (err) {
+			await confirmModal({ title: "Could not move the deck", message: err?.body?.message ?? "That did not work. Try again.", confirmLabel: "OK" });
 			return;
 		}
-		if (d.over === d.from) return;
-		const before = lists[d.list];
-		const rest = before.filter(deck => deck !== d.deck);
-		lists[d.list] = [...rest.slice(0, d.over), d.deck, ...rest.slice(d.over)];
-		const ids = lists[d.list].map(deck => deck.id);
-		try {
-			await (d.list === "meta" ? reorderMetadecks({ ids }) : reorderDecks({ marketplace: d.list === "market", ids }));
-		} catch (err) {
-			lists[d.list] = before;
-			throw err;
-		}
-		// what a metadeck holds stands in the order of these lists
-		if (lists.meta.length) await invalidateAll();
-	}
-
-	// The same two acts without a drag, from a right-click on the row: the
-	// metadecks it can go into, and for a row inside one the way out of it.
-	// A row with neither to offer keeps the browser's own menu.
-	let menu = $state(null);
-	const handleRowContextMenu = (e, row) => {
-		if (!row.kind) return;
-		const targets = lists.meta.filter(metadeck => canHold(metadeck, row.kind, row.ref));
-		if (!targets.length && !row.parent) return;
-		e.preventDefault();
-		menu = { x: e.clientX, y: e.clientY, row, targets };
-	}
-
-	// A deck that uses subdecks opens to show them, each with its own counts,
-	// and a subdeck that holds subdecks opens the same way, level by level; a
-	// metadeck opens onto the decks and metadecks it holds, which open in
-	// turn. Which ones are open is the reader's own business, kept in this
-	// browser from one visit to the next (by the row's id: its own for a row
-	// of a list, and for a row under another that row's and its own together).
-	const EXPANDED_KEY = "chesscards:expanded-decks";
-	const storedExpanded = () => {
-		try { return JSON.parse(localStorage.getItem(EXPANDED_KEY) ?? "[]"); } catch { return []; }
-	}
-	let expanded = $state(new SvelteSet());
-	// read after mount: the server renders every deck closed
-	$effect(() => { expanded = new SvelteSet(storedExpanded()); });
-	const toggleExpanded = id => {
-		if (!expanded.delete(id)) expanded.add(id);
-		try { localStorage.setItem(EXPANDED_KEY, JSON.stringify([...expanded])); } catch {}
-	}
-
-	// A row of a table: its name, where a click on it studies, its three
-	// numbers, how far in it stands, and whether it opens (`holds` names what
-	// onto, `inside` gives those rows).
-
-	// the subdecks of an open deck that show: each level only under an open
-	// row, so a closed subdeck keeps everything inside it out of the list
-	const subdeckRows = (deck, deckRowId, depth) => {
-		const rows = [];
-		// the level of the closed subdeck the walk is inside, if any
-		let closedAt = null;
-		for (const subdeck of deck.subdecks) {
-			if (closedAt !== null && subdeck.level > closedAt) continue;
-			const id = `${deckRowId}:${subdeck.id}`;
-			closedAt = subdeck.holdsSubdecks && !expanded.has(id) ? subdeck.level : null;
-			// a subdeck is studied on its own from here, locked or not
-			rows.push({
-				id, depth: depth + subdeck.level, name: subdeck.name,
-				href: `my-flashcards/${deck.id}/study?subdeck=${subdeck.id}`,
-				counts: subdeck, opens: subdeck.holdsSubdecks, holds: "subdecks", locked: subdeck.locked
-			});
-		}
-		return rows;
-	}
-
-	// `kind` and `ref` say what a row is of (a subdeck's row has neither);
-	// `parent` and `parentRowId` are the metadeck a row stands inside and
-	// that metadeck's row.
-	let instanceIds = $derived(new Set(data.marketplaceDecks.map(deck => deck.id)));
-	const deckRow = (deck, id, depth, parent = null, parentRowId = null) => ({
-		id, depth, name: deck.name, href: `my-flashcards/${deck.id}/study`,
-		counts: deck, opens: deck.subdecks.length > 0, holds: "subdecks",
-		kind: instanceIds.has(deck.id) ? "instance" : "deck", ref: deck.id, parent, parentRowId,
-		inside: () => subdeckRows(deck, id, depth)
-	});
-
-	let decksById = $derived(new Map([...data.marketplaceDecks, ...data.decks].map(deck => [deck.id, deck])));
-	let metadecksById = $derived(new Map(data.metadecks.map(metadeck => [metadeck.id, metadeck])));
-
-	// a metadeck's numbers: those of the decks it comes to, each counted once
-	// however many ways lead to it
-	const totals = metadeck => {
-		const sum = { new: 0, learn: 0, review: 0 };
-		for (const { id } of resolveDecks(data.metadecks, metadeck.id)) {
-			const deck = decksById.get(id);
-			if (!deck) continue;
-			sum.new += Number(deck.new);
-			sum.learn += Number(deck.learn);
-			sum.review += Number(deck.review);
-		}
-		return sum;
-	}
-
-	const metadeckRow = (metadeck, id, depth, parent = null, parentRowId = null) => ({
-		id, depth, name: metadeck.name, href: `my-flashcards/metadecks/${metadeck.id}/study`,
-		counts: totals(metadeck), opens: metadeck.items.length > 0, holds: "decks",
-		kind: "metadeck", ref: metadeck.id, metadeck, parent, parentRowId,
-		inside: () => metadeck.items.flatMap(item => {
-			const held = item.kind === "metadeck" ? metadecksById.get(item.id) : decksById.get(item.id);
-			if (!held) return [];
-			return opened((item.kind === "metadeck" ? metadeckRow : deckRow)(held, `${id}/${item.id}`, depth + 1, metadeck, id));
-		})
-	});
-
-	// a row, and under it what it holds when it is open
-	const opened = row => [row, ...(expanded.has(row.id) ? row.inside() : [])];
-
-	// a row of a list itself: the one that is dragged to reorder it
-	const listRow = (list, item) => ({ ...(list === "meta" ? metadeckRow : deckRow)(item, item.id, 0), item, list });
-
-	// What a table shows, row by row: each of its list, with what it holds
-	// under it when it is open. While one is lifted, the others with a
-	// placeholder at the slot it would drop into — and nothing under them,
-	// which would be rows that are not the lifted kind standing between the
-	// slots.
-	const rowsOf = list => {
-		if (drag?.list === list && drag.started) {
-			const rest = lists[list].filter(item => item !== drag.deck).map(item => listRow(list, item));
-			return [...rest.slice(0, drag.over), { id: "__placeholder__", placeholder: true }, ...rest.slice(drag.over)];
-		}
-		return lists[list].flatMap(item => opened(listRow(list, item)));
+		if (d.drop.parentId) expand(d.drop.parentId);
+		await invalidateAll();
 	}
 </script>
 
@@ -276,104 +289,38 @@
 	onmousemove={handleWindowMouseMove}
 	onmouseup={handleWindowMouseUp}
 	onmousedown={() => { menu = null }}
-	onkeydown={e => { if (e.key === "Escape") menu = null }}
+	onkeydown={e => { if (e.key === "Escape") { menu = null; drag = null } }}
 />
 
-<!-- The plus that opens a row onto what is inside it, a minus once it is
-     open (as Anki has them). It is there only for a row that holds
-     something; the name keeps its place either way. -->
+<!-- The plus that opens a row onto the decks inside it, a minus once it is
+     open (as Anki has them). It is there only for a row that holds decks;
+     the name keeps its place either way. -->
 {#snippet expander(row)}
-	{@const id = row.id}
 	<button
 		class="expander"
-		class:open={expanded.has(id)}
-		class:empty={!row.opens}
-		aria-label={`${expanded.has(id) ? "Hide" : "Show"} ${row.holds}`}
-		aria-expanded={expanded.has(id)}
-		tabindex={row.opens ? 0 : -1}
+		class:open={expanded.has(row.id)}
+		class:empty={!row.holdsDecks}
+		aria-label={`${expanded.has(row.id) ? "Hide" : "Show"} the decks inside`}
+		aria-expanded={expanded.has(row.id)}
+		tabindex={row.holdsDecks ? 0 : -1}
 		onmousedown={e => e.stopPropagation()}
-		onclick={() => toggleExpanded(id)}
+		onclick={() => toggleExpanded(row.id)}
 	></button>
 {/snippet}
 
-<!-- anki's three columns, for a deck or a subdeck -->
+<!-- anki's three columns -->
 {#snippet counts(of)}
 	<td class="count new" class:none={of.new == 0}>{of.new}</td>
 	<td class="count learn" class:none={of.learn == 0}>{of.learn}</td>
 	<td class="count review" class:none={of.review == 0}>{of.review}</td>
 {/snippet}
 
-{#snippet deckTable(firstTableHeader, list)}
-	<table data-list={list} class:dragging={drag?.started}>
-		<thead>
-			<tr>
-				<th>
-					{firstTableHeader}
-					<!-- what a metadeck is and how one is filled, for whoever meets
-					     the word here first (the app's own tooltip) -->
-					{#if list === "meta"}
-						<span
-							class="info"
-							data-tip="A metadeck groups decks so you can study them together. Drag a deck onto one, or right-click a deck and choose Add to metadeck. The decks stay in their own lists; drag one out of a metadeck to take it out."
-						><Info /></span>
-					{/if}
-				</th>
-				<th>New</th>
-				<th>Learn</th>
-				<th>Due</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each rowsOf(list) as row (row.id)}
-				<!-- one tr for every kind of row and the placeholder alike: the
-				     animate directive must sit directly under the keyed each -->
-				<tr
-					data-deck-row={row.item ? row.id : undefined}
-					data-row-id={row.placeholder ? undefined : row.id}
-					data-metadeck={row.metadeck?.id}
-					class:placeholder-row={row.placeholder}
-					class:drop-inside={drag?.started && drag.targetRowId === row.id}
-					class:lifted={drag?.started && drag.row.id === row.id}
-					style:height={row.placeholder ? `${drag.rowHeight}px` : undefined}
-					animate:flip={{ duration: drag?.started && drag.list === list ? 150 : 0 }}
-					onmousedown={row.item || row.parent ? e => handleRowMouseDown(e, row) : undefined}
-					oncontextmenu={row.placeholder ? undefined : e => handleRowContextMenu(e, row)}
-				>
-					{#if row.placeholder}
-						<td colspan="4"></td>
-					{:else}
-						<td style:padding-left={row.depth ? `${4 + row.depth * 26}px` : undefined}>
-							{@render expander(row)}
-							<a
-								href={row.href}
-								draggable="false"
-								onclick={e => { if (justDragged) e.preventDefault() }}
-							>
-								{row.name}
-							</a>
-							{#if row.locked}
-								<svg class="lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
-									<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
-									<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
-								</svg>
-							{/if}
-						</td>
-						{@render counts(row.counts)}
-					{/if}
-				</tr>
-			{/each}
-		</tbody>
-	</table>
-{/snippet}
-
-<!-- the row in hand, saying what letting go would do when that is more
-     than putting it down -->
+<!-- the deck in hand, saying where letting go would put it when that is
+     inside another -->
 {#if drag?.started}
 	<div class="drag-ghost" style="left: {drag.x + 14}px; top: {drag.y + 10}px">
-		{#if drag.target}
-			{drag.row.name} → {drag.target.name}
-		{:else if drag.out}
-			Remove {drag.row.name} from {drag.row.parent.name}
+		{#if drag.drop?.zone === "inside"}
+			{drag.row.name} → {byId.get(drag.drop.targetId)?.name}
 		{:else}
 			{drag.row.name}
 		{/if}
@@ -388,37 +335,34 @@
 		style="left: {menu.x}px; top: {menu.y}px"
 		onmousedown={e => e.stopPropagation()}
 	>
-		{#if menu.targets.length}
-			<span class="menu-heading">Add to metadeck</span>
-			{#each menu.targets as metadeck (metadeck.id)}
-				<button
-					class="menu-item"
-					onclick={() => {
-						const { row } = menu;
-						menu = null;
-						addTo(metadeck, row);
-					}}
-				>
-					{metadeck.name}
-				</button>
-			{/each}
-		{/if}
-		{#if menu.row.parent}
-			<button
-				onclick={() => {
-					const { row } = menu;
-					menu = null;
-					removeFrom(row.parent, row);
-				}}
-			>
-				Remove from {menu.row.parent.name}
-			</button>
-		{/if}
+		{#each menuItems(menu.row) as item}
+			{#if item === "create"}
+				<button onclick={() => fromMenu(createInside)}>New deck inside</button>
+			{:else if item === "rename"}
+				<button onclick={() => fromMenu(rename)}>Rename</button>
+			{:else if item === "order"}
+				<!-- how the decks inside are taken, the one in force ticked -->
+				<span class="menu-heading">Decks inside</span>
+				{#each [[true, "In order"], [false, "Mixed"]] as [inOrder, label]}
+					<button class="menu-item" class:chosen={menu.row.in_order === inOrder} onclick={() => fromMenu(row => chooseInOrder(row, inOrder))}>
+						{label}
+					</button>
+				{/each}
+			{:else if item === "flatten"}
+				<button onclick={() => fromMenu(flatten)}>Flatten</button>
+			{:else if item === "move"}
+				<button onclick={() => fromMenu(moveTo)}>Move to…</button>
+			{:else if item === "delete"}
+				<button class="danger" onclick={() => fromMenu(remove)}>Delete</button>
+			{:else if item === "remove"}
+				<button class="danger" onclick={() => fromMenu(remove)}>Remove</button>
+			{/if}
+		{/each}
 	</div>
 {/if}
 
-<!-- the name asked for in the modal that makes a deck or a metadeck; Enter
-     in the field creates -->
+<!-- the name asked for in the modal that makes or renames a deck; Enter in
+     the field confirms -->
 {#snippet nameField()}
 	<div class="name-prompt">
 		<!-- svelte-ignore a11y_autofocus -- the modal is there to ask for this -->
@@ -440,18 +384,109 @@
 	</div>
 {/snippet}
 
+<!-- where Move to… can put the deck: the top of the list, or inside any deck
+     of the user's own but itself and what is inside it, as the tree reads -->
+{#snippet destinationField()}
+	<div class="destinations" role="radiogroup">
+		<button class="destination" class:chosen={moving.to === null} role="radio" aria-checked={moving.to === null} onclick={() => moving.to = null}>
+			Top of the list
+		</button>
+		{#each destinations as row (row.id)}
+			<button
+				class="destination"
+				class:chosen={moving.to === row.id}
+				role="radio"
+				aria-checked={moving.to === row.id}
+				style:padding-left="{10 + (row.level + 1) * 16}px"
+				onclick={() => moving.to = row.id}
+			>
+				{row.name}
+			</button>
+		{/each}
+	</div>
+{/snippet}
+
 <StandardLayout>
-	<!-- what the page can make, at the right of its title row. Each asks
-	     for the name. -->
+	<!-- what the page can make, at the right of its title row -->
 	{#snippet headerActions()}
 		<div class="create-row">
-			<button class="std-btn" onclick={() => createNew("mine")}>Create deck</button>
-			<button class="std-btn" onclick={() => createNew("meta")}>Create metadeck</button>
+			<button class="std-btn" onclick={createAtTop}>Create deck</button>
 		</div>
 	{/snippet}
-	{@render deckTable("Marketplace decks", "market")}
-	{@render deckTable("My decks", "mine")}
-	{@render deckTable("Metadecks", "meta")}
+	<table class="decks" class:dragging={drag?.started} class:drop-end={drag?.drop?.zone === "end"}>
+		<thead>
+			<tr>
+				<th>Decks</th>
+				<th>New</th>
+				<th>Learn</th>
+				<th>Due</th>
+				<th class="wheel-col"></th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each visible as row (row.id)}
+				{@const dropHere = drag?.started && drag.drop?.targetId === row.id ? drag.drop.zone : null}
+				<tr
+					data-row-id={row.id}
+					class:drop-inside={dropHere === "inside"}
+					class:drop-before={dropHere === "before"}
+					class:drop-after={dropHere === "after"}
+					class:lifted={drag?.started && drag.within.has(row.id)}
+					onmousedown={e => handleRowMouseDown(e, row)}
+					oncontextmenu={e => handleRowContextMenu(e, row)}
+				>
+					<td style:padding-left={row.level ? `${4 + row.level * 26}px` : undefined}>
+						{@render expander(row)}
+						<a
+							href="my-flashcards/{row.id}/study"
+							draggable="false"
+							onclick={e => { if (justDragged) e.preventDefault() }}
+						>
+							{row.name}
+						</a>
+						<!-- taken from the marketplace, not made: a small mark, grey
+						     as the page is -->
+						{#if isTaken(row)}
+							<svg class="taken" viewBox="0 0 16 16" aria-label="From the marketplace" role="img">
+								<path d="M2.5 6.2 3.6 2.5h8.8l1.1 3.7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+								<path d="M2.5 6.2c0 1.1 1.2 1.8 2.2 1.1.5.7 1.6.7 2.2 0 .5.7 1.6.7 2.2 0 .5.7 1.6.7 2.2 0 1 .7 2.2 0 2.2-1.1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+								<path d="M3.5 8v5.5h9V8M6.5 13.5V10h3v3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+							</svg>
+						{/if}
+						{#if row.locked}
+							<svg class="lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
+								<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
+								<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+							</svg>
+						{/if}
+					</td>
+					{@render counts(row)}
+					<td class="wheel-cell">
+						{#if menuItems(row).length}
+							<button
+								class="wheel"
+								aria-label="Deck options"
+								aria-haspopup="menu"
+								onmousedown={e => e.stopPropagation()}
+								onclick={e => {
+									const box = e.currentTarget.getBoundingClientRect();
+									openMenu(row, box.left, box.bottom + 2);
+								}}
+							>
+								<svg viewBox="0 0 24 24" aria-hidden="true">
+									<path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M14.28 2.15C13.91 2 13.44 2 12.5 2s-1.41 0-1.78.15a2 2 0 0 0-1.09 1.08c-.09.23-.13.49-.14.87a1.6 1.6 0 0 1-.8 1.35 1.6 1.6 0 0 1-1.58.01c-.34-.18-.58-.28-.82-.31a2 2 0 0 0-1.5.4c-.31.24-.55.65-1.02 1.45s-.7 1.21-.76 1.6a2 2 0 0 0 .4 1.48c.15.2.36.36.68.56.48.3.78.8.78 1.36s-.3 1.06-.78 1.36c-.32.2-.53.36-.68.56a2 2 0 0 0-.4 1.48c.06.4.29.8.76 1.6s.7 1.21 1.02 1.45a2 2 0 0 0 1.5.4c.24-.03.48-.13.82-.31a1.6 1.6 0 0 1 1.58.01c.49.28.78.8.8 1.35.01.38.05.64.14.87.2.49.6.88 1.09 1.08.37.15.84.15 1.78.15s1.41 0 1.78-.15a2 2 0 0 0 1.09-1.08c.09-.23.13-.49.14-.87.02-.56.31-1.07.8-1.35a1.6 1.6 0 0 1 1.58-.01c.34.18.58.28.82.31a2 2 0 0 0 1.5-.4c.31-.24.55-.65 1.02-1.45s.7-1.21.76-1.6a2 2 0 0 0-.4-1.48c-.15-.2-.36-.36-.68-.56a1.6 1.6 0 0 1-.78-1.36c0-.56.3-1.06.78-1.36.32-.2.53-.36.68-.56a2 2 0 0 0 .4-1.48c-.06-.4-.29-.8-.76-1.6s-.7-1.21-1.02-1.45a2 2 0 0 0-1.5-.4c-.24.03-.48.13-.82.31a1.6 1.6 0 0 1-1.58-.01 1.6 1.6 0 0 1-.8-1.35c-.01-.38-.05-.64-.14-.87a2 2 0 0 0-1.09-1.08ZM12.5 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+								</svg>
+							</button>
+						{/if}
+					</td>
+				</tr>
+			{:else}
+				<tr class="empty-row">
+					<td colspan="5">No decks yet. Create one, or take one from the marketplace.</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
 
 	<!-- the year's study, a square a day, under everything there is to study -->
 	<div class="activity">
@@ -460,7 +495,7 @@
 </StandardLayout>
 
 <style>
-	/* fixed shared column widths so both tables' columns line up */
+	/* fixed column widths, so the counts line up down the tree */
 	table {
 		padding: 8px;
 		border-collapse: collapse;
@@ -469,13 +504,17 @@
 		table-layout: fixed;
 		width: 100%;
 	}
-	/* the first list stands as far under the page's heading as the lists
-	   stand under each other (24px): the page's own padding is 25px */
+	/* the list stands 24px under the page's heading: the page's own padding
+	   is 25px */
 	table:first-of-type {
 		margin-top: -1px;
 	}
 	th:nth-child(n + 2) {
 		width: 65px;
+	}
+	/* the wheel's column, no wider than the wheel */
+	th.wheel-col {
+		width: 32px;
 	}
 	th:nth-child(n + 2),
 	td:nth-child(n + 2) {
@@ -486,16 +525,6 @@
 	}
 	tbody td:first-child {
 		padding-left: 4px;
-	}
-	/* the information sign beside a section's title that explains it on
-	   hover, in the orange such signs come in */
-	.info {
-		display: inline-flex;
-		margin-left: 4px;
-		font-size: 15px;
-		color: #ffa107;
-		vertical-align: -2px;
-		cursor: help;
 	}
 	/* The plus that opens a row onto what is inside it, and the minus that
 	   closes it: above the row-filling link, so it takes its own click. A row
@@ -542,6 +571,46 @@
 		margin-left: 4px;
 		vertical-align: -1px;
 		color: rgba(0, 0, 0, 0.45);
+	}
+	/* a marketplace deck taken, marked right of its name */
+	.taken {
+		display: inline-block;
+		width: 13px;
+		height: 13px;
+		margin-left: 6px;
+		vertical-align: -1px;
+		color: rgba(0, 0, 0, 0.45);
+	}
+	/* The wheel that opens a deck's menu: grey, always there (a phone has no
+	   hover to find it by), above the row-filling link so it takes its own
+	   click. */
+	.wheel {
+		position: relative;
+		z-index: 1;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		padding: 0;
+		border: none;
+		border-radius: 4px;
+		background: none;
+		color: rgba(0, 0, 0, 0.35);
+		cursor: pointer;
+	}
+	.wheel svg {
+		width: 15px;
+		height: 15px;
+	}
+	.wheel:hover {
+		color: black;
+		background-color: rgba(0, 0, 0, 0.06);
+	}
+	.empty-row td {
+		padding: 8px 4px;
+		color: rgba(0, 0, 0, 0.5);
+		cursor: default;
 	}
 	/* the row-filling link overlay (table a::after) anchors here, making the
 	   whole row one click target to match the full-row hover affordance */
@@ -597,8 +666,8 @@
 	th:first-child {
 		font-size: 1.05rem;
 	}
-	/* the two Create buttons, at the right of the page's title row: the
-	   app's standard button, a size down */
+	/* the Create button, at the right of the page's title row: the app's
+	   standard button, a size down */
 	.create-row {
 		display: flex;
 		gap: 8px;
@@ -651,18 +720,23 @@
 	:global(body:has(table.dragging) *) {
 		cursor: grabbing;
 	}
-	/* the metadeck the row in hand would go into */
+	/* where the deck in hand would land: the deck it would go inside, lit,
+	   or a line above or below the row it would sit beside — under the last
+	   row for the end of the list */
 	table.dragging tbody > tr.drop-inside,
 	table.dragging tbody > tr.drop-inside:hover {
 		background-color: var(--accent-subtle-strong);
 	}
-	/* a row carried out of its metadeck steps back where it stood */
+	table.dragging tbody > tr.drop-before td {
+		box-shadow: inset 0 2px 0 var(--accent);
+	}
+	table.dragging tbody > tr.drop-after td,
+	table.drop-end tbody > tr:last-child td {
+		box-shadow: inset 0 -2px 0 var(--accent);
+	}
+	/* the deck in hand, and everything inside it, steps back where it stood */
 	tbody tr.lifted td {
 		opacity: 0.45;
-	}
-	/* the slot the deck would drop into, a hole in the table's own ground */
-	tr.placeholder-row td {
-		padding: 0;
 	}
 	/* the lifted deck rides with the cursor, as a card does in Cards */
 	.drag-ghost {
@@ -703,10 +777,40 @@
 	.context-menu button:hover {
 		background-color: #f0f0f0;
 	}
-	/* the metadecks to choose among, under the words that say what for */
+	.context-menu button.danger {
+		color: #c62828;
+	}
+	/* the choices under the words that say what for, the one in force ticked */
 	.context-menu button.menu-item {
+		position: relative;
 		padding-left: 26px;
 		color: #404040;
+	}
+	.context-menu button.menu-item.chosen::before {
+		content: "✓";
+		position: absolute;
+		left: 10px;
+	}
+	/* Move to…'s choices: the tree as it reads, the one chosen lit */
+	.destinations {
+		display: flex;
+		flex-direction: column;
+	}
+	.destination {
+		padding: 5px 10px;
+		border: none;
+		border-radius: 4px;
+		background: none;
+		text-align: left;
+		font: inherit;
+		color: #404040;
+		cursor: pointer;
+	}
+	.destination:hover {
+		background-color: #f0f0f0;
+	}
+	.destination.chosen {
+		background-color: var(--accent-subtle-strong);
 	}
 	.menu-heading {
 		display: block;

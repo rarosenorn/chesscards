@@ -1,6 +1,5 @@
 <script>
-	// a deck's cards and a metadeck's are looked through by the same page: it
-	// reads whichever of the two is in context
+	// the deck the layout put in context, with everything inside it
 	import Cards from "$lib/components/Cards.svelte"
 </script>
 

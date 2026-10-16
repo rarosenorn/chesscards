@@ -4,11 +4,12 @@ import * as decks from "$lib/server/decks.js"
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const load = async ({ locals, params }) => {
-	// a marketplace deck instance's sample cards are its author's
-	const deck = await decks.getById(locals.userId, params.id);
-	if (!deck) error(404);
+	// a marketplace deck's sample cards are its author's; a deck's own are
+	// chosen from every card under it
+	const deck = await decks.getDeck(locals.userId, params.id);
+	if (!deck || deck.isMarketplace) error(404);
 
-	const listing = await decks.getListing(locals.userId, params.id);
+	const listing = await decks.getOwnListing(locals.userId, params.id);
 
 	return {
 		deck,

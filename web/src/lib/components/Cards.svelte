@@ -13,21 +13,22 @@
 	import { flip } from "svelte/animate"
 	import { SvelteSet } from "svelte/reactivity"
 	import { page } from "$app/state"
-	import { goto } from "$app/navigation"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
 	import { canonicalSideJson } from "$lib/card-utils.js"
-	import { gatingDepth, unlockedSubdeckIds, subdeckName, childrenByParent, subdeckOutline, subdeckSubtree, cardsUnder } from "$lib/subdecks.js"
+	import { unlockedDeckIds, deckOutline } from "$lib/deck-tree.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
 	import { updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
-	import { createSubdeck, renameSubdeck, deleteSubdeck, flattenSubdecks, moveSubdeck, moveCards, listDecks, moveCardsToDeck, copyCards } from "$lib/deck.remote.js"
+	import { moveCards, listDecks, copyCards } from "$lib/deck.remote.js"
 
 	let deck = getContext("deck");
 	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
-	// marketplace deck instances can only be viewed, not edited, and neither
-	// can a metadeck's cards from the metadeck: they are their decks'
-	const readonly = deck.isMarketplace || deck.isMetadeck;
+	// A marketplace deck can only be viewed, not edited: the whole page when
+	// it is one (or a deck inside one), and its cards when it sits inside a
+	// deck of the user's own.
+	let readonly = $derived(deck.isMarketplace);
+	const isBought = card => readonly || !!card.marketplace_deck_instance_id;
 
 	// in-progress edit lives in the deck layout's context so it survives tab
 	// navigation within the deck: session is CardBlockEdit's persistence bag
@@ -48,7 +49,7 @@
 	// a draft written before sorting existed carries neither field
 	draft.sortColumn ??= "order";
 	draft.sortDescending ??= false;
-	// collapsed subdeck ids, kept across tab visits like the sort
+	// the ids of the collapsed decks inside, kept across tab visits like the sort
 	draft.collapsed ??= {};
 
 	// returning to the tab reselects where it was left — the card being
@@ -63,6 +64,7 @@
 	$effect(() => { draft.selectedCardId = selectedCard?.id ?? null; });
 
 	let isEditingSelected = $derived(selectedCard && draft.editingCardId === selectedCard.id);
+	let selectedBought = $derived(!selectedCard || isBought(selectedCard));
 
 	const startEditing = () => {
 		draft.session = {
@@ -108,43 +110,40 @@
 				: deck.cards
 	);
 
-	// --- subdecks ---
-	// The deck's subdecks carry the order. They nest (lib/subdecks.js), so the
-	// deck reads as an outline: each subdeck, then everything inside it. The
-	// cards sit in the subdecks that have none inside (the leaves). The Order
-	// column reads the path to the card's subdeck and its place there
-	// ("2.3.17"), and with the table sorted by Order and unfiltered, the rows
-	// sit grouped under collapsible, indented subdeck headers.
-	let outline = $derived(subdeckOutline(deck.subdecks));
-	let leaves = $derived(outline.filter(entry => entry.leaf));
-	let subdeckIndex = $derived(new Map(outline.map((entry, index) => [entry.subdeck.id, index])));
-	let unlockedSubdecks = $derived(unlockedSubdeckIds(deck.subdecks, deck.cards, gatingDepth(deck)));
+	// --- the decks inside ---
+	// The decks inside carry the order. They nest (lib/deck-tree.js), so the
+	// deck reads as an outline: its own cards, then each deck inside it and
+	// everything inside that. Any deck holds cards. The Order column reads
+	// the path to the card's deck and its place there ("2.3.17"; a card of
+	// the deck itself is just "17"), and with the table sorted by Order and
+	// unfiltered, the rows sit grouped under collapsible, indented headers,
+	// one for each deck inside.
+	let outline = $derived(deckOutline(deck.decks));
+	let deckIndex = $derived(new Map(outline.map((entry, index) => [entry.deck.id, index])));
+	let unlockedDecks = $derived(unlockedDeckIds(deck.decks, deck.cards));
 
-	let subdeckCards = $derived.by(() => {
-		const map = new Map(deck.subdecks.map(subdeck => [subdeck.id, []]));
+	let deckCards = $derived.by(() => {
+		const map = new Map(deck.decks.map(entry => [entry.id, []]));
 		for (const card of [...deck.cards].sort((a, b) => a.position - b.position)) {
-			map.get(card.subdeck_id)?.push(card);
+			map.get(card.deck_id)?.push(card);
 		}
 		return map;
 	});
 	// "2.3.17" per card — from the places in the outline, not the stored
 	// positions, so a gap the server has not renumbered yet cannot show
-	// through. Without subdecks there is no path to write: the deck is one run
-	// of numbers, counted across the subdecks it still has in the order they
-	// sit.
+	// through
 	let orderLabels = $derived.by(() => {
 		const labels = new Map();
-		let flat = 0;
-		for (const { subdeck, number } of leaves) {
-			subdeckCards.get(subdeck.id).forEach((card, index) =>
-				labels.set(card.id, deck.usesSubdecks ? `${number}.${index + 1}` : `${++flat}`));
+		for (const { deck: entry, number } of outline) {
+			deckCards.get(entry.id).forEach((card, index) =>
+				labels.set(card.id, number ? `${number}.${index + 1}` : `${index + 1}`));
 		}
 		return labels;
 	});
 
-	// Subdeck ops renumber across the deck, so they answer with the fresh deck;
-	// land it in the shared context and re-find the selection among the new
-	// card objects.
+	// Moves renumber across the decks they touch, so they answer with the
+	// fresh deck; land it in the shared context and re-find the selection
+	// among the new card objects.
 	const applyFresh = fresh => {
 		const keep = selectedCard?.id;
 		Object.assign(deck, fresh);
@@ -157,7 +156,7 @@
 	// column runs: those rows show a dash, and a blank belongs at the end rather
 	// than crowding whichever end is being read.
 	const sortValues = {
-		order: card => subdeckIndex.get(card.subdeck_id) * 100000 + card.position,
+		order: card => deckIndex.get(card.deck_id) * 100000 + card.position,
 		front: card => getFrontIndicator(card.front)?.toLowerCase() ?? null,
 		type: card => (card.card_type === "tactic" ? 1 : 0),
 		// the due date itself, so ascending is soonest-due first — the order
@@ -176,23 +175,21 @@
 		return (x < y ? -1 : 1) * (descending ? -1 : 1);
 	}
 
-	// The subdeck headers only frame the table when it shows the deck's own
-	// order, whole: a search result or another column's sort is a flat list.
-	// One group per subdeck that shows, in outline order: its header and, for
-	// a leaf, its cards. A collapsed subdeck keeps its header and takes
-	// everything inside it out of the table.
+	// The headers only frame the table when it shows the deck's own order,
+	// whole: a search result or another column's sort is a flat list. One
+	// group per deck that shows, in outline order: its header (none for the
+	// deck itself, whose cards come first) and its cards. A collapsed deck
+	// keeps its header and takes everything inside it out of the table.
 	let groupedRows = $derived.by(() => {
 		if (draft.sortColumn !== "order" || searchFilter || dupFilter) return null;
 		const groups = [];
-		// the level of the collapsed subdeck the walk is inside, if any
+		// the level of the collapsed deck the walk is inside, if any
 		let foldedAt = null;
-		for (const entry of subdeckOutline(deck.subdecks, draft.sortDescending)) {
+		for (const entry of deckOutline(deck.decks, draft.sortDescending)) {
 			if (foldedAt !== null && entry.level > foldedAt) continue;
-			// a subdeck collapsed before subdecks were switched off would take
-			// its cards out of a table that no longer has a header to open it
-			const collapsed = deck.usesSubdecks && !!draft.collapsed[entry.subdeck.id];
+			const collapsed = entry.level > 0 && !!draft.collapsed[entry.deck.id];
 			foldedAt = collapsed ? entry.level : null;
-			const cards = subdeckCards.get(entry.subdeck.id);
+			const cards = deckCards.get(entry.deck.id);
 			groups.push({ ...entry, cards: draft.sortDescending ? [...cards].reverse() : cards, collapsed });
 		}
 		return groups;
@@ -209,7 +206,7 @@
 		const placeholder = { id: "__placeholder__", placeholder: true };
 		return groupedRows.map(group => {
 			let cards = group.cards.filter(c => !drag.cardIds.includes(c.id));
-			if (group.subdeck.id === drag.over.subdeckId) {
+			if (group.deck.id === drag.over.deckId) {
 				cards = [...cards.slice(0, drag.over.index), placeholder, ...cards.slice(drag.over.index)];
 			}
 			return { ...group, cards };
@@ -218,7 +215,7 @@
 
 	// A column is always sorted — Order ascending is the deck's own order, the
 	// table's default. Sort is stable, so that order still decides ties.
-	// Grouped, this is the visible rows: a collapsed subdeck's cards drop out of
+	// Grouped, this is the visible rows: a collapsed deck's cards drop out of
 	// arrow navigation and range selection with their rows.
 	let filteredCards = $derived(
 		groupedRows
@@ -344,7 +341,7 @@
 	// own row) out of the table — a ghost chip rides the cursor, a placeholder
 	// row holds the slot the cards would drop into, and the other rows slide
 	// around it live. A plain click on it opens the order for typing ("3.3" —
-	// subdeck, then place in subdeck). A drop is a move in the deck's own order,
+	// the deck inside, then the place in it). A drop is a move in the deck's own order,
 	// so the table has to be showing that order, whole and the way it runs:
 	// the grouped view (Order, unfiltered), ascending, where the slots read
 	// the way the numbers do. The grip goes by the same rule — a table that
@@ -355,7 +352,7 @@
 	let canReorder = $derived(!readonly && !!groupedRows && !draft.sortDescending);
 
 	const handleOrderMouseDown = (e, card) => {
-		if (e.button !== 0 || !canReorder) return;
+		if (e.button !== 0 || !canReorder || isBought(card)) return;
 		e.stopPropagation();
 		// this handler both stops the event reaching the window and prevents
 		// the default, so an order input open on another row would neither be
@@ -375,7 +372,7 @@
 		const contiguous = selected.length > 0 && selected.every((c, i) =>
 			i === 0 || filteredCards.indexOf(c) === filteredCards.indexOf(selected[i - 1]) + 1
 		);
-		const cardIds = multiSelected.has(card.id) && contiguous
+		const cardIds = multiSelected.has(card.id) && contiguous && !selected.some(isBought)
 			? selected.map(c => c.id)
 			: [card.id];
 		reorderDrag = {
@@ -391,10 +388,6 @@
 	}
 
 	const handleWindowMouseMove = e => {
-		if (subdeckDrag) {
-			moveSubdeckDrag(e);
-			return;
-		}
 		if (!reorderDrag) return;
 		reorderDrag.x = e.clientX;
 		reorderDrag.y = e.clientY;
@@ -407,10 +400,10 @@
 			// there (past the last row, in the padding beside them) is still
 			// a drop, taken against the nearest row rather than a departure.
 			// The slot itself is left alone too: the cursor resting on it is
-			// the drop it shows, and in an empty subdeck it is the only row
-			// there is — the nearest card would be another subdeck's.
+			// the drop it shows, and in an empty deck it is the only row
+			// there is — the nearest card would be another deck's.
 			if (!tableContainer?.contains(e.target)) {
-				setDragOver(reorderDrag.initial.subdeckId, reorderDrag.initial.index);
+				setDragOver(reorderDrag.initial.deckId, reorderDrag.initial.index);
 			} else if (!e.target?.closest?.("tr[data-card-row], tr.subdeck-row, tr.placeholder-row")) {
 				reslotUnderCursor();
 			}
@@ -419,21 +412,21 @@
 		if (Math.abs(e.clientX - reorderDrag.startX) + Math.abs(e.clientY - reorderDrag.startY) > 5) {
 			// the placeholder opens at the dragged card's own slot, so the
 			// table holds still until the cursor actually moves somewhere
-			const subdeckList = subdeckCards.get(reorderDrag.card.subdeck_id);
-			const index = subdeckList
-				.slice(0, subdeckList.findIndex(c => c.id === reorderDrag.card.id))
+			const deckList = deckCards.get(reorderDrag.card.deck_id);
+			const index = deckList
+				.slice(0, deckList.findIndex(c => c.id === reorderDrag.card.id))
 				.filter(c => !reorderDrag.cardIds.includes(c.id)).length;
-			reorderDrag.initial = { subdeckId: reorderDrag.card.subdeck_id, index };
+			reorderDrag.initial = { deckId: reorderDrag.card.deck_id, index };
 			reorderDrag.over = { ...reorderDrag.initial };
 			reorderDrag.started = true;
 			autoScrollFrame ??= requestAnimationFrame(autoScrollStep);
 		}
 	}
 
-	const setDragOver = (subdeckId, index) => {
+	const setDragOver = (deckId, index) => {
 		const over = reorderDrag.over;
-		if (over && over.subdeckId === subdeckId && over.index === index) return;
-		reorderDrag.over = { subdeckId, index };
+		if (over && over.deckId === deckId && over.index === index) return;
+		reorderDrag.over = { deckId, index };
 	}
 
 	const slotForRow = (rowEl, card, clientY) => {
@@ -443,12 +436,13 @@
 		const transform = new DOMMatrixReadOnly(getComputedStyle(rowEl).transform);
 		const top = rect.top - transform.m42;
 		const before = clientY < top + rect.height / 2;
-		const list = subdeckCards.get(card.subdeck_id).filter(c => !reorderDrag.cardIds.includes(c.id));
-		setDragOver(card.subdeck_id, list.findIndex(c => c.id === card.id) + (before ? 0 : 1));
+		const list = deckCards.get(card.deck_id).filter(c => !reorderDrag.cardIds.includes(c.id));
+		setDragOver(card.deck_id, list.findIndex(c => c.id === card.id) + (before ? 0 : 1));
 	}
 
+	// a marketplace deck's cards are no place to drop the user's own
 	const handleRowDragOver = (e, card) => {
-		if (!reorderDrag?.started || reorderDrag.cardIds.includes(card.id)) return;
+		if (!reorderDrag?.started || reorderDrag.cardIds.includes(card.id) || isBought(card)) return;
 		slotForRow(e.currentTarget, card, e.clientY);
 	}
 
@@ -463,12 +457,12 @@
 		const y = reorderDrag.y;
 		const row = rows.find(r => r.getBoundingClientRect().bottom >= y) ?? rows[rows.length - 1];
 		const card = deck.cards.find(c => c.id === row.dataset.cardRow);
-		if (card && !reorderDrag.cardIds.includes(card.id)) slotForRow(row, card, y);
+		if (card && !reorderDrag.cardIds.includes(card.id) && !isBought(card)) slotForRow(row, card, y);
 	}
 
 	// Held near the top or bottom edge, the list scrolls itself: without this
 	// a card cannot be dragged past the rows the window happens to show, and
-	// a long subdeck can only be reordered by typing the numbers. Speed rises
+	// a long deck can only be reordered by typing the numbers. Speed rises
 	// with how far into the edge band the cursor is.
 	const EDGE_BAND = 48;
 	const EDGE_SPEED = 16;
@@ -496,11 +490,11 @@
 
 
 
-	// over a header, the cards would go to the front of that subdeck — when
-	// it is one that holds cards; a subdeck of subdecks has no place for them
-	const handleSubdeckDragOver = group => {
-		if (!reorderDrag?.started || !group.leaf) return;
-		setDragOver(group.subdeck.id, 0);
+	// over a header, the cards would go to the front of that deck — unless
+	// it is a marketplace deck's
+	const handleHeaderDragOver = group => {
+		if (!reorderDrag?.started || group.deck.bought) return;
+		setDragOver(group.deck.id, 0);
 	}
 
 	const finishReorderDrag = async () => {
@@ -513,7 +507,7 @@
 		}
 		// dropped back where it was lifted from: nothing to commit
 		const unmoved = !drag.over
-			|| (drag.over.subdeckId === drag.initial.subdeckId && drag.over.index === drag.initial.index);
+			|| (drag.over.deckId === drag.initial.deckId && drag.over.index === drag.initial.index);
 		if (unmoved) {
 			reorderDrag = null;
 			return;
@@ -527,36 +521,36 @@
 		// where every card stood before the optimistic move, so a refused
 		// request can put them all back: the table snapping to the old order
 		// is the only honest answer to a move the server did not make
-		const before = deck.cards.map(card => ({ card, subdeck_id: card.subdeck_id, position: card.position }));
+		const before = deck.cards.map(card => ({ card, deck_id: card.deck_id, position: card.position }));
 		applyLocalMove(drag);
 		reorderDrag = null;
 		try {
 			applyFresh(await moveCards({
-				deckId: deck.id, cardIds: drag.cardIds, subdeckId: drag.over.subdeckId, index: drag.over.index
+				deckId: deck.id, cardIds: drag.cardIds, targetDeckId: drag.over.deckId, index: drag.over.index
 			}));
 		} catch (err) {
 			for (const was of before) {
-				was.card.subdeck_id = was.subdeck_id;
+				was.card.deck_id = was.deck_id;
 				was.card.position = was.position;
 			}
 			throw err;
 		}
 	}
 
-	// the preview's order, written into the cards themselves: each subdeck
+	// the preview's order, written into the cards themselves: each deck
 	// renumbered 1..n the way the server will, so the table settles into the
 	// dropped order without waiting to be told
 	const applyLocalMove = drag => {
 		const carried = deck.cards.filter(card => drag.cardIds.includes(card.id));
-		for (const subdeck of deck.subdecks) {
+		for (const entry of deck.decks) {
 			let cards = deck.cards
-				.filter(card => card.subdeck_id === subdeck.id && !drag.cardIds.includes(card.id))
+				.filter(card => card.deck_id === entry.id && !drag.cardIds.includes(card.id))
 				.sort((a, b) => a.position - b.position);
-			if (subdeck.id === drag.over.subdeckId) {
+			if (entry.id === drag.over.deckId) {
 				cards = [...cards.slice(0, drag.over.index), ...carried, ...cards.slice(drag.over.index)];
 			}
 			cards.forEach((card, i) => {
-				card.subdeck_id = subdeck.id;
+				card.deck_id = entry.id;
 				card.position = i + 1;
 			});
 		}
@@ -566,224 +560,49 @@
 		orderEdit = { cardId: card.id, value: orderLabels.get(card.id) };
 	}
 
-	// "3.3" makes the card the third of subdeck 3, pushing the rest along
-	// ("3.2.3" the third of 3's second subdeck); anything unparsable, a
-	// subdeck that is not there or holds no cards, or an out-of-range place
-	// falls back to the order as it stands. Without subdecks the label is a plain
-	// "17", so that is what the field takes: the deck's subdecks are still what
-	// the move is expressed in, so the flat place is walked back to the subdeck
-	// it lands in and the index within it.
+	// "3.3" makes the card the third of the deck numbered 3, pushing the rest
+	// along ("3.2.3" the third of 3's second deck, a plain "3" the third of
+	// the deck itself); anything unparsable, a deck that is not there or is a
+	// marketplace deck's, or an out-of-range place falls back to the order as
+	// it stands.
 	const commitOrderEdit = async () => {
 		const edit = orderEdit;
 		orderEdit = null;
 		if (!edit || edit.value === orderLabels.get(edit.cardId)) return;
-		const target = deck.usesSubdecks
-			? subdeckPlace(edit.value, edit.cardId)
-			: flatPlace(edit.value, edit.cardId);
+		const target = orderPlace(edit.value, edit.cardId);
 		if (!target) return;
 		applyFresh(await moveCards({
-			deckId: deck.id, cardIds: [edit.cardId], subdeckId: target.subdeckId, index: target.index
+			deckId: deck.id, cardIds: [edit.cardId], targetDeckId: target.deckId, index: target.index
 		}));
 	}
 
-	const subdeckPlace = (value, cardId) => {
-		const match = value.trim().match(/^(\d+(?:\.\d+)*)\.(\d+)$/);
+	const orderPlace = (value, cardId) => {
+		const match = value.trim().match(/^(?:(\d+(?:\.\d+)*)\.)?(\d+)$/);
 		if (!match) return null;
-		const subdeck = leaves.find(entry => entry.number === match[1])?.subdeck;
-		if (!subdeck) return null;
+		const target = outline.find(entry => entry.number === (match[1] ?? ""))?.deck;
+		if (!target || target.bought) return null;
 		const place = Number(match[2]);
-		const others = subdeckCards.get(subdeck.id).filter(c => c.id !== cardId);
+		const others = deckCards.get(target.id).filter(c => c.id !== cardId);
 		if (place < 1 || place > others.length + 1) return null;
-		return { subdeckId: subdeck.id, index: place - 1 };
+		return { deckId: target.id, index: place - 1 };
 	}
 
-	// The same move, said flatly: place p means "sit where the deck's p-th
-	// card sits", so the card the flat count lands on names both the subdeck to
-	// move into and the index within it. Past the end, the last subdeck's end.
-	const flatPlace = (value, cardId) => {
-		if (!/^\d+$/.test(value.trim())) return null;
-		const place = Number(value.trim());
-		const others = leaves.flatMap(({ subdeck }) =>
-			subdeckCards.get(subdeck.id).filter(c => c.id !== cardId));
-		if (place < 1 || place > others.length + 1) return null;
-		if (place === others.length + 1) {
-			const last = leaves[leaves.length - 1].subdeck;
-			return { subdeckId: last.id, index: subdeckCards.get(last.id).filter(c => c.id !== cardId).length };
-		}
-		const target = others[place - 1];
-		const within = subdeckCards.get(target.subdeck_id).filter(c => c.id !== cardId);
-		return { subdeckId: target.subdeck_id, index: within.findIndex(c => c.id === target.id) };
-	}
+	const selectedIds = () => filteredCards.filter(c => multiSelected.has(c.id) && !isBought(c)).map(c => c.id);
 
-	// --- subdeck management ---
-	// the header's own context menu: rename inline, add a subdeck inside,
-	// delete (with everything in it); new top-level subdecks are appended
-	// from the row under the table, and the header's grip drags a subdeck to
-	// another place or into another subdeck
-	let subdeckMenu = $state(null);
-	let subdeckRename = $state(null);
-
-	const handleSubdeckContextMenu = (e, subdeck) => {
-		if (readonly) return;
-		e.preventDefault();
-		e.stopPropagation();
-		subdeckMenu = { x: e.clientX, y: e.clientY, subdeck };
-	}
-
-
-	// A subdeck is named at birth: the button opens a field rather than
-	// creating one, so there is never an unnamed subdeck to go back and fix.
-	// Blank is a cancel in both directions — creating and renaming — since
-	// there is no name to fall back to.
-	// parentId: the subdeck the new one goes inside, null for the top level.
-	// The field opens under that subdeck's header, which is unfolded for it.
-	let subdeckAdd = $state(null);
-
-	const startAddSubdeck = (parentId = null) => {
-		if (parentId) draft.collapsed[parentId] = false;
-		subdeckAdd = { value: "", parentId };
-	}
-
-	const commitAddSubdeck = async () => {
-		const add = subdeckAdd;
-		subdeckAdd = null;
-		if (!add?.value.trim()) return;
-		applyFresh(await createSubdeck({ deckId: deck.id, name: add.value.trim(), parentId: add.parentId }));
-	}
-
-	const commitSubdeckRename = async () => {
-		const rename = subdeckRename;
-		subdeckRename = null;
-		if (!rename?.value.trim()) return;
-		applyFresh(await renameSubdeck({ deckId: deck.id, subdeckId: rename.subdeckId, name: rename.value.trim() }));
-	}
-
-	// Flattening: the way back from subdecks that deletes no card. The
-	// subdecks inside a subdeck are taken away and all their cards become its
-	// own, in order; asked of no subdeck, it is the whole deck that goes back
-	// to a plain list. The grouping cannot be put back, so it is always asked
-	// about first, in words that say what goes and what stays.
-	const holdsSubdecks = subdeck => deck.subdecks.some(other => other.parent_id === subdeck.id);
-
-	const flatten = async (subdeck = null) => {
-		const inside = subdeck ? subdeckSubtree(deck.subdecks, subdeck.id).size - 1 : deck.subdecks.length;
-		const cards = subdeck ? cardsUnder(deck.subdecks, deck.cards, subdeck.id).length : deck.cards.length;
-		const gone = subdeck
-			? `${inside === 1 ? "the subdeck" : `the ${inside} subdecks`} inside "${subdeck.name}"`
-			: inside === 1 ? "the deck's subdeck" : `all ${inside} of the deck's subdecks`;
-		const kept = cards === 0
-			? "There are no cards in them."
-			: `${cards === 1 ? "The 1 card in them stays" : `The ${cards} cards in them stay`}, in the same order, `
-				+ (subdeck ? `directly in "${subdeck.name}".` : "as one plain list.");
-		const confirmed = await confirmModal({
-			title: "Flatten subdecks",
-			message: `This removes ${gone}. ${kept}`,
-			confirmLabel: "Flatten"
-		});
-		if (!confirmed) return;
-		applyFresh(await flattenSubdecks({ deckId: deck.id, subdeckId: subdeck?.id }));
-	}
-
-	// A subdeck goes with everything in it: the subdecks inside it and every
-	// card under it, with their history. Always asked about first, in words
-	// that say what goes. (The deck's last one can go as well: the deck then
-	// stops using subdecks and is a plain list again.)
-	const removeSubdeck = async subdeck => {
-		const inside = subdeckSubtree(deck.subdecks, subdeck.id).size - 1;
-		const cards = cardsUnder(deck.subdecks, deck.cards, subdeck.id);
-		const subdecksGone = inside > 0 ? `, the ${inside === 1 ? "subdeck" : `${inside} subdecks`} inside it` : "";
-		const confirmed = await confirmModal({
-			title: "Delete subdeck",
-			message: cards.length > 0
-				? `This permanently deletes "${subdeck.name}"${subdecksGone} and ${cards.length === 1 ? "the 1 card" : `the ${cards.length} cards`} in it, with their progress.`
-				: `This permanently deletes "${subdeck.name}"${subdecksGone}. There are no cards in it.`,
-			confirmLabel: "Delete",
-			danger: true
-		});
-		if (!confirmed) return;
-		if (cards.some(card => card.id === draft.editingCardId)) stopEditing();
-		applyFresh(await deleteSubdeck({ deckId: deck.id, subdeckId: subdeck.id }));
-	}
-
-	// --- moving a subdeck ---
-	// The grip on a header drags the subdeck, with everything in it. Over
-	// another header, the upper and lower quarters put it before or after
-	// that subdeck (as its sibling) and the middle puts it inside. Never into
-	// itself. The move is the server's to make: the table follows its answer.
-	let subdeckDrag = $state(null);
-
-	const handleSubdeckGripDown = (e, subdeck) => {
-		if (e.button !== 0) return;
-		e.preventDefault();
-		e.stopPropagation();
-		commitOrderEdit();
-		subdeckDrag = {
-			subdeck, within: subdeckSubtree(deck.subdecks, subdeck.id), started: false,
-			startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY, over: null
-		};
-	}
-
-	const moveSubdeckDrag = e => {
-		const drag = subdeckDrag;
-		drag.x = e.clientX;
-		drag.y = e.clientY;
-		if (!drag.started) {
-			if (Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) <= 5) return;
-			drag.started = true;
-		}
-		const row = e.target?.closest?.("tr[data-subdeck-row]");
-		const id = row?.dataset.subdeckRow;
-		if (!id || drag.within.has(id)) {
-			drag.over = null;
-			return;
-		}
-		const box = row.getBoundingClientRect();
-		const part = (e.clientY - box.top) / box.height;
-		const zone = part < 0.25 ? "before" : part > 0.75 ? "after" : "inside";
-		if (drag.over?.subdeckId !== id || drag.over.zone !== zone) drag.over = { subdeckId: id, zone };
-	}
-
-	const finishSubdeckDrag = async () => {
-		const drag = subdeckDrag;
-		if (!drag) return;
-		subdeckDrag = null;
-		if (!drag.started || !drag.over) return;
-		const target = deck.subdecks.find(subdeck => subdeck.id === drag.over.subdeckId);
-		if (!target) return;
-		let parentId = target.id, index = null;
-		if (drag.over.zone === "inside") {
-			draft.collapsed[target.id] = false;
-		} else {
-			parentId = target.parent_id ?? null;
-			const siblings = (childrenByParent(deck.subdecks).get(parentId) ?? [])
-				.filter(subdeck => subdeck.id !== drag.subdeck.id);
-			index = siblings.findIndex(subdeck => subdeck.id === target.id) + (drag.over.zone === "after" ? 1 : 0);
-		}
-		applyFresh(await moveSubdeck({ deckId: deck.id, subdeckId: drag.subdeck.id, parentId, index }));
-	}
-
-	const selectedIds = () => filteredCards.filter(c => multiSelected.has(c.id)).map(c => c.id);
-
-	const moveSelectedToSubdeck = async subdeckId => {
-		const cardIds = selectedIds();
-		if (cardIds.length === 0) return;
-		applyFresh(await moveCards({ deckId: deck.id, cardIds, subdeckId, index: null }));
-	}
-
-	// to another deck: the cards themselves go, progress and history with them
-	const moveSelectedToDeck = async targetDeckId => {
+	// to the end of a deck, this one, one inside it or another altogether:
+	// the cards themselves go, progress and history with them
+	const moveSelected = async targetDeckId => {
 		const cardIds = selectedIds();
 		if (cardIds.length === 0) return;
 		stopEditing();
-		applyFresh(await moveCardsToDeck({ deckId: deck.id, cardIds, targetDeckId }));
+		applyFresh(await moveCards({ deckId: deck.id, cardIds, targetDeckId, index: null }));
 	}
 
-	// copies are new cards; `subdeckId` names a subdeck of this deck, and is
-	// left out when the copies go to a deck as a whole
-	const copySelected = async (targetDeckId, subdeckId = null) => {
+	// copies are new cards, at the end of the deck
+	const copySelected = async targetDeckId => {
 		const cardIds = selectedIds();
 		if (cardIds.length === 0) return;
-		applyFresh(await copyCards({ deckId: deck.id, cardIds, targetDeckId, subdeckId }));
+		applyFresh(await copyCards({ deckId: deck.id, cardIds, targetDeckId }));
 	}
 
 	let cardPane = $state(null);
@@ -805,21 +624,17 @@
 	});
 
 	// { x, y } where the context menu is open, or null. Its lists — the
-	// subdecks and decks to move or copy to — open folded, one at a time, and
-	// fold again with the menu: `openList` names the one showing.
+	// decks to move or copy to — open folded, one at a time, and fold again
+	// with the menu: `openList` names the one showing.
 	let contextMenu = $state(null);
 	let openList = $state(null);
-	// the user's decks, asked for when the menu opens
+	// the user's own decks as an outline, asked for when the menu opens
 	let deckNames = $state([]);
-	let otherDecks = $derived(deckNames.filter(d => d.id !== deck.id));
 	let cardsNoun = $derived(multiSelected.size > 1 ? `${multiSelected.size} cards` : "card");
-	// the subdecks a card can be sent to, as the outline they sit in: the ones
-	// that hold cards to pick, the ones that hold subdecks as headings
-	let subdeckItems = $derived(outline.map(({ subdeck, level, leaf }) =>
-		({ id: subdeck.id, name: subdeck.name, level, heading: !leaf })));
 
+	// a marketplace deck's cards are not the user's to move, copy or delete
 	const handleRowContextMenu = (e, card, index) => {
-		if (readonly) return;
+		if (isBought(card)) return;
 		e.preventDefault();
 		// right-clicking outside the current selection selects the clicked row instead
 		if (!multiSelected.has(card.id)) {
@@ -907,19 +722,17 @@
 </script>
 
 <svelte:window
-	onmouseup={() => { dragging = false; finishReorderDrag(); finishSubdeckDrag(); }}
+	onmouseup={() => { dragging = false; finishReorderDrag(); }}
 	onmousemove={handleWindowMouseMove}
-	onmousedown={() => { contextMenu = null; subdeckMenu = null; commitOrderEdit(); }}
+	onmousedown={() => { contextMenu = null; commitOrderEdit(); }}
 	onkeydown={e => {
 		if (e.key === "Escape") {
 			contextMenu = null;
-			subdeckMenu = null;
 			reorderDrag = null;
-			subdeckDrag = null;
 			orderEdit = null;
 		} else if (
 			e.key === "e" && !e.ctrlKey && !e.metaKey && !e.altKey &&
-			!readonly && selectedCard && !isEditingSelected &&
+			!selectedBought && !isEditingSelected &&
 			!inField(e.target)
 		) {
 			e.preventDefault();
@@ -930,11 +743,11 @@
 		) {
 			navigateCards(e);
 		} else if (
-			e.key === "Delete" && !readonly && selectedCard && !isEditingSelected &&
+			e.key === "Delete" && !selectedBought && !isEditingSelected &&
 			!inField(e.target)
 		) {
 			e.preventDefault();
-			deleteCardsByIds(multiSelected.size > 0 ? [...multiSelected] : [selectedCard.id]);
+			deleteCardsByIds(multiSelected.size > 0 ? selectedIds() : [selectedCard.id]);
 		}
 	}}
 />
@@ -957,9 +770,8 @@
 				Edit card
 			</button>
 		{/if}
-		<!-- the lists stay folded away until asked for: a deck with many
-		     subdecks used to bury Delete under the whole list. A deck with
-		     subdecks off has no subdeck to move a card to that it can name -->
+		<!-- the lists stay folded away until asked for: a long list of decks
+		     would bury Delete under it -->
 		{#snippet list(key, label, items, pick)}
 			<button
 				class="submenu-toggle"
@@ -972,36 +784,25 @@
 			</button>
 			{#if openList === key}
 				{#each items as item (item.id)}
-					<!-- a list of subdecks reads as their outline: stepped in
-					     by depth, the ones that hold no cards as headings -->
-					{#if item.heading}
-						<span class="submenu-heading" style:padding-left="{26 + (item.level - 1) * 14}px">{item.name}</span>
-					{:else}
-						<button
-							class="submenu-item"
-							style:padding-left="{26 + ((item.level ?? 1) - 1) * 14}px"
-							onclick={() => {
-								contextMenu = null;
-								pick(item.id);
-							}}
-						>
-							{item.name}
-						</button>
-					{/if}
+					<!-- the decks read as their outline, stepped in by depth -->
+					<button
+						class="submenu-item"
+						style:padding-left="{26 + item.level * 14}px"
+						onclick={() => {
+							contextMenu = null;
+							pick(item.id);
+						}}
+					>
+						{item.name}
+					</button>
 				{/each}
 			{/if}
 		{/snippet}
-		{#if deck.usesSubdecks && leaves.length > 1}
-			{@render list("move-subdeck", `Move ${cardsNoun} to subdeck`, subdeckItems, moveSelectedToSubdeck)}
-		{/if}
-		{#if otherDecks.length > 0}
-			{@render list("move-deck", `Move ${cardsNoun} to deck`, otherDecks, moveSelectedToDeck)}
-		{/if}
-		{#if deck.usesSubdecks}
-			{@render list("copy-subdeck", `Copy ${cardsNoun} to subdeck`, subdeckItems, subdeckId => copySelected(deck.id, subdeckId))}
-		{/if}
-		<!-- this deck is among them: a copy into it is a duplicate -->
+		<!-- every deck of the user's own: the end of this one or of one inside
+		     it, or another altogether (a copy into the card's own deck is a
+		     duplicate) -->
 		{#if deckNames.length > 0}
+			{@render list("move-deck", `Move ${cardsNoun} to deck`, deckNames, moveSelected)}
 			{@render list("copy-deck", `Copy ${cardsNoun} to deck`, deckNames, copySelected)}
 		{/if}
 		<button
@@ -1016,65 +817,6 @@
 	</div>
 {/if}
 
-{#if subdeckMenu}
-	<div
-		class="context-menu"
-		role="menu"
-		tabindex="-1"
-		style="left: {subdeckMenu.x}px; top: {subdeckMenu.y}px"
-		onmousedown={e => e.stopPropagation()}
-	>
-		<button
-			onclick={() => {
-				subdeckRename = { subdeckId: subdeckMenu.subdeck.id, value: subdeckMenu.subdeck.name };
-				subdeckMenu = null;
-			}}
-		>
-			Rename subdeck
-		</button>
-		<button
-			onclick={() => {
-				const id = subdeckMenu.subdeck.id;
-				subdeckMenu = null;
-				startAddSubdeck(id);
-			}}
-		>
-			Add subdeck inside
-		</button>
-		<!-- the subdeck's intro page, where it is read and written -->
-		<button
-			onclick={() => {
-				const id = subdeckMenu.subdeck.id;
-				subdeckMenu = null;
-				goto(`/my-flashcards/${deck.id}/intro?subdeck=${id}`);
-			}}
-		>
-			Intro
-		</button>
-		{#if holdsSubdecks(subdeckMenu.subdeck)}
-			<button
-				onclick={() => {
-					const subdeck = subdeckMenu.subdeck;
-					subdeckMenu = null;
-					flatten(subdeck);
-				}}
-			>
-				Flatten subdecks
-			</button>
-		{/if}
-		<button
-			class="danger"
-			onclick={() => {
-				const subdeck = subdeckMenu.subdeck;
-				subdeckMenu = null;
-				removeSubdeck(subdeck);
-			}}
-		>
-			Delete subdeck
-		</button>
-	</div>
-{/if}
-
 {#if reorderDrag?.started}
 	<!-- rides the cursor; pointer-events off so the rows underneath keep
 	     seeing the mousemoves that place the drop slot -->
@@ -1085,13 +827,7 @@
 	</div>
 {/if}
 
-{#if subdeckDrag?.started}
-	<div class="drag-ghost" style="left: {subdeckDrag.x + 14}px; top: {subdeckDrag.y + 10}px">
-		{subdeckDrag.subdeck.name}
-	</div>
-{/if}
-
-<div class="browse-container" class:reordering={!!reorderDrag?.started || !!subdeckDrag?.started}>
+<div class="browse-container" class:reordering={!!reorderDrag?.started}>
 	<div class="left-pane">
 		<div class="search-row">
 			<div class="search-field">
@@ -1212,8 +948,8 @@
 							<span class="board-only">{boardCount > 1 ? "{{chessboards}}" : "{{chessboard}}"}</span>
 						{/if}
 					</td>
-					<td class:type-cell={!readonly}>
-						{#if readonly}
+					<td class:type-cell={!isBought(card)}>
+						{#if isBought(card)}
 							{card.card_type === "tactic" ? "Tactic" : "Basic"}
 						{:else}
 							<!-- the press is kept off the row: picking a type is not
@@ -1233,107 +969,36 @@
 					<td>{@render cellOrDash(card.reps ?? 0)}</td>
 					<td>{@render cellOrDash(card.card_type === "tactic" ? null : stateNames[card.state])}</td>
 			{/snippet}
-			<!-- The name field of a subdeck being added. Like the rename and
-			     order fields, it reads its state null-safely: committing clears
-			     the state while the field is still in the page. -->
-			{#snippet subdeckAddField()}
-				<!-- svelte-ignore a11y_autofocus -- the input exists because the user just asked to add -->
-				<input
-					class="subdeck-rename-input"
-					autofocus
-					maxlength="100"
-					placeholder="Subdeck name"
-					bind:value={() => subdeckAdd?.value ?? "", value => { if (subdeckAdd) subdeckAdd.value = value; }}
-					onblur={commitAddSubdeck}
-					onmousedown={e => e.stopPropagation()}
-					onkeydown={e => {
-						if (e.key === "Enter") commitAddSubdeck();
-						if (e.key === "Escape") { subdeckAdd = null; e.stopPropagation(); }
-						e.stopPropagation();
-					}}
-				/>
-			{/snippet}
 			<tbody>
 				{#if displayGroups}
-					{#each displayGroups as group (group.subdeck.id)}
-						<!-- without subdecks the groups are still what the rows are
-						     built from (and what a reorder drops into), but nothing
-						     frames them: the deck reads as one list -->
-						{#if deck.usesSubdecks}
-						{@const dropZone = subdeckDrag?.over?.subdeckId === group.subdeck.id ? subdeckDrag.over.zone : null}
+					{#each displayGroups as group (group.deck.id)}
+						<!-- a deck inside under its header; the deck's own cards
+						     come first, framed by nothing, so a deck with none
+						     inside reads as one list -->
+						{#if group.level > 0}
 						<tr
 							class="subdeck-row"
-							data-subdeck-row={group.subdeck.id}
-							class:drop-into={reorderDrag?.started && reorderDrag.over?.subdeckId === group.subdeck.id && group.collapsed}
-							class:drop-inside={dropZone === "inside"}
-							class:drop-before={dropZone === "before"}
-							class:drop-after={dropZone === "after"}
-							class:lifted={subdeckDrag?.started && subdeckDrag.within.has(group.subdeck.id)}
-							onmousemove={() => handleSubdeckDragOver(group)}
-							oncontextmenu={e => handleSubdeckContextMenu(e, group.subdeck)}
+							data-subdeck-row={group.deck.id}
+							class:drop-into={reorderDrag?.started && reorderDrag.over?.deckId === group.deck.id && group.collapsed}
+							onmousemove={() => handleHeaderDragOver(group)}
 						>
 							<td colspan="6">
 								<!-- the header steps in with its depth; the card rows
 								     under it keep to the table's columns -->
 								<div class="subdeck-head" style:padding-left="{(group.level - 1) * 18}px">
-								{#if canReorder}
-									<span class="subdeck-grip" role="presentation" onmousedown={e => handleSubdeckGripDown(e, group.subdeck)}>
-										<svg class="grip" viewBox="0 0 6 10" aria-hidden="true">
-											<circle cx="1" cy="1" r="1"/><circle cx="5" cy="1" r="1"/>
-											<circle cx="1" cy="5" r="1"/><circle cx="5" cy="5" r="1"/>
-											<circle cx="1" cy="9" r="1"/><circle cx="5" cy="9" r="1"/>
-										</svg>
-									</span>
-								{/if}
-								{#if subdeckRename?.subdeckId === group.subdeck.id}
-									<!-- svelte-ignore a11y_autofocus -- the input exists because the user just asked to rename -->
-									<input
-										class="subdeck-rename-input"
-										autofocus
-										maxlength="100"
-										placeholder={group.subdeck.name}
-										bind:value={() => subdeckRename?.value ?? "", value => { if (subdeckRename) subdeckRename.value = value; }}
-										onblur={commitSubdeckRename}
-										onmousedown={e => e.stopPropagation()}
-										onkeydown={e => {
-											if (e.key === "Enter") commitSubdeckRename();
-											if (e.key === "Escape") { subdeckRename = null; e.stopPropagation(); }
-											e.stopPropagation();
-										}}
-									/>
-								{:else}
-									<button class="subdeck-toggle" onmousedown={e => e.stopPropagation()} onclick={() => draft.collapsed[group.subdeck.id] = !group.collapsed}>
+									<button class="subdeck-toggle" onmousedown={e => e.stopPropagation()} onclick={() => draft.collapsed[group.deck.id] = !group.collapsed}>
 										<span class="collapse-arrow" class:collapsed={group.collapsed}></span>
-										<span class="subdeck-name">{subdeckName(group.subdeck)}</span>
-										{#if !unlockedSubdecks.has(group.subdeck.id)}
+										<span class="subdeck-name">{group.deck.name}</span>
+										{#if !unlockedDecks.has(group.deck.id)}
 											<svg class="subdeck-lock" viewBox="0 0 16 16" aria-label="Locked" role="img">
 												<rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>
 												<path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
 											</svg>
 										{/if}
 									</button>
-									<!-- a metadeck's deck: the way to its own cards page,
-									     where they are edited -->
-									{#if group.subdeck.deckId}
-										<a
-											class="open-deck"
-											href={`/my-flashcards/${group.subdeck.deckId}/browse`}
-											onmousedown={e => e.stopPropagation()}
-										>Open deck</a>
-									{/if}
-								{/if}
 								</div>
 							</td>
 						</tr>
-						{#if subdeckAdd?.parentId === group.subdeck.id}
-							<tr class="add-subdeck-row">
-								<td colspan="6">
-									<div class="subdeck-head" style:padding-left="{group.level * 18}px">
-										{@render subdeckAddField()}
-									</div>
-								</td>
-							</tr>
-						{/if}
 						{/if}
 						{#if !group.collapsed}
 							{#each group.cards as item (item.id)}
@@ -1343,7 +1008,6 @@
 									data-card-row={item.placeholder ? undefined : item.id}
 									animate:flip={{ duration: reorderDrag?.started ? 150 : 0 }}
 									class:placeholder-row={item.placeholder}
-									class:lifted={subdeckDrag?.started && subdeckDrag.within.has(group.subdeck.id)}
 									class:active={!item.placeholder && item.id === selectedCard.id}
 									class:multi-selected={!item.placeholder && multiSelected.has(item.id)}
 									onmousedown={item.placeholder ? undefined : e => handleRowMouseDown(e, item, filteredCards.indexOf(item))}
@@ -1361,23 +1025,13 @@
 						{/if}
 					{/each}
 					{#if !readonly}
+						<!-- the way to the deck's intro page; the decks inside are
+						     made and arranged in My flashcards -->
 						<tr class="add-subdeck-row">
 							<td colspan="6">
-								{#if subdeckAdd && !subdeckAdd.parentId}
-									{@render subdeckAddField()}
-								{:else}
-									<!-- the deck's own two moves on its subdecks: one
-									     more, or none at all (its cards kept); and
-									     the way to the deck's intro page (a
-									     subdeck's is in its own menu) -->
-									<div class="subdeck-head">
-										<button class="add-subdeck-btn" onmousedown={e => e.stopPropagation()} onclick={() => startAddSubdeck()}>+ Add subdeck</button>
-										<a class="add-subdeck-btn remove-subdecks-btn" href="/my-flashcards/{deck.id}/intro" onmousedown={e => e.stopPropagation()}>Deck intro</a>
-										{#if deck.usesSubdecks}
-											<button class="add-subdeck-btn remove-subdecks-btn" onmousedown={e => e.stopPropagation()} onclick={() => flatten()}>Flatten subdecks</button>
-										{/if}
-									</div>
-								{/if}
+								<div class="subdeck-head">
+									<a class="add-subdeck-btn" href="/my-flashcards/{deck.id}/intro" onmousedown={e => e.stopPropagation()}>Deck intro</a>
+								</div>
 							</td>
 						</tr>
 					{/if}
@@ -1411,7 +1065,7 @@
 				</div>
 			{:else}
 				<FlashcardBrowse card={selectedCard} />
-				{#if !readonly}
+				{#if !selectedBought}
 					<div class="card-toolbar">
 						<button class="std-btn" onclick={startEditing}>Edit card</button>
 					</div>
@@ -1747,7 +1401,7 @@
 		   edges — and the editor is exactly as wide as the card it replaces */
 		max-width: var(--flashcard-width);
 	}
-	/* --- subdeck rows --- */
+	/* --- the rows of the decks inside --- */
 	/* a band between the card rows, greyer than the zebra so it reads as
 	   structure rather than another card (the selector out-weighs the zebra
 	   and hover rules, which would otherwise repaint it as a card row) */
@@ -1761,44 +1415,6 @@
 	.subdeck-head {
 		display: flex;
 		align-items: center;
-	}
-	.open-deck {
-		flex: none;
-		padding: 0 8px;
-		font-size: 0.8rem;
-		color: rgba(0, 0, 0, 0.55);
-		text-decoration: none;
-	}
-	.open-deck:hover {
-		color: black;
-		text-decoration: underline;
-	}
-	/* the handle a subdeck is dragged by, to another place or into another */
-	.subdeck-grip {
-		display: flex;
-		align-items: center;
-		align-self: stretch;
-		padding: 0 2px 0 8px;
-		cursor: grab;
-	}
-	.subdeck-grip:hover .grip {
-		fill: #333;
-	}
-	/* where a dragged subdeck would land: a line above or below the header
-	   it would sit beside, or the header filled when it would go inside */
-	tbody tr.subdeck-row.drop-before td {
-		box-shadow: inset 0 2px 0 var(--accent);
-	}
-	tbody tr.subdeck-row.drop-after td {
-		box-shadow: inset 0 -2px 0 var(--accent);
-	}
-	tbody tr.subdeck-row.drop-inside td {
-		background-color: var(--accent-subtle-strong);
-	}
-	/* the subdeck in hand, and everything inside it, steps back while it is
-	   carried */
-	tbody tr.lifted td {
-		opacity: 0.45;
 	}
 	.subdeck-toggle {
 		display: flex;
@@ -1833,18 +1449,6 @@
 		height: 13px;
 		color: rgba(0, 0, 0, 0.55);
 	}
-	.subdeck-rename-input {
-		width: 280px;
-		margin: 1px 8px;
-		padding: 2px 6px;
-		border: 1px solid var(--accent);
-		border-radius: 0;
-		font-size: 0.8rem;
-		font-weight: 600;
-	}
-	.subdeck-rename-input:focus {
-		outline: none;
-	}
 	.add-subdeck-btn {
 		width: 100%;
 		padding: 4px 8px;
@@ -1860,12 +1464,6 @@
 	}
 	a.add-subdeck-btn {
 		text-decoration: none;
-	}
-	/* at the far end of the add row, and no wider than its words */
-	.remove-subdecks-btn {
-		width: auto;
-		flex: none;
-		white-space: nowrap;
 	}
 	tbody tr.add-subdeck-row td,
 	tbody tr.add-subdeck-row:hover td {

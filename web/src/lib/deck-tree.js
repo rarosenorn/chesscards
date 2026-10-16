@@ -212,8 +212,9 @@ const newCardRanks = (decks, cards) => {
 // The My flashcards list's rows: every deck in reading order, each with the
 // counts of everything under it (the learning and review cards due, and
 // every new card, in a deck progression still holds shut as much as in an
-// open one — so a row is the sum of the rows under it), whether progression
-// has it locked, and whether it has decks inside to open onto.
+// open one — so a row is the sum of the rows under it; total, every card),
+// whether progression has it locked, and whether it has decks inside to
+// open onto.
 // stats: deck id -> its own cardStats and its due counts, { new, learn,
 // review }.
 const deckListing = (decks, stats) => {
@@ -221,15 +222,13 @@ const deckListing = (decks, stats) => {
 	const sums = new Map();
 	const sum = deck => {
 		const own = stats.get(deck.id);
-		const total = { new: own?.new ?? 0, learn: own?.learn ?? 0, review: own?.review ?? 0 };
+		const counts = { new: own?.new ?? 0, learn: own?.learn ?? 0, review: own?.review ?? 0, total: own?.total ?? 0 };
 		for (const child of children.get(deck.id) ?? []) {
 			const inside = sum(child);
-			total.new += inside.new;
-			total.learn += inside.learn;
-			total.review += inside.review;
+			for (const key of Object.keys(counts)) counts[key] += inside[key];
 		}
-		sums.set(deck.id, total);
-		return total;
+		sums.set(deck.id, counts);
+		return counts;
 	}
 	for (const root of children.get(null) ?? []) sum(root);
 	const open = walkProgression(decks, stats).unlocked;

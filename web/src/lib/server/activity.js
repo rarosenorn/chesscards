@@ -60,18 +60,18 @@ const logPractice = async (userId, cardId, isInstance, gotIt) => {
 	return rowCount === 1;
 }
 
-// A cram session has been gone through to the end, on `studied` (a deck, a
-// marketplace deck taken or a metadeck) or on one subdeck of it. It is
-// noted, and the answer is how many that makes on the same thing in the
-// study day it is now.
-const completeCramSession = async (userId, studied, subdeck, { timeZone, rolloverHour }) => {
+// A cram session has been gone through to the end, on `studied` (a deck of
+// the user's own, a marketplace deck taken, or a deck inside one). It is
+// noted, and the answer is how many that makes on the same deck in the study
+// day it is now.
+const completeCramSession = async (userId, studied, { timeZone, rolloverHour }) => {
 	await pool.query(
-		"insert into cram_sessions(user_id, studied, subdeck) values ($1, $2, $3)", [userId, studied, subdeck]);
+		"insert into cram_sessions(user_id, studied) values ($1, $2)", [userId, studied]);
 	const { rows: [{ count }] } = await pool.query(`
 		select count(*)::int count from cram_sessions
-		where user_id = $1 and studied = $4 and subdeck is not distinct from $5
+		where user_id = $1 and studied = $4
 			and ${studyDay("completed", "$2", "$3")} = ${studyDay("now()", "$2", "$3")}`,
-		[userId, timeZone, rolloverHour, studied, subdeck]);
+		[userId, timeZone, rolloverHour, studied]);
 
 	return count;
 }

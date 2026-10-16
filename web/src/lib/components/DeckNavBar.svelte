@@ -4,13 +4,13 @@
 	import { zenHidden } from "$lib/zen-state.svelte.js"
 	import { modalState } from "$lib/modals.svelte.js"
 
-	// The bar under the site's, on the pages of a deck and of a metadeck: the
-	// way back to My flashcards and where you are, then the page's tabs.
+	// The bar under the site's, on the pages of a deck: the way back to My
+	// flashcards and where you are, then the page's tabs.
 	// crumbs: what follows "My flashcards", each { name, href?, separator? }
 	// (the separator stands before it; "->" unless it says otherwise).
 	// tabs: each { name, href, current, shortcut? }.
 	// switcher: when the page shown can be turned to something else of the
-	// same kind (a deck's Study, to one of its subdecks), an arrow after the
+	// same kind (a deck's Study, to a deck around it or inside it), an arrow after the
 	// crumbs that opens the choice: { label, options }, each option
 	// { name, href, depth, current, locked? }.
 	let { crumbs, tabs, switcher = null } = $props();
@@ -29,7 +29,7 @@
 		// a modal owns the keyboard while it is up
 		if (modalState.current || e.ctrlKey || e.metaKey || e.altKey) return;
 		const tab = tabs.find(tab => tab.shortcut === e.key.toLowerCase());
-		// already there, whatever else its link carries (Study's, a subdeck)
+		// already there, whatever else its link carries
 		if (!tab || takesTyping(e.target) || page.url.pathname === tab.href.split("?")[0]) return;
 		e.preventDefault();
 		goto(tab.href);

@@ -16,8 +16,8 @@
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import ChessboardNode from "$lib/components/ChessboardNode.svelte"
 	import { newBoard, boardForJson, docSideJson, docHasContent } from "$lib/card-utils.js"
-	import { subdeckChoices } from "$lib/subdecks.js"
-	import { loadSubdeckId, saveSubdeckId, loadCardType, saveCardType, DEFAULT_CARD_TYPE } from "$lib/add-cards-draft.js"
+	import { deckChoices } from "$lib/deck-tree.js"
+	import { loadTargetDeckId, saveTargetDeckId, loadCardType, saveCardType, DEFAULT_CARD_TYPE } from "$lib/add-cards-draft.js"
 
 	const startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -33,17 +33,16 @@
 		cardType = value;
 		saveCardType(deckId, value);
 	}
-	let choices = $derived(subdeckChoices(deck.subdecks));
-	let cardSubdecks = $derived(choices.filter(choice => !choice.disabled));
-	let subdeckId = $state(browser ? loadSubdeckId(deckId) : null);
+	let choices = $derived(deckChoices(deck.decks));
+	let subdeckId = $state(browser ? loadTargetDeckId(deckId) : null);
 	let validSubdeckId = $derived(
-		cardSubdecks.some(choice => choice.id === subdeckId)
+		choices.some(choice => choice.id === subdeckId && !choice.disabled)
 			? subdeckId
-			: cardSubdecks[cardSubdecks.length - 1]?.id
+			: deck.id
 	);
 	const chooseSubdeck = value => {
 		subdeckId = value;
-		saveSubdeckId(deckId, value);
+		saveTargetDeckId(deckId, value);
 	}
 
 	// shared board-editing state (see ChessboardNode.svelte): one bag serves
@@ -177,9 +176,9 @@
 {/snippet}
 
 <div class="type-row">
-	{#if cardSubdecks.length > 1}
+	{#if choices.length > 1}
 		<label class="subdeck-picker">
-			Subdeck
+			Deck
 			<select value={validSubdeckId} onchange={e => chooseSubdeck(e.currentTarget.value)}>
 				{#each choices as choice (choice.id)}
 					<option value={choice.id} disabled={choice.disabled}>{choice.label}</option>
@@ -262,7 +261,7 @@
 			formData.set("front", sideJson(front, frontBoards));
 			formData.set("back", sideJson(back, backBoards));
 			formData.set("cardType", cardType);
-			formData.set("subdeckId", validSubdeckId ?? "");
+			formData.set("deckId", validSubdeckId);
 
 			return async ({ result, update }) => {
 				// no invalidation: the deck context is updated by the push

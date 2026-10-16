@@ -1,17 +1,17 @@
 <script>
-	import { subdeckOutline, subdeckSubtree } from "$lib/subdecks.js"
+	import { deckOutline, deckSubtree } from "$lib/deck-tree.js"
 
 	// What a deck holds, for someone deciding whether to take it: the outline
-	// of its subdecks, each with how many cards sit under it. Under the
-	// description on the marketplace page and on the Deck tab; a deck that
-	// uses no subdecks has nothing to list. subdecks: the deck's, each with
-	// the count of its own cards.
+	// of the decks inside it, each with how many cards sit under it. Under the
+	// description on the marketplace page and on the Deck tab; a deck with no
+	// decks inside has nothing to list. subdecks: the decks inside it, each
+	// with the count of its own cards (those directly inside it at the top).
 	let { subdecks } = $props();
 
-	let rows = $derived(subdeckOutline(subdecks).map(({ subdeck, level }) => {
-		const inside = subdeckSubtree(subdecks, subdeck.id);
+	let rows = $derived(deckOutline(subdecks).map(({ deck, level }) => {
+		const inside = deckSubtree(subdecks, deck.id);
 		const cards = subdecks.filter(other => inside.has(other.id)).reduce((sum, other) => sum + other.cards, 0);
-		return { id: subdeck.id, name: subdeck.name, level, cards };
+		return { id: deck.id, name: deck.name, level: level + 1, cards };
 	}));
 </script>
 

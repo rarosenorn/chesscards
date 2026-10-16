@@ -1,9 +1,9 @@
 import { ttGenerateText } from "./tiptap-utility.js"
 import { isValidFen } from "./isValidFen.js"
-import { isSeen, cardsUnder } from "./subdecks.js"
+import { isSeen, cardsUnder } from "./deck-tree.js"
 
-// An intro is a page read before the first card of what it introduces: a
-// deck's, or a subdeck's. It is stored as blocks, like a deck's description
+// An intro is a page read before the first card of the deck it introduces.
+// It is stored as blocks, like a deck's description
 // (text and boards), with headings among the text (tiptap-heading.js).
 //
 // Whether one has been read is not stored on the account. It comes up while
@@ -43,40 +43,42 @@ const isIntroBlocks = value => {
 	}
 }
 
-// What stands on the way to a subdeck, outermost first: the deck, then each
-// subdeck down to it, each with the intro it has (blocks, or null). A deck
-// that does not use its subdecks shows nothing of them, so it has only its
-// own. key is what the place is known by: the deck's id, or the subdeck's.
-// (A page with no blocks on it is no page.)
+// What stands on the way to a deck, outermost first: the decks around the
+// deck the page is on (deck.ancestors), then that deck and each deck inside
+// it down to the one named (deckId; the deck itself without one), each with
+// the intro it has (blocks, or null). key is the deck's id. (A page with no
+// blocks on it is no page.)
 const blocksOf = holder => holder.intro?.length > 0 ? holder.intro : null;
-const introPlaces = (deck, subdeckId = null) => {
-	const places = [{ key: deck.id, name: deck.name, blocks: blocksOf(deck), subdeckId: null }];
-	if (!deck.usesSubdecks || !subdeckId) return places;
-	const byId = new Map(deck.subdecks.map(subdeck => [subdeck.id, subdeck]));
+const introPlaces = (deck, deckId = null) => {
+	const around = (deck.ancestors ?? []).map(at =>
+		({ key: at.id, name: at.name, blocks: blocksOf(at), deckId: at.id, around: true, begun: at.begun }));
+	const byId = new Map(deck.decks.map(entry => [entry.id, entry]));
 	const trail = [];
-	for (let subdeck = byId.get(subdeckId); subdeck; subdeck = byId.get(subdeck.parent_id)) trail.unshift(subdeck);
-	for (const subdeck of trail) {
-		places.push({ key: subdeck.id, name: subdeck.name, blocks: blocksOf(subdeck), subdeckId: subdeck.id });
-	}
-	return places;
+	for (let at = byId.get(deckId ?? deck.id); at; at = byId.get(at.parent_id)) trail.unshift(at);
+	return [...around, ...trail.map(at => ({ key: at.id, name: at.name, blocks: blocksOf(at), deckId: at.id }))];
 }
 
-// whether what a place introduces has been begun: a card under it studied
-const isBegun = (deck, cards, place) =>
-	(place.subdeckId ? cardsUnder(deck.subdecks, cards, place.subdeckId) : cards).some(isSeen);
+// Whether what a place introduces has been begun: a card under it studied.
+// A deck around the one the page is on has cards beyond the page's; what
+// the page loaded said whether any of those had been, and the page's own
+// cards are under it as well.
+const isBegun = (deck, cards, place) => place.around
+	? place.begun || cards.some(isSeen)
+	: cardsUnder(deck.decks, cards, place.deckId).some(isSeen);
 
-// The intro to read before a card of the subdeck is studied, the outermost
-// first: one that has not been passed (read: the keys that were) and whose
-// deck or subdeck has not been begun. null when there is none.
-const pendingIntro = (deck, cards, subdeckId, read) =>
-	introPlaces(deck, subdeckId)
+// The intro to read before a card of the deck deckId is studied, the
+// outermost first: one that has not been passed (read: the keys that were)
+// and whose deck has not been begun. null when there is none.
+const pendingIntro = (deck, cards, deckId, read) =>
+	introPlaces(deck, deckId)
 		.find(place => place.blocks && !read.has(place.key) && !isBegun(deck, cards, place)) ?? null;
 
 // --- the read marks ---
 // The keys of the pages passed, as this browser remembers them. Only a page
-// whose deck or subdeck has not been begun is ever asked about, so a mark
-// matters from the Study button to the first grade. A deck reset forgets the
-// deck's: its cards are new again, and its pages come up again.
+// whose deck has not been begun is ever asked about, so a mark matters from
+// the Study button to the first grade. A deck reset forgets the pages of the
+// deck and of every deck inside it: their cards are new again, and their
+// pages come up again.
 const READ_KEY = "chesscards:intros-read";
 const readMarks = () => {
 	try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) ?? "[]")); }
@@ -88,7 +90,7 @@ const writeMarks = marks => {
 const markIntroRead = key => writeMarks(readMarks().add(key));
 const forgetIntrosRead = deck => {
 	const marks = readMarks();
-	for (const key of [deck.id, ...deck.subdecks.map(subdeck => subdeck.id)]) marks.delete(key);
+	for (const entry of deck.decks) marks.delete(entry.id);
 	writeMarks(marks);
 }
 

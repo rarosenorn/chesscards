@@ -1,5 +1,5 @@
 import { isDueAt } from "./rollover.js"
-import { isSeen } from "./subdecks.js"
+import { isSeen } from "./deck-tree.js"
 
 // A cram session goes through every card of what is being studied, due or
 // not, once, in an order chosen at its start. One answer does for a card,

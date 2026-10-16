@@ -6,9 +6,12 @@ import { sideHasContent } from "$lib/card-utils.js"
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const load = async ({ locals, params }) => {
-	// marketplace deck instances have no personal deck row: 404s for them
-	const deck = await decks.getById(locals.userId, params.id);
-	if (!deck) error(404);
+	// only a deck of the user's own can be published, and not one with a
+	// marketplace deck they have taken inside it
+	const deck = await decks.getDeck(locals.userId, params.id);
+	if (!deck || deck.isMarketplace) error(404);
+	const listing = await decks.getOwnListing(locals.userId, params.id);
+	if (listing.holdsTaken) redirect(303, `/my-flashcards/${params.id}/settings`);
 
 	const uploadRequest = await marketplace.getUploadRequestForDeck(locals.userId, params.id);
 	if (uploadRequest?.status === "pending" || uploadRequest?.status === "approved") {
@@ -18,7 +21,7 @@ export const load = async ({ locals, params }) => {
 	// the request starts as the deck's own listing
 	return {
 		deck,
-		listing: await decks.getListing(locals.userId, params.id),
+		listing,
 		themes: marketplace.themes
 	}
 }

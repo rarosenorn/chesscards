@@ -4,11 +4,12 @@ import * as marketplace from "$lib/server/marketplace.js"
 import { sideHasContent } from "$lib/card-utils.js"
 
 export const load = async ({ locals, params, parent }) => {
-	// a marketplace deck instance shows the listing it was bought from
+	// a marketplace deck taken, and a deck inside one, show the listing it
+	// was taken from
 	const { deck } = await parent();
 	const listing = deck.isMarketplace
-		? await marketplace.getInstanceListing(locals.userId, params.id)
-		: await decks.getListing(locals.userId, params.id);
+		? await marketplace.getInstanceListing(locals.userId, deck.instanceId)
+		: await decks.getOwnListing(locals.userId, params.id);
 
 	// the sample cards as the marketplace shows them, in their order
 	const sampleCards = deck.isMarketplace
@@ -21,13 +22,13 @@ export const load = async ({ locals, params, parent }) => {
 		pageTitle: "Deck",
 		listing,
 		sampleCards,
-		// the deck's subdecks with their card counts, for the contents outline
+		// the decks inside it with their card counts, for the contents outline
 		// the marketplace shows: the marketplace deck's own, or this deck's as
 		// they stand
 		contents: deck.isMarketplace
 			? await marketplace.getDeckContents(listing.marketplaceDeckId)
-			: !deck.usesSubdecks ? [] : deck.subdecks.map(({ intro, ...subdeck }) =>
-				({ ...subdeck, cards: deck.cards.filter(card => card.subdeck_id === subdeck.id).length })),
+			: deck.decks.slice(1).map(({ id, parent_id, name, position }) =>
+				({ id, parent_id, name, position, cards: deck.cards.filter(card => card.deck_id === id).length })),
 		// a deck taken from the marketplace is reviewed here as well as there
 		reviews: deck.isMarketplace
 			? await marketplace.getReviews(listing.marketplaceDeckId, locals.userId)

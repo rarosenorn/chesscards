@@ -95,14 +95,15 @@ const loadFrozenBoards = deckId => {
 const saveFrozenBoards = (deckId, frozen) =>
 	write(frozenBoardsKey(deckId), JSON.stringify(Object.keys(frozen).filter(id => frozen[id])));
 
-// which subdeck new cards are filed into, like the card type a mode of writing
-// the deck; the page falls back to the last subdeck when the stored one is gone
-const loadSubdeckId = deckId => read(subdeckKey(deckId));
+// which deck new cards are filed into — the deck itself or one inside it —
+// like the card type a mode of writing the deck; the page falls back to the
+// deck itself when the stored one is gone
+const loadTargetDeckId = deckId => read(subdeckKey(deckId));
 
-const saveSubdeckId = (deckId, subdeckId) => write(subdeckKey(deckId), subdeckId);
+const saveTargetDeckId = (deckId, targetId) => write(subdeckKey(deckId), targetId);
 
 export {
 	DEFAULT_CARD_TYPE, loadCardType, saveCardType, loadDraft, saveDraft, clearDraft,
 	loadFrozenSides, saveFrozenSides, loadFrozenBoards, saveFrozenBoards,
-	loadSubdeckId, saveSubdeckId
+	loadTargetDeckId, saveTargetDeckId
 }

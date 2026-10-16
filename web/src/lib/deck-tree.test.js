@@ -169,14 +169,14 @@ describe("the My flashcards list's rows", () => {
 	})
 
 	it("count everything under a deck, in a locked deck as in an open one", () => {
-		expect(row("top")).toMatchObject({ new: 8, learn: 0, review: 1, locked: false });
+		expect(row("top")).toMatchObject({ new: 8, learn: 0, review: 1, total: 12, locked: false });
 		expect(row("a")).toMatchObject({ new: 3, review: 1, locked: false });
 		expect(row("b")).toMatchObject({ new: 5, locked: true });
 		expect(row("lone")).toMatchObject({ new: 2, locked: false });
 	})
 
 	it("count a deck with no cards as nothing", () => {
-		expect(deckListing([deck("empty", 1)], new Map())[0]).toMatchObject({ new: 0, learn: 0, review: 0, locked: false });
+		expect(deckListing([deck("empty", 1)], new Map())[0]).toMatchObject({ new: 0, learn: 0, review: 0, total: 0, locked: false });
 	})
 })
 

@@ -19,26 +19,30 @@ vi.mock("$lib/cards.remote.js", () => ({
 
 const { default: Study } = await import("./Study.svelte");
 
-// An intro page stands where the card would, before the first card of a deck
-// and of a subdeck is studied — the whole path, from the page coming up to
-// the card after it.
+// An intro page stands where the card would, before the first card under a
+// deck is studied — the whole path, from the page coming up to the card after
+// it.
 
 const text = words => [{ type: "text", content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: words }] }] } }];
-const card = (id, subdeck_id, seen = false) => ({
+const card = (id, deck_id, seen = false) => ({
 	...createEmptyCard(new Date(Date.now() - 1000)),
 	// a card met before: on a real schedule, and not due for a while
 	...(seen ? { state: 2, reps: 1, due: new Date(Date.now() + 5 * 864e5), last_review: new Date(Date.now() - 864e5), scheduled_days: 6 } : {}),
-	id, deck_id: "deck", subdeck_id, position: 1, card_type: "basic", finished_at: null,
+	id, deck_id, position: 1, card_type: "basic", finished_at: null,
 	front: text(`Question ${id}`), back: text(`Answer ${id}`)
 });
-const deckOf = (cards, overrides = {}) => ({
-	id: "deck", name: "The deck", usesSubdecks: true, progressionDepth: 0, intro: text("The deck's page"),
-	subdecks: [
-		{ id: "a", name: "First", position: 1, parent_id: null, intro: text("First's page") },
-		{ id: "b", name: "Second", position: 2, parent_id: null, intro: null }
+// a deck as the layout loads it: itself first among its decks (mixed, so
+// both decks inside are open), the decks it sits inside as ancestors
+const deckOf = (cards, { intro = text("The deck's page"), ancestors = [], inside = true } = {}) => ({
+	id: "deck", name: "The deck", inOrder: false, intro, ancestors,
+	decks: [
+		{ id: "deck", name: "The deck", position: 1, parent_id: null, in_order: false, intro },
+		...(inside ? [
+			{ id: "a", name: "First", position: 1, parent_id: "deck", in_order: true, intro: text("First's page") },
+			{ id: "b", name: "Second", position: 2, parent_id: "deck", in_order: true, intro: null }
+		] : [])
 	],
-	cards,
-	...overrides
+	cards
 });
 
 describe("an intro page in study", () => {
@@ -82,7 +86,7 @@ describe("an intro page in study", () => {
 		};
 	}
 
-	it("comes up before the first card: the deck's, then the subdeck's, then the card", async () => {
+	it("comes up before the first card: the deck's, then the one's inside it, then the card", async () => {
 		const page = await study(deckOf([card("one", "a"), card("two", "b")]));
 		expect(page.title()).toBe("The deck");
 		expect(page.question()).toBe(null);
@@ -118,7 +122,7 @@ describe("an intro page in study", () => {
 		expect(page.title()).toBe(null);
 		expect(page.question()).toBe("Question one");
 
-		// graded: the next card is of a subdeck with no page, in a deck now begun
+		// graded: the next card is of a deck with no page, inside one now begun
 		await page.key(" ");
 		await page.key("3");
 		expect(page.title()).toBe(null);
@@ -176,8 +180,20 @@ describe("an intro page in study", () => {
 		page.close();
 	})
 
-	it("is the deck's alone where the deck does not use its subdecks", async () => {
-		const page = await study(deckOf([card("one", "a")], { usesSubdecks: false }));
+	it("is the deck's alone for a deck with no decks inside", async () => {
+		const page = await study(deckOf([card("one", "deck")], { inside: false }));
+		expect(page.title()).toBe("The deck");
+		await page.press("Study");
+		expect(page.question()).toBe("Question one");
+		page.close();
+	})
+
+	it("starts from the decks around the deck studied, outermost first", async () => {
+		const page = await study(deckOf([card("one", "b")], {
+			ancestors: [{ id: "top", name: "Top", intro: text("Top's page"), begun: false }]
+		}));
+		expect(page.title()).toBe("Top");
+		await page.press("Study");
 		expect(page.title()).toBe("The deck");
 		await page.press("Study");
 		expect(page.question()).toBe("Question one");
@@ -192,17 +208,12 @@ describe("an intro page in study", () => {
 		page.close();
 	})
 
-	it("is each deck's own in a metadeck, before that deck's first card", async () => {
-		const part = (id, name, subdeck) => ({
-			id, name, usesSubdecks: false, progressionDepth: 0, intro: text(`${name}'s page`),
-			subdecks: [{ id: subdeck, name: "Cards", position: 1, parent_id: null, intro: text("never shown") }]
-		});
-		const parts = [part("d1", "Openings", "s1"), part("d2", "Endings", "s2")];
+	it("is each deck's own in a mixed deck, before that deck's first card", async () => {
+		const part = (id, name) => ({ id, name, position: id === "d1" ? 1 : 2, parent_id: "all", in_order: true, intro: text(`${name}'s page`) });
 		const page = await study({
-			id: "meta", name: "Everything", isMetadeck: true, studyOrder: "in-order", reviewsFirst: true,
-			parts,
-			subdecks: parts.flatMap(each => each.subdecks),
-			cards: [{ ...card("one", "s1"), deck_id: "d1" }, { ...card("two", "s2"), deck_id: "d2" }]
+			id: "all", name: "Everything", inOrder: false, intro: null, ancestors: [],
+			decks: [{ id: "all", name: "Everything", position: 1, parent_id: null, in_order: false, intro: null }, part("d1", "Openings"), part("d2", "Endings")],
+			cards: [card("one", "d1"), card("two", "d2")]
 		});
 		expect(page.title()).toBe("Openings");
 		await page.press("Study");

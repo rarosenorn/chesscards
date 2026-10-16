@@ -3,27 +3,14 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import FormErrors from "$lib/components/FormErrors.svelte"
 	import { typedConfirmModal } from "$lib/modals.svelte.js"
-	import { subdeckLevels } from "$lib/subdecks.js"
 	import { forgetIntrosRead } from "$lib/intros.js"
 
 	let { data, form } = $props();
 
-	// How deep progression can run on this deck: not at all, one number for
-	// each level short of its last, or every level it has. A deck with a
-	// single level of subdecks has only the two ends to offer, which then
-	// read as off and on. A stored depth that reaches the deck's last level
-	// is the same as every level.
-	let levels = $derived(subdeckLevels(data.deck.subdecks));
-	let depths = $derived([
-		{ value: "none", label: levels > 1 ? "None" : "Off" },
-		...Array.from({ length: Math.max(0, levels - 1) }, (_, index) =>
-			({ value: String(index + 1), label: index === 0 ? "1 level" : `${index + 1} levels` })),
-		{ value: "all", label: levels > 1 ? "All levels" : "On" }
-	]);
-	let chosenDepth = $derived.by(() => {
-		const depth = data.deck.progressionDepth;
-		return depth === 0 ? "none" : depth === null || depth >= levels ? "all" : String(depth);
-	});
+	// whether there are decks inside it to take in order or mixed
+	let holdsDecks = $derived(data.deck.decks.length > 1);
+	// a marketplace deck taken, as against a deck inside one
+	let isTaken = $derived(data.deck.isMarketplace && data.deck.id === data.deck.instanceId);
 
 	let deleteForm = $state();
 	let resetForm = $state();
@@ -39,12 +26,19 @@
 	}
 
 	const confirmDelete = async () => {
-		const confirmed = await typedConfirmModal({
-			title: "Delete deck",
-			message: `This permanently deletes "${data.deck.name}", its cards and their progress.`,
-			requiredText: data.deck.name,
-			confirmLabel: "Delete deck"
-		});
+		const confirmed = await typedConfirmModal(isTaken
+			? {
+				title: "Remove deck",
+				message: `This removes "${data.deck.name}" from your decks, and your progress on it. You can take it again from the marketplace.`,
+				requiredText: data.deck.name,
+				confirmLabel: "Remove deck"
+			}
+			: {
+				title: "Delete deck",
+				message: `This permanently deletes "${data.deck.name}", every deck and card inside it and their progress.`,
+				requiredText: data.deck.name,
+				confirmLabel: "Delete deck"
+			});
 		if (confirmed) deleteForm.requestSubmit();
 	}
 </script>
@@ -59,7 +53,6 @@
 				name="name"
 				value={form?.name ?? data.deck.name}
 				required
-				minlength="4"
 				maxlength="100"
 				autocomplete="off"
 			/>
@@ -77,6 +70,11 @@
 			<p class="status status-approved">
 				This deck is on the marketplace as "{data.uploadRequest.name}" ({data.uploadRequest.theme}).
 			</p>
+		{:else if data.holdsTaken}
+			<p class="section-note">
+				A marketplace deck sits inside this deck, so it cannot be shared:
+				only what is your own can go on the marketplace.
+			</p>
 		{:else}
 			{#if data.uploadRequest?.status === "rejected"}
 				<p class="status status-rejected">
@@ -92,24 +90,23 @@
 	</section>
 	{/if}
 
-	<!-- nothing to gate without subdecks, so the switch only appears with them -->
-	{#if data.deck.usesSubdecks}
+	<!-- nothing to order without decks inside, so the choice only appears with them -->
+	{#if holdsDecks}
 	<section>
-		<h3>Subdeck progression</h3>
+		<h3>Decks inside</h3>
 		<p class="section-note">
-			New cards arrive subdeck by subdeck — the next subdeck unlocks once
-			the one before is learned.
-			{#if levels > 1}
-				Choose how many levels of subdecks that goes for: inside the
-				last one that counts, everything is mixed.
-			{/if}
-			With none, every card is available from the start.
+			In order: new cards arrive deck by deck — the next deck opens once the
+			one before is learned (the cards of this deck itself come first).
+			Mixed: every deck inside is open from the start, and new cards come
+			from each in turn.
+			{#if data.deck.isMarketplace}This is your own choice; it starts as the author's.{/if}
 		</p>
-		<form method="POST" action="?/progression" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
+		<form method="POST" action="?/inOrder" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
 			<div class="pills">
-				{#each depths as option}
-					<label class="pill" class:selected={chosenDepth === option.value}>
-						<input type="radio" name="value" value={option.value} checked={chosenDepth === option.value} />
+				{#each [{ value: "in-order", label: "In order" }, { value: "mixed", label: "Mixed" }] as option}
+					{@const chosen = (option.value === "in-order") === data.deck.inOrder}
+					<label class="pill" class:selected={chosen}>
+						<input type="radio" name="value" value={option.value} checked={chosen} />
 						{option.label}
 					</label>
 				{/each}
@@ -118,8 +115,9 @@
 	</section>
 	{/if}
 
-	<!-- the danger zone is the one section a marketplace instance also gets:
-	     resetting is its only destructive act, deleting stays the owner's -->
+	<!-- the danger zone is the one section a marketplace deck also gets:
+	     resetting the progress is the studier's, and a deck taken can be
+	     removed; deleting a deck stays its owner's -->
 	<section class="danger-zone">
 		<h3>Danger zone</h3>
 		{#if form?.cards != null}
@@ -128,7 +126,7 @@
 			</p>
 		{/if}
 		<div class="danger-actions">
-			<!-- the deck's cards are new again, so its intro pages come up again -->
+			<!-- the cards under it are new again, so their intro pages come up again -->
 			<form
 				bind:this={resetForm}
 				method="POST"
@@ -140,7 +138,7 @@
 			>
 				<button type="button" class="danger-button" onclick={confirmReset}>Reset deck</button>
 			</form>
-			{#if !data.deck.isMarketplace}
+			{#if !data.deck.isMarketplace || isTaken}
 			<form
 				bind:this={deleteForm}
 				method="POST"
@@ -151,7 +149,7 @@
 					}
 				}}
 			>
-				<button type="button" class="danger-button" onclick={confirmDelete}>Delete deck</button>
+				<button type="button" class="danger-button" onclick={confirmDelete}>{isTaken ? "Remove deck" : "Delete deck"}</button>
 			</form>
 			{/if}
 		</div>
@@ -214,7 +212,7 @@
 		text-decoration: none;
 		color: inherit;
 	}
-	/* the depth choice, as the profile's three-way is drawn */
+	/* the in order / mixed choice, as the profile draws its choices */
 	.pills {
 		display: flex;
 		flex-wrap: wrap;

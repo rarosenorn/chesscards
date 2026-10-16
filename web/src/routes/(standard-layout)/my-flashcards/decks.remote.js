@@ -1,46 +1,80 @@
 import { getRequestEvent, command } from "$app/server"
 import { error } from "@sveltejs/kit"
 import * as decks from "$lib/server/decks.js"
-import * as marketplace from "$lib/server/marketplace.js"
-import * as metadecks from "$lib/server/metadecks.js"
-import { checkIds, checkIdList } from "$lib/server/ids.js"
+import * as zod from "$lib/zod-schemas.js"
+import { checkIds, checkIndex } from "$lib/server/ids.js"
 
-// one of the two lists, in its new order
-export const reorderDecks =
-	command("unchecked", async ({ marketplace: isMarketplace, ids }) => {
+// What My flashcards does to the decks themselves: make them, name them,
+// nest them, take them apart. The page reloads its list after each.
+
+const deckName = name => {
+	const result = zod.deck.safeParse(name);
+	if (!result.success) error(400, result.error.flatten().formErrors[0]);
+	return result.data;
+}
+
+const refused = err => {
+	if (err.message === "Unauthorized") error(403, "Unauthorized");
+	if (err.message === "A deck cannot go inside itself") error(400, err.message);
+	// a name is said once among a deck's siblings
+	if (err.code === "23505") error(409, "There is already a deck with this name there");
+	throw err;
+}
+
+// a new deck at the end of the top of the list, or inside parentId
+export const createDeck =
+	command("unchecked", async ({ name, parentId }) => {
 		const { locals } = getRequestEvent();
-		checkIdList(ids);
-		const reorder = isMarketplace ? marketplace.reorderInstances : decks.reorder;
-		if (!await reorder(locals.userId, ids)) error(409, "The deck list changed; reload to reorder it");
+		const trimmed = deckName(name);
+		checkIds(parentId ?? []);
+		try { return await decks.create(locals.userId, trimmed, parentId ?? null); }
+		catch (err) { refused(err); }
 	})
 
-export const reorderMetadecks =
-	command("unchecked", async ({ ids }) => {
+export const renameDeck =
+	command("unchecked", async ({ id, name }) => {
 		const { locals } = getRequestEvent();
-		checkIdList(ids);
-		if (!await metadecks.reorder(locals.userId, ids)) error(409, "The metadeck list changed; reload to reorder it");
+		const trimmed = deckName(name);
+		checkIds(id);
+		try { if (!await decks.rename(locals.userId, id, trimmed)) error(403, "Unauthorized"); }
+		catch (err) { refused(err); }
 	})
 
-// a deck, a marketplace deck or a metadeck (kind says which) goes into a
-// metadeck, leaving the one it was dragged out of when that is named
-export const addToMetadeck =
-	command("unchecked", async ({ metadeckId, kind, id, fromMetadeckId }) => {
+// a deck, or a marketplace deck taken, goes to index (the end without one)
+// among the decks inside parentId, or at the top without one
+export const moveDeck =
+	command("unchecked", async ({ id, parentId, index }) => {
 		const { locals } = getRequestEvent();
-		if (!Object.hasOwn(metadecks.KINDS, kind)) error(400, "Bad request");
-		checkIds(metadeckId, id, fromMetadeckId ?? []);
-		try {
-			await metadecks.addItem(locals.userId, metadeckId, kind, id, fromMetadeckId ?? null);
-		} catch (err) {
-			if (err.message === "Unauthorized") error(403, "Unauthorized");
-			if (err.message === "A metadeck cannot go inside itself") error(400, err.message);
-			throw err;
+		checkIds(id, parentId ?? []);
+		checkIndex(index);
+		try { await decks.move(locals.userId, id, parentId ?? null, index ?? null); }
+		catch (err) { refused(err); }
+	})
+
+// a deck of the user's own with everything inside it, or a marketplace deck
+// they have taken with their progress on it
+export const deleteDeck =
+	command("unchecked", async ({ id }) => {
+		const { locals } = getRequestEvent();
+		checkIds(id);
+		if (!await decks.remove(locals.userId, id) && !await decks.removeTaken(locals.userId, id)) {
+			error(403, "Unauthorized");
 		}
 	})
 
-export const removeFromMetadeck =
-	command("unchecked", async ({ metadeckId, kind, id }) => {
+// the decks inside it are taken away, their cards kept in it
+export const flattenDeck =
+	command("unchecked", async ({ id }) => {
 		const { locals } = getRequestEvent();
-		if (!Object.hasOwn(metadecks.KINDS, kind)) error(400, "Bad request");
-		checkIds(metadeckId, id);
-		if (!await metadecks.removeItem(locals.userId, metadeckId, kind, id)) error(403, "Unauthorized");
+		checkIds(id);
+		try { await decks.flatten(locals.userId, id); }
+		catch (err) { refused(err); }
+	})
+
+export const setInOrder =
+	command("unchecked", async ({ id, inOrder }) => {
+		const { locals } = getRequestEvent();
+		checkIds(id);
+		if (typeof inOrder !== "boolean") error(400, "Bad request");
+		if (!await decks.setInOrder(locals.userId, id, inOrder)) error(403, "Unauthorized");
 	})

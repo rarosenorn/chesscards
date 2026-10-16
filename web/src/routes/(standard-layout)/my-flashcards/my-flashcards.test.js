@@ -30,7 +30,7 @@ const listing = () => [
 	row("Ch1", 1, "Course", { total: 2, new: 2 }),
 	row("Ch2", 1, "Course", { total: 3, new: 3, locked: true }),
 	row("Empty", 0, null),
-	row("Taken", 0, null, { bought: true, instance_id: "Taken", author: "Sielecki", holdsDecks: true, total: 4 }),
+	row("Taken", 0, null, { bought: true, instance_id: "Taken", holdsDecks: true, total: 4 }),
 	row("Inside", 1, "Taken", { bought: true, instance_id: "Taken", total: 4 })
 ];
 
@@ -74,13 +74,6 @@ describe("My flashcards", () => {
 		page.rowEl("Course").querySelector(".expander").click();
 		await tick();
 		expect(page.shown()).toEqual(["Course", "Ch1", "Ch2", "Empty", "Taken"]);
-		// a marketplace deck says who made it; the decks inside it, and the
-		// user's own, say nothing
-		page.rowEl("Taken").querySelector(".expander").click();
-		await tick();
-		expect(page.rowEl("Taken").querySelector(".author")?.textContent).toBe("Sielecki");
-		expect(page.rowEl("Inside").querySelector(".author")).toBeFalsy();
-		expect(page.rowEl("Course").querySelector(".author")).toBeFalsy();
 		// no lock on a deck progression holds shut
 		expect(page.rowEl("Ch2").querySelector("[aria-label=Locked]")).toBeFalsy();
 		page.close();

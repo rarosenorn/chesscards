@@ -26,10 +26,6 @@ create table "user" (
 	-- position it opens on; with this, of every move it is stepped to as well.
 	"highlightEveryMove" boolean default false not null,
 	"animationDuration" integer default 150 not null,
-	-- what the profile's subdeck-progression control shows: 'all'/'none' were
-	-- bulk-applied to every deck; touching one deck's own toggle puts this
-	-- back to 'per-deck' (decks keep their own flags either way)
-	"subdeckProgressionMode" text default 'all' not null check ("subdeckProgressionMode" in ('per-deck', 'all', 'none')),
 	-- the hour a new study day begins ("next day starts at", Anki's 4am): a
 	-- card scheduled a day or more out waits for this boundary rather than
 	-- for the clock time it was graded at, so studying past midnight is still
@@ -92,26 +88,23 @@ create table decks (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid references "user" ("id") on delete cascade not null,
 	name text not null,
-	-- the deck's place in My flashcards, 1..n per user; the user drags to
-	-- reorder, and a new deck joins at the end
+	-- Decks nest, as Anki's do: parent_id is the deck this one sits inside,
+	-- null at the top of My flashcards. A deck goes with everything inside
+	-- it. It holds cards and decks both, its own cards coming first.
+	parent_id uuid references decks(id) on delete cascade,
+	-- its place among its siblings, 1..n, shared with the marketplace decks
+	-- taken that sit beside it; the user drags to reorder, and a new deck
+	-- joins at the end
 	position integer not null default 0,
-	-- Whether the deck is organised into subdecks at all. Off (the default) it
-	-- is one flat list: the subdeck picker, the headers and the "2.17" order
-	-- numbering all go, and the deck's single subdeck is an implementation
-	-- detail nothing shows. The subdecks survive being switched off, so turning
-	-- subdecks back on restores the grouping instead of rebuilding it.
-	uses_subdecks boolean not null default false,
-	-- How many levels down new cards are introduced subdeck by subdeck (all seen
-	-- + most graduated unlocks the next): 0 = none, every card is open from
-	-- the start, Anki style; 1 = the top-level subdecks in order, everything
-	-- inside one mixed; 2 = theirs in order as well; null = every level there
-	-- is. Only bites while subdecks is on — a deck with no subdecks has
-	-- nothing to gate.
-	progression_depth smallint check (progression_depth >= 0),
+	-- How the decks inside it are studied: in order (each opens once the one
+	-- before has passed — all seen, most graduated — its own cards counting
+	-- as the first), or mixed (all open, new cards taken from each in turn).
+	-- The deck's own say, wherever study starts from (lib/deck-tree.js).
+	in_order boolean not null default true,
 	-- the deck's own listing (its Deck tab): an upload request starts from
 	-- it, and editing it never reaches a listing already on the marketplace.
 	-- A description is blocks, like a card's side (text and boards), and the
-	-- sample cards are ordered ids of the deck's cards
+	-- sample cards are ordered ids of the cards under it
 	description jsonb,
 	theme deck_theme,
 	image bytea,
@@ -120,25 +113,9 @@ create table decks (
 	-- The deck's intro: a page read before its first card is studied. Blocks,
 	-- like the description, with headings among the text; null for none.
 	intro jsonb,
-	unique(user_id, name)
-);
-
--- Every card belongs to a subdeck and every deck has at least one; a deck that
--- wants no progression is simply a deck of one subdeck. Every subdeck is named:
--- the Cards table shows the name alone, and the order is read off the rows.
--- The subdecks of a deck form a tree (the interface's subdecks): parent_id is
--- the subdeck one sits inside, null at the deck's top level. A subdeck holds
--- either cards or subdecks, never both, so the cards all sit at the leaves.
--- Positions (subdeck among its siblings, card in subdeck) are kept dense 1..n by
--- the server ops that move things.
-create table subdecks (
-	id uuid primary key default gen_random_uuid(),
-	deck_id uuid references decks(id) on delete cascade not null,
-	parent_id uuid references subdecks(id) on delete cascade,
-	name text not null,
-	position smallint not null,
-	-- the subdeck's own intro, as the deck's (decks.intro)
-	intro jsonb
+	-- a name says which deck it is among its siblings only, as Anki's full
+	-- name does: two courses can each have a "Chapter 1"
+	unique nulls not distinct (user_id, parent_id, name)
 );
 
 -- Tactic cards are graded Correct/Incorrect instead of FSRS: Correct finishes
@@ -147,9 +124,8 @@ create table subdecks (
 -- the constraint's representative for the group).
 create table cards (
 	id uuid primary key default gen_random_uuid(),
+	-- the deck the card sits in; position is its place there, 1..n
 	deck_id uuid references decks(id) on delete cascade not null,
-	-- no cascade: deleting a subdeck first moves its cards elsewhere
-	subdeck_id uuid references subdecks(id) not null,
 	position smallint not null,
 	front jsonb not null,
 	back jsonb,
@@ -177,31 +153,30 @@ create table marketplace_decks (
 	theme deck_theme not null,
 	image bytea not null,
 	image_type text not null,
-	-- the author's subdeck choice, copied from the source deck at approval: a
-	-- deck published without subdecks reads as one list for everyone who takes it
-	uses_subdecks boolean not null default false,
-	-- the author's progression depth (as decks.progression_depth), which
-	-- each copy of the deck starts at
-	progression_depth smallint check (progression_depth >= 0),
-	-- the deck's intro and its subdecks' (below), copied with them
+	-- the author's in order / mixed for the decks inside it (as decks.in_order),
+	-- which every copy starts from
+	in_order boolean not null default true,
+	-- the deck's intro and those of the decks inside it (below), copied with them
 	intro jsonb
 );
 
--- the deck's subdeck structure, tree and all, copied from the source deck at
--- upload approval
+-- the decks inside a published deck, tree and all, copied from the author's
+-- at upload approval (parent_id null: directly inside the published deck)
 create table marketplace_subdecks (
 	id uuid primary key default gen_random_uuid(),
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
 	parent_id uuid references marketplace_subdecks(id) on delete cascade,
 	name text not null,
 	position smallint not null,
+	in_order boolean not null default true,
 	intro jsonb
 );
 
 create table marketplace_cards (
 	id uuid default gen_random_uuid() primary key,
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
-	subdeck_id uuid references marketplace_subdecks(id) not null,
+	-- the deck inside it the card sits in; null for the published deck's own
+	subdeck_id uuid references marketplace_subdecks(id),
 	position smallint not null,
 	front jsonb not null,
 	back jsonb,
@@ -214,11 +189,16 @@ create table marketplace_deck_instances (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid references "user" ("id") on delete cascade not null,
 	marketplace_deck_id uuid references marketplace_decks(id) not null,
-	-- its place among the user's marketplace decks, as decks.position
+	-- The deck of the user's own it sits inside, null at the top; when that
+	-- deck is deleted it comes to the top, since it was taken, not made.
+	-- position is its place among its siblings, as decks.position.
+	parent_id uuid references decks(id) on delete set null,
 	position integer not null default 0,
-	-- each studier follows the deck's subdecks as deep as they choose (as
-	-- decks.progression_depth); it starts at the author's own depth
-	progression_depth smallint check (progression_depth >= 0)
+	-- The studier's own in order / mixed where it differs from the author's,
+	-- for the deck itself (under this instance's id) and each deck inside it
+	-- (under its marketplace_subdecks id): { "<id>": true | false }.
+	in_order_overrides jsonb not null default '{}',
+	unique (user_id, marketplace_deck_id)
 );
 
 create table marketplace_card_instances (
@@ -311,38 +291,6 @@ create table marketplace_review_votes (
 	primary key (review_id, user_id)
 );
 
--- A metadeck is its owner's own grouping of decks, for studying them
--- together: it holds no cards, only decks (their own, or marketplace decks
--- they have taken) and other metadecks, nested as deep as they like. A deck
--- can be in several. Its decks' cards come mixed, as if they were one deck's,
--- or deck after deck in the order the decks stand in My flashcards.
-create table metadecks (
-	id uuid primary key default gen_random_uuid(),
-	user_id uuid references "user" ("id") on delete cascade not null,
-	name text not null,
-	-- its place among the user's metadecks, as decks.position
-	position integer not null default 0,
-	study_order text not null default 'mix' check (study_order in ('mix', 'in-order')),
-	-- in order only: due reviews come from all its decks before the new cards
-	-- (true), or wait their deck's turn as the new cards do (false)
-	reviews_first boolean not null default true,
-	unique (user_id, name)
-);
-
--- what a metadeck holds: each row is one deck, one marketplace deck taken, or
--- one other metadeck (never one that holds this one in turn: the server
--- refuses the loop)
-create table metadeck_items (
-	metadeck_id uuid references metadecks(id) on delete cascade not null,
-	deck_id uuid references decks(id) on delete cascade,
-	marketplace_deck_instance_id uuid references marketplace_deck_instances(id) on delete cascade,
-	child_metadeck_id uuid references metadecks(id) on delete cascade,
-	check (num_nonnulls(deck_id, marketplace_deck_instance_id, child_metadeck_id) = 1),
-	unique (metadeck_id, deck_id),
-	unique (metadeck_id, marketplace_deck_instance_id),
-	unique (metadeck_id, child_metadeck_id)
-);
-
 -- Answers given as practice in a cram session. They change no schedule and
 -- are no part of a card's review history (review_logs is what scheduling
 -- reads), but they are study done, and the activity heatmap counts them. A
@@ -357,15 +305,14 @@ create table practice_logs (
 );
 
 -- A cram session gone through to the end: by whom, when, and on what (the
--- deck, marketplace deck taken or metadeck that was crammed, and the one
--- subdeck of it when it was only that). Plain ids, not references: it is a
--- record of study done, kept whatever becomes of the deck. Study's end
--- screen counts the day's from it.
+-- deck crammed: one of the user's own, a marketplace deck taken, or a deck
+-- inside one). A plain id, not a reference: it is a record of study done,
+-- kept whatever becomes of the deck. Study's end screen counts the day's
+-- from it.
 create table cram_sessions (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid references "user" ("id") on delete cascade not null,
 	studied uuid not null,
-	subdeck uuid,
 	completed timestamptz not null default now()
 );
 
@@ -374,15 +321,13 @@ create table cram_sessions (
 -- referencing side, and without one each "the cards of this deck" is a scan
 -- of the whole table, as is each cascade when a row above goes.
 create index cards_deck_id_idx on cards (deck_id);
-create index cards_subdeck_id_idx on cards (subdeck_id);
-create index subdecks_deck_id_idx on subdecks (deck_id);
-create index subdecks_parent_id_idx on subdecks (parent_id);
+create index decks_parent_id_idx on decks (parent_id);
 create index marketplace_decks_user_id_idx on marketplace_decks (user_id);
 create index marketplace_subdecks_marketplace_deck_id_idx on marketplace_subdecks (marketplace_deck_id);
 create index marketplace_subdecks_parent_id_idx on marketplace_subdecks (parent_id);
 create index marketplace_cards_marketplace_deck_id_idx on marketplace_cards (marketplace_deck_id);
 create index marketplace_cards_subdeck_id_idx on marketplace_cards (subdeck_id);
-create index marketplace_deck_instances_user_id_idx on marketplace_deck_instances (user_id);
+create index marketplace_deck_instances_parent_id_idx on marketplace_deck_instances (parent_id);
 create index marketplace_deck_instances_marketplace_deck_id_idx on marketplace_deck_instances (marketplace_deck_id);
 create index marketplace_card_instances_marketplace_deck_instance_id_idx on marketplace_card_instances (marketplace_deck_instance_id);
 create index marketplace_card_instances_marketplace_card_id_idx on marketplace_card_instances (marketplace_card_id);
@@ -393,9 +338,6 @@ create index marketplace_upload_requests_user_id_idx on marketplace_upload_reque
 create index marketplace_upload_requests_deck_id_idx on marketplace_upload_requests (deck_id);
 create index marketplace_reviews_user_id_idx on marketplace_reviews (user_id);
 create index marketplace_review_votes_user_id_idx on marketplace_review_votes (user_id);
-create index metadeck_items_deck_id_idx on metadeck_items (deck_id);
-create index metadeck_items_marketplace_deck_instance_id_idx on metadeck_items (marketplace_deck_instance_id);
-create index metadeck_items_child_metadeck_id_idx on metadeck_items (child_metadeck_id);
 create index cram_sessions_user_id_idx on cram_sessions (user_id);
 create index practice_logs_user_id_idx on practice_logs (user_id);
 create index practice_logs_card_id_idx on practice_logs (card_id);

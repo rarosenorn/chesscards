@@ -648,6 +648,9 @@
 	}
 
 	const deleteCardsByIds = async ids => {
+		// a selection of a marketplace deck's cards alone has nothing of the
+		// user's to delete
+		if (ids.length === 0) return;
 		const confirmed = await confirmModal({
 			title: ids.length === 1 ? "Delete card" : `Delete ${ids.length} cards`,
 			message: ids.length === 1
@@ -809,7 +812,7 @@
 			class="danger"
 			onclick={() => {
 				contextMenu = null;
-				deleteCardsByIds([...multiSelected]);
+				deleteCardsByIds(selectedIds());
 			}}
 		>
 			{multiSelected.size > 1 ? `Delete ${multiSelected.size} cards` : "Delete card"}

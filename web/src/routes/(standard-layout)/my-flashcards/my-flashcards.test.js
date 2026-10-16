@@ -80,7 +80,7 @@ describe("My flashcards", () => {
 		expect(page.rowEl("Taken").querySelector(".taken")).toBeTruthy();
 		expect(page.rowEl("Inside").querySelector(".taken")).toBeFalsy();
 		// no lock on a deck progression holds shut
-		expect(page.rowEl("Ch2").querySelector("svg")).toBeFalsy();
+		expect(page.rowEl("Ch2").querySelector("[aria-label=Locked]")).toBeFalsy();
 		page.close();
 	})
 

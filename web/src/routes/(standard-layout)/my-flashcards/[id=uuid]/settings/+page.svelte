@@ -11,6 +11,8 @@
 	let holdsDecks = $derived(data.deck.decks.length > 1);
 	// a marketplace deck taken, as against a deck inside one
 	let isTaken = $derived(data.deck.isMarketplace && data.deck.id === data.deck.instanceId);
+	// a marketplace deck taken somewhere inside it, which deleting it does not take
+	let takenInside = $derived(data.deck.decks.some(entry => entry.bought && entry.id === entry.instance_id && entry.id !== data.deck.id));
 
 	let deleteForm = $state();
 	let resetForm = $state();
@@ -35,7 +37,8 @@
 			}
 			: {
 				title: "Delete deck",
-				message: `This permanently deletes "${data.deck.name}", every deck and card inside it and their progress.`,
+				message: `This permanently deletes "${data.deck.name}", every deck and card inside it and their progress.`
+					+ (takenInside ? " The marketplace decks inside it move to the top of your list." : ""),
 				requiredText: data.deck.name,
 				confirmLabel: "Delete deck"
 			});

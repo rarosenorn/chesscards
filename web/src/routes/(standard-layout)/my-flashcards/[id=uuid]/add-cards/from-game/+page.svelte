@@ -231,6 +231,7 @@
 		startError = null;
 		try {
 			const { jobId } = await startImport({
+				deckId: deck.id,
 				targetDeckId: validTargetId,
 				pgn: game.pgn,
 				color: game.color,

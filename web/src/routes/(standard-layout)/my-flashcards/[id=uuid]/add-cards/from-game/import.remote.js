@@ -5,12 +5,13 @@ import * as decks from "$lib/server/decks.js"
 import * as gameImport from "$lib/server/game-import.js"
 
 // the game goes into the line, its cards to go in targetDeckId (the deck the
-// page is on, or one inside it); the page asks after it with importStatus
+// page is on, deckId, or one inside it); the page asks after it with
+// importStatus
 export const startImport =
-	command("unchecked", async ({ targetDeckId, pgn, color, kinds, url }) => {
+	command("unchecked", async ({ deckId, targetDeckId, pgn, color, kinds, url }) => {
 		const { locals } = getRequestEvent();
 		try {
-			return { jobId: await gameImport.start(locals.userId, { deckId: targetDeckId, pgn, color, kinds, url }) };
+			return { jobId: await gameImport.start(locals.userId, { deckId, targetId: targetDeckId, pgn, color, kinds, url }) };
 		} catch (err) {
 			error(400, err.message);
 		}

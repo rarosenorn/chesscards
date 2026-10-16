@@ -72,7 +72,7 @@ const run = async job => {
 	const cards = mistakes.map((mistake, i) => buildCard(mistakeCardSpec(job.game, mistake, reasons[i]), `move ${mistake.ply + 1}`));
 	if (problems.length > 0) throw new Error(`The cards did not build: ${problems[0]}`);
 	const cardIds = cards.length > 0
-		? await decks.addCards(job.userId, job.deckId, cards, Object.values(createEmptyCard()))
+		? await decks.addCards(job.userId, job.targetId, cards, Object.values(createEmptyCard()))
 		: [];
 	job.result = { cardIds };
 }
@@ -103,11 +103,13 @@ const work = async () => {
 const isActive = job => !job.cancelled && !["done", "failed", "cancelled"].includes(job.phase);
 
 // Returns the job's id. Throws an Error whose message is for the user.
-// deckId: the deck of the user's own the cards go in.
-const start = async (userId, { deckId, pgn, color, kinds, url }) => {
+// targetId: the deck of the user's own the cards go in. deckId: the deck
+// whose page started it (the target, or a deck it is inside), which a
+// reload of that page follows again (active, below).
+const start = async (userId, { deckId, targetId, pgn, color, kinds, url }) => {
 	if (!isInstalled()) throw new Error(`Stockfish is not installed on the server (${BINARY})`);
 	const UUID = /^[0-9a-f-]{36}$/i;
-	if (!UUID.test(deckId ?? "") || !await decks.userIdOwnsDeckId(userId, deckId)) throw new Error("Unauthorized");
+	if (!UUID.test(deckId ?? "") || !UUID.test(targetId ?? "") || !await decks.userIdOwnsDeckId(userId, targetId)) throw new Error("Unauthorized");
 	if (!["w", "b"].includes(color)) throw new Error("Which side did you play?");
 	const wanted = KINDS.filter(kind => Array.isArray(kinds) && kinds.includes(kind));
 	if (wanted.length === 0) throw new Error("Nothing to look for: pick blunders, mistakes or inaccuracies");
@@ -120,7 +122,7 @@ const start = async (userId, { deckId, pgn, color, kinds, url }) => {
 		throw new Error("You already have a game being analysed");
 
 	const job = {
-		id: crypto.randomUUID(), userId, deckId, color, kinds: wanted, game,
+		id: crypto.randomUUID(), userId, deckId, targetId, color, kinds: wanted, game,
 		// where the game came from, for the page to mark it in its list
 		url: typeof url === "string" && url.length <= 300 ? url : null,
 		phase: "queued", done: 0, total: 0, result: null, error: null

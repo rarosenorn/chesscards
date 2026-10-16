@@ -181,7 +181,8 @@
 	const menuItems = row => {
 		if (isInsideTaken(row)) return row.holdsDecks ? ["order"] : [];
 		if (isTaken(row)) return ["move", ...(row.holdsDecks ? ["order"] : []), "remove"];
-		return ["create", "rename", ...(row.holdsDecks ? ["order", "flatten"] : []), "move", "delete"];
+		// flattening takes away the user's own decks inside; marketplace decks stay
+		return ["create", "rename", ...(row.holdsDecks ? ["order"] : []), ...(ownDecksInside(row) ? ["flatten"] : []), "move", "delete"];
 	}
 	const openMenu = (row, x, y) => {
 		if (menuItems(row).length === 0) return;

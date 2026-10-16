@@ -46,11 +46,11 @@ describe("My flashcards", () => {
 		HTMLDialogElement.prototype.close ??= function () { this.open = false; this.dispatchEvent(new Event("close")) };
 	});
 
-	const open = async () => {
+	const open = async (decks = listing()) => {
 		const target = document.createElement("div");
 		document.body.append(target);
 		const host = mount(ModalHost, { target });
-		const app = mount(Page, { target, props: { data: { decks: listing(), activity: { days: [], forecast: [], today: "2026-10-16" } } } });
+		const app = mount(Page, { target, props: { data: { decks, activity: { days: [], forecast: [], today: "2026-10-16" } } } });
 		await tick();
 		const rowEl = id => target.querySelector(`tr[data-row-id="${id}"]`);
 		const buttons = within => [...(within ?? target).querySelectorAll("button")];
@@ -91,6 +91,16 @@ describe("My flashcards", () => {
 		await tick();
 		// a deck inside a marketplace deck with nothing inside it has nothing to offer
 		expect(page.rowEl("Inside").querySelector(".wheel")).toBeFalsy();
+		page.close();
+	})
+
+	it("offers no Flatten on a deck whose only decks inside are marketplace decks", async () => {
+		const page = await open([
+			row("Mine", 0, null, { holdsDecks: true, total: 4 }),
+			row("Taken", 1, "Mine", { bought: true, instance_id: "Taken", total: 4 })
+		]);
+		await page.wheel("Mine");
+		expect(page.menuItems()).toEqual(["New deck inside", "Rename", "In order", "Mixed", "Move to…", "Delete"]);
 		page.close();
 	})
 

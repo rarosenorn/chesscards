@@ -37,9 +37,10 @@
 	// `onSolved` makes a board marked `puzzle` one to be played: until the
 	// reveal, the back moves of the side to move are made on the board, the
 	// other side's replies play themselves, and onSolved is called when the
-	// line is through. Without it (the editors) such a board is an ordinary
-	// one. `playable` has it played with the answer on show (browse): the
-	// line is all there, and the moves can be made on the board all the same.
+	// line is through, with true if no move of it took a second try. Without
+	// it (the editors) such a board is an ordinary one. `playable` has it
+	// played with the answer on show (browse): the line is all there, and the
+	// moves can be made on the board all the same.
 	let { board, minWidth = "409px", flushBottom = false, revealed = true, authorView = false, onBack = false, number = null, autoFocus = false, inEditor = false, analysis = false, backDots = true, onSolutionFromChange = null, aside = null, onPosition = null, lines = null, onSolved = null, playable = false, children } = $props();
 
 	const boardPrefs = getContext("boardPrefs") ?? (() => DEFAULT_BOARD_PREFS);
@@ -361,12 +362,10 @@
 	);
 	// at once — but not inside the board's own handling of the move that
 	// finished it, which has still to put the piece down
-	const markDone = () => {
-		puzzleDone = Object.values(finds).includes("late") ? "late" : "clean";
-	}
+	const markDone = () => puzzleDone = Object.values(finds).includes("late") ? "late" : "clean";
 	const finishPuzzle = () => {
-		markDone();
-		puzzleTimer = setTimeout(() => onSolved?.(), 0);
+		const clean = markDone() === "clean";
+		puzzleTimer = setTimeout(() => onSolved?.(clean), 0);
 	}
 	// the other side's reply, a beat after the player's move; if the line
 	// ends on the player's move, or on this reply, the puzzle is done
@@ -456,8 +455,8 @@
 		if (!made.theMove) {
 			// a mate the line does not have: won all the same. The board is put
 			// back on the line's own position as the card turns.
-			markDone();
-			puzzleTimer = setTimeout(() => { snapTo(displayFen); onSolved?.(); }, 0);
+			const clean = markDone() === "clean";
+			puzzleTimer = setTimeout(() => { snapTo(displayFen); onSolved?.(clean); }, 0);
 			return !ontoRook;
 		}
 		if (ontoRook && byClick) stepping = true;

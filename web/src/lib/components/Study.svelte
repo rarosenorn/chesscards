@@ -327,6 +327,7 @@
 	// that day, for the activity heatmap.
 	const cramPractice = async gotIt => {
 		const card = currentCard;
+		studyState.played = null;
 		settle(cram, gotIt ? null : Date.now() + PRACTICE_AGAIN_MS);
 		cramAdvance();
 		await logPractice({ cardId: card.id, instance: !!card.marketplace_deck_instance_id, gotIt });
@@ -416,22 +417,34 @@
 	let previewAt = $state(Date.now());
 	const showAnswer = () => {
 		previewAt = Date.now();
+		if (selfGrading && studyState.played?.cardId !== currentCard.id)
+			studyState.played = { cardId: currentCard.id, correct: cleanBoards.size >= frontPuzzles };
 		isCardTurned = true;
 	}
 
 	// Boards marked as puzzles are played on the front; the card turns by
 	// itself once every one of them has been played through.
-	const isPuzzle = board => !!board?.puzzle && board.solutionFrom != null;
+	const isPuzzle = board => !!board?.puzzle && board.solutionFrom != null && board.solutionFrom < (board.moves?.length ?? 0);
 	let frontPuzzles = $derived(
 		(currentCard?.front ?? []).filter(block => block.type === "chessboards").flatMap(block => block.content).filter(isPuzzle).length
 	);
 	let solvedBoards = new Set();
+	let cleanBoards = new Set();
 	// a new card, or this one turned back over, starts its puzzles afresh
-	$effect(() => { void currentCard?.id; if (!isCardTurned) solvedBoards = new Set(); });
-	const boardSolved = n => {
+	$effect(() => { void currentCard?.id; if (!isCardTurned) { solvedBoards = new Set(); cleanBoards = new Set(); } });
+	const boardSolved = (n, clean) => {
 		solvedBoards.add(n);
+		if (clean) cleanBoards.add(n);
 		if (!isCardTurned && solvedBoards.size >= frontPuzzles) showAnswer();
 	}
+	// A tactic played on the board grades itself, as a puzzle on Lichess
+	// does: right if every puzzle on its front was played through with no
+	// wrong move, wrong if one went astray or Show gave the answer first.
+	// Settled the first time the card turns, so a replay after Hide does not
+	// change it, and kept beside the turned card in the layout, so a tab
+	// switch does not lose it. A grade clears it.
+	let selfGrading = $derived(isTactic && frontPuzzles > 0);
+	let played = $derived(studyState.played?.cardId === currentCard?.id ? studyState.played : null);
 
 	let preview = $derived(isTactic ? null : scheduler.repeat(currentCard, new Date(previewAt)));
 
@@ -506,10 +519,17 @@
 	// how far up the card on screen has climbed, for the steps drawn beside
 	// the buttons
 	let tacticRung = $derived(Math.min(currentCard?.reps ?? 0, TACTIC_LADDER_DAYS.length));
+	// Next grades a played tactic as the board found it; over it stands the
+	// wait that grade gives, as over the buttons it replaces
+	const gradePlayed = () => cram && !cramCounts ? cramPractice(played.correct) : evaluateTactic(played.correct);
+	let playedLabel = $derived(
+		!played ? "" : cram && !cramCounts ? (played.correct ? " " : "1m") : played.correct ? tacticCorrectLabel : "1d"
+	);
 	const evaluateTactic = async correct => {
 		// shadows the queue's clock, which is advanced below like evaluateCard's
 		const now = new Date();
 		const rung = currentCard.reps ?? 0;
+		studyState.played = null;
 		const finished = correct && rung >= TACTIC_LADDER_DAYS.length;
 		const waitDays = !correct ? 1 : finished ? 0 : TACTIC_LADDER_DAYS[rung];
 		const card = {
@@ -721,6 +741,11 @@
 			}
 		} else if (e.key === "h" || e.key === "H") {
 			isCardTurned = false;
+		} else if (played) {
+			if (e.key === " ") {
+				e.preventDefault();
+				gradePlayed();
+			}
 		} else if (cram && !cramCounts) {
 			switch (e.key) {
 				case "1": cramPractice(false); break;
@@ -799,7 +824,7 @@
 						aside={asides[n]}
 						onPosition={at => boardAt[n] = at}
 						lines={() => moveRefLines(cardElement, n)}
-						onSolved={() => boardSolved(n)}
+						onSolved={clean => boardSolved(n, clean)}
 					/>
 					</div>
 				{/each}
@@ -905,7 +930,18 @@
 							</button>
 						</div>
 					{/snippet}
-					{#if cram && !cramCounts}
+					{#if played}
+						<div class="eval-btn">
+							<p>{playedLabel}</p>
+							<button
+								onclick={gradePlayed}
+								class="std-btn"
+								title="Shortcut key: Space"
+							>
+								Next
+							</button>
+						</div>
+					{:else if cram && !cramCounts}
 						<!-- practice: the card is not scheduled from it, so there is only right
 						     and not yet -->
 						<div class="eval-btn">

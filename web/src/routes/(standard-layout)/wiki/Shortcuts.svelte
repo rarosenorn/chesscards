@@ -7,8 +7,8 @@
 <p>The arrow keys work on the board you last clicked, or whose move you clicked in the text. They work the same in the Browse preview.</p>
 <table>
 	<tbody>
-		<tr><td><kbd>Space</kbd></td><td>Show the answer; once shown, grade Good (Correct on a tactic)</td></tr>
-		<tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></td><td>Again, Hard, Good, Easy (a tactic: <kbd>1</kbd> Incorrect, <kbd>2</kbd> Correct)</td></tr>
+		<tr><td><kbd>Space</kbd></td><td>Show the answer; once shown, grade Good (Correct on a tactic, Next on a tactic played on the board)</td></tr>
+		<tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></td><td>Again, Hard, Good, Easy (a tactic: <kbd>1</kbd> Incorrect, <kbd>2</kbd> Correct; one played on the board grades itself)</td></tr>
 		<tr><td><kbd>H</kbd></td><td>Hide the answer again</td></tr>
 		<tr><td><kbd>E</kbd></td><td>Edit the card</td></tr>
 		<tr><td><kbd>Delete</kbd></td><td>Delete the card</td></tr>

@@ -667,6 +667,62 @@
             ]
           },
           "back": "- 2...d6 Black prepares the attack on our e-pawn with ...Nf6. This concept makes sense but does not stop us from building and maintaining the strong pawn duo e4&d4.\n- 3.d4 Easy, that was our idea.\n- 3...Nf6 Black attacks our e-pawn, the idea of the previous move.\n- 4.Bd3 We cover our central pawn and get one move closer to kingside castling.\n- 4...cxd4 Black's usual choice.\n- 5.cxd4 This position frequently arises via the move order 3...cxd4 4.cxd4 Nf6 5.Bd3, when Black has traded the pawns one move earlier.\n- 5...Nc6 Black attacks our unprotected d-pawn.\n- 6.Nf3 I suggest covering the pawn. We keep a strong central pawn duo and may still advance one of the pawns later.\n- 6...Bg4 A natural move, pinning our knight. As a consequence, our d-pawn is now hanging.\n- 7.Be3 Again, I prefer to cover the center and not advance the d-pawn."
+        },
+        {
+          "id": "ae-ov-cxd4",
+          "front": {
+            "text": "Play the Alapin 2...e6 line with 3...cxd4?! from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "c5",
+                  "c3",
+                  "e6",
+                  "d4",
+                  "cxd4",
+                  "cxd4",
+                  "d5",
+                  "e5",
+                  "Nc6",
+                  "Nf3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 2...e6 Black prepares the move ...d5, an idea similar to the French Defense.\n- 3.d4 The automatic reply, completing our central pawn duo.\n- 3...cxd4?! A common reply. It is premature and helps our cause by allowing Nc3 soon.\n- 4.cxd4 As always, we are happy about this trade. We'll gain the c3-square for our knight.\n- 4...d5 This is best. Black needs a pawn on a central square, attacking our e-pawn.\n- 5.e5! I suggest advancing the pawn. Without the c-pawns, we can develop our queen's knight to its most active square on c3.\n- 5...Nc6 The most popular and best move. Black wants to put pressure on our d-pawn.\n- 6.Nf3 The best square for our knight. We cover d4 and prepare kingside castling."
+        },
+        {
+          "id": "ae-ov-d5",
+          "front": {
+            "text": "Play the Alapin 2...e6 line with 3...d5 from the first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "e4",
+                  "c5",
+                  "c3",
+                  "e6",
+                  "d4",
+                  "d5",
+                  "exd5",
+                  "exd5",
+                  "Bb5+",
+                  "Nc6",
+                  "Nf3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 2...e6 Black prepares the move ...d5, an idea similar to the French Defense.\n- 3.d4 The automatic reply, completing our central pawn duo.\n- 3...d5 This looks like Black's best option.\n- 4.exd5 This move aligns with our repertoire choice against the French Defense.\n- 4...exd5 Black takes with the pawn and avoids the transposition after the queen move.\n- 5.Bb5+ We want to develop quickly: our knight to f3 and our bishop to b5, trying to castle as fast as possible.\n- 5...Nc6 claude: Black blocks the check with a developing move.\n- 6.Nf3 We want to castle next and get our rook into the game. Black's king is still on e8, and the e-file is wide open!"
         }
       ]
     },
@@ -10593,6 +10649,1384 @@
                 ]
               },
               "back": "7.h3 leads to a position that we examine via [5...g6 6.Nf3], the current chapter's main line.\n\nWe need to either play an early h3 to stop ...Bg4, or we need to be able to answer ...Bg4 with Nbd2."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Alapin 2.c3 e6",
+      "chapters": [
+        {
+          "name": "3...cxd4",
+          "cards": [
+            {
+              "id": "ae-idea",
+              "front": {
+                "text": "What is Black's idea with 2...e6 against the Alapin?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 4
+                  }
+                ]
+              },
+              "back": "Black prepares the move ...d5, an idea similar to the French Defense. It is no surprise that the following lines feature multiple possible transpositions to this opening or its typical structures."
+            },
+            {
+              "id": "ae-d4",
+              "front": {
+                "text": "What is your move after 2...e6 and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 4,
+                    "solutionArrows": {
+                      "4": [
+                        [
+                          "success",
+                          "d2",
+                          "d4"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 4,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "3.d4 The automatic reply, completing our central pawn duo."
+            },
+            {
+              "id": "ae-d4-replies",
+              "front": {
+                "text": "What are Black's 5 main moves after 3.d4, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 5,
+                    "solutionArrows": {
+                      "5": [
+                        [
+                          "success",
+                          "c5",
+                          "d4"
+                        ],
+                        [
+                          "success",
+                          "d7",
+                          "d5"
+                        ],
+                        [
+                          "success",
+                          "b8",
+                          "c6"
+                        ],
+                        [
+                          "success",
+                          "d7",
+                          "d6"
+                        ],
+                        [
+                          "success",
+                          "b7",
+                          "b6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [3...cxd4]?! A common reply. It is premature and helps our cause by allowing Nc3 soon.\n- [3...d5] Black's only fully satisfactory move.\n- [3...Nc6]? Black sometimes goes for it. Then [3...Nc6 | 4.d5], which we cover in our chapter on 2...Nc6.\n- [3...d6] A passive move, best answered by a natural setup of Nf3, Bd3, and O-O.\n- [3...b6] Passive too, met by the same setup."
+            },
+            {
+              "id": "ae-3nc6",
+              "front": {
+                "text": "What is your move after 3...Nc6? and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "Nc6",
+                      "d5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 6,
+                    "solutionArrows": {
+                      "6": [
+                        [
+                          "success",
+                          "d4",
+                          "d5"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 6,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "4.d5 We are happy to gain more space in the center and push around Black's knight.\n\nWe cover this position in our chapter on 2...Nc6, via [2...Nc6 3.d4 e6]."
+            },
+            {
+              "id": "ae-3d6",
+              "front": {
+                "text": "What setup do we choose against the passive 3...d6 or 3...b6 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 6,
+                    "solutionArrows": {
+                      "6": [
+                        [
+                          "success",
+                          "g1",
+                          "f3"
+                        ],
+                        [
+                          "success",
+                          "f1",
+                          "d3"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "Passive moves like 3...d6 or [3...b6] are best answered by a natural setup of Nf3, Bd3, and O-O."
+            },
+            {
+              "id": "aex-cxd4",
+              "front": {
+                "text": "What is your move after 3...cxd4?! and why are we happy about the trade?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 6,
+                    "solutionArrows": {
+                      "6": [
+                        [
+                          "success",
+                          "c3",
+                          "d4"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 6,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "4.cxd4 As always, we are happy about this trade. After our natural reply, we'll gain the c3-square for our knight."
+            },
+            {
+              "id": "aex-cxd4-replies",
+              "front": {
+                "text": "What are Black's 4 main moves after 4.cxd4, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 7,
+                    "solutionArrows": {
+                      "7": [
+                        [
+                          "success",
+                          "d7",
+                          "d5"
+                        ],
+                        [
+                          "success",
+                          "b8",
+                          "c6"
+                        ],
+                        [
+                          "success",
+                          "f8",
+                          "b4"
+                        ],
+                        [
+                          "success",
+                          "g8",
+                          "f6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [4...d5] This is best. Black needs a pawn on a central square, attacking our e-pawn.\n- [4...Nc6]? Then [4...Nc6 | 5.d5], which we examine in the chapter on 2...Nc6. White is much better.\n- [4...Bb4+] I also found some games featuring it. Best answered by developing with Nc3 and Bd3, preparing kingside castling.\n- [4...Nf6] The same: we develop with Nc3 and Bd3, preparing kingside castling."
+            },
+            {
+              "id": "aex-e5",
+              "front": {
+                "text": "What is your move after 4...d5 and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "e4",
+                          "e5"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 8,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "5.e5! I suggest advancing the pawn. Without the c-pawns, we can develop our queen's knight to its most active square on c3. After the premature trade of the c-pawns, we always have the excellent c3-square for our knight to enter the game.\n\n4...d5 is best. Black needs a pawn on a central square, attacking our e-pawn."
+            },
+            {
+              "id": "aex-not-exd5",
+              "front": {
+                "text": "After 4...d5, why not 5.exd5 or 5.Nc3 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "e4",
+                          "e5"
+                        ],
+                        [
+                          "warning",
+                          "e4",
+                          "d5"
+                        ],
+                        [
+                          "warning",
+                          "b1",
+                          "c3"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "Going for [5.exd5 exd5] is toothless, as the position is completely symmetrical. After [5.Nc3 dxe4], Black is fine too.\n\nWith c-pawns on the board, in the French, I recommend 3.exd5 exd5 4.c4, putting pressure on d5. This concept doesn't work here in the Sicilian for obvious reasons: the c-pawns are already traded."
+            },
+            {
+              "id": "aex-french",
+              "front": {
+                "text": "After 5.e5!, why is this an improved French Advance for us?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 9
+                  }
+                ]
+              },
+              "back": "Compared to the French Advance (1.e4 e6 2.d4 d5 3.e5), the c-pawns are gone. In the French, you could reach the position via 3...c5 4.c3 cxd4?! 5.cxd4, but it is a dubious line: Black can wait until White has chosen a worse square for the knight (like a3) and only trade on d4 if desired.\n\nBlack started with 1...c5, not 1...e6 − they will likely not know these positions well. It gives us a good opportunity to play this pawn structure under particularly favorable conditions."
+            },
+            {
+              "id": "aex-nf3",
+              "front": {
+                "text": "What is your move after 5...Nc6, and what is our goal?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5",
+                      "Nc6",
+                      "Nf3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 10,
+                    "solutionArrows": {
+                      "10": [
+                        [
+                          "success",
+                          "g1",
+                          "f3"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 10,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "6.Nf3 The best square for our knight. We cover d4 and prepare kingside castling.\n\n5...Nc6 is the most popular and best move. Black wants to put pressure on our d-pawn. They can increase it with a later ...Qb6 or ...Ne7-f5. Our goal is to keep this pawn safely protected, and seek to exploit our advantage in space."
+            },
+            {
+              "id": "aex-nf3-replies",
+              "front": {
+                "text": "What are Black's 3 main moves after 6.Nf3, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5",
+                      "Nc6",
+                      "Nf3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 11,
+                    "solutionArrows": {
+                      "11": [
+                        [
+                          "success",
+                          "d8",
+                          "b6"
+                        ],
+                        [
+                          "success",
+                          "g8",
+                          "e7"
+                        ],
+                        [
+                          "success",
+                          "f8",
+                          "b4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [6...Qb6] looks sensible, to put more pressure on d4. Now [6...Qb6 | 7.Nc3] is a good reply.\n- [6...Nge7] is an interesting line. Black wants ...Nf5 and ...Qb6, attacking our pawn even more. A strong reply is similar to the 6...Qb6 line: Nc3 and a3!\n- [6...Bb4+]? A popular but bad move, frequently seen below the master level. The fundamental problem of Black's concept is the bishop's placement on b4."
+            },
+            {
+              "id": "aex-qb6-next3",
+              "front": {
+                "text": "What are the next 3 plies following 6...Qb6 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5",
+                      "Nc6",
+                      "Nf3",
+                      "Qb6",
+                      "Nc3",
+                      "Bd7",
+                      "a3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 12,
+                    "solutionFrom": 12,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 7.Nc3 It not only develops a piece but will often be useful to start an attack on the queenside.\n- 7...Bd7 claude: Black develops and makes room for ...Rc8.\n- 8.a3! preparing Na4."
+            },
+            {
+              "id": "aex-rc8-next3",
+              "front": {
+                "text": "What are the next 3 plies following 8...Rc8 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5",
+                      "Nc6",
+                      "Nf3",
+                      "Qb6",
+                      "Nc3",
+                      "Bd7",
+                      "a3",
+                      "Rc8",
+                      "Na4",
+                      "Qc7",
+                      "Bd3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 16,
+                    "solutionFrom": 16,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 9.Na4 claude: The knight hits the queen on b6.\n- 9...Qc7 claude: The queen retreats.\n- 10.Bd3 and we are much better."
+            },
+            {
+              "id": "aex-qb6-plan",
+              "front": {
+                "text": "After 10.Bd3, how do we stand and what is our plan?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5",
+                      "Nc6",
+                      "Nf3",
+                      "Qb6",
+                      "Nc3",
+                      "Bd7",
+                      "a3",
+                      "Rc8",
+                      "Na4",
+                      "Qc7",
+                      "Bd3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 19,
+                    "solutionArrows": {
+                      "19": [
+                        [
+                          "success",
+                          "b2",
+                          "b4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "We are much better. A later b2-b4 gives us an excellent game on the queenside."
+            },
+            {
+              "id": "aex-nge7-next3",
+              "front": {
+                "text": "What are the next 3 plies following 6...Nge7 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5",
+                      "Nc6",
+                      "Nf3",
+                      "Nge7",
+                      "Nc3",
+                      "Nf5",
+                      "a3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 12,
+                    "solutionFrom": 12,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 7.Nc3 claude: We develop, as against 6...Qb6.\n- 7...Nf5 Black wants to play ...Qb6 next, attacking our pawn even more.\n- 8.a3! A strong reply, similar to the 6...Qb6 line."
+            },
+            {
+              "id": "aex-na4",
+              "front": {
+                "text": "What is your move after 8...Qb6 and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5",
+                      "Nc6",
+                      "Nf3",
+                      "Nge7",
+                      "Nc3",
+                      "Nf5",
+                      "a3",
+                      "Qb6",
+                      "Na4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 16,
+                    "solutionArrows": {
+                      "16": [
+                        [
+                          "success",
+                          "c3",
+                          "a4"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 16,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "9.Na4! sending the queen to a passive square."
+            },
+            {
+              "id": "aex-b4",
+              "front": {
+                "text": "What is your move after 9...Qa5+? and why did we need 8.a3 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5",
+                      "Nc6",
+                      "Nf3",
+                      "Nge7",
+                      "Nc3",
+                      "Nf5",
+                      "a3",
+                      "Qb6",
+                      "Na4",
+                      "Qa5+",
+                      "b4"
+                    ],
+                    "orientation": "w",
+                    "openAt": 18,
+                    "solutionArrows": {
+                      "18": [
+                        [
+                          "success",
+                          "b2",
+                          "b4"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 18,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "10.b4, rendering Black's concept a complete failure.\n\nWe needed to play the move a3 to enable this."
+            },
+            {
+              "id": "aex-bb4",
+              "front": {
+                "text": "What is your move after 6...Bb4+? and what is wrong with Black's bishop?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5",
+                      "Nc6",
+                      "Nf3",
+                      "Bb4+",
+                      "Nc3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 12,
+                    "solutionArrows": {
+                      "12": [
+                        [
+                          "success",
+                          "b1",
+                          "c3"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 12,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "7.Nc3 claude: We block the check with a developing move.\n\nThe fundamental problem of Black's concept is the bishop's placement on b4. Taking our knight looks unattractive... so what is the bishop doing on b4? An additional problem: the bishop may be a useful defender of the kingside."
+            },
+            {
+              "id": "aex-bb4-next3",
+              "front": {
+                "text": "What are the next 3 plies following 7...Nge7 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5",
+                      "Nc6",
+                      "Nf3",
+                      "Bb4+",
+                      "Nc3",
+                      "Nge7",
+                      "Bd3",
+                      "O-O",
+                      "Bxh7+"
+                    ],
+                    "orientation": "w",
+                    "openAt": 14,
+                    "solutionFrom": 14,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 8.Bd3 claude: Our bishop aims at h7.\n- 8...O-O?? A striking example of the bishop missing as a defender of the kingside.\n- 9.Bxh7+! is already 'Lights Out!' for Black. The 'Greek Gift', as we call it, is a common attacking idea in French structures."
+            },
+            {
+              "id": "aex-4nc6",
+              "front": {
+                "text": "What is your move after 4...Nc6? and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "Nc6",
+                      "d5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "d4",
+                          "d5"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 8,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "5.d5 We gain more space with a tempo gain. White is much better.\n\nWe examine this position in the chapter on 2...Nc6, via [2...Nc6 3.d4 cxd4 4.cxd4 e6]."
+            },
+            {
+              "id": "aex-4bb4",
+              "front": {
+                "text": "What is your move after 4...Bb4+, and what is the plan?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "Bb4+",
+                      "Nc3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "b1",
+                          "c3"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 8,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "5.Nc3 4...Bb4+ is best answered by developing with Nc3 and Bd3, preparing kingside castling."
+            },
+            {
+              "id": "aex-4nf6",
+              "front": {
+                "text": "Which 2 moves do we develop with after 4...Nf6, and what do they prepare?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "Nf6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "b1",
+                          "c3"
+                        ],
+                        [
+                          "success",
+                          "f1",
+                          "d3"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "We develop with [5.Nc3] and [5.Bd3], preparing kingside castling."
+            },
+            {
+              "id": "aex-conclusion",
+              "front": {
+                "text": "How good is our position after 3...cxd4?! 4.cxd4 d5 5.e5! ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "cxd4",
+                      "cxd4",
+                      "d5",
+                      "e5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 9
+                  }
+                ]
+              },
+              "back": "This line offers White good chances. Black has transposed to a worse version of the French, and we have a nice advantage and good attacking chances.\n\nA good illustration of the key ideas is the game M. Socko − P. Ofstad."
+            }
+          ]
+        },
+        {
+          "name": "3...d5",
+          "cards": [
+            {
+              "id": "aed-exd5",
+              "front": {
+                "text": "What is your move after 3...d5, and why not 4.e5 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 6,
+                    "solutionArrows": {
+                      "6": [
+                        [
+                          "success",
+                          "e4",
+                          "d5"
+                        ],
+                        [
+                          "warning",
+                          "e4",
+                          "e5"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 6,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "4.exd5 This move aligns with our repertoire choice against the French Defense.\n\nAfter [4.e5], we would transpose to the main line of the French Advance Variation 1.e4 e6 2.d4 d5 3.e5 c5 4.c3, which is not part of our repertoire. I considered this line but felt that Black usually feels more at home in these structures when they opt for the French.\n\n3...d5 looks like Black's best option."
+            },
+            {
+              "id": "aed-exd5-replies",
+              "front": {
+                "text": "What are Black's 2 main moves after 4.exd5, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 7,
+                    "solutionArrows": {
+                      "7": [
+                        [
+                          "success",
+                          "e6",
+                          "d5"
+                        ],
+                        [
+                          "success",
+                          "d8",
+                          "d5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [4...exd5] Black takes with the pawn and avoids the transposition after the queen move.\n- [4...Qxd5] would again lead to a transposition. This position is covered via [2...d5 3.exd5 Qxd5 4.d4 e6], which is a more common way to get to the same situation."
+            },
+            {
+              "id": "aed-plan",
+              "front": {
+                "text": "After 4...exd5, which French line is this with colors reversed, and what is our plan?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5",
+                      "exd5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "g1",
+                          "f3"
+                        ],
+                        [
+                          "success",
+                          "f1",
+                          "b5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "With White, we play 1.e4 e6 2.d4 d5 3.exd5 exd5 4.c4 against the French, when 4...Nf6 5.Nc3 c6 is a common continuation. Here, in the Sicilian, we switch sides but enjoy an extra tempo! This extra tempo is important because the position is wide open.\n\nWe want to make use of it by developing quickly. The best way to do it is playing our knight to f3 and our bishop to b5, trying to castle as fast as possible."
+            },
+            {
+              "id": "aed-bb5",
+              "front": {
+                "text": "What is your move after 4...exd5, and how does it compare with 5.Nf3 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5",
+                      "exd5",
+                      "Bb5+"
+                    ],
+                    "orientation": "w",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "f1",
+                          "b5"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 8,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "5.Bb5+ I like this a bit more than [5.Nf3], but both moves will likely lead to the same positions − we want to play both anyway."
+            },
+            {
+              "id": "aed-bb5-replies",
+              "front": {
+                "text": "What are Black's 2 main moves after 5.Bb5+, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5",
+                      "exd5",
+                      "Bb5+"
+                    ],
+                    "orientation": "w",
+                    "openAt": 9,
+                    "solutionArrows": {
+                      "9": [
+                        [
+                          "success",
+                          "b8",
+                          "c6"
+                        ],
+                        [
+                          "success",
+                          "c8",
+                          "d7"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [5...Nc6] claude: Black blocks the check with a developing move.\n- [5...Bd7] Then [5...Bd7 | 6.Bxd7+ Nxd7 7.Nf3] followed by O-O. We develop quickly and will be the first to operate on the e-file."
+            },
+            {
+              "id": "aed-nf3",
+              "front": {
+                "text": "What is your move after 5...Nc6 and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5",
+                      "exd5",
+                      "Bb5+",
+                      "Nc6",
+                      "Nf3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 10,
+                    "solutionArrows": {
+                      "10": [
+                        [
+                          "success",
+                          "g1",
+                          "f3"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 10,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "6.Nf3 No surprises, but good moves. We want to castle next and get our rook into the game. Black's king is still on e8, and the e-file is wide open!\n\nThis position is only slightly better for White if Black plays perfectly. In practice, this proves difficult."
+            },
+            {
+              "id": "aed-nf3-replies",
+              "front": {
+                "text": "What are Black's 2 main moves after 6.Nf3, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5",
+                      "exd5",
+                      "Bb5+",
+                      "Nc6",
+                      "Nf3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 11,
+                    "solutionArrows": {
+                      "11": [
+                        [
+                          "success",
+                          "f8",
+                          "d6"
+                        ],
+                        [
+                          "success",
+                          "g8",
+                          "f6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [6...Bd6]! is best, but it is not an obvious move. The idea is that Black can block a check on the e-file with the move ...Nge7.\n- [6...Nf6] is less reliable for Black. [6...Nf6 | 7.O-O Be7 8.dxc5 Bxc5 9.Bg5] shows a drawback of ...Nf6: the pin is annoying for Black."
+            },
+            {
+              "id": "aed-bd6-next3",
+              "front": {
+                "text": "What are the next 3 plies following 6...Bd6! ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5",
+                      "exd5",
+                      "Bb5+",
+                      "Nc6",
+                      "Nf3",
+                      "Bd6",
+                      "dxc5",
+                      "Bxc5",
+                      "O-O"
+                    ],
+                    "orientation": "w",
+                    "openAt": 12,
+                    "solutionFrom": 12,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 7.dxc5 claude: Black's d-pawn is left isolated.\n- 7...Bxc5 claude: Black takes back.\n- 8.O-O We want to castle and get our rook into the game."
+            },
+            {
+              "id": "aed-nge7-plan",
+              "front": {
+                "text": "After 8...Nge7, how do we stand and what is our plan?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5",
+                      "exd5",
+                      "Bb5+",
+                      "Nc6",
+                      "Nf3",
+                      "Bd6",
+                      "dxc5",
+                      "Bxc5",
+                      "O-O",
+                      "Nge7"
+                    ],
+                    "orientation": "w",
+                    "openAt": 16,
+                    "solutionArrows": {
+                      "16": [
+                        [
+                          "success",
+                          "b1",
+                          "d2"
+                        ],
+                        [
+                          "success",
+                          "d2",
+                          "b3"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "After 8...Nge7, Black's king is safe for the moment. Black's knight on e7 is not ideally placed, but the king's safety is more important.\n\nWe have a small advantage in this position, trying to exploit the isolated d-pawn. The next step is Nb1-d2-b3, increasing our control of the d4-square. We want to trade as many minor pieces as possible, as each trade makes the isolated pawn more vulnerable in an endgame."
+            },
+            {
+              "id": "aed-nf6-next3",
+              "front": {
+                "text": "What are the next 3 plies following 6...Nf6 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5",
+                      "exd5",
+                      "Bb5+",
+                      "Nc6",
+                      "Nf3",
+                      "Nf6",
+                      "O-O",
+                      "Be7",
+                      "dxc5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 12,
+                    "solutionFrom": 12,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 7.O-O We want to castle and get our rook into the game.\n- 7...Be7 claude: Black gets ready to castle.\n- 8.dxc5 claude: Black's d-pawn is left isolated."
+            },
+            {
+              "id": "aed-bg5",
+              "front": {
+                "text": "What is your move after 8...Bxc5 and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5",
+                      "exd5",
+                      "Bb5+",
+                      "Nc6",
+                      "Nf3",
+                      "Nf6",
+                      "O-O",
+                      "Be7",
+                      "dxc5",
+                      "Bxc5",
+                      "Bg5"
+                    ],
+                    "orientation": "w",
+                    "openAt": 16,
+                    "solutionArrows": {
+                      "16": [
+                        [
+                          "success",
+                          "c1",
+                          "g5"
+                        ]
+                      ]
+                    },
+                    "solutionFrom": 16,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "9.Bg5 shows a drawback of ...Nf6: the pin is annoying for Black.\n\nWe'll follow a similar strategy as against [6...Bd6] (Nb1-d2-b3 next) and have good chances for an advantage."
+            },
+            {
+              "id": "aed-5bd7-next3",
+              "front": {
+                "text": "What are the next 3 plies following 5...Bd7 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6",
+                      "d4",
+                      "d5",
+                      "exd5",
+                      "exd5",
+                      "Bb5+",
+                      "Bd7",
+                      "Bxd7+",
+                      "Nxd7",
+                      "Nf3"
+                    ],
+                    "orientation": "w",
+                    "openAt": 10,
+                    "solutionFrom": 10,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 6.Bxd7+ claude: We trade bishops and keep developing.\n- 6...Nxd7 claude: Black takes back with the knight.\n- 7.Nf3 followed by O-O. We develop quickly and will be the first to operate on the e-file."
+            },
+            {
+              "id": "ae-conclusion",
+              "front": {
+                "text": "What is the conclusion on 2...e6 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "c5",
+                      "c3",
+                      "e6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 4
+                  }
+                ]
+              },
+              "back": "If they continue with optimal play, 2...e6 is a reasonable choice for Black. In practice, however, Black often invites a transposition to a worse version of the French, which we happily accept. We have a nice advantage and good attacking chances after [3.d4 cxd4 | 4.cxd4 d5 5.e5]!\n\nA better option for Black is 3...d5, which leads to a different pawn structure after [3.d4 d5 | 4.exd5 exd5], and usually features an IQP on our opponent's side. We can castle quickly and are quicker on the e-file, which makes it easier for us to play."
             }
           ]
         }

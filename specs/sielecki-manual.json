@@ -2254,7 +2254,7 @@
             {
               "id": "ptc-nxc6",
               "front": {
-                "text": "What is your move after 4...Nc6 and why? Which other move is not bad either?",
+                "text": "What are the next 3 plies following 4...Nc6, and which other fifth move is not bad either?",
                 "boards": [
                   {
                     "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -2267,25 +2267,18 @@
                       "Bc5",
                       "Nxe5",
                       "Nc6",
-                      "Nxc6"
+                      "Nxc6",
+                      "dxc6",
+                      "h3"
                     ],
                     "orientation": "w",
                     "openAt": 8,
-                    "solutionArrows": {
-                      "8": [
-                        [
-                          "success",
-                          "e5",
-                          "c6"
-                        ]
-                      ]
-                    },
                     "solutionFrom": 8,
                     "puzzle": true
                   }
                 ]
               },
-              "back": "5.Nxc6 The simplest solution. The alternative [5.Nf3] is not bad either."
+              "back": "- 5.Nxc6 The simplest solution. The alternative [5.Nf3] is not bad either.\n- 5...dxc6 claude: Black takes back with the d-pawn.\n- 6.h3! A somewhat unusual, but strong move. It is uncommon and usually wrong to move a flank pawn early in the game, as we have more pressing things to do − develop pieces, occupy the center, etc. Here, however, the little pawn move is essential. Black's idea was to attack our vulnerable f2-spot with ...Ng4, which is a dangerous knight jump."
             },
             {
               "id": "ptc-recapture",
@@ -2351,44 +2344,6 @@
                 ]
               },
               "back": "The 'Stafford Gambit'. It arises after [3.Nxe5 Nc6]?, when [3.Nxe5 Nc6 | 4.Nxc6 dxc6 5.Nc3 Bc5] leads us to the position we currently have on the board.\n\nThe Stafford is an incorrect gambit, but it sets some pitfalls for White to navigate. If Black answers our 3.Nc3 with 3...Bc5?, it is likely that they were intending to play the Stafford and now try to transpose to their gambit line. We are happy to oblige, as there is more than one clean refutation."
-            },
-            {
-              "id": "ptc-h3",
-              "front": {
-                "text": "What is your move after 5...dxc6 and why?",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nf6",
-                      "Nc3",
-                      "Bc5",
-                      "Nxe5",
-                      "Nc6",
-                      "Nxc6",
-                      "dxc6",
-                      "h3"
-                    ],
-                    "orientation": "w",
-                    "openAt": 10,
-                    "solutionArrows": {
-                      "10": [
-                        [
-                          "success",
-                          "h2",
-                          "h3"
-                        ]
-                      ]
-                    },
-                    "solutionFrom": 10,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "6.h3! A somewhat unusual, but strong move. It is uncommon and usually wrong to move a flank pawn early in the game, as we have more pressing things to do − develop pieces, occupy the center, etc. Here, however, the little pawn move is essential. Black's idea was to attack our vulnerable f2-spot with ...Ng4, which is a dangerous knight jump."
             },
             {
               "id": "ptc-not-bc4",
@@ -4273,45 +4228,7 @@
             {
               "id": "tkd-qxd4",
               "front": {
-                "text": "What is your move after 5...exd4 and why?",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "d6",
-                      "d4",
-                      "Bg4",
-                      "Bb5",
-                      "exd4",
-                      "Qxd4"
-                    ],
-                    "orientation": "w",
-                    "openAt": 10,
-                    "solutionArrows": {
-                      "10": [
-                        [
-                          "success",
-                          "d1",
-                          "d4"
-                        ]
-                      ]
-                    },
-                    "solutionFrom": 10,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "6.Qxd4 We have pinned the black knight, so taking the pawn with the queen is possible. Now Black usually takes on f3, hoping to gain something by doubling our pawns."
-            },
-            {
-              "id": "tkd-gxf3",
-              "front": {
-                "text": "What is your move after 6...Bxf3, and what is a good alternative?",
+                "text": "What are the next 3 plies following 5...exd4, and what good alternative do we have on move 7?",
                 "boards": [
                   {
                     "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -4331,22 +4248,13 @@
                       "gxf3"
                     ],
                     "orientation": "w",
-                    "openAt": 12,
-                    "solutionArrows": {
-                      "12": [
-                        [
-                          "success",
-                          "g2",
-                          "f3"
-                        ]
-                      ]
-                    },
-                    "solutionFrom": 12,
+                    "openAt": 10,
+                    "solutionFrom": 10,
                     "puzzle": true
                   }
                 ]
               },
-              "back": "7.gxf3 Taking the bishop is strong, but inserting [7.Bxc6+ bxc6 8.gxf3] is a good alternative too."
+              "back": "- 6.Qxd4 We have pinned the black knight, so taking the pawn with the queen is possible.\n- 6...Bxf3 Now Black usually takes on f3, hoping to gain something by doubling our pawns.\n- 7.gxf3 Taking the bishop is strong, but inserting [7.Bxc6+ bxc6 8.gxf3] is a good alternative too."
             },
             {
               "id": "tkd-plan",
@@ -6482,45 +6390,7 @@
             {
               "id": "fsb-qg4",
               "front": {
-                "text": "What is your move after 5...Nxe4 and why?",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "e5",
-                      "Nf3",
-                      "Nc6",
-                      "Nc3",
-                      "Nf6",
-                      "d4",
-                      "Bb4",
-                      "Nxe5",
-                      "Nxe4",
-                      "Qg4"
-                    ],
-                    "orientation": "w",
-                    "openAt": 10,
-                    "solutionArrows": {
-                      "10": [
-                        [
-                          "success",
-                          "d1",
-                          "g4"
-                        ]
-                      ]
-                    },
-                    "solutionFrom": 10,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "6.Qg4! The best and most fun move to play! We attack both the knight and the g-pawn and enter wild complications."
-            },
-            {
-              "id": "fsb-qxg7",
-              "front": {
-                "text": "What is your move after 6...Nxc3, and why was it Black's only move?",
+                "text": "What are the next 3 plies following 5...Nxe4, and why is Black's reply forced?",
                 "boards": [
                   {
                     "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -6540,22 +6410,13 @@
                       "Qxg7"
                     ],
                     "orientation": "w",
-                    "openAt": 12,
-                    "solutionArrows": {
-                      "12": [
-                        [
-                          "success",
-                          "g4",
-                          "g7"
-                        ]
-                      ]
-                    },
-                    "solutionFrom": 12,
+                    "openAt": 10,
+                    "solutionFrom": 10,
                     "puzzle": true
                   }
                 ]
               },
-              "back": "7.Qxg7! Wow, what a mess! The position is very favorable for us.\n\n6...Nxc3 was the only move available. The knight was attacked, and retreating or covering it failed due to our queen taking g7."
+              "back": "- 6.Qg4! The best and most fun move to play! We attack both the knight and the g-pawn and enter wild complications.\n- 6...Nxc3 was the only move available. The knight was attacked, and retreating or covering it failed due to our queen taking g7.\n- 7.Qxg7! Wow, what a mess! The position is very favorable for us."
             },
             {
               "id": "fsb-qxg7-replies",
@@ -8154,43 +8015,7 @@
             {
               "id": "ald-d5",
               "front": {
-                "text": "What is your move after 4...d6?! and why?",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "c5",
-                      "c3",
-                      "Nc6",
-                      "d4",
-                      "cxd4",
-                      "cxd4",
-                      "d6",
-                      "d5"
-                    ],
-                    "orientation": "w",
-                    "openAt": 8,
-                    "solutionArrows": {
-                      "8": [
-                        [
-                          "success",
-                          "d4",
-                          "d5"
-                        ]
-                      ]
-                    },
-                    "solutionFrom": 8,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "5.d5! Gaining space and time.\n\n4...d6?! is a passive move that does not fight for an equal share of the center."
-            },
-            {
-              "id": "ald-f4",
-              "front": {
-                "text": "What is your move after 5...Ne5 and why?",
+                "text": "After 4...d6?!, what are the next 3 plies?",
                 "boards": [
                   {
                     "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -8208,22 +8033,13 @@
                       "f4"
                     ],
                     "orientation": "w",
-                    "openAt": 10,
-                    "solutionArrows": {
-                      "10": [
-                        [
-                          "success",
-                          "f2",
-                          "f4"
-                        ]
-                      ]
-                    },
-                    "solutionFrom": 10,
+                    "openAt": 8,
+                    "solutionFrom": 8,
                     "puzzle": true
                   }
                 ]
               },
-              "back": "6.f4 The most aggressive way. There is nothing wrong about [6.Nc3] or a similar development, but our pawn center looks crushing after pushing the f-pawn."
+              "back": "- 5.d5! Gaining space and time.\n- 5...Ne5 claude: The attacked knight goes to the center.\n- 6.f4 The most aggressive way. There is nothing wrong about [6.Nc3] or a similar development, but our pawn center looks crushing after pushing the f-pawn.\n\n4...d6?! is a passive move that does not fight for an equal share of the center."
             },
             {
               "id": "ald-f4-plan",
@@ -9928,7 +9744,7 @@
             {
               "id": "aex-e5",
               "front": {
-                "text": "What is your move after 4...d5 and why?",
+                "text": "What are the next 3 plies following 4...d5, and what is our goal?",
                 "boards": [
                   {
                     "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -9941,25 +9757,18 @@
                       "cxd4",
                       "cxd4",
                       "d5",
-                      "e5"
+                      "e5",
+                      "Nc6",
+                      "Nf3"
                     ],
                     "orientation": "w",
                     "openAt": 8,
-                    "solutionArrows": {
-                      "8": [
-                        [
-                          "success",
-                          "e4",
-                          "e5"
-                        ]
-                      ]
-                    },
                     "solutionFrom": 8,
                     "puzzle": true
                   }
                 ]
               },
-              "back": "5.e5! I suggest advancing the pawn. Without the c-pawns, we can develop our queen's knight to its most active square on c3. After the premature trade of the c-pawns, we always have the excellent c3-square for our knight to enter the game.\n\n4...d5 is best. Black needs a pawn on a central square, attacking our e-pawn."
+              "back": "- 5.e5! I suggest advancing the pawn. Without the c-pawns, we can develop our queen's knight to its most active square on c3. After the premature trade of the c-pawns, we always have the excellent c3-square for our knight to enter the game.\n- 5...Nc6 is the most popular and best move. Black wants to put pressure on our d-pawn. They can increase it with a later ...Qb6 or ...Ne7-f5.\n- 6.Nf3 The best square for our knight. We cover d4 and prepare kingside castling. Our goal is to keep our d-pawn safely protected, and seek to exploit our advantage in space.\n\n4...d5 is best. Black needs a pawn on a central square, attacking our e-pawn."
             },
             {
               "id": "aex-not-exd5",
@@ -10028,44 +9837,6 @@
                 ]
               },
               "back": "Compared to the French Advance (1.e4 e6 2.d4 d5 3.e5), the c-pawns are gone. In the French, you could reach the position via 3...c5 4.c3 cxd4?! 5.cxd4, but it is a dubious line: Black can wait until White has chosen a worse square for the knight (like a3) and only trade on d4 if desired.\n\nBlack started with 1...c5, not 1...e6 − they will likely not know these positions well. It gives us a good opportunity to play this pawn structure under particularly favorable conditions."
-            },
-            {
-              "id": "aex-nf3",
-              "front": {
-                "text": "What is your move after 5...Nc6, and what is our goal?",
-                "boards": [
-                  {
-                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    "moves": [
-                      "e4",
-                      "c5",
-                      "c3",
-                      "e6",
-                      "d4",
-                      "cxd4",
-                      "cxd4",
-                      "d5",
-                      "e5",
-                      "Nc6",
-                      "Nf3"
-                    ],
-                    "orientation": "w",
-                    "openAt": 10,
-                    "solutionArrows": {
-                      "10": [
-                        [
-                          "success",
-                          "g1",
-                          "f3"
-                        ]
-                      ]
-                    },
-                    "solutionFrom": 10,
-                    "puzzle": true
-                  }
-                ]
-              },
-              "back": "6.Nf3 The best square for our knight. We cover d4 and prepare kingside castling.\n\n5...Nc6 is the most popular and best move. Black wants to put pressure on our d-pawn. They can increase it with a later ...Qb6 or ...Ne7-f5. Our goal is to keep this pawn safely protected, and seek to exploit our advantage in space."
             },
             {
               "id": "aex-nf3-replies",

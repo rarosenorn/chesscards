@@ -101,6 +101,10 @@ create table decks (
 	-- as the first), or mixed (all open, new cards taken from each in turn).
 	-- The deck's own say, wherever study starts from (lib/deck-tree.js).
 	in_order boolean not null default true,
+	-- How the cards due for review come: shuffled, or in the order new cards
+	-- come (for lines seen in sequence, like openings). Read on the deck at
+	-- the top of the list only; everything inside it follows it.
+	reviews_in_order boolean not null default false,
 	-- the deck's own listing (its Deck tab): an upload request starts from
 	-- it, and editing it never reaches a listing already on the marketplace.
 	-- A description is blocks, like a card's side (text and boards), and the
@@ -156,6 +160,8 @@ create table marketplace_decks (
 	-- the author's in order / mixed for the decks inside it (as decks.in_order),
 	-- which every copy starts from
 	in_order boolean not null default true,
+	-- the author's shuffled / in order for its reviews (as decks.reviews_in_order)
+	reviews_in_order boolean not null default false,
 	-- the deck's intro and those of the decks inside it (below), copied with them
 	intro jsonb
 );
@@ -198,6 +204,8 @@ create table marketplace_deck_instances (
 	-- for the deck itself (under this instance's id) and each deck inside it
 	-- (under its marketplace_subdecks id): { "<id>": true | false }.
 	in_order_overrides jsonb not null default '{}',
+	-- the studier's own shuffled / in order for its reviews; null: the author's
+	reviews_in_order boolean,
 	unique (user_id, marketplace_deck_id)
 );
 

@@ -202,8 +202,17 @@ const approveUploadRequest = async requestId => {
 		}
 
 		const { rows: [mpDeck] } = await client.query(
-			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, intro)
-			 select $1, $2, $3, $4, $5, $6, $7, d.in_order, d.intro from decks d where d.id = $8 returning id`,
+			// reviews in order is read at the top of the list, so a deck published
+			// from inside another takes it from the deck at the top
+			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, reviews_in_order, intro)
+			 select $1, $2, $3, $4, $5, $6, $7, d.in_order, (
+				with recursive up(id, parent_id, reviews_in_order) as (
+					select d.id, d.parent_id, d.reviews_in_order
+					union all
+					select above.id, above.parent_id, above.reviews_in_order from decks above join up on above.id = up.parent_id
+				)
+				select reviews_in_order from up where parent_id is null
+			 ), d.intro from decks d where d.id = $8 returning id`,
 			// the description as JSON text, as pg would send its blocks array as a postgres array
 			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id]
 		);

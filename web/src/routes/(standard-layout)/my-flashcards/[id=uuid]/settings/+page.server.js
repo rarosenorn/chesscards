@@ -34,6 +34,13 @@ export const actions = {
 		if (value !== "in-order" && value !== "mixed") return fail(400, { errors: ["Invalid choice"] });
 		await decks.setInOrder(locals.userId, params.id, value === "in-order");
 	},
+	// shuffled or in order, for the cards due for review: said on a deck at
+	// the top of the list, for everything inside it
+	reviewsInOrder: async ({ params, request, locals }) => {
+		const value = (await request.formData()).get("value");
+		if (value !== "in-order" && value !== "mixed") return fail(400, { errors: ["Invalid choice"] });
+		if (!await decks.setReviewsInOrder(locals.userId, params.id, value === "in-order")) return fail(403, { errors: ["Not a deck at the top"] });
+	},
 	// a deck of the user's own goes with everything inside it; a marketplace
 	// deck taken leaves their library
 	delete: async ({ params, locals }) => {

@@ -100,7 +100,8 @@
 	// --- the queue ---
 	// Learning cards come first, as they fall due; then due reviews, shuffled
 	// once per visit (the keys live for the component, so grading doesn't
-	// reshuffle what's left); then new cards, in the order the decks they sit
+	// reshuffle what's left) — or, where the deck at the top says so, in the
+	// order new cards come; then new cards, in the order the decks they sit
 	// in give them (in order or mixed: newCardRanks). A tactic
 	// has no FSRS state: unseen it queues as new, seen-but-unfinished it
 	// queues with the reviews.
@@ -130,6 +131,8 @@
 		}
 		return ranking.ranks;
 	}
+	// the same order over every card, for reviews taken in order
+	let reviewRanks = $derived(deck.reviewsInOrder ? newCardRanks(deck.decks, deck.cards) : null);
 
 	// Progression gates only the introduction of unseen cards: anything
 	// already met keeps its reviews coming even if its deck has fallen back
@@ -190,7 +193,8 @@
 		if (learning.length) return learning.reduce(byDueTime);
 		const reviews = due.filter(isReviewState);
 		if (reviews.length) {
-			return reviews.reduce((min, card) => shuffleKey(card.id) < shuffleKey(min.id) ? card : min);
+			const key = reviewRanks ? card => reviewRanks.get(card.id) : card => shuffleKey(card.id);
+			return reviews.reduce((min, card) => key(card) < key(min) ? card : min);
 		}
 		if (due.length) {
 			const ranks = newRanks(studyCards.filter(card => !isSeen(card)));

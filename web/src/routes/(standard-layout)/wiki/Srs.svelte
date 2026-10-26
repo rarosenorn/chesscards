@@ -68,3 +68,14 @@
 	An empty deck passes with nothing to prove, so it never holds up the ones
 	after it.
 </p>
+
+<h3>Due cards in order</h3>
+
+<p>
+	Cards due for review come <strong>shuffled</strong>, unless the deck at
+	the top of the list is set under its <strong>Settings</strong> to take its
+	due cards <strong>in order</strong>: then they come in the order new cards
+	do — for lines best seen in sequence, like openings. Every deck inside it
+	follows it. On a deck taken from the marketplace the choice is yours; it
+	starts as the author's.
+</p>

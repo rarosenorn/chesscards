@@ -118,6 +118,30 @@
 	</section>
 	{/if}
 
+	<!-- said at the top of the list only: everything inside follows it -->
+	{#if data.deck.ancestors.length === 0}
+	<section>
+		<h3>Due cards</h3>
+		<p class="section-note">
+			Mixed: cards due for review come shuffled.
+			In order: they come in the order new cards do — for lines best seen in
+			sequence, like openings. Every deck inside this one follows it.
+			{#if data.deck.isMarketplace}This is your own choice; it starts as the author's.{/if}
+		</p>
+		<form method="POST" action="?/reviewsInOrder" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
+			<div class="pills">
+				{#each [{ value: "in-order", label: "In order" }, { value: "mixed", label: "Mixed" }] as option}
+					{@const chosen = (option.value === "in-order") === data.deck.reviewsInOrder}
+					<label class="pill" class:selected={chosen}>
+						<input type="radio" name="value" value={option.value} checked={chosen} />
+						{option.label}
+					</label>
+				{/each}
+			</div>
+		</form>
+	</section>
+	{/if}
+
 	<!-- the danger zone is the one section a marketplace deck also gets:
 	     resetting the progress is the studier's, and a deck taken can be
 	     removed; deleting a deck stays its owner's -->

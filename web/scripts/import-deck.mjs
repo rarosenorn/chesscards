@@ -397,6 +397,16 @@ try {
 	await importIntro(deck, deckIntro, `  deck "${spec.deck}"`)
 	await importDeck(root, deck, 0)
 
+	// cards this spec used to own but no longer lists (pruned before the
+	// numbering below, which would otherwise count them among the cards)
+	for (const [id, cardId] of Object.entries(lock.cards ?? {})) {
+		if (specIds.has(id) || !byId.has(cardId)) continue
+		const row = byId.get(cardId)
+		pruned.push({ id, reps: row.reps })
+		if (prune) await client.query("delete from cards where id = $1", [cardId])
+		else nextLock.cards[id] = cardId
+	}
+
 	// a card the spec moved out of a deck leaves a gap behind it: every deck
 	// under this one is numbered 1..n again, in the order its cards stand
 	await client.query(`
@@ -405,15 +415,6 @@ try {
 		from (select id, row_number() over (partition by deck_id order by position) position
 			from cards where deck_id in (select id from under)) r
 		where c.id = r.id and c.position <> r.position`, [deck.id])
-
-	// cards this spec used to own but no longer lists
-	for (const [id, cardId] of Object.entries(lock.cards ?? {})) {
-		if (specIds.has(id) || !byId.has(cardId)) continue
-		const row = byId.get(cardId)
-		pruned.push({ id, reps: row.reps })
-		if (prune) await client.query("delete from cards where id = $1", [cardId])
-		else nextLock.cards[id] = cardId
-	}
 
 	console.log(`\n${spec.deck}: ${inserted} new, ${updated} updated, ${unchanged} unchanged ` +
 		`(${total} in spec, deck ${deckExisted ? "existed" : "created"})`)

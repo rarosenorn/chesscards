@@ -1,7 +1,7 @@
 ---
 name: fc-line
 argument-hint: <course variation title, e.g. "Three Knights 3.Nc3 Bc5 4.Nxe5 Bxf2+ #1"> [deck]
-description: Turn one Chessable course variation into flashcards in the user's own opening-deck style (a tree of branch cards and "next 3 plies" cards, backs in the course's own words, every course point covered) and import them straight into the deck. Use when the user names a Chessable line/variation to card, or asks for cards "the same way" as the Sielecki deck.
+description: Turn one Chessable course variation into flashcards in the user's own opening-deck style (a tree of branch cards and "next N plies" cards up to the next branch, backs in the course's own words, every course point covered) and import them straight into the deck. Use when the user names a Chessable line/variation to card, or asks for cards "the same way" as the Sielecki deck.
 ---
 
 # Cards from one Chessable variation
@@ -62,11 +62,12 @@ the branch card's back. The course's own order gives way to this.
   move — no arrow for it), the answer as a green `solutionArrows` arrow; back = the move and the author's
   reason. Add a second ask where the course has one ("Which bishop move is less
   precise?").
-- **Line card** — "What are the next 3 plies following 4...Bxf2+?!". The board
-  carries the whole line including the answer; `openAt` and `solutionFrom` at
-  the question; back
+- **Line card** — "What are the next 5 plies following 4...Bxf2+?!". One card
+  for the whole stretch from the question to the next branch (or the line's
+  end), never chunked: the number is however many plies that stretch holds.
+  The board carries the whole line including the answer; `openAt` and
+  `solutionFrom` at the question; back
   = one "- " bullet per ply: "- 5.Kxf2 We have to take the bishop, no choice."
-  Chunk longer lines into 3-ply cards.
 - **Refutation card** — one per bad opponent move the course refutes
   (4...Qh4?, 4...Nf6?), as a move or line card from the position after it.
 - **Why-not card** — for "Black can't play X because Y" and "why not our

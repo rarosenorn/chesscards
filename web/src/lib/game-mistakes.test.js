@@ -91,8 +91,9 @@ describe("the tries around a mistake", () => {
 		// after 4.Nxd4 the only capture is the line's own exd4
 		expect(at("better", 1)).toEqual([])
 		expect(at("better", 3)).toEqual(["d4c3"])
-		// after 4.Nxe5 Qg5: not the line's own Nxf7, and no quiet move
-		expect(at("played", 2).sort()).toEqual(["c4f7", "e5d7"])
+		// after 4.Nxe5 Qg5: not the line's own Nxf7, no quiet move, and not
+		// Nxd7, a knight for a pawn the bishop and king guard
+		expect(at("played", 2).sort()).toEqual(["c4f7"])
 		expect(at("played", 4)).toContain("f7h8")
 		expect(asks.every(ask => ask.line === "better" ? ask.at % 2 === 1 : ask.at % 2 === 0)).toBe(true)
 	})

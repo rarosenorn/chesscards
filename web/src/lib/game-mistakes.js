@@ -62,6 +62,9 @@ const lineSan = (fen, ucis, max) => {
 }
 
 const LINE_PLIES = 4
+// the better line as far as the reasons are given it: a positional reason
+// is the plan the engine goes on with, which four plies do not show
+const PLAN_PLIES = 12
 
 // `evals[i]` is the engine on fens[i]: { cp | mate, pv: [uci...] }, or null
 // where it was not asked. Like Lichess, a move the engine would have played
@@ -83,6 +86,7 @@ export const findMistakes = ({ moves, fens }, evals, color, kinds = KINDS) => {
 		found.push({
 			ply, kind, move, missedMate,
 			better,
+			plan: missedMate ? better : lineSan(fens[ply], prev.pv, PLAN_PLIES),
 			followUp: lineSan(fens[ply + 1], cur.pv ?? [], LINE_PLIES),
 			evalBefore: prev.mate != null ? { mate: prev.mate } : { cp: prev.cp },
 			evalAfter: cur.mate != null ? { mate: cur.mate } : { cp: cur.cp }
@@ -96,8 +100,13 @@ export const findMistakes = ({ moves, fens }, evals, color, kinds = KINDS) => {
 const TRY_PLIES = 9
 const TRY_SHOWN = 4
 
-// a capture, a check, a queen: what a player looks at first
-const isTempting = move => (move.captured || /[+#]/.test(move.san)) && (!move.promotion || move.promotion === "q")
+const VALUE = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 }
+
+// a check, or a capture that wins at a glance — as much as the piece that
+// takes, or something nothing guards — and a queen: what a player looks at
+// first. A knight taking a guarded pawn is no way out anyone would look for.
+const isTempting = (move, chess) => (/[+#]/.test(move.san) || move.captured && (VALUE[move.captured] >= VALUE[move.piece]
+	|| chess.attackers(move.to, move.color === "w" ? "b" : "w").length === 0)) && (!move.promotion || move.promotion === "q")
 
 // The ways out a line's loser would look for, as { line, at, fen, uci } for
 // the engine to try: in the better line the opponent's tempting moves, in
@@ -110,8 +119,9 @@ export const triesToCheck = ({ move, better, followUp, missedMate }) => {
 	for (const [line, moves, first] of [["better", better, 1], ["played", [move, ...followUp], 2]])
 		for (let at = first; at <= moves.length; at += 2) {
 			const own = moves[at] && uciOf(moves[at])
-			for (const tried of new Chess(moves[at - 1].after).moves({ verbose: true }))
-				if (isTempting(tried) && uciOf(tried) !== own) asks.push({ line, at, fen: tried.before, uci: uciOf(tried) })
+			const chess = new Chess(moves[at - 1].after)
+			for (const tried of chess.moves({ verbose: true }))
+				if (isTempting(tried, chess) && uciOf(tried) !== own) asks.push({ line, at, fen: tried.before, uci: uciOf(tried) })
 		}
 	return asks
 }

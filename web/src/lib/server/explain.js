@@ -27,9 +27,12 @@ const pieceList = fen => {
 	return `White: ${by.w.join(" ")}\nBlack: ${by.b.join(" ")}`;
 }
 
-// every piece that stands attacked, with what attacks and what guards it:
-// what a move was for is mostly read off this — the piece it guards, the
-// attack it blocks — and counting attackers is another place a model slips
+// every piece that stands attacked as often as it is guarded, or by a
+// cheaper piece, with what attacks and what guards it: what a move was for
+// is mostly read off this — the piece it guards, the attack it blocks — and
+// counting attackers is another place a model slips. A piece guarded more
+// often than cheaper pieces attack it is in no danger, and listed it only
+// invites "guards it a third time".
 const attacked = fen => {
 	const chess = new Chess(fen);
 	const named = square => { const piece = chess.get(square); return `${piece.type === "p" ? "" : piece.type.toUpperCase()}${square}`; };
@@ -41,9 +44,51 @@ const attacked = fen => {
 			const by = chess.attackers(piece.square, other);
 			if (by.length === 0) continue;
 			const guards = chess.attackers(piece.square, piece.color);
+			if (by.length < guards.length && by.every(square => VALUE[chess.get(square).type] >= VALUE[piece.type])) continue;
 			out.push(`${SIDE[piece.color]}'s ${NAME[piece.type]} on ${piece.square} — attacked by ${by.map(named).join(", ")}; guarded by ${guards.map(named).join(", ") || "nothing"}`);
 		}
 	return out.join(". ") || "nothing";
+}
+
+// Every piece but the pawns and the kings with the number of moves it has,
+// a bishop with the colour of its squares, and a knight or bishop in the other half that no enemy pawn can ever
+// attack marked as on an outpost: a positional reason is read off these —
+// which piece was doing something and which was boxed in — not guessed.
+const activity = fen => {
+	const sides = { w: [], b: [] };
+	const [placement, turn] = fen.split(" ");
+	const chess = new Chess(fen);
+	for (const color of ["w", "b"]) {
+		let mover = chess;
+		if (color !== turn) {
+			try { mover = new Chess([placement, color, "-", "-", 0, 1].join(" ")); }
+			catch { mover = null; }
+		}
+		for (const rank of chess.board())
+			for (const piece of rank) {
+				if (!piece || piece.color !== color || piece.type === "p" || piece.type === "k") continue;
+				const count = mover ? mover.moves({ square: piece.square }).length : null;
+				const notes = [
+					piece.type === "b" && `${chess.squareColor(piece.square)} squares`,
+					count != null && `${count} ${count === 1 ? "move" : "moves"}`,
+					isOutpost(chess, piece) && "outpost"
+				].filter(Boolean);
+				sides[color].push(`${piece.type.toUpperCase()}${piece.square}${notes.length ? ` (${notes.join(", ")})` : ""}`);
+			}
+	}
+	return `White: ${sides.w.join(", ")}\n  Black: ${sides.b.join(", ")}`;
+}
+
+// no enemy pawn on a file beside it that could still come level with it
+const isOutpost = (chess, { type, color, square }) => {
+	if (type !== "n" && type !== "b") return false;
+	const file = square.charCodeAt(0) - 97, rank = Number(square[1]);
+	if (color === "w" ? rank < 5 : rank > 4) return false;
+	for (const rows of chess.board())
+		for (const pawn of rows)
+			if (pawn?.type === "p" && pawn.color !== color && Math.abs(pawn.square.charCodeAt(0) - 97 - file) === 1
+				&& (color === "w" ? Number(pawn.square[1]) > rank : Number(pawn.square[1]) < rank)) return false;
+	return true;
 }
 
 // a line as it reads: "27.Qxg5 Rxg5 28.Rde2"
@@ -52,10 +97,17 @@ const written = line => line.map((move, i) => {
 	return move.color === "w" ? `${number}.${move.san}` : i === 0 ? `${number}...${move.san}` : move.san;
 }).join(" ");
 
+// both lines level in material and neither a mate: the engine's preference
+// is then positional, and there is no way out to argue
+const isPositional = ({ move, better, followUp }) => netMaterial([move, ...followUp], move.color) === netMaterial(better, move.color)
+	&& ![...followUp, ...better].some(m => m.san.endsWith("#"));
+
+const netMaterial = (line, player) => line.reduce((sum, move) => sum + (move.captured ? (move.color === player ? 1 : -1) * VALUE[move.captured] : 0), 0);
+
 // a line with what it takes and whether it ends in mate
 const describeLine = (line, player) => {
-	const captures = line.filter(move => move.captured).map(move => `${SIDE[move.color]} takes a ${NAME[move.captured]}`);
-	const net = line.reduce((sum, move) => sum + (move.captured ? (move.color === player ? 1 : -1) * VALUE[move.captured] : 0), 0);
+	const captures = line.filter(move => move.captured).map(move => `${SIDE[move.color]}'s ${NAME[move.piece]} from ${move.from} takes the ${NAME[move.captured]} on ${move.to}`);
+	const net = netMaterial(line, player);
 	const mate = line.at(-1)?.san.endsWith("#");
 	return `${written(line)}\n  Captures in this line: ${captures.join("; ") || "none"}. Net material for the player: ${net >= 0 ? "+" : ""}${net}.${mate ? " The line ends in checkmate." : ""}`;
 }
@@ -88,11 +140,15 @@ The played move usually has a plain point: it guards a piece that is attacked mo
 
 Be concrete. Name the pieces and the squares, and name the mechanism where there is one: a pin (what is pinned to what), a fork, a skewer, a discovered attack, a piece that is overloaded, trapped or left undefended, a back-rank mate. "Wins a pawn" or "loses material" on its own is not a reason: say how.
 
+When the two lines come out level in material and neither mates, there is no such mechanism: the engine prefers the better move for a positional reason, and that is the reason to give, read off the facts given. For the played move: a piece traded for one that was doing less (the move counts show which piece was active and which was boxed in), a piece given up or driven off an outpost, a weakness the move leaves. For the better move: what it keeps that the played move gave away, and what it goes on to do in the better line further on. Say it as plainly as a coach would: "it trades your knight on its outpost for a bishop that had two squares".
+
 Follow each thought to its end. The player's next question is "but then they just take it?" or "can't I still do that a move later?": answer it from the tries, with the move that refutes the try and why that move works. Both lines are printed on the card and stepped through move by move, so a capture that fails at once may look possible again two moves later and fail there for another reason: then the later answer, with its mechanism, is the one to give. Leave out a try no player would think of, like a queen given away for a pawn.
 
 Be brief: each of the two is at most two sentences and 35 words, and shorter when one statement says it. No filler, no scene-setting, nothing that restates what the board already shows. Plain casual English; the player is "you". It continues the sentence: start lowercase, do not repeat the move the sentence opens with, do not write "because" at the start. Name the moves that carry the point, not whole lines.
 
 tries: the numbers of the tries you wrote about, at most two for each sentence, or none. Their lines are printed on the card after your words, so do not spell them out in full.
+
+Count from the lists of what stands attacked before you claim pressure or a guard: a square is under pressure only when it is attacked more often than it is guarded, and a move that guards something already guarded more often than it is attacked does nothing worth saying. Never give as a reason that a move keeps a piece, keeps an option or lets a piece come back later: say what the piece does where it goes.
 
 Rules: name only moves that appear in the lines and tries you were given, written exactly as given, and say after which move a try comes when it is not the first move of its line. Check every piece and square you mention against the piece lists: a try's own list is the board after the answer to it. No evaluation numbers, no bold, no lists, no square brackets, no "T1", no "the engine says".`;
 
@@ -108,8 +164,9 @@ const SCHEMA = {
 };
 
 const prompt = ({ fens }, mistake) => {
-	const { ply, kind, move, better, followUp, evalBefore, evalAfter, tries = [] } = mistake;
+	const { ply, kind, move, better, plan = better, followUp, evalBefore, evalAfter, tries = [] } = mistake;
 	const player = move.color;
+	const positional = isPositional(mistake);
 	return `Side to move: ${SIDE[player]} (the player)
 Position before the move (FEN): ${fens[ply]}
 ${pieceList(fens[ply])}
@@ -118,14 +175,20 @@ The player's move, ${kind === "inaccuracy" ? "an" : "a"} ${kind}, and how the en
   Engine evaluation after it, from the player's side: ${evaluation(evalAfter, player)}
 
 The engine's better move and its line: ${describeLine(better, player)}
-  Engine evaluation, from the player's side: ${evaluation(evalBefore, player)}
+  Engine evaluation, from the player's side: ${evaluation(evalBefore, player)}${plan.length > better.length ? `
+  The better line further on: ${written(plan)}` : ""}
 
-What stands attacked (pieces attacking directly, not those lined up behind another):
+Material: ${positional ? "the two lines come out level, so the difference is positional." : "the two lines do not come out level."}
+
+The pieces before the move, with how many moves each has:
+  ${activity(fens[ply])}
+
+What stands attacked as often as it is guarded, or by a cheaper piece (pieces attacking directly, not those lined up behind another):
   Before the move: ${attacked(fens[ply])}
   After ${written([move])}: ${attacked(move.after)}
   After ${written([better[0]])}: ${attacked(better[0].after)}
 
-Tries that fail, each with the engine's answer:${tries.length > 0 ? "\n" + tries.map((tried, i) => describeTry(tried, i, mistake, player)).join("\n") : " none found."}`;
+Tries that fail, each with the engine's answer:${positional ? " none to write about, the difference being positional." : tries.length > 0 ? "\n" + tries.map((tried, i) => describeTry(tried, i, mistake, player)).join("\n") : " none found."}`;
 }
 
 // The flags past --json-schema keep the call to what it is: no tools, and
@@ -164,8 +227,8 @@ const askClaude = user => new Promise((done, reject) => {
 // unmistakably a move is read as one — a piece letter, a capture, castling —
 // since a bare "e6" is as often a square as a pawn push.
 const MOVE = /\b(?:[KQRBN][a-h]?[1-8]?x?[a-h][1-8]|[a-h]x[a-h][1-8](?:=[QRBN])?|O-O(?:-O)?)/g;
-const strayMoves = (text, { move, better, followUp, tries = [] }) => {
-	const given = new Set([move, ...better, ...followUp, ...tries.flatMap(tried => tried.moves)].map(m => m.san.replace(/[+#]/g, "")));
+const strayMoves = (text, { move, better, plan = [], followUp, tries = [] }) => {
+	const given = new Set([move, ...better, ...plan, ...followUp, ...tries.flatMap(tried => tried.moves)].map(m => m.san.replace(/[+#]/g, "")));
 	return (text.match(MOVE) ?? []).filter(san => !given.has(san));
 }
 
@@ -179,7 +242,7 @@ const explainMistake = async (game, mistake) => {
 			const why = await askClaude(prompt(game, mistake));
 			const stray = strayMoves(`${why.bad} ${why.better}`, mistake);
 			// the model counts the tries from 1, as they are written to it
-			const tries = [...new Set(why.tries.map(number => number - 1))].filter(index => mistake.tries?.[index]);
+			const tries = isPositional(mistake) ? [] : [...new Set(why.tries.map(number => number - 1))].filter(index => mistake.tries?.[index]);
 			if (stray.length === 0) return { ...why, tries };
 			console.error(`explain: named moves outside the lines (${stray.join(", ")})`);
 		}

@@ -9,8 +9,8 @@
 
 	// The add-cards editing surface for an EXISTING card: both sides as
 	// block-editor documents initialized from the stored card, sharing one
-	// menu bar, board-editing ui and the Cancel/Save row (placed like the
-	// add-cards page's Add card button); Ctrl+Enter saves too. session
+	// menu bar, board-editing ui and the Cancel/Save row under the card
+	// (placed like the add-cards page's Add card button); Ctrl+Enter saves too. session
 	// (optional) is a bag { boardUi, frontDoc, backDoc } owned by the host,
 	// letting an in-progress edit survive host navigation.
 	let { card, session = null, onSave, onCancel } = $props();
@@ -170,14 +170,13 @@
 <svelte:window onkeydown={handleKeyDown} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<!-- the trap needs an element to listen on, but the host lays these out as
-     its own flex children: display: contents keeps the box out of the way -->
+<!-- the trap listens on the card and the buttons under it alike -->
 <div
-	class="trap-root"
 	bind:this={container}
 	onkeydowncapture={handleTrapKeydown}
 	onfocusin={handleFocusIn}
 >
+<div class="edit-card card-surface">
 <div class="menu-holder">
 	<DocEditorMenuBar
 		{menu}
@@ -227,6 +226,7 @@
 		onEditorTransaction={handleEditorRefresh}
 	/>
 </div>
+</div>
 <div class="edit-actions">
 	<button class="std-btn" bind:this={cancelBtn} onclick={onCancel}>Cancel</button>
 	<button class="std-btn" bind:this={saveBtn} title="ctrl+enter" onclick={save}>Save</button>
@@ -234,15 +234,19 @@
 </div>
 
 <style>
-	.trap-root {
-		display: contents;
+	/* the add-cards canvas: content lands at 896, so boards render the
+	   card's exact sizes (432 cells, 562 lone) with text sharing both
+	   edges — and the editor is exactly as wide as the card it replaces */
+	.edit-card {
+		padding: 12px 20px;
 	}
-	/* flush with the editors' right edge, like add-cards' Add card */
+	/* under the card, flush with its right edge, like add-cards' Add card
+	   and browse's Edit card */
 	.edit-actions {
-		align-self: end;
 		display: flex;
+		justify-content: end;
 		gap: 8px;
-		margin-top: 12px;
+		margin: 8px 0 40px 0;
 	}
 	.menu-holder {
 		/* the moves panel hangs from this */

@@ -1053,7 +1053,7 @@
 	<div class="selected-card-container" bind:this={cardPane}>
 		{#if selectedCard}
 			{#if isEditingSelected}
-				<div class="card-edit card-surface">
+				<div class="card-edit">
 					<CardBlockEdit
 						card={selectedCard}
 						session={draft.session}
@@ -1391,13 +1391,9 @@
 	}
 	/* same inner inset as the add-cards page, whose editor this hosts */
 	.card-edit {
-		margin-top: 16px;
-		margin-bottom: 0;
-		padding: 12px 20px;
-		/* the add-cards canvas: content lands at 896, so boards render the
-		   card's exact sizes (432 cells, 562 lone) with text sharing both
-		   edges — and the editor is exactly as wide as the card it replaces */
+		width: 100%;
 		max-width: var(--flashcard-width);
+		margin: 16px auto 0 auto;
 	}
 	/* --- the rows of the decks inside --- */
 	/* a band between the card rows, greyer than the zebra so it reads as

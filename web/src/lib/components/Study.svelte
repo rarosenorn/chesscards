@@ -864,7 +864,7 @@
 			{/each}
 		</div>
 	</div>
-	<div class="flashcard-edit card-surface">
+	<div class="flashcard-edit">
 		<CardBlockEdit card={currentCard} onSave={saveEdit} onCancel={() => editingCard = false} />
 	</div>
 {:else if currentCard}
@@ -1392,12 +1392,9 @@
 		font-weight: 500;
 	}
 	.flashcard-edit {
-		margin-top: 6px;
-		padding: 12px 20px;
-		/* the add-cards canvas: content lands at 896, so boards render the
-		   card's exact sizes (432 cells, 562 lone) with text sharing both
-		   edges — and the editor is exactly as wide as the card it replaces */
+		width: 100%;
 		max-width: var(--flashcard-width);
+		margin: 6px auto 0 auto;
 	}
 	.flashcard-btn-row {
 		display: flex;

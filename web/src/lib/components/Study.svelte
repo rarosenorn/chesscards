@@ -585,9 +585,9 @@
 	const getTimeUntilDuePreviewText = rating =>
 		formatTimeUntil(preview[rating].card.due, previewAt);
 
-	// The wait, as the value after "Next review:". Below a day it is a duration
+	// The wait, as the rest of "Next review ...". Below a day it is a duration
 	// counted to the minute; past that a card is waiting at a day boundary, so
-	// it is a day on the calendar instead — "tomorrow", never "26 hours".
+	// it is a day on the calendar instead — "tomorrow", never "in 26 hours".
 	const formatNextReview = dueDate => {
 		const withUnit = (value, unit) => `${value} ${unit}${value === 1 ? "" : "s"}`;
 		const hour = rolloverHour();
@@ -597,21 +597,21 @@
 		if (days === 1)
 			return "tomorrow";
 		if (days >= 365)
-			return withUnit(Math.round(days / 365 * 10) / 10, "year");
+			return `in ${withUnit(Math.round(days / 365 * 10) / 10, "year")}`;
 		if (days > 1)
-			return withUnit(days, "day");
+			return `in ${withUnit(days, "day")}`;
 		const minutes = (due - now) / 1000 / 60;
 		if (minutes < 1)
-			return "less than a minute";
+			return "in less than a minute";
 		// round the whole wait, then split it, so 119.7 minutes is not "1 hour 60 minutes"
 		const total = Math.round(minutes);
 		if (total < 60)
-			return withUnit(total, "minute");
+			return `in ${withUnit(total, "minute")}`;
 		const hours = Math.floor(total / 60);
 		const rest = total % 60;
 		return rest
-			? `${withUnit(hours, "hour")} ${withUnit(rest, "minute")}`
-			: withUnit(hours, "hour");
+			? `in ${withUnit(hours, "hour")} ${withUnit(rest, "minute")}`
+			: `in ${withUnit(hours, "hour")}`;
 	}
 
 	// earliest upcoming due among the deck's unfinished, ungated cards (null
@@ -1039,7 +1039,7 @@
 			<p>Congratulations you finished this deck for now! <span class="party"><PartyPopper /></span></p>
 		{/if}
 		{#if nextDue && !cram}
-			<p class="next-review">Next review: {formatNextReview(nextDue)}</p>
+			<p class="next-review">Next review {formatNextReview(nextDue)}</p>
 		{/if}
 	</div>
 {/if}

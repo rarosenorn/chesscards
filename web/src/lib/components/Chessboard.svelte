@@ -350,9 +350,6 @@
 		!!normalized.puzzle && !inEditor && (playable || (!!onSolved && !revealed && !authorView))
 			&& solutionFrom != null && solutionFrom < replay.moveInfos.length
 	);
-	// takes the keyboard: a board with moves to step, or a puzzle waiting
-	// for its first move
-	let focusable = $derived((hasMoves || puzzling) && !inEditor);
 	let solver = $derived(solutionFrom != null ? replay.fens[solutionFrom]?.split(" ")[1] : null);
 	// the board is waiting for the player's move: on the position the next
 	// move to find is made from, with the line not yet through, and theirs
@@ -778,6 +775,13 @@
 	// trackpads don't fire a step per micro-tick, and page scroll is always
 	// swallowed over a board with moves. Attached manually: svelte's wheel
 	// handlers are passive, which forbids preventDefault.
+	// Focus taken by a click or a scroll must not draw the keyboard ring:
+	// Chrome counts a programmatic focus() as :focus-visible whenever the last
+	// input was a key, so switching tabs with s/b and then scrolling a board
+	// would light it up. The flag lasts as long as the focus does — stepping
+	// through moves with the arrows is not a new arrival — and only clears on
+	// blur, so the ring belongs to focus that arrived by tabbing.
+	let pointerFocus = $state(false);
 	const takeFocus = () => {
 		// inEditor: the text editor keeps the keyboard. A board living in a
 		// document is not a focus stop — taking focus here blurs ProseMirror,
@@ -786,17 +790,20 @@
 		// buttons and the wheel never needed focus), and the arrows belong to
 		// the virtual board caret.
 		if (inEditor) return;
+		pointerFocus = true;
 		wrapperElement.focus({ preventScroll: true });
 	}
 
 	// The active card's first board takes focus as its card arrives (study's
 	// current card, the Cards preview), so ←/→ step the moves without a
-	// click first. Never off a field being typed in.
+	// click first. Never off a field being typed in, and quietly: an arrival
+	// the user did not tab to draws no keyboard ring, like takeFocus above.
 	$effect(() => {
 		void normalized;
-		if (!autoFocus || !focusable || !wrapperElement) return;
+		if (!autoFocus || !hasMoves || !wrapperElement) return;
 		const active = document.activeElement;
 		if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT" || active.isContentEditable)) return;
+		pointerFocus = true;
 		wrapperElement.focus({ preventScroll: true });
 	});
 
@@ -1029,12 +1036,19 @@
 <div
 	style="min-width: {minWidth}"
 	class="board-wrapper"
-	class:focusable
+	class:pointer-focus={pointerFocus}
+	onblur={() => {
+		// a window switch blurs the focused element too, and the return
+		// refocuses it as a keyboard arrival — that round trip must not
+		// surrender the flag, or coming back to the browser draws the ring.
+		// A blur while the document still has focus is a real departure.
+		if (document.hasFocus()) pointerFocus = false;
+	}}
 	bind:this={wrapperElement}
-	tabindex={focusable ? 0 : undefined}
+	tabindex={hasMoves && !inEditor ? 0 : undefined}
 	role="group"
 	aria-label={hasMoves && !inEditor ? "Chessboard, use arrow keys to step through moves" : "Chessboard"}
-	onkeydown={focusable ? handleKeyDown : undefined}
+	onkeydown={hasMoves && !inEditor ? handleKeyDown : undefined}
 >
 	<!-- The strip above every board: its number (when the card has more than
 	     one) and the side to move, which takes the number's place on a lone
@@ -1067,7 +1081,7 @@
 		class:grab-squares={hoverPiece && !clickMoving}
 		class:grabbing-squares={draggingPiece}
 		bind:this={chessboardElement}
-		onclick={focusable ? takeFocus : undefined}
+		onclick={hasMoves ? takeFocus : undefined}
 	></div>
 	{#if mateBadge}
 		<span
@@ -1149,6 +1163,13 @@
 	   shrinks, the board never re-renders smaller, and the drag shadow's
 	   correct size mismatches the real one, making drops snap dirty). With
 	   inline-size containment the cell sizes the board, never the reverse. */
+	/* The ring belongs to Tab arrivals alone. Every other way focus lands on
+	   a board — a click, a scroll, the active card's auto-focus on switches
+	   and reveals — sets pointer-focus first, and this rule (out-weighing
+	   the ring rule below) keeps those arrivals quiet. */
+	.board-wrapper.pointer-focus:focus-visible {
+		outline: none;
+	}
 	.board-wrapper {
 		/* the line's measuring copy is placed against it */
 		position: relative;
@@ -1161,7 +1182,6 @@
 	   edges align instead of the bar overhanging the board */
 	.board > :global(div) {
 		margin: 0 auto;
-		box-shadow: var(--active-shadow, none);
 	}
 	/* the strip shares the board's exact width, so the number sits over the
 	   board's left edge rather than the cell's */
@@ -1291,41 +1311,9 @@
 		margin-left: auto;
 		margin-right: auto;
 	}
-	/* the board the arrows step, whatever in it holds the focus, sits on a
-	   light grey panel with its strip and move line: the wrapper's own fill,
-	   carried 8px past its edges by a shadow of the same grey, so nothing
-	   moves */
-	.board-wrapper:focus {
-		outline: none;
-	}
-	.board-wrapper.focusable:focus-within {
-		background-color: rgba(0, 0, 0, 0.1);
-		box-shadow: 0 0 0 8px rgba(0, 0, 0, 0.1);
-		border-radius: 2px;
-	}
-	/* the /design tryouts in its place (html[data-active-board]) */
-	:global(html[data-active-board]) .board-wrapper.focusable:focus-within {
-		background-color: transparent;
-		box-shadow: none;
-	}
-	:global(html[data-active-board="ring"]) .board-wrapper.focusable:focus-within .board > :global(div) {
-		outline: 2px solid #404040;
-		outline-offset: 2px;
-	}
-	:global(html[data-active-board="shadow"]) .board-wrapper.focusable:focus-within .board {
-		--active-shadow: 0 5px 14px -2px rgba(0, 0, 0, 0.4);
-	}
-	:global(html[data-active-board="glow"]) .board-wrapper.focusable:focus-within .board {
-		--active-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.3);
-	}
-	:global(html[data-active-board="dim"]) .board-wrapper.focusable .board {
-		transition: opacity 120ms;
-	}
-	:global(html[data-active-board="dim"]) .board-wrapper.focusable:not(:focus-within) .board {
-		opacity: 0.5;
-	}
-	:global(html[data-active-board="bar"]) .board-wrapper.focusable:focus-within .board-header {
-		box-shadow: inset 0 -3px 0 #404040;
+	.board-wrapper:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 1px;
 	}
 	/* quiet step controls heading the move line; the ends fade out rather
 	   than disappear, so the line never shifts */

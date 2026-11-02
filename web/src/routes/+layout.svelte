@@ -2,7 +2,7 @@
 	import { setContext } from "svelte"
 	import { zenHidden } from "$lib/zen-state.svelte.js"
 	import { browser } from "$app/environment"
-	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, ACTIVE_BOARD_KEY, readPreview, applySchemeVars, applyFontVar, applyBannerVariant, applyActiveBoardVariant } from "$lib/design-preview.js"
+	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, readPreview, applySchemeVars, applyFontVar, applyBannerVariant } from "$lib/design-preview.js"
 	import favicon from '$lib/assets/favicon.svg';
 	import Logo from "$lib/assets/Logo.svelte"
 	import ModalHost from "$lib/components/ModalHost.svelte"
@@ -36,8 +36,8 @@
 		}
 	}
 
-	// design tryouts (/design): a scheme, menu font, banner variant or
-	// active-board marker being tried rides along on every page until reset there
+	// design tryouts (/design): a scheme, menu font or banner variant being
+	// tried rides along on every page until reset there
 	if (browser) {
 		const scheme = readPreview(SCHEME_KEY);
 		if (scheme?.accent) applySchemeVars(scheme);
@@ -45,8 +45,6 @@
 		if (font?.family) applyFontVar(font.family);
 		const banner = readPreview(BANNER_KEY);
 		if (banner?.variant) applyBannerVariant(banner.variant);
-		const activeBoard = readPreview(ACTIVE_BOARD_KEY);
-		if (activeBoard?.variant) applyActiveBoardVariant(activeBoard.variant);
 	}
 </script>
 

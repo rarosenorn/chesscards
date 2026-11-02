@@ -17,6 +17,7 @@
 	import CardSideBlockEditor from "$lib/components/CardSideBlockEditor.svelte"
 	import DocEditorMenuBar from "$lib/components/DocEditorMenuBar.svelte"
 	import MoveRefDialog from "$lib/components/MoveRefDialog.svelte"
+	import CardTypeSegments from "$lib/components/CardTypeSegments.svelte"
 	import { insertChessboardBlock, insertBoardAtCaret } from "$lib/tiptap-chessboard-block/index.js"
 	import { createTabTrap } from "$lib/tab-trap.js"
 	import { docSideJsonBlocks, docToSideBlocks, canonicalSideJson, docHasContentBlocks, docCountBoardsBlocks, docHasBoardPairBlocks, docBoardsBlocks, docInvalidBoardNumbersBlocks, invalidFenMessage, docPuzzlesWithoutBackBlocks, puzzleWithoutBackMessage } from "$lib/card-utils.js"
@@ -329,23 +330,7 @@
 
 <div class="type-row">
 	<span id="card-type-label">Type</span>
-	<div class="type-segments" role="radiogroup" aria-labelledby="card-type-label">
-		{#each [
-			["basic", "Basic", "Basic card type: Card is scheduled following FSRS (Free Spaced Repetition Scheduler)"],
-			["tactic", "Tactic", "Tactic card type: <i>Correct</i> waits 7 days, then 30, 90 and 365, and one more <i>Correct</i> retires the card. <i>Incorrect</i> brings it back the next day, one step down. A puzzle played on the board grades itself: <i>Correct</i> if it went through with no wrong move"]
-		] as [value, label, description]}
-			<button
-				class="std-btn"
-				role="radio"
-				aria-checked={cardType === value}
-				class:selected={cardType === value}
-				onclick={() => chooseCardType(value)}
-			>
-				{label}
-				<span class="tooltip" aria-hidden="true">{@html description}</span>
-			</button>
-		{/each}
-	</div>
+	<CardTypeSegments value={cardType} onchoose={chooseCardType} labelledby="card-type-label" />
 	<!-- no decks inside, nothing to file into: the cards go in the deck -->
 	{#if choices.length > 1}
 	<div class="subdeck-picker">
@@ -561,60 +546,6 @@
 		border-radius: 4px;
 		background-color: white;
 		cursor: pointer;
-	}
-	.type-segments {
-		display: flex;
-		gap: 4px;
-	}
-	/* unselected recedes grey, the selected pill is plain white — the
-	   contrast alone carries the state, no accent border */
-	.type-segments button {
-		width: 62px;
-		padding: 3px 0;
-		border-radius: 999px;
-		font-size: 0.85rem;
-		cursor: pointer;
-		position: relative;
-		margin: 0;
-		background-color: #e6e6e6;
-		color: rgba(0, 0, 0, 0.65);
-	}
-	/* custom tooltip: appears after 300ms instead of the ~1s native delay
-	   (a real element rather than a title attribute, so it can hold markup) */
-	.type-segments button .tooltip {
-		position: absolute;
-		top: calc(100% + 6px);
-		left: 0;
-		width: max-content;
-		max-width: 300px;
-		text-align: left;
-		background-color: black;
-		color: white;
-		font-size: 13px;
-		font-weight: 500;
-		padding: 5px 10px;
-		border-radius: 4px;
-		opacity: 0;
-		visibility: hidden;
-		pointer-events: none;
-		transition: opacity 100ms ease 300ms, visibility 0ms 300ms;
-		/* above the sticky menu-bar holder, which the tooltip hangs over */
-		z-index: 30;
-	}
-	.type-segments button:hover .tooltip {
-		opacity: 1;
-		visibility: visible;
-	}
-	.type-segments button.selected {
-		background-color: white;
-		color: black;
-	}
-	/* the :active transform makes the button a stacking context, which would
-	   trap the tooltip beneath the card below — lift the button while the
-	   tooltip can be showing */
-	.type-segments button:hover,
-	.type-segments button:active {
-		z-index: 30;
 	}
 	/* pinned to the viewport top while the card scrolls; the holder spans the
 	   full card width (white, so content passes underneath cleanly) while the

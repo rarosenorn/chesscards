@@ -15,6 +15,7 @@
 	import { page } from "$app/state"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
+	import CardTypeSegments from "$lib/components/CardTypeSegments.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
 	import { canonicalSideJson } from "$lib/card-utils.js"
 	import { deckOutline } from "$lib/deck-tree.js"
@@ -70,7 +71,10 @@
 		draft.session = {
 			boardUi: { editingIds: new Set(), editorStates: {}, applyEditors: {}, invalidBoards: {} },
 			frontDoc: null,
-			backDoc: null
+			backDoc: null,
+			// chosen on the row above the editor and saved with the rest, as
+			// in study, so Cancel leaves the type alone
+			cardType: selectedCard.card_type
 		};
 		draft.editingCardId = selectedCard.id;
 	}
@@ -81,9 +85,11 @@
 	}
 
 	const saveCard = async (front, back) => {
-		await updateCardContent({ cardId: selectedCard.id, front, back });
-		selectedCard.front = JSON.parse(front);
-		selectedCard.back = JSON.parse(back);
+		const card = selectedCard;
+		await updateCardContent({ cardId: card.id, front, back });
+		card.front = JSON.parse(front);
+		card.back = JSON.parse(back);
+		await changeCardType(card, draft.session.cardType ?? card.card_type);
 		stopEditing();
 	}
 
@@ -238,6 +244,9 @@
 	}
 
 	const changeCardType = async (card, cardType) => {
+		// the table's select, while the card is open: the editor's row follows,
+		// or its Save would put the old type back
+		if (draft.editingCardId === card.id && draft.session) draft.session.cardType = cardType;
 		if (card.card_type === cardType) return;
 		Object.assign(card, await updateCardType({ cardId: card.id, cardType }));
 	}
@@ -1054,6 +1063,10 @@
 		{#if selectedCard}
 			{#if isEditingSelected}
 				<div class="card-edit">
+					<div class="edit-type-row">
+						<span id="cards-edit-type-label">Type</span>
+						<CardTypeSegments value={draft.session.cardType} onchoose={type => draft.session.cardType = type} labelledby="cards-edit-type-label" />
+					</div>
 					<CardBlockEdit
 						card={selectedCard}
 						session={draft.session}
@@ -1394,6 +1407,15 @@
 		width: 100%;
 		max-width: var(--flashcard-width);
 		margin: 16px auto 0 auto;
+	}
+	/* study's type row, above the editor */
+	.edit-type-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 6px;
+		font-size: 0.85rem;
+		color: rgba(0, 0, 0, 0.6);
 	}
 	/* --- the rows of the decks inside --- */
 	/* a band between the card rows, greyer than the zebra so it reads as

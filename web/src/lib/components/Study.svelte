@@ -10,6 +10,7 @@
 	import { isDueAt, isDueSoonAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import IntroView from "$lib/components/IntroView.svelte"
+	import CardTypeSegments from "$lib/components/CardTypeSegments.svelte"
 	import { introPlaces, pendingIntro, readMarks, markIntroRead } from "$lib/intros.js"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
@@ -850,19 +851,7 @@
 	<!-- the add-cards type row, above the card and on the page's own ground -->
 	<div class="edit-type-row">
 		<span id="edit-card-type-label">Type</span>
-		<div class="type-segments" role="radiogroup" aria-labelledby="edit-card-type-label">
-			{#each [["basic", "Basic"], ["tactic", "Tactic"]] as [value, label]}
-				<button
-					class="std-btn"
-					role="radio"
-					aria-checked={editCardType === value}
-					class:selected={editCardType === value}
-					onclick={() => editCardType = value}
-				>
-					{label}
-				</button>
-			{/each}
-		</div>
+		<CardTypeSegments value={editCardType} onchoose={type => editCardType = type} labelledby="edit-card-type-label" />
 	</div>
 	<div class="flashcard-edit">
 		<CardBlockEdit card={currentCard} onSave={saveEdit} onCancel={() => editingCard = false} />
@@ -1375,21 +1364,6 @@
 		gap: 12px;
 		font-size: 0.85rem;
 		color: rgba(0, 0, 0, 0.6);
-	}
-	.type-segments {
-		display: flex;
-		gap: 4px;
-	}
-	.type-segments .std-btn {
-		padding: 4px 10px;
-		border-radius: 999px;
-		color: rgba(0, 0, 0, 0.55);
-	}
-	.type-segments .std-btn.selected {
-		background-color: white;
-		border-color: darkgrey;
-		color: #222;
-		font-weight: 500;
 	}
 	.flashcard-edit {
 		width: 100%;

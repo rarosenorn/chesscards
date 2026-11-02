@@ -775,13 +775,6 @@
 	// trackpads don't fire a step per micro-tick, and page scroll is always
 	// swallowed over a board with moves. Attached manually: svelte's wheel
 	// handlers are passive, which forbids preventDefault.
-	// Focus taken by a click or a scroll must not draw the keyboard ring:
-	// Chrome counts a programmatic focus() as :focus-visible whenever the last
-	// input was a key, so switching tabs with s/b and then scrolling a board
-	// would light it up. The flag lasts as long as the focus does — stepping
-	// through moves with the arrows is not a new arrival — and only clears on
-	// blur, so the ring belongs to focus that arrived by tabbing.
-	let pointerFocus = $state(false);
 	const takeFocus = () => {
 		// inEditor: the text editor keeps the keyboard. A board living in a
 		// document is not a focus stop — taking focus here blurs ProseMirror,
@@ -790,20 +783,17 @@
 		// buttons and the wheel never needed focus), and the arrows belong to
 		// the virtual board caret.
 		if (inEditor) return;
-		pointerFocus = true;
 		wrapperElement.focus({ preventScroll: true });
 	}
 
 	// The active card's first board takes focus as its card arrives (study's
 	// current card, the Cards preview), so ←/→ step the moves without a
-	// click first. Never off a field being typed in, and quietly: an arrival
-	// the user did not tab to draws no keyboard ring, like takeFocus above.
+	// click first. Never off a field being typed in.
 	$effect(() => {
 		void normalized;
 		if (!autoFocus || !hasMoves || !wrapperElement) return;
 		const active = document.activeElement;
 		if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT" || active.isContentEditable)) return;
-		pointerFocus = true;
 		wrapperElement.focus({ preventScroll: true });
 	});
 
@@ -1036,14 +1026,7 @@
 <div
 	style="min-width: {minWidth}"
 	class="board-wrapper"
-	class:pointer-focus={pointerFocus}
-	onblur={() => {
-		// a window switch blurs the focused element too, and the return
-		// refocuses it as a keyboard arrival — that round trip must not
-		// surrender the flag, or coming back to the browser draws the ring.
-		// A blur while the document still has focus is a real departure.
-		if (document.hasFocus()) pointerFocus = false;
-	}}
+	class:steppable={hasMoves && !inEditor}
 	bind:this={wrapperElement}
 	tabindex={hasMoves && !inEditor ? 0 : undefined}
 	role="group"
@@ -1076,6 +1059,7 @@
 	<div
 		class="board"
 		class:black-border={hasBlackBorder(boardPrefs())}
+		class:puzzle-frame={puzzling && !puzzleDone}
 		class:flush-bottom={flushBottom}
 		class:pointer-squares={clickMoving}
 		class:grab-squares={hoverPiece && !clickMoving}
@@ -1156,6 +1140,18 @@
 	.board.black-border.flush-bottom > :global(div) {
 		border-bottom-width: 4px;
 	}
+	/* a puzzle still to play: the black border turns blue; a board without
+	   one gets the blue as a shadow, which leaves its size alone when the
+	   frame goes */
+	.board.puzzle-frame > :global(div) {
+		box-shadow: 0 0 0 2px var(--accent);
+		border-radius: 2px;
+	}
+	.board.black-border.puzzle-frame > :global(div) {
+		border-color: var(--accent);
+		background-color: var(--accent);
+		box-shadow: none;
+	}
 	/* Containment breaks a sizing feedback loop: the rendered svg and the
 	   --board-px-wide bar/move line all have fixed pixel widths, which would
 	   otherwise feed the surrounding cell's min-content — locking the cell
@@ -1163,13 +1159,6 @@
 	   shrinks, the board never re-renders smaller, and the drag shadow's
 	   correct size mismatches the real one, making drops snap dirty). With
 	   inline-size containment the cell sizes the board, never the reverse. */
-	/* The ring belongs to Tab arrivals alone. Every other way focus lands on
-	   a board — a click, a scroll, the active card's auto-focus on switches
-	   and reveals — sets pointer-focus first, and this rule (out-weighing
-	   the ring rule below) keeps those arrivals quiet. */
-	.board-wrapper.pointer-focus:focus-visible {
-		outline: none;
-	}
 	.board-wrapper {
 		/* the line's measuring copy is placed against it */
 		position: relative;
@@ -1311,9 +1300,16 @@
 		margin-left: auto;
 		margin-right: auto;
 	}
-	.board-wrapper:focus-visible {
-		outline: 2px solid var(--accent);
-		outline-offset: 1px;
+	/* the board the arrows step, whatever in it holds the focus */
+	.board-wrapper:focus {
+		outline: none;
+	}
+	.board-wrapper.steppable:focus-within .board > :global(div) {
+		outline: 2px solid #404040;
+		outline-offset: 2px;
+	}
+	.board-wrapper.steppable:focus-within .board.puzzle-frame:not(.black-border) > :global(div) {
+		outline-offset: 4px;
 	}
 	/* quiet step controls heading the move line; the ends fade out rather
 	   than disappear, so the line never shifts */

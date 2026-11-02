@@ -5,7 +5,7 @@
 
 	const types = [
 		["basic", "Basic", "Basic card type: Card is scheduled following FSRS (Free Spaced Repetition Scheduler)"],
-		["tactic", "Tactic", "Tactic card type: Tactic card has fixed intervals of default 14, 60 and 180 days if solved. If incorrect the card resets."]
+		["tactic", "Tactic", "Tactic card type: Card has fixed intervals of default 14, 60 and 180 days if solved. If incorrect the card resets."]
 	];
 </script>
 

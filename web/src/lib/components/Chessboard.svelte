@@ -1142,16 +1142,16 @@
 	.board.black-border.flush-bottom > :global(div) {
 		border-bottom-width: 4px;
 	}
-	/* a played puzzle: a 6px blue frame drawn as a shadow outside the box, so
-	   the board keeps its size (a black border turns blue and counts as the
-	   frame's inner 2px); --frame-out is how far it reaches, which the
-	   active-board marks start from */
+	/* a played puzzle: the black border turns blue; a board without one gets
+	   the same 2px as a shadow outside the box, so it keeps its size.
+	   --frame-out is how far that reaches, which the active-board marks
+	   start from */
 	.board.puzzle-frame {
-		--frame-out: 6px;
+		--frame-out: 2px;
 		--puzzle-ring: 0 0 0 var(--frame-out) var(--accent);
 	}
 	.board.black-border.puzzle-frame {
-		--frame-out: 4px;
+		--frame-out: 0px;
 	}
 	.board.puzzle-frame > :global(div) {
 		margin: var(--frame-out) auto;

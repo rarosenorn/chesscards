@@ -1291,21 +1291,18 @@
 		margin-left: auto;
 		margin-right: auto;
 	}
-	/* the board the arrows step, whatever in it holds the focus, casts a
-	   heavy shadow */
+	/* the board the arrows step, whatever in it holds the focus, wears a
+	   dark ring */
 	.board-wrapper:focus {
 		outline: none;
 	}
-	.board-wrapper.focusable:focus-within .board {
-		--active-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
-	}
-	/* the /design tryouts in its place (html[data-active-board]) */
-	:global(html[data-active-board]) .board-wrapper.focusable:focus-within .board {
-		--active-shadow: none;
-	}
-	:global(html[data-active-board="ring"]) .board-wrapper.focusable:focus-within .board > :global(div) {
+	.board-wrapper.focusable:focus-within .board > :global(div) {
 		outline: 2px solid #404040;
 		outline-offset: 2px;
+	}
+	/* the /design tryouts in its place (html[data-active-board]) */
+	:global(html[data-active-board]) .board-wrapper.focusable:focus-within .board > :global(div) {
+		outline: none;
 	}
 	:global(html[data-active-board="shadow"]) .board-wrapper.focusable:focus-within .board {
 		--active-shadow: 0 5px 14px -2px rgba(0, 0, 0, 0.4);

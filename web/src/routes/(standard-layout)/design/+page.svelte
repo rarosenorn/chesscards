@@ -3,7 +3,7 @@
 	// live to the whole app (see design-preview.js — the root layout re-applies
 	// a stored choice on every page) until reset here.
 	import { onMount } from "svelte"
-	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant } from "$lib/design-preview.js"
+	import { SCHEME_KEY, FONT_KEY, BANNER_KEY, ACTIVE_BOARD_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant, applyActiveBoardVariant, clearActiveBoardVariant } from "$lib/design-preview.js"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 
 	// "straight" — the hue at close to full strength; "muted" — the same idea
@@ -225,15 +225,44 @@
 		back: []
 	};
 
+	// The active-board tab: ways to mark the board the arrow keys step. The
+	// ring is Chessboard's default (no variant); the rest key off
+	// html[data-active-board].
+	const activeBoardVariants = [
+		{ id: null, name: "Ring", note: "now — a dark line around it" },
+		{ id: "shadow", name: "Soft shadow", note: "it lifts off the page" },
+		{ id: "glow", name: "Glow", note: "a soft grey halo" },
+		{ id: "dim", name: "Dim the others", note: "the rest fade back" },
+		{ id: "bar", name: "Bar above", note: "like a selected tab" }
+	];
+
+	// a board with moves beside a puzzle with a lead-in, so both can be
+	// stepped and the mark moved between them and off onto the text
+	const activeBoardCard = {
+		front: [
+			sampleText("Click a board, then the other one or this text."),
+			{
+				type: "chessboards",
+				content: [
+					{ fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves: ["e4", "e5", "Nf3", "Nc6", "Bb5"], annotations: {}, orientation: "w", openAt: 0 },
+					{ fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves: ["e4", "e5", "Nf3"], annotations: {}, orientation: "w", openAt: 2, solutionFrom: 2, puzzle: true }
+				]
+			}
+		],
+		back: []
+	};
+
 	let activeAccent = $state(null);
 	let activeFont = $state(null);
 	let whiteBanner = $state(false);
+	let activeBoard = $state(null);
 	let tab = $state("color");
 
 	onMount(() => {
 		activeAccent = readPreview(SCHEME_KEY)?.accent ?? null;
 		activeFont = readPreview(FONT_KEY)?.family ?? null;
 		whiteBanner = readPreview(BANNER_KEY)?.variant === "white";
+		activeBoard = readPreview(ACTIVE_BOARD_KEY)?.variant ?? null;
 		// the samples below render in the tryout fonts, so they must load here
 		// even before any is applied
 		ensureFontStylesheet();
@@ -278,6 +307,19 @@
 		localStorage.removeItem(FONT_KEY);
 		activeFont = null;
 	}
+
+	const applyActiveBoard = variant => {
+		if (variant.id == null || activeBoard === variant.id) return resetActiveBoard();
+		applyActiveBoardVariant(variant.id);
+		localStorage.setItem(ACTIVE_BOARD_KEY, JSON.stringify({ variant: variant.id }));
+		activeBoard = variant.id;
+	}
+
+	const resetActiveBoard = () => {
+		clearActiveBoardVariant();
+		localStorage.removeItem(ACTIVE_BOARD_KEY);
+		activeBoard = null;
+	}
 </script>
 
 <div class="design-container">
@@ -291,6 +333,7 @@
 		<button class:current={tab === "color"} onclick={() => tab = "color"}>Accent color</button>
 		<button class:current={tab === "font"} onclick={() => tab = "font"}>Menu font</button>
 		<button class:current={tab === "card"} onclick={() => tab = "card"}>Card text</button>
+		<button class:current={tab === "board"} onclick={() => tab = "board"}>Active board</button>
 	</div>
 
 	{#if tab === "color"}
@@ -361,6 +404,30 @@
 		{/each}
 		<button class="std-btn reset-btn" onclick={resetFont}>Reset font to app default</button>
 	</section>
+	{:else if tab === "board"}
+	<section>
+		<p class="lever-intro">
+			How the board the arrow keys step is marked. Picking one takes over
+			the whole app, like a color, so it can be tried in Study too.
+		</p>
+		<div class="scheme-grid">
+			{#each activeBoardVariants as variant (variant.name)}
+				<button
+					class="scheme-card"
+					class:applied={activeBoard === variant.id}
+					onclick={() => applyActiveBoard(variant)}
+				>
+					<span class="card-name">
+						{variant.name}
+						<span class="card-note">{variant.note}</span>
+					</span>
+				</button>
+			{/each}
+		</div>
+		<div class="variant board-sample">
+			<FlashcardBrowse card={activeBoardCard} />
+		</div>
+	</section>
 	{:else}
 	<section>
 		<p class="lever-intro">
@@ -430,6 +497,9 @@
 		   justified 54-character line opening rivers */
 		text-align: justify;
 		hyphens: auto;
+	}
+	.board-sample {
+		margin-top: 22px;
 	}
 	.design-container {
 		display: flex;

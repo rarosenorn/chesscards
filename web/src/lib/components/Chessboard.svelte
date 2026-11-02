@@ -1142,16 +1142,24 @@
 	.board.black-border.flush-bottom > :global(div) {
 		border-bottom-width: 4px;
 	}
-	/* a played puzzle: the black border turns blue; a board without one gets
-	   the blue as a shadow, which leaves its size as it is */
+	/* a played puzzle: a 6px blue frame drawn as a shadow outside the box, so
+	   the board keeps its size (a black border turns blue and counts as the
+	   frame's inner 2px); --frame-out is how far it reaches, which the
+	   active-board marks start from */
+	.board.puzzle-frame {
+		--frame-out: 6px;
+		--puzzle-ring: 0 0 0 var(--frame-out) var(--accent);
+	}
+	.board.black-border.puzzle-frame {
+		--frame-out: 4px;
+	}
 	.board.puzzle-frame > :global(div) {
-		box-shadow: 0 0 0 2px var(--accent);
+		margin: var(--frame-out) auto;
 		border-radius: 2px;
 	}
 	.board.black-border.puzzle-frame > :global(div) {
 		border-color: var(--accent);
 		background-color: var(--accent);
-		box-shadow: none;
 	}
 	/* Containment breaks a sizing feedback loop: the rendered svg and the
 	   --board-px-wide bar/move line all have fixed pixel widths, which would
@@ -1172,6 +1180,7 @@
 	   edges align instead of the bar overhanging the board */
 	.board > :global(div) {
 		margin: 0 auto;
+		box-shadow: var(--puzzle-ring, 0 0 #0000), var(--active-shadow, 0 0 #0000);
 	}
 	/* the strip shares the board's exact width, so the number sits over the
 	   board's left edge rather than the cell's */
@@ -1307,10 +1316,26 @@
 	}
 	.board-wrapper.steppable:focus-within .board > :global(div) {
 		outline: 2px solid #404040;
-		outline-offset: 2px;
+		outline-offset: calc(var(--frame-out, 0px) + 2px);
 	}
-	.board-wrapper.steppable:focus-within .board.puzzle-frame:not(.black-border) > :global(div) {
-		outline-offset: 4px;
+	/* the /design tryouts in its place (html[data-active-board]) */
+	:global(html[data-active-board]) .board-wrapper.steppable:focus-within .board > :global(div) {
+		outline: none;
+	}
+	:global(html[data-active-board="shadow"]) .board-wrapper.steppable:focus-within .board {
+		--active-shadow: 0 5px 14px calc(var(--frame-out, 0px) - 2px) rgba(0, 0, 0, 0.4);
+	}
+	:global(html[data-active-board="glow"]) .board-wrapper.steppable:focus-within .board {
+		--active-shadow: 0 0 10px calc(var(--frame-out, 0px) + 2px) rgba(0, 0, 0, 0.3);
+	}
+	:global(html[data-active-board="dim"]) .board-wrapper.steppable .board {
+		transition: opacity 120ms;
+	}
+	:global(html[data-active-board="dim"]) .board-wrapper.steppable:not(:focus-within) .board {
+		opacity: 0.5;
+	}
+	:global(html[data-active-board="bar"]) .board-wrapper.steppable:focus-within .board-header {
+		box-shadow: inset 0 -3px 0 #404040;
 	}
 	/* quiet step controls heading the move line; the ends fade out rather
 	   than disappear, so the line never shifts */

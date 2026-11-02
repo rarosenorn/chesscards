@@ -1,5 +1,5 @@
-// The /design page's tryout state: an accent scheme, a menu-font override
-// and a banner variant, kept in localStorage and re-applied on every load by the root
+// The /design page's tryout state: an accent scheme, a menu-font override,
+// a banner variant and an active-board marker, kept in localStorage and re-applied on every load by the root
 // layout, so a candidate rides along across the whole app until reset on
 // /design. Nothing here touches app.css — making a choice permanent stays a
 // code change. Tryout fonts come off Google Fonts; a chosen one gets
@@ -8,6 +8,7 @@
 const SCHEME_KEY = "chesscards:scheme-preview";
 const FONT_KEY = "chesscards:font-preview";
 const BANNER_KEY = "chesscards:banner-preview";
+const ACTIVE_BOARD_KEY = "chesscards:active-board-preview";
 
 const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Fira+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Lato:wght@400;700&family=Lexend:wght@400;500;600&family=Lora:wght@400;500;600&family=Manrope:wght@400;500;600&family=Merriweather:wght@400;700&family=Montserrat:wght@400;500;600&family=Nunito:wght@400;500;600;700&family=Outfit:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600&family=Poppins:wght@400;500;600&family=Raleway:wght@400;500;600&family=Red+Hat+Mono:wght@400;500;600&family=Rubik:wght@400;500;600&family=Sora:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Victor+Mono:wght@400;500;600&display=swap";
 
@@ -62,4 +63,12 @@ const applyBannerVariant = variant =>
 const clearBannerVariant = () =>
 	delete document.documentElement.dataset.banner;
 
-export { SCHEME_KEY, FONT_KEY, BANNER_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant }
+// how the board the arrows step is marked (html[data-active-board]); no
+// attribute is the ring Chessboard draws by default
+const applyActiveBoardVariant = variant =>
+	document.documentElement.dataset.activeBoard = variant;
+
+const clearActiveBoardVariant = () =>
+	delete document.documentElement.dataset.activeBoard;
+
+export { SCHEME_KEY, FONT_KEY, BANNER_KEY, ACTIVE_BOARD_KEY, readPreview, applySchemeVars, clearSchemeVars, ensureFontStylesheet, applyFontVar, clearFontVar, applyBannerVariant, clearBannerVariant, applyActiveBoardVariant, clearActiveBoardVariant }

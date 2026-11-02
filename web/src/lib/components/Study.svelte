@@ -513,9 +513,9 @@
 	// each time rather than recalled, so it is exposure that is scheduled.
 	// Correct waits the rung's interval and climbs (reps is the rung); past the
 	// last rung the card is finished for good. Incorrect re-queues it a day
-	// later (a post-fail success can't come from short-term memory) and drops
-	// a rung.
-	const TACTIC_LADDER_DAYS = [7, 30, 90, 365];
+	// later (a post-fail success can't come from short-term memory) and starts
+	// the ladder over.
+	const TACTIC_LADDER_DAYS = [14, 60, 180];
 	// what Correct does to the card on screen, as the label over the button
 	let tacticCorrectLabel = $derived.by(() => {
 		const days = TACTIC_LADDER_DAYS[currentCard?.reps ?? 0];
@@ -540,7 +540,7 @@
 		const card = {
 			...currentCard,
 			due: new Date(now.getTime() + waitDays * DAY_MS).toISOString(),
-			reps: correct ? rung + 1 : Math.max(0, rung - 1),
+			reps: correct ? rung + 1 : 0,
 			finished_at: finished ? now.toISOString() : null,
 			// the tactic's "seen" mark: with no FSRS state, last_review is what
 			// tells an attempted card from an untouched one (deck progression

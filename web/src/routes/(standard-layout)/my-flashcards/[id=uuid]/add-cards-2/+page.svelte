@@ -127,7 +127,7 @@
 	<div class="type-segments" role="radiogroup" aria-labelledby="card-type-label">
 		{#each [
 			["basic", "Basic", "Basic card type: Card is scheduled following FSRS (Free Spaced Repetition Scheduler)"],
-			["tactic", "Tactic", "Tactic card type: <i>Correct</i> waits 7 days, then 30, 90 and 365, and one more <i>Correct</i> retires the card. <i>Incorrect</i> brings it back the next day, one step down. A puzzle played on the board grades itself: <i>Correct</i> if it went through with no wrong move"]
+			["tactic", "Tactic", "Tactic card type: Tactic card has fixed intervals of default 14, 60 and 180 days if solved. If incorrect the card resets."]
 		] as [value, label, description]}
 			<button
 				class="std-btn"

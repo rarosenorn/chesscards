@@ -117,7 +117,7 @@ describe("a tactic played on the board", () => {
 		expect(page.buttons()).toEqual(["Show"]);
 		await page.move("g1", "f3");
 		expect(page.buttons()).toEqual(["Next"]);
-		expect(page.label()).toBe("7d");
+		expect(page.label()).toBe("14d");
 		await page.key(" ");
 		expect(updateCardStudyStateAndAddLog).toHaveBeenCalledTimes(1);
 		expect(updateCardStudyStateAndAddLog.mock.calls[0][0].log.rating).toBe(Rating.Good);
@@ -155,7 +155,7 @@ describe("a tactic played on the board", () => {
 		await page.press("Show");
 		await page.press("Next");
 		await page.move("g1", "f3");
-		expect(page.label()).toBe("7d");
+		expect(page.label()).toBe("14d");
 		page.close();
 	})
 

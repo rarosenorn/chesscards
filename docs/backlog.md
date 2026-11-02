@@ -204,7 +204,6 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] phone app
 [ ] maybe allow subdecks alone to be put into metadeck?
 [ ] should deck progression be auto or allow to unlock when you reach end of current cards?
-[ ] maybe do marker when board is active (so you know you can left right)? mb. a thicker border. Maybe also do more marker when puzzle, maybe different color border or smt?
 [ ] maybe call intro for first exposure articles instead? And maybe do "First exposure articles" a card type that can be put anywhere and is then only shown once do introduce what subsequent cards are about?
 [ ] update tactic card tooltip
 [ ] maybe do tactic card intervals and #reps customizable to so creator can make fit different decks, but with sensible defaults.

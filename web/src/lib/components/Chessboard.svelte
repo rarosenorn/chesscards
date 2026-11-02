@@ -1298,7 +1298,7 @@
 	}
 	.board-wrapper.focusable:focus-within .board > :global(div) {
 		outline: 2px solid #404040;
-		outline-offset: 1px;
+		outline-offset: 2px;
 	}
 	/* the /design tryouts in its place (html[data-active-board]) */
 	:global(html[data-active-board]) .board-wrapper.focusable:focus-within .board > :global(div) {

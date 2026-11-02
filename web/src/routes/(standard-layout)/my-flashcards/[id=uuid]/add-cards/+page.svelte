@@ -363,10 +363,12 @@
 	<a class="std-btn from-game" href="/my-flashcards/{page.params.id}/add-cards/from-game">Import from game</a>
 </div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<!-- the trap listens on the card and the Add card under it alike; the box
-     itself stays out of the page's layout -->
-<div class="trap-root" onkeydowncapture={handleTrapKeydown} onfocusin={handleFocusIn}>
-<div class="container card-surface" bind:this={container}>
+<div
+	class="container card-surface"
+	bind:this={container}
+	onkeydowncapture={handleTrapKeydown}
+	onfocusin={handleFocusIn}
+>
 	<div class="menu-bar-holder">
 		<DocEditorMenuBar
 			{menu}
@@ -422,78 +424,77 @@
 			<span class="added-toast" role="status">Card added</span>
 		{/if}
 	{/key}
-</div>
-<form
-	bind:this={addCardForm}
-	class="add-form"
-	method="POST"
-	use:enhance={({ formData, cancel }) => {
-		// open board editors are applied as if Ok was pressed (they stay
-		// open through the submit, no visual flash); an invalid FEN — in
-		// an editor or pending in an inline input — blocks the submit
-		for (const apply of Object.values(boardUi.applyEditors)) apply();
+	<form
+		bind:this={addCardForm}
+		class="add-form"
+		method="POST"
+		use:enhance={({ formData, cancel }) => {
+			// open board editors are applied as if Ok was pressed (they stay
+			// open through the submit, no visual flash); an invalid FEN — in
+			// an editor or pending in an inline input — blocks the submit
+			for (const apply of Object.values(boardUi.applyEditors)) apply();
 
-		const front = frontEditor.getJson();
-		const back = backEditor.getJson();
-		const frontCount = docCountBoardsBlocks(front);
-		invalidFenNumbers = [
-			...docInvalidBoardNumbersBlocks(front, 0, boardUi),
-			...docInvalidBoardNumbersBlocks(back, frontCount, boardUi)
-		];
-		emptyPuzzleNumbers = [
-			...docPuzzlesWithoutBackBlocks(front, 0),
-			...docPuzzlesWithoutBackBlocks(back, frontCount)
-		];
-		if (invalidFenNumbers.length > 0 || emptyPuzzleNumbers.length > 0) {
-			cancel();
-			return;
-		}
-		if (!docHasContentBlocks(front) && !docHasContentBlocks(back)) {
-			formAttemptedAndInvalid = true;
-			cancel();
-			return;
-		}
+			const front = frontEditor.getJson();
+			const back = backEditor.getJson();
+			const frontCount = docCountBoardsBlocks(front);
+			invalidFenNumbers = [
+				...docInvalidBoardNumbersBlocks(front, 0, boardUi),
+				...docInvalidBoardNumbersBlocks(back, frontCount, boardUi)
+			];
+			emptyPuzzleNumbers = [
+				...docPuzzlesWithoutBackBlocks(front, 0),
+				...docPuzzlesWithoutBackBlocks(back, frontCount)
+			];
+			if (invalidFenNumbers.length > 0 || emptyPuzzleNumbers.length > 0) {
+				cancel();
+				return;
+			}
+			if (!docHasContentBlocks(front) && !docHasContentBlocks(back)) {
+				formAttemptedAndInvalid = true;
+				cancel();
+				return;
+			}
 
-		formData.set("front", docSideJsonBlocks(front));
-		formData.set("back", docSideJsonBlocks(back));
-		formData.set("cardType", cardType);
-		formData.set("deckId", validTargetId);
+			formData.set("front", docSideJsonBlocks(front));
+			formData.set("back", docSideJsonBlocks(back));
+			formData.set("cardType", cardType);
+			formData.set("deckId", validTargetId);
 
-		return async ({ result, update }) => {
-			// no invalidation: the deck context is updated by the push
-			// below, a refetch's result would be discarded anyway
-			await update({ invalidateAll: false })
-			if (result.type !== "success") return;
-			deck.cards.push(result.data.card);
-			boardUi.editingIds.clear();
-			boardUi.editorStates = {};
-			// a frozen side stays for the next card, boards and all; an
-			// unfrozen one clears down to the single boards frozen inside
-			// it (captured before the clear, which takes the docs away)
-			const keptFront = frozenSides.front ? null : frozenBoardsOf(front);
-			const keptBack = frozenSides.back ? null : frozenBoardsOf(back);
-			if (keptFront) frontEditor.clearKeeping(keptFront);
-			if (keptBack) backEditor.clearKeeping(keptBack);
-			pruneFrozenBoards();
-			// the card is saved: the clears above have scheduled a write of
-			// what is left, which drops the draft when nothing is
-			flushDraft();
-			// land in the side that was emptied, not the one kept — a side
-			// holding a frozen board counts as kept
-			const frontKept = frozenSides.front || keptFront?.length > 0;
-			const backKept = frozenSides.back || keptBack?.length > 0;
-			(frontKept && !backKept ? backEditor : frontEditor).focus();
-			showAddedToast();
-		}
-	}}
->
-	<button
-		class="std-btn"
-		title="ctrl+enter"
+			return async ({ result, update }) => {
+				// no invalidation: the deck context is updated by the push
+				// below, a refetch's result would be discarded anyway
+				await update({ invalidateAll: false })
+				if (result.type !== "success") return;
+				deck.cards.push(result.data.card);
+				boardUi.editingIds.clear();
+				boardUi.editorStates = {};
+				// a frozen side stays for the next card, boards and all; an
+				// unfrozen one clears down to the single boards frozen inside
+				// it (captured before the clear, which takes the docs away)
+				const keptFront = frozenSides.front ? null : frozenBoardsOf(front);
+				const keptBack = frozenSides.back ? null : frozenBoardsOf(back);
+				if (keptFront) frontEditor.clearKeeping(keptFront);
+				if (keptBack) backEditor.clearKeeping(keptBack);
+				pruneFrozenBoards();
+				// the card is saved: the clears above have scheduled a write of
+				// what is left, which drops the draft when nothing is
+				flushDraft();
+				// land in the side that was emptied, not the one kept — a side
+				// holding a frozen board counts as kept
+				const frontKept = frozenSides.front || keptFront?.length > 0;
+				const backKept = frozenSides.back || keptBack?.length > 0;
+				(frontKept && !backKept ? backEditor : frontEditor).focus();
+				showAddedToast();
+			}
+		}}
 	>
-		Add card
-	</button>
-</form>
+		<button
+			class="std-btn"
+			title="ctrl+enter"
+		>
+			Add card
+		</button>
+	</form>
 </div>
 
 <style>
@@ -506,6 +507,7 @@
 		   bleed back out to the edge by exactly as much */
 		--canvas-pad: 20px;
 		margin-top: 6px;
+		margin-bottom: 80px;
 		/* 20px to the editors: with the editor's own 2px border and 10px
 		   text padding that puts content 32px in — the card's rim exactly,
 		   so a board sits the same distance from this canvas's edge as from
@@ -713,17 +715,10 @@
 		font-size: 1rem;
 		line-height: 1.2;
 	}
-	.trap-root {
-		display: contents;
-	}
-	/* under the card, flush with its right edge, as the card editors put
-	   their Cancel/Save */
+	/* inside the card, flush with the editors' right edge */
 	.add-form {
-		display: flex;
-		justify-content: end;
-		width: 100%;
-		max-width: var(--flashcard-width);
-		margin: 8px auto 80px auto;
+		align-self: end;
+		margin-top: 12px;
 	}
 	/* a sticky note in the card's bottom-left corner, gone before it is read
 	   twice; positioned against the card so the button row never moves */

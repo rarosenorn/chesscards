@@ -71,11 +71,11 @@ describe("editing a card", () => {
 });
 
 describe("the add-cards page", () => {
-	it("puts Add card under the card, and tabs through it", async () => {
+	it("puts Add card inside the card, and tabs through it", async () => {
 		const view = await open(AddCards, { context: new Map([["deck", reactiveProps(deck)]]) });
 		const card = view.target.querySelector(".card-surface");
 		expect(card.contains(view.side(0))).toBe(true);
-		expect(under(card, view.button("Add card"))).toBe(true);
+		expect(card.contains(view.button("Add card"))).toBe(true);
 
 		view.button("Add card").focus();
 		await view.tab(view.button("Add card"));

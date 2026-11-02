@@ -64,7 +64,7 @@ const clearBannerVariant = () =>
 	delete document.documentElement.dataset.banner;
 
 // how the board the arrows step is marked (html[data-active-board]); no
-// attribute is the ring Chessboard draws by default
+// attribute is the grey panel Chessboard draws by default
 const applyActiveBoardVariant = variant =>
 	document.documentElement.dataset.activeBoard = variant;
 

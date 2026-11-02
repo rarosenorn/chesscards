@@ -226,10 +226,11 @@
 	};
 
 	// The active-board tab: ways to mark the board the arrow keys step. The
-	// ring is Chessboard's default (no variant); the rest key off
+	// grey panel is Chessboard's default (no variant); the rest key off
 	// html[data-active-board].
 	const activeBoardVariants = [
-		{ id: null, name: "Ring", note: "now — a dark line around it" },
+		{ id: null, name: "Grey panel", note: "now — it sits on light grey" },
+		{ id: "ring", name: "Ring", note: "a dark line around it" },
 		{ id: "shadow", name: "Soft shadow", note: "it lifts off the page" },
 		{ id: "glow", name: "Glow", note: "a soft grey halo" },
 		{ id: "dim", name: "Dim the others", note: "the rest fade back" },

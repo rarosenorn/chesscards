@@ -1291,18 +1291,26 @@
 		margin-left: auto;
 		margin-right: auto;
 	}
-	/* the board the arrows step, whatever in it holds the focus, wears a
-	   dark ring */
+	/* the board the arrows step, whatever in it holds the focus, sits on a
+	   light grey panel with its strip and move line: the wrapper's own fill,
+	   carried 8px past its edges by a shadow of the same grey, so nothing
+	   moves */
 	.board-wrapper:focus {
 		outline: none;
 	}
-	.board-wrapper.focusable:focus-within .board > :global(div) {
-		outline: 2px solid #404040;
-		outline-offset: 2px;
+	.board-wrapper.focusable:focus-within {
+		background-color: rgba(0, 0, 0, 0.06);
+		box-shadow: 0 0 0 8px rgba(0, 0, 0, 0.06);
+		border-radius: 2px;
 	}
 	/* the /design tryouts in its place (html[data-active-board]) */
-	:global(html[data-active-board]) .board-wrapper.focusable:focus-within .board > :global(div) {
-		outline: none;
+	:global(html[data-active-board]) .board-wrapper.focusable:focus-within {
+		background-color: transparent;
+		box-shadow: none;
+	}
+	:global(html[data-active-board="ring"]) .board-wrapper.focusable:focus-within .board > :global(div) {
+		outline: 2px solid #404040;
+		outline-offset: 2px;
 	}
 	:global(html[data-active-board="shadow"]) .board-wrapper.focusable:focus-within .board {
 		--active-shadow: 0 5px 14px -2px rgba(0, 0, 0, 0.4);

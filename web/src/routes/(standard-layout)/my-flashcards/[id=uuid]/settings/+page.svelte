@@ -152,13 +152,16 @@
 		<h3>Tactic cards</h3>
 		{#if data.deck.isMarketplace}
 			<p class="section-note">
-				A solved tactic card comes back after {days(data.deck.decks[0].ladder)}; one
-				more solve after that retires it, and a miss starts it over. This is the author's.
+				A tactic card is shown {data.deck.decks[0].ladder.length + 1} times: when new, then
+				after {days(data.deck.decks[0].ladder)}, and is retired when the last one is solved.
+				A miss starts it over. This is the author's.
 			</p>
 		{:else}
 			<p class="section-note">
-				The days a solved tactic card waits before it comes back, step by step;
-				one more solve after the last retires it, and a miss starts it over.
+				Each number is the days a solved tactic card waits before it comes back.
+				With {data.deck.decks[0].ladder.join(", ")}, a card is shown
+				{data.deck.decks[0].ladder.length + 1} times and is retired when the last one is
+				solved; a miss starts it over.
 				Left empty, it is the {data.deck.ancestors.length ? "deck above's" : "default"}:
 				{data.deck.parentLadder.join(", ")}.
 				{#if holdsDecks}The decks inside take it unless they have their own.{/if}

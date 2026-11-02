@@ -346,10 +346,12 @@
 	// How a move of the line shows: as the player found it. A move only shown
 	// (the card turned before it was played) is a plain move.
 	const foundAs = index => finds[index] ?? null;
-	let puzzling = $derived(
-		!!normalized.puzzle && !inEditor && (playable || (!!onSolved && !revealed && !authorView))
+	// a puzzle played on this board here, solved, shown or not
+	let playedPuzzle = $derived(
+		!!normalized.puzzle && !inEditor && (playable || (!!onSolved && !onBack))
 			&& solutionFrom != null && solutionFrom < replay.moveInfos.length
 	);
+	let puzzling = $derived(playedPuzzle && (playable || (!revealed && !authorView)));
 	let solver = $derived(solutionFrom != null ? replay.fens[solutionFrom]?.split(" ")[1] : null);
 	// the board is waiting for the player's move: on the position the next
 	// move to find is made from, with the line not yet through, and theirs
@@ -1059,7 +1061,7 @@
 	<div
 		class="board"
 		class:black-border={hasBlackBorder(boardPrefs())}
-		class:puzzle-frame={puzzling && !puzzleDone}
+		class:puzzle-frame={playedPuzzle}
 		class:flush-bottom={flushBottom}
 		class:pointer-squares={clickMoving}
 		class:grab-squares={hoverPiece && !clickMoving}
@@ -1140,9 +1142,8 @@
 	.board.black-border.flush-bottom > :global(div) {
 		border-bottom-width: 4px;
 	}
-	/* a puzzle still to play: the black border turns blue; a board without
-	   one gets the blue as a shadow, which leaves its size alone when the
-	   frame goes */
+	/* a played puzzle: the black border turns blue; a board without one gets
+	   the blue as a shadow, which leaves its size as it is */
 	.board.puzzle-frame > :global(div) {
 		box-shadow: 0 0 0 2px var(--accent);
 		border-radius: 2px;

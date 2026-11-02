@@ -1316,7 +1316,7 @@
 		outline: none;
 	}
 	.board-wrapper.steppable:focus-within .board {
-		--active-shadow: 0 6px 20px calc(var(--frame-out, 0px) + 1px) rgba(0, 0, 0, 0.55);
+		--active-shadow: 0 4px 14px var(--frame-out, 0px) rgba(0, 0, 0, 0.55);
 	}
 	/* the /design tryouts in its place (html[data-active-board]) */
 	:global(html[data-active-board]) .board-wrapper.steppable:focus-within .board {

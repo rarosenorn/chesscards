@@ -1,3 +1,19 @@
+<script module>
+	// Left/Right pressed with no board holding the keyboard (after a click on
+	// the card's text, say) go to a board anyway: the one that held it last,
+	// or else the card's first board with moves, the one that takes focus as
+	// the card arrives
+	let lastBoard = null;
+	const autoBoards = new Set();
+	const strayArrowBoard = () => {
+		if (lastBoard?.isConnected && lastBoard.tabIndex === 0) return lastBoard;
+		for (const el of autoBoards) if (el.isConnected && el.tabIndex === 0) return el;
+		return null;
+	}
+	// what uses the arrows itself keeps them
+	const ARROW_OWNERS = ".board-wrapper, input, textarea, select, dialog, [role=dialog], [role=radiogroup], [role=tablist], [role=menu], [role=menubar], [role=listbox], [role=slider]";
+</script>
+
 <script>
 	import { onMount, getContext, untrack } from "svelte"
 	import "cm-chessboard/assets/chessboard.css"
@@ -12,6 +28,7 @@
 	import { playMoveSound } from "$lib/sounds.js"
 	import { tryMove } from "$lib/puzzle.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
+	import { modalState } from "$lib/modals.svelte.js"
 
 	// `board` is a board object ({ fen, moves, annotations, solutionFrom,
 	// solutionAnnotations, orientation }) or a legacy FEN string; `children`
@@ -983,7 +1000,26 @@
 			jumpToEnd(true);
 		}
 	}
+
+	$effect(() => {
+		if (!autoFocus || !wrapperElement) return;
+		const el = wrapperElement;
+		autoBoards.add(el);
+		return () => autoBoards.delete(el);
+	});
+
+	// Up/Down stay the page's: they scroll it, and walk the Cards tab's list
+	const handleStrayArrow = e => {
+		if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+		if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || modalState.current) return;
+		if (!wrapperElement || strayArrowBoard() !== wrapperElement) return;
+		if (e.target.isContentEditable || e.target.closest?.(ARROW_OWNERS)) return;
+		takeFocus();
+		handleKeyDown(e);
+	}
 </script>
+
+<svelte:window onkeydown={handleStrayArrow} />
 
 {#snippet pairs(list, live)}
 	{#each list as pair}
@@ -1045,6 +1081,7 @@
 		if (document.hasFocus()) pointerFocus = false;
 	}}
 	bind:this={wrapperElement}
+	onfocusin={() => lastBoard = wrapperElement}
 	tabindex={hasMoves && !inEditor ? 0 : undefined}
 	role="group"
 	aria-label={hasMoves && !inEditor ? "Chessboard, use arrow keys to step through moves" : "Chessboard"}

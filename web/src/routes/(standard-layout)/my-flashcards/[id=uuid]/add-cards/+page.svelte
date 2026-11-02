@@ -511,7 +511,7 @@
 		   so a board sits the same distance from this canvas's edge as from
 		   the card's. The card's width less that 64px of chrome lands the
 		   content at the card's 818, and boards render at the card's sizes. */
-		padding: 12px var(--canvas-pad);
+		padding: 12px var(--canvas-pad) 18px var(--canvas-pad);
 		gap: 4px;
 		max-width: var(--flashcard-width);
 		position: relative;

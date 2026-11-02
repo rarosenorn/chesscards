@@ -14,6 +14,11 @@
 	// a marketplace deck taken somewhere inside it, which deleting it does not take
 	let takenInside = $derived(data.deck.decks.some(entry => entry.bought && entry.id === entry.instance_id && entry.id !== data.deck.id));
 
+	// a ladder said in words: "14, 60 and 180 days"
+	const days = ladder => ladder.length === 1
+		? `${ladder[0]} day${ladder[0] === 1 ? "" : "s"}`
+		: `${ladder.slice(0, -1).join(", ")} and ${ladder.at(-1)} days`;
+
 	let deleteForm = $state();
 	let resetForm = $state();
 
@@ -141,6 +146,35 @@
 		</form>
 	</section>
 	{/if}
+
+	<!-- the author's on a marketplace deck, so there only said -->
+	<section>
+		<h3>Tactic cards</h3>
+		{#if data.deck.isMarketplace}
+			<p class="section-note">
+				A solved tactic card comes back after {days(data.deck.decks[0].ladder)}; one
+				more solve after that retires it, and a miss starts it over. This is the author's.
+			</p>
+		{:else}
+			<p class="section-note">
+				The days a solved tactic card waits before it comes back, step by step;
+				one more solve after the last retires it, and a miss starts it over.
+				Left empty, it is the {data.deck.ancestors.length ? "deck above's" : "default"}:
+				{data.deck.parentLadder.join(", ")}.
+				{#if holdsDecks}The decks inside take it unless they have their own.{/if}
+			</p>
+			<FormErrors form={form?.ladderErrors ? { errors: form.ladderErrors } : null} />
+			<form method="POST" action="?/tacticLadder" class="rename-form" use:enhance={() => ({ update }) => update({ reset: false })}>
+				<input
+					name="ladder"
+					value={form?.ladder ?? data.deck.tacticLadder?.join(", ") ?? ""}
+					placeholder={data.deck.parentLadder.join(", ")}
+					autocomplete="off"
+				/>
+				<button class="std-btn">Save</button>
+			</form>
+		{/if}
+	</section>
 
 	<!-- the danger zone is the one section a marketplace deck also gets:
 	     resetting the progress is the studier's, and a deck taken can be

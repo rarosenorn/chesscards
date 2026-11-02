@@ -1,11 +1,11 @@
 import { pool } from "./pool.js"
-import { childrenByParent, deckSubtree, readingOrder, byReadingOrder, deckListing, deckOutline } from "../deck-tree.js"
+import { childrenByParent, deckSubtree, readingOrder, byReadingOrder, deckListing, deckOutline, tacticLadder } from "../deck-tree.js"
 import { LEARN_AHEAD_MS } from "../rollover.js"
 
 // A user's decks nest, as Anki's do (see lib/deck-tree.js for the tree and
 // sql/init.sql for the tables). Their library is one tree of three kinds of
 // deck, all shaped alike ({ id, parent_id, name, position, in_order,
-// reviews_in_order, bought, instance_id }):
+// reviews_in_order, tactic_ladder, bought, instance_id }):
 // - their own (decks),
 // - the marketplace decks they have taken (marketplace_deck_instances: the
 //   instance's id is the deck's, and it may sit inside a deck of their own),
@@ -13,7 +13,8 @@ import { LEARN_AHEAD_MS } from "../rollover.js"
 //   copy of it this user has).
 // A bought deck and the decks inside it carry its instance_id. Their in
 // order / mixed is the author's unless the studier has chosen otherwise, and
-// so is the bought deck's reviews in order.
+// so is the bought deck's reviews in order. Their tactic ladder is the
+// author's.
 
 // Due and still in play — the shared condition behind every count below, and
 // the SQL twin of isDueAt (lib/rollover.js). An interval of a day or more is
@@ -72,18 +73,18 @@ const BOUGHT_DECK = "coalesce(mc.subdeck_id, i.id)";
 // Every deck of the user's, of the three kinds, without cards.
 const getLibrary = async (userId, client = pool) => {
 	const { rows } = await client.query(`
-		select d.id, d.parent_id, d.name, d.position, d.in_order, d.reviews_in_order, false bought, null::uuid instance_id
+		select d.id, d.parent_id, d.name, d.position, d.in_order, d.reviews_in_order, d.tactic_ladder, false bought, null::uuid instance_id
 		from decks d where d.user_id = $1
 		union all
 		select i.id, i.parent_id, md.name, i.position,
 			coalesce((i.in_order_overrides ->> i.id::text)::boolean, md.in_order),
-			coalesce(i.reviews_in_order, md.reviews_in_order), true, i.id
+			coalesce(i.reviews_in_order, md.reviews_in_order), md.tactic_ladder, true, i.id
 		from marketplace_deck_instances i
 		join marketplace_decks md on md.id = i.marketplace_deck_id
 		where i.user_id = $1
 		union all
 		select ms.id, coalesce(ms.parent_id, i.id), ms.name, ms.position,
-			coalesce((i.in_order_overrides ->> ms.id::text)::boolean, ms.in_order), false, true, i.id
+			coalesce((i.in_order_overrides ->> ms.id::text)::boolean, ms.in_order), false, ms.tactic_ladder, true, i.id
 		from marketplace_subdecks ms
 		join marketplace_deck_instances i on i.marketplace_deck_id = ms.marketplace_deck_id
 		where i.user_id = $1`, [userId]);
@@ -199,6 +200,9 @@ const getDeck = async (userId, id) => {
 		inOrder: deck.in_order,
 		// the deck at the top's say, for everything inside it
 		reviewsInOrder: (ancestors[0] ?? deck).reviews_in_order,
+		// the deck's own tactic ladder (null: it takes parentLadder)
+		tacticLadder: deck.tactic_ladder,
+		parentLadder: tacticLadder(byId, deck.parent_id),
 		isMarketplace: deck.bought,
 		instanceId: deck.instance_id,
 		intro: intros.get(deck.id) ?? null,
@@ -206,7 +210,9 @@ const getDeck = async (userId, id) => {
 			id: entry.id, name: entry.name, bought: entry.bought, intro: intros.get(entry.id) ?? null,
 			begun: [...deckSubtree(library, entry.id)].some(under => begun.has(under))
 		})),
-		decks: decks.map(entry => ({ ...entry, intro: intros.get(entry.id) ?? null })),
+		// each with the tactic ladder its cards climb, found through the decks
+		// around it too
+		decks: decks.map(entry => ({ ...entry, intro: intros.get(entry.id) ?? null, ladder: tacticLadder(byId, entry.id) })),
 		cards
 	};
 }
@@ -371,6 +377,14 @@ const setReviewsInOrder = async (userId, id, inOrder) => {
 	const { rowCount: taken } = await pool.query(
 		"update marketplace_deck_instances set reviews_in_order = $3 where id = $2 and user_id = $1 and parent_id is null", [userId, id, inOrder]);
 	return taken === 1;
+}
+
+// The tactic ladder of a deck of the user's own: whole days, or null to take
+// the one above's. A marketplace deck's is its author's.
+const setTacticLadder = async (userId, id, ladder) => {
+	const { rowCount } = await pool.query(
+		"update decks set tactic_ladder = $3 where id = $2 and user_id = $1", [userId, id, ladder]);
+	return rowCount === 1;
 }
 
 // Every card under a deck back to new, its type kept (that is content, not
@@ -654,4 +668,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, due, listCounts, BOUGHT_DECK, getLibrary, getListing, getDeck, create, rename, move, remove, removeTaken, flatten, setInOrder, setReviewsInOrder, reset, updateIntro, userIdOwnsDeckId, getOwnListing, getImage, updateListing, updatePreviewCards, addCard, addCards, updateCardType, updateCardContent, deleteCards, moveCards, copyCards, updateCardStudyState, createReviewLog }
+export { BOUNDS, due, listCounts, BOUGHT_DECK, getLibrary, getListing, getDeck, create, rename, move, remove, removeTaken, flatten, setInOrder, setReviewsInOrder, setTacticLadder, reset, updateIntro, userIdOwnsDeckId, getOwnListing, getImage, updateListing, updatePreviewCards, addCard, addCards, updateCardType, updateCardContent, deleteCards, moveCards, copyCards, updateCardStudyState, createReviewLog }

@@ -41,6 +41,18 @@ export const actions = {
 		if (value !== "in-order" && value !== "mixed") return fail(400, { errors: ["Invalid choice"] });
 		if (!await decks.setReviewsInOrder(locals.userId, params.id, value === "in-order")) return fail(403, { errors: ["Not a deck at the top"] });
 	},
+	// the days a solved tactic card waits, step by step, as typed ("14, 60,
+	// 180"); left empty, the deck takes the ladder of the deck above it
+	tacticLadder: async ({ params, request, locals }) => {
+		const typed = String((await request.formData()).get("ladder") ?? "").trim();
+		const steps = typed === "" ? [] : typed.split(/[\s,]+/).filter(Boolean);
+		if (steps.length > 12 || steps.some(step => !/^\d+$/.test(step) || +step < 1 || +step > 3650)) {
+			return fail(400, { ladder: typed, ladderErrors: ["Whole days from 1 to 3650, at most 12 steps"] });
+		}
+		const ladder = steps.length === 0 ? null : steps.map(Number);
+		if (!await decks.setTacticLadder(locals.userId, params.id, ladder)) return fail(403, { ladder: typed, ladderErrors: ["Not a deck of your own"] });
+		return { ladderSaved: true };
+	},
 	// a deck of the user's own goes with everything inside it; a marketplace
 	// deck taken leaves their library
 	delete: async ({ params, locals }) => {

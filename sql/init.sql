@@ -105,6 +105,10 @@ create table decks (
 	-- come (for lines seen in sequence, like openings). Read on the deck at
 	-- the top of the list only; everything inside it follows it.
 	reviews_in_order boolean not null default false,
+	-- The days a solved tactic card waits, step by step; one more solve after
+	-- the last retires it. Null: the nearest deck above's, or else the
+	-- default (lib/deck-tree.js).
+	tactic_ladder int[],
 	-- the deck's own listing (its Deck tab): an upload request starts from
 	-- it, and editing it never reaches a listing already on the marketplace.
 	-- A description is blocks, like a card's side (text and boards), and the
@@ -122,8 +126,9 @@ create table decks (
 	unique nulls not distinct (user_id, parent_id, name)
 );
 
--- Tactic cards are graded Correct/Incorrect instead of FSRS: Correct finishes
--- the card for good (finished_at), Incorrect re-queues it a day later. They
+-- Tactic cards are graded Correct/Incorrect instead of FSRS: Correct climbs
+-- their deck's ladder (reps is the rung) and past its last step finishes the
+-- card for good (finished_at); Incorrect starts it over a day later. They
 -- carry no FSRS memory state, so the FSRS columns stay null for them (state is
 -- the constraint's representative for the group).
 create table cards (
@@ -162,6 +167,9 @@ create table marketplace_decks (
 	in_order boolean not null default true,
 	-- the author's shuffled / in order for its reviews (as decks.reviews_in_order)
 	reviews_in_order boolean not null default false,
+	-- the author's tactic ladder (as decks.tactic_ladder), as it stood for
+	-- the published deck where it sat
+	tactic_ladder int[],
 	-- the deck's intro and those of the decks inside it (below), copied with them
 	intro jsonb
 );
@@ -175,6 +183,7 @@ create table marketplace_subdecks (
 	name text not null,
 	position smallint not null,
 	in_order boolean not null default true,
+	tactic_ladder int[],
 	intro jsonb
 );
 

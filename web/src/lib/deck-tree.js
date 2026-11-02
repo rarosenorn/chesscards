@@ -21,7 +21,7 @@ const GRADUATED_SHARE = 0.8;
 
 // a tactic card carries no FSRS state; its grades stamp last_review
 // (seen) and reps (its ladder rung). It graduates on its first climb —
-// finishing the ladder takes over a year, too long to hold a deck shut
+// finishing the ladder takes months, too long to hold a deck shut
 const isSeen = card => card.card_type === "tactic"
 	? card.finished_at != null || card.last_review != null
 	: card.state !== 0;
@@ -29,6 +29,17 @@ const isSeen = card => card.card_type === "tactic"
 const isGraduated = card => card.card_type === "tactic"
 	? card.finished_at != null || (card.reps ?? 0) > 0
 	: card.state === 2 || card.state === 3;
+
+// A tactic card's ladder: the days a solve waits, step by step; one more
+// solve after the last retires the card. A deck's own, or else the nearest
+// deck above's, or else the default. byId: the library's decks by id.
+const DEFAULT_TACTIC_LADDER = [14, 60, 180];
+const tacticLadder = (byId, deckId) => {
+	for (let at = byId.get(deckId); at; at = byId.get(at.parent_id)) {
+		if (at.tactic_ladder) return at.tactic_ladder;
+	}
+	return DEFAULT_TACTIC_LADDER;
+}
 
 // what progression needs to know of a set of cards, and its verdict on them.
 // (The My flashcards list has only such counts, per deck, to go on.)
@@ -244,4 +255,4 @@ const deckProgress = cards => ({
 	total: cards.length
 });
 
-export { GRADUATED_SHARE, isSeen, isGraduated, cardStats, statsPass, childrenByParent, deckOutline, readingOrder, byReadingOrder, deckTrail, deckPath, deckSubtree, cardsUnder, deckChoices, unlockedDeckIds, firstLockedDeck, newCardRanks, deckListing, deckProgress }
+export { GRADUATED_SHARE, DEFAULT_TACTIC_LADDER, tacticLadder, isSeen, isGraduated, cardStats, statsPass, childrenByParent, deckOutline, readingOrder, byReadingOrder, deckTrail, deckPath, deckSubtree, cardsUnder, deckChoices, unlockedDeckIds, firstLockedDeck, newCardRanks, deckListing, deckProgress }

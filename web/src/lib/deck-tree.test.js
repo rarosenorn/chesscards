@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { unlockedDeckIds, firstLockedDeck, newCardRanks, deckListing, deckOutline, readingOrder, byReadingOrder, deckTrail, deckPath, deckSubtree, cardsUnder, deckChoices } from "./deck-tree.js"
+import { DEFAULT_TACTIC_LADDER, tacticLadder, unlockedDeckIds, firstLockedDeck, newCardRanks, deckListing, deckOutline, readingOrder, byReadingOrder, deckTrail, deckPath, deckSubtree, cardsUnder, deckChoices } from "./deck-tree.js"
 
 const deck = (id, position, parent_id = null, in_order = true) => ({ id, name: id, position, parent_id, in_order });
 const mixed = (id, position, parent_id = null) => deck(id, position, parent_id, false);
@@ -226,3 +226,19 @@ describe("the outline", () => {
 		]);
 	})
 })
+
+describe("a tactic card's ladder", () => {
+	const byId = new Map([
+		{ id: "top", parent_id: null, tactic_ladder: null },
+		{ id: "drills", parent_id: "top", tactic_ladder: [1, 3, 7] },
+		{ id: "inner", parent_id: "drills", tactic_ladder: null },
+		{ id: "plain", parent_id: "top", tactic_ladder: null }
+	].map(deck => [deck.id, deck]));
+
+	it("is the deck's own, or the nearest above, or the default", () => {
+		expect(tacticLadder(byId, "drills")).toEqual([1, 3, 7]);
+		expect(tacticLadder(byId, "inner")).toEqual([1, 3, 7]);
+		expect(tacticLadder(byId, "plain")).toBe(DEFAULT_TACTIC_LADDER);
+		expect(tacticLadder(byId, null)).toBe(DEFAULT_TACTIC_LADDER);
+	});
+});

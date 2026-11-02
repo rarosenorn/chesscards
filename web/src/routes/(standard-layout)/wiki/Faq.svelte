@@ -35,8 +35,9 @@
 
 	<dt>Different card types?</dt>
 	<dd>
-		They are built the same way, but tactic cards are done when you get
-		them correct once, basic cards follow fsrs scheduling
+		They are built the same way, but tactic cards come back on a fixed
+		ladder of waits (14, 60 and 180 days, unless the deck's settings say
+		otherwise) and retire after the last; basic cards follow fsrs scheduling
 	</dd>
 </dl>
 

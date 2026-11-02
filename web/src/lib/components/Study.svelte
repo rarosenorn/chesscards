@@ -6,7 +6,7 @@
 	import { boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
-	import { isSeen, readingOrder, byReadingOrder, cardsUnder, unlockedDeckIds, firstLockedDeck, newCardRanks, deckProgress, deckTrail } from "$lib/deck-tree.js"
+	import { DEFAULT_TACTIC_LADDER, isSeen, readingOrder, byReadingOrder, cardsUnder, unlockedDeckIds, firstLockedDeck, newCardRanks, deckProgress, deckTrail } from "$lib/deck-tree.js"
 	import { isDueAt, isDueSoonAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import IntroView from "$lib/components/IntroView.svelte"
@@ -514,16 +514,16 @@
 	// Correct waits the rung's interval and climbs (reps is the rung); past the
 	// last rung the card is finished for good. Incorrect re-queues it a day
 	// later (a post-fail success can't come from short-term memory) and starts
-	// the ladder over.
-	const TACTIC_LADDER_DAYS = [14, 60, 180];
+	// the ladder over. The ladder is the card's deck's (lib/deck-tree.js).
+	let ladder = $derived(deck.decks.find(entry => entry.id === currentCard?.deck_id)?.ladder ?? DEFAULT_TACTIC_LADDER);
 	// what Correct does to the card on screen, as the label over the button
 	let tacticCorrectLabel = $derived.by(() => {
-		const days = TACTIC_LADDER_DAYS[currentCard?.reps ?? 0];
-		return days == null ? "Done" : days >= 365 ? days / 365 + "y" : days + "d";
+		const days = ladder[currentCard?.reps ?? 0];
+		return days == null ? "Done" : days >= 365 ? +(days / 365).toFixed(1) + "y" : days + "d";
 	});
 	// how far up the card on screen has climbed, for the steps drawn beside
 	// the buttons
-	let tacticRung = $derived(Math.min(currentCard?.reps ?? 0, TACTIC_LADDER_DAYS.length));
+	let tacticRung = $derived(Math.min(currentCard?.reps ?? 0, ladder.length));
 	// Next grades a played tactic as the board found it; over it stands the
 	// wait that grade gives, as over the buttons it replaces
 	const gradePlayed = () => cram && !cramCounts ? cramPractice(played.correct) : evaluateTactic(played.correct);
@@ -535,8 +535,8 @@
 		const now = new Date();
 		const rung = currentCard.reps ?? 0;
 		studyState.played = null;
-		const finished = correct && rung >= TACTIC_LADDER_DAYS.length;
-		const waitDays = !correct ? 1 : finished ? 0 : TACTIC_LADDER_DAYS[rung];
+		const finished = correct && rung >= ladder.length;
+		const waitDays = !correct ? 1 : finished ? 0 : ladder[rung];
 		const card = {
 			...currentCard,
 			due: new Date(now.getTime() + waitDays * DAY_MS).toISOString(),
@@ -881,8 +881,8 @@
 		{#if isTactic}
 			<!-- the puzzle's ladder, in the corner the counts leave free: a step
 			     for each wait, filled as far as the card has climbed -->
-			<span class="ladder" role="img" aria-label="Climbed {tacticRung} of {TACTIC_LADDER_DAYS.length} steps">
-				{#each TACTIC_LADDER_DAYS as _, step}
+			<span class="ladder" role="img" aria-label="Climbed {tacticRung} of {ladder.length} steps">
+				{#each ladder as _, step}
 					<span class="step" class:climbed={step < tacticRung} style:height="{5 + step * 3}px"></span>
 				{/each}
 			</span>

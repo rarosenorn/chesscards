@@ -203,8 +203,9 @@ const approveUploadRequest = async requestId => {
 
 		const { rows: [mpDeck] } = await client.query(
 			// reviews in order is read at the top of the list, so a deck published
-			// from inside another takes it from the deck at the top
-			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, reviews_in_order, intro)
+			// from inside another takes it from the deck at the top; its tactic
+			// ladder is the nearest one set, its own or a deck's above
+			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, reviews_in_order, tactic_ladder, intro)
 			 select $1, $2, $3, $4, $5, $6, $7, d.in_order, (
 				with recursive up(id, parent_id, reviews_in_order) as (
 					select d.id, d.parent_id, d.reviews_in_order
@@ -212,27 +213,34 @@ const approveUploadRequest = async requestId => {
 					select above.id, above.parent_id, above.reviews_in_order from decks above join up on above.id = up.parent_id
 				)
 				select reviews_in_order from up where parent_id is null
+			 ), (
+				with recursive up(parent_id, tactic_ladder, depth) as (
+					select d.parent_id, d.tactic_ladder, 0
+					union all
+					select above.parent_id, above.tactic_ladder, up.depth + 1 from decks above join up on above.id = up.parent_id
+				)
+				select tactic_ladder from up where tactic_ladder is not null order by depth limit 1
 			 ), d.intro from decks d where d.id = $8 returning id`,
 			// the description as JSON text, as pg would send its blocks array as a postgres array
 			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id]
 		);
-		// The decks inside it travel with the cards, each with its intro and
-		// its in order / mixed. Every one gets its new id up front (copies),
+		// The decks inside it travel with the cards, each with its intro, its
+		// in order / mixed and its tactic ladder. Every one gets its new id up front (copies),
 		// so a copy can name its parent's copy (none for those directly
 		// inside the published deck) and each card its deck's (none for the
 		// published deck's own), all in the one statement. array_position
 		// gives the preview cards their requested order and leaves
 		// non-preview cards (and since-deleted preview ids) at null.
 		await client.query(`
-			with recursive inside(id, parent_id, name, position, in_order, intro) as (
-				select id, null::uuid, name, position, in_order, intro from decks where parent_id = $2
+			with recursive inside(id, parent_id, name, position, in_order, tactic_ladder, intro) as (
+				select id, null::uuid, name, position, in_order, tactic_ladder, intro from decks where parent_id = $2
 				union all
-				select d.id, d.parent_id, d.name, d.position, d.in_order, d.intro from decks d join inside on d.parent_id = inside.id
+				select d.id, d.parent_id, d.name, d.position, d.in_order, d.tactic_ladder, d.intro from decks d join inside on d.parent_id = inside.id
 			), copies as (
 				select inside.*, gen_random_uuid() copy_id from inside
 			), copied_decks as (
-				insert into marketplace_subdecks(id, marketplace_deck_id, parent_id, name, position, in_order, intro)
-				select copy.copy_id, $1, parent.copy_id, copy.name, copy.position, copy.in_order, copy.intro
+				insert into marketplace_subdecks(id, marketplace_deck_id, parent_id, name, position, in_order, tactic_ladder, intro)
+				select copy.copy_id, $1, parent.copy_id, copy.name, copy.position, copy.in_order, copy.tactic_ladder, copy.intro
 				from copies copy
 				left join copies parent on parent.id = copy.parent_id
 			)

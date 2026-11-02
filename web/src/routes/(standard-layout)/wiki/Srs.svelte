@@ -38,7 +38,7 @@
 	<li>at least <strong>80%</strong> have <strong>graduated</strong> — proved
 		once, meaning they have reached Review. A card that lapses back to
 		Relearning still counts: it was proved, and a lapse does not un-prove
-		it. A tactic card graduates when you get it right and it finishes.</li>
+		it. A tactic card graduates the first time you get it right.</li>
 </ul>
 
 <p>

@@ -124,6 +124,27 @@ describe("a tactic played on the board", () => {
 		page.close();
 	})
 
+	it("climbs the ladder its deck sets", async () => {
+		const withLadder = (cards, ladder) => ({ ...deckOf(cards), decks: deckOf(cards).decks.map(entry => ({ ...entry, ladder })) });
+		const target = document.createElement("div");
+		document.body.append(target);
+		const app = mount(Study, {
+			target,
+			context: new Map([["deck", reactiveProps(withLadder([{ ...played("p"), reps: 1 }], [3, 10]))], ["studyState", reactiveProps({ turnedCardId: null, cram: null, played: null })]])
+		});
+		await tick();
+		const square = name => target.querySelector(`.board-container [data-square="${name}"]:not([data-piece])`)
+			?? target.querySelector(`.board-container [data-square="${name}"]`);
+		const mouse = (type, el) => el.dispatchEvent(new MouseEvent(type, { bubbles: true, button: 0, clientX: 0, clientY: 0 }));
+		for (const name of ["g1", "f3"]) { mouse("mousedown", square(name)); mouse("mouseup", square(name)); }
+		await wait(400);
+		await tick();
+		expect(target.querySelector(".flashcard-btn-row .eval-btn p")?.textContent.trim()).toBe("10d");
+		expect(target.querySelectorAll(".ladder .step")).toHaveLength(2);
+		unmount(app);
+		target.remove();
+	})
+
 	it("found after a wrong move: Next grades Incorrect", async () => {
 		const page = await study([played("p")]);
 		await page.move("d2", "d4");

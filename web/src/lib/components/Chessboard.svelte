@@ -346,12 +346,10 @@
 	// How a move of the line shows: as the player found it. A move only shown
 	// (the card turned before it was played) is a plain move.
 	const foundAs = index => finds[index] ?? null;
-	// a puzzle played on this board here, solved, shown or not
-	let playedPuzzle = $derived(
-		!!normalized.puzzle && !inEditor && (playable || (!!onSolved && !onBack))
+	let puzzling = $derived(
+		!!normalized.puzzle && !inEditor && (playable || (!!onSolved && !revealed && !authorView))
 			&& solutionFrom != null && solutionFrom < replay.moveInfos.length
 	);
-	let puzzling = $derived(playedPuzzle && (playable || (!revealed && !authorView)));
 	// takes the keyboard: a board with moves to step, or a puzzle waiting
 	// for its first move
 	let focusable = $derived((hasMoves || puzzling) && !inEditor);
@@ -1064,7 +1062,6 @@
 	<div
 		class="board"
 		class:black-border={hasBlackBorder(boardPrefs())}
-		class:puzzle-frame={playedPuzzle}
 		class:flush-bottom={flushBottom}
 		class:pointer-squares={clickMoving}
 		class:grab-squares={hoverPiece && !clickMoving}
@@ -1145,25 +1142,6 @@
 	.board.black-border.flush-bottom > :global(div) {
 		border-bottom-width: 5px;
 	}
-	/* a played puzzle: the black border turns blue; a board without one gets
-	   the same 3px as a shadow outside the box, so it keeps its size.
-	   --frame-out is how far that reaches, which the active-board marks
-	   start from */
-	.board.puzzle-frame {
-		--frame-out: 3px;
-		--puzzle-ring: 0 0 0 var(--frame-out) var(--accent);
-	}
-	.board.black-border.puzzle-frame {
-		--frame-out: 0px;
-	}
-	.board.puzzle-frame > :global(div) {
-		margin: var(--frame-out) auto;
-		border-radius: 2px;
-	}
-	.board.black-border.puzzle-frame > :global(div) {
-		border-color: var(--accent);
-		background-color: var(--accent);
-	}
 	/* Containment breaks a sizing feedback loop: the rendered svg and the
 	   --board-px-wide bar/move line all have fixed pixel widths, which would
 	   otherwise feed the surrounding cell's min-content — locking the cell
@@ -1183,7 +1161,7 @@
 	   edges align instead of the bar overhanging the board */
 	.board > :global(div) {
 		margin: 0 auto;
-		box-shadow: var(--puzzle-ring, 0 0 #0000), var(--active-shadow, 0 0 #0000);
+		box-shadow: var(--active-shadow, none);
 	}
 	/* the strip shares the board's exact width, so the number sits over the
 	   board's left edge rather than the cell's */
@@ -1319,21 +1297,21 @@
 		outline: none;
 	}
 	.board-wrapper.focusable:focus-within .board {
-		--active-shadow: 0 4px 14px var(--frame-out, 0px) rgba(0, 0, 0, 0.55);
+		--active-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
 	}
 	/* the /design tryouts in its place (html[data-active-board]) */
 	:global(html[data-active-board]) .board-wrapper.focusable:focus-within .board {
-		--active-shadow: 0 0 #0000;
+		--active-shadow: none;
 	}
 	:global(html[data-active-board="ring"]) .board-wrapper.focusable:focus-within .board > :global(div) {
 		outline: 2px solid #404040;
-		outline-offset: calc(var(--frame-out, 0px) + 2px);
+		outline-offset: 2px;
 	}
 	:global(html[data-active-board="shadow"]) .board-wrapper.focusable:focus-within .board {
-		--active-shadow: 0 5px 14px calc(var(--frame-out, 0px) - 2px) rgba(0, 0, 0, 0.4);
+		--active-shadow: 0 5px 14px -2px rgba(0, 0, 0, 0.4);
 	}
 	:global(html[data-active-board="glow"]) .board-wrapper.focusable:focus-within .board {
-		--active-shadow: 0 0 10px calc(var(--frame-out, 0px) + 2px) rgba(0, 0, 0, 0.3);
+		--active-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.3);
 	}
 	:global(html[data-active-board="dim"]) .board-wrapper.focusable .board {
 		transition: opacity 120ms;

@@ -131,11 +131,8 @@ the editor when a menu button is pressed, click still fires -->
 	.fixed-menu :global(svg) {
 		height: 0.85rem;
 	}
-	.add-board-btn {
-		padding: 2px 0;
-	}
 	.add-board-btn :global(svg) {
-		height: 1.125rem;
+		height: 1rem;
 	}
 	/* the lettered buttons in the bar: a move is what the one writes, a
 	   heading the others */

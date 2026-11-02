@@ -1299,8 +1299,8 @@
 		outline: none;
 	}
 	.board-wrapper.focusable:focus-within {
-		background-color: rgba(0, 0, 0, 0.06);
-		box-shadow: 0 0 0 8px rgba(0, 0, 0, 0.06);
+		background-color: rgba(0, 0, 0, 0.1);
+		box-shadow: 0 0 0 8px rgba(0, 0, 0, 0.1);
 		border-radius: 2px;
 	}
 	/* the /design tryouts in its place (html[data-active-board]) */

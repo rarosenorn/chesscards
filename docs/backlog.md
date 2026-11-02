@@ -5,15 +5,16 @@ Can you look through this feature and double check if the logic is correct, the 
 ## Add checklist for me to test through for feature
 Can you add checklist in backlog.md for me to test this implemented feature, incl. edgecases.
 
-# Things to test/check nested decks
-## Your existing data (after the migration)
+# Things to test/check
+## Nested decks
+### Your existing data (after the migration)
 [ ] every deck that had subdecks has them as decks inside it, with the same cards, order and progress (due dates, reps)
 [ ] a deck that had its subdecks switched off is one plain deck, its cards in the old order
 [ ] the metadecks "current" and "Overviews" are decks; "current" is Mixed and holds the 4 decks it held
 [ ] intros of the old subdecks are on the decks inside, and still show in study
 [ ] the marketplace decks you took are in the list, at the end of the top
 
-## My flashcards: the list
+### My flashcards: the list
 [ ] one list, headed "Deck": your decks and the marketplace decks you took, in one tree, looking alike (no marketplace mark)
 [ ] a grey wheel at the end of every row that has a menu, always visible (no hover needed)
 [ ] + / - opens a deck onto the decks inside it, level by level; stays open after a reload
@@ -23,7 +24,7 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] deck names: trimmed, 1 to 100 characters (a 1-letter name now works); the same name is fine in two different parents
 [ ] no decks at all: "No decks yet. Create one, or take one from the marketplace."
 
-## My flashcards: dragging
+### My flashcards: dragging
 [ ] drag a deck onto the middle of another: it goes inside (the target lights up, ghost says "A → B") and that deck opens
 [ ] drag to the top or bottom edge of a row: a line shows; it lands before / after that row at that row's level
 [ ] just under an open deck that holds decks: it becomes the first deck inside it
@@ -34,7 +35,7 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] a name already used among the new siblings: "Could not move the deck" with the reason, nothing moves
 [ ] a plain click on a row still opens its Study; Escape cancels a drag
 
-## My flashcards: the wheel menu (and right-click, same menu)
+### My flashcards: the wheel menu (and right-click, same menu)
 [ ] your deck: New deck inside · Rename · Decks inside: In order / Mixed (only when it has decks inside, current one ticked) · Flatten (same) · Move to… · Delete
 [ ] marketplace deck: Move to… · In order / Mixed (if it has decks inside) · Remove
 [ ] a deck inside a marketplace deck: In order / Mixed if it has decks inside, else no wheel
@@ -47,7 +48,7 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] Move to…: "Top of the list" or any of your decks except itself and what is inside it; Move moves it to the end there
 [ ] menu closes on Escape and on a click elsewhere
 
-## Study
+### Study
 [ ] studying a deck studies everything under it, incl. marketplace decks inside it
 [ ] In order: the next deck inside opens only when the one before passes (all seen, 80% graduated); the deck's own cards count as the first
 [ ] the "unlocks when ... passes" note names the deck by its path (or "the cards of X" when X's own cards hold it)
@@ -60,7 +61,7 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] cram on a deck covers everything under it; "Cram sessions completed today" counts per deck
 [ ] an empty deck says "This deck has no cards yet."
 
-## Cards tab
+### Cards tab
 [ ] the deck's own cards first (numbered 1, 2, ...), then a header per deck inside (1.1, 2.3.17, ...)
 [ ] headers collapse / expand, remembered while you visit the deck's other tabs
 [ ] drag cards within a deck, to another deck inside, onto a header (to its front)
@@ -70,13 +71,13 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] "Deck intro" at the bottom opens the deck's intro page
 [ ] a marketplace deck's own Cards tab is read only
 
-## Add cards and import from game
+### Add cards and import from game
 [ ] the Deck picker shows the deck and the decks inside it as an outline; marketplace decks inside are greyed out
 [ ] the chosen deck is remembered per deck; a deck that has gone falls back to the deck itself
 [ ] with no decks inside, no picker: cards go in the deck
 [ ] Import from game: the same picker, cards land in the chosen deck
 
-## Settings
+### Settings
 [ ] rename (a clash with a sibling is refused)
 [ ] "Decks inside": In order / Mixed, only when the deck has decks inside; on a marketplace deck it is your own choice
 [ ] Reset deck resets every card under it, incl. marketplace decks inside, and brings its intro pages back
@@ -84,7 +85,7 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] a marketplace deck: "Remove deck" instead of Delete; a deck inside a marketplace deck: no delete/remove
 [ ] Marketplace section: a deck with a marketplace deck inside says it cannot be shared
 
-## Marketplace
+### Marketplace
 [ ] any of your decks can be published (also one inside another); everything under it goes with it
 [ ] the request-upload page refuses (back to Settings) a deck with a marketplace deck inside
 [ ] admin review: card count, Browse and Intros cover the whole tree
@@ -92,13 +93,13 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] Contents card lists the decks inside with their card counts
 [ ] taking a deck puts it at the end of the top of My flashcards; taking the same deck twice is refused
 
-## Importer
+### Importer
 [ ] a spec's chapters become decks inside the spec's deck; chapters of chapters go one deeper
 [ ] a chapter can hold cards and chapters both; a top-level "cards" list fills the deck itself
 [ ] re-running a spec changes nothing ("0 new, 0 updated")
 [ ] a spec deck that now sits inside another deck (like Sielecki in "current") is still found by name
 
-# Things to test/check cram mode
+## Cram mode
 [ ] fix card height in different modes and for different screen sizes, incl. when in zen / fs mode and hover at top to bring momentarily bars back
 [ ] works on a deck with decks inside it and on a deck inside another (chosen from the breadcrumb)
 [ ] every card comes up, due or not, also from locked decks
@@ -121,8 +122,8 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] Zen mode works while cramming
 [ ] while the Cram prompt (or any dialog) is open, Space / 1-4 and the tab shortcuts do nothing to the page behind
 
-# Things to test/check intro pages
-## Writing an intro
+## Intro pages
+### Writing an intro
 [ ] Cards: "Deck intro" at the bottom opens the deck's intro page (a deck inside: open it and use its own Cards tab)
 [ ] a page with no intro opens straight in the editor (Save only, no Cancel); one with an intro opens to read, with "Edit"
 [ ] e opens the editor (not while typing in a field); Ctrl+Enter saves; Cancel drops the changes
@@ -132,12 +133,12 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] the names above the title lead to the outer pages (for the owner all of them, also ones with no intro yet); open the editor, click one: the other page loads, editor closed or open as that page needs
 [ ] a reload after saving shows the saved page (headings included)
 [ ] "Study" under a page goes to study of that deck
-## Reading an intro
+### Reading an intro
 [ ] 3 or more headings: a contents list under the title, H2s indented; clicking one scrolls to it; a heading with no words is not listed and the others still scroll to the right place
 [ ] 2 or fewer headings: no contents list
 [ ] long page: the page scrolls, nothing scrolls inside it
 [ ] paragraphs read from the left, not centred as on a card
-## Study: when an intro comes up
+### Study: when an intro comes up
 [ ] fresh deck with a deck intro: Study shows the intro before the first card; "Study" (or Enter) goes on to the card
 [ ] deck intro + intro of a deck inside + of one inside that: they come one after another, outermost first, then the card
 [ ] the crumbs above an inner deck's page lead back to the outer pages that have an intro (not to ones without)
@@ -155,25 +156,25 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] zen mode on: the intro shows with the normal chrome, zen comes back on the card
 [ ] cram on a never-studied deck with an intro: the intro comes up first, then the cram cards
 [ ] no flash of the intro on load when it has already been passed
-## Study: Intro button
+### Study: Intro button
 [ ] "Intro" at the bottom right shows when the card's deck or one around it has an intro; opens the nearest one
 [ ] on a page opened this way the button reads "Close" when no card is up, "Study" when one is; it goes back to the card
 [ ] the crumbs on that page open the outer pages
 [ ] not shown while editing a card (e); not shown when nothing on the way has an intro
 [ ] opened intro, then switch deck in the breadcrumb: the page closes (does not reappear later when that deck comes round)
 [ ] done screen (no card up): Intro still opens the page of what is being studied
-## Mixed decks
+### Mixed decks
 [ ] a Mixed deck with two decks inside, each with an intro: each one's intro comes up before its own first card, not the other's
 [ ] the Intro button opens the intro of the deck the card on screen is from
-## Reset
+### Reset
 [ ] Settings → Reset deck: the intros of the deck and of every deck inside it come up again in study on this browser
 [ ] another deck's passed intros are not affected by the reset
-## Marketplace
+### Marketplace
 [ ] upload a deck with intros: the admin review has an "Intros" tab with the deck's page and those of the decks inside it (with their trail), in reading order; "No intro pages" when there are none
 [ ] after approval, taking the deck: intros come up in study as for an own deck
 [ ] marketplace deck's intro page: read only (no Edit, no e, no editor), crumbs lead only to pages that have an intro
 [ ] the author editing their intro after publishing does not change the published one
-## Importer
+### Importer
 [ ] a spec with deck / chapter intros writes them ("N intro page(s) written")
 [ ] re-importing keeps intros up to date and does not duplicate them
 
@@ -203,6 +204,10 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] phone app
 [ ] maybe allow subdecks alone to be put into metadeck?
 [ ] should deck progression be auto or allow to unlock when you reach end of current cards?
+[ ] maybe do marker when board is active (so you know you can left right)? mb. a thicker border. Maybe also do more marker when puzzle, maybe different color border or smt?
+[ ] maybe call intro for first exposure articles instead? And maybe do "First exposure articles" a card type that can be put anywhere and is then only shown once do introduce what subsequent cards are about?
+[ ] update tactic card tooltip
+[ ] maybe do tactic card intervals and #reps customizable to so creator can make fit different decks, but with sensible defaults.
 
 # Currently working on
 

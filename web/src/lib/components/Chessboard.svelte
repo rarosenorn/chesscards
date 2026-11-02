@@ -352,6 +352,9 @@
 			&& solutionFrom != null && solutionFrom < replay.moveInfos.length
 	);
 	let puzzling = $derived(playedPuzzle && (playable || (!revealed && !authorView)));
+	// takes the keyboard: a board with moves to step, or a puzzle waiting
+	// for its first move
+	let focusable = $derived((hasMoves || puzzling) && !inEditor);
 	let solver = $derived(solutionFrom != null ? replay.fens[solutionFrom]?.split(" ")[1] : null);
 	// the board is waiting for the player's move: on the position the next
 	// move to find is made from, with the line not yet through, and theirs
@@ -793,7 +796,7 @@
 	// click first. Never off a field being typed in.
 	$effect(() => {
 		void normalized;
-		if (!autoFocus || !hasMoves || !wrapperElement) return;
+		if (!autoFocus || !focusable || !wrapperElement) return;
 		const active = document.activeElement;
 		if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT" || active.isContentEditable)) return;
 		wrapperElement.focus({ preventScroll: true });
@@ -1028,12 +1031,12 @@
 <div
 	style="min-width: {minWidth}"
 	class="board-wrapper"
-	class:steppable={hasMoves && !inEditor}
+	class:focusable
 	bind:this={wrapperElement}
-	tabindex={hasMoves && !inEditor ? 0 : undefined}
+	tabindex={focusable ? 0 : undefined}
 	role="group"
 	aria-label={hasMoves && !inEditor ? "Chessboard, use arrow keys to step through moves" : "Chessboard"}
-	onkeydown={hasMoves && !inEditor ? handleKeyDown : undefined}
+	onkeydown={focusable ? handleKeyDown : undefined}
 >
 	<!-- The strip above every board: its number (when the card has more than
 	     one) and the side to move, which takes the number's place on a lone
@@ -1067,7 +1070,7 @@
 		class:grab-squares={hoverPiece && !clickMoving}
 		class:grabbing-squares={draggingPiece}
 		bind:this={chessboardElement}
-		onclick={hasMoves ? takeFocus : undefined}
+		onclick={focusable ? takeFocus : undefined}
 	></div>
 	{#if mateBadge}
 		<span
@@ -1130,7 +1133,7 @@
 	   move line the same outer width. The dark background makes any svg
 	   rasterization slack at fractional zoom read as border, not white. */
 	.board.black-border > :global(div) {
-		border: 2px solid #404040;
+		border: 3px solid #404040;
 		background-color: #404040;
 		border-radius: 2px;
 	}
@@ -1138,16 +1141,16 @@
 		border-radius: 2px 2px 0 0;
 	}
 	/* a flush bar below overlaps 2px (CardSideEditor); widen the bottom
-	   border so 2px stay visible, matching the other sides */
+	   border so 3px stay visible, matching the other sides */
 	.board.black-border.flush-bottom > :global(div) {
-		border-bottom-width: 4px;
+		border-bottom-width: 5px;
 	}
 	/* a played puzzle: the black border turns blue; a board without one gets
-	   the same 2px as a shadow outside the box, so it keeps its size.
+	   the same 3px as a shadow outside the box, so it keeps its size.
 	   --frame-out is how far that reaches, which the active-board marks
 	   start from */
 	.board.puzzle-frame {
-		--frame-out: 2px;
+		--frame-out: 3px;
 		--puzzle-ring: 0 0 0 var(--frame-out) var(--accent);
 	}
 	.board.black-border.puzzle-frame {
@@ -1315,30 +1318,30 @@
 	.board-wrapper:focus {
 		outline: none;
 	}
-	.board-wrapper.steppable:focus-within .board {
+	.board-wrapper.focusable:focus-within .board {
 		--active-shadow: 0 4px 14px var(--frame-out, 0px) rgba(0, 0, 0, 0.55);
 	}
 	/* the /design tryouts in its place (html[data-active-board]) */
-	:global(html[data-active-board]) .board-wrapper.steppable:focus-within .board {
+	:global(html[data-active-board]) .board-wrapper.focusable:focus-within .board {
 		--active-shadow: 0 0 #0000;
 	}
-	:global(html[data-active-board="ring"]) .board-wrapper.steppable:focus-within .board > :global(div) {
+	:global(html[data-active-board="ring"]) .board-wrapper.focusable:focus-within .board > :global(div) {
 		outline: 2px solid #404040;
 		outline-offset: calc(var(--frame-out, 0px) + 2px);
 	}
-	:global(html[data-active-board="shadow"]) .board-wrapper.steppable:focus-within .board {
+	:global(html[data-active-board="shadow"]) .board-wrapper.focusable:focus-within .board {
 		--active-shadow: 0 5px 14px calc(var(--frame-out, 0px) - 2px) rgba(0, 0, 0, 0.4);
 	}
-	:global(html[data-active-board="glow"]) .board-wrapper.steppable:focus-within .board {
+	:global(html[data-active-board="glow"]) .board-wrapper.focusable:focus-within .board {
 		--active-shadow: 0 0 10px calc(var(--frame-out, 0px) + 2px) rgba(0, 0, 0, 0.3);
 	}
-	:global(html[data-active-board="dim"]) .board-wrapper.steppable .board {
+	:global(html[data-active-board="dim"]) .board-wrapper.focusable .board {
 		transition: opacity 120ms;
 	}
-	:global(html[data-active-board="dim"]) .board-wrapper.steppable:not(:focus-within) .board {
+	:global(html[data-active-board="dim"]) .board-wrapper.focusable:not(:focus-within) .board {
 		opacity: 0.5;
 	}
-	:global(html[data-active-board="bar"]) .board-wrapper.steppable:focus-within .board-header {
+	:global(html[data-active-board="bar"]) .board-wrapper.focusable:focus-within .board-header {
 		box-shadow: inset 0 -3px 0 #404040;
 	}
 	/* quiet step controls heading the move line; the ends fade out rather

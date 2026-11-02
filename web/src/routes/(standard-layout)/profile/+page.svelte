@@ -332,7 +332,7 @@
 		box-sizing: content-box;
 	}
 	.preview-board.black-border {
-		border: 2px solid #404040;
+		border: 3px solid #404040;
 		border-radius: 2px;
 	}
 	.saved {

@@ -1310,17 +1310,21 @@
 		margin-left: auto;
 		margin-right: auto;
 	}
-	/* the board the arrows step, whatever in it holds the focus */
+	/* the board the arrows step, whatever in it holds the focus, casts a
+	   heavy shadow */
 	.board-wrapper:focus {
 		outline: none;
 	}
-	.board-wrapper.steppable:focus-within .board > :global(div) {
-		outline: 2px solid #404040;
-		outline-offset: calc(var(--frame-out, 0px) + 2px);
+	.board-wrapper.steppable:focus-within .board {
+		--active-shadow: 0 6px 20px calc(var(--frame-out, 0px) + 1px) rgba(0, 0, 0, 0.55);
 	}
 	/* the /design tryouts in its place (html[data-active-board]) */
-	:global(html[data-active-board]) .board-wrapper.steppable:focus-within .board > :global(div) {
-		outline: none;
+	:global(html[data-active-board]) .board-wrapper.steppable:focus-within .board {
+		--active-shadow: 0 0 #0000;
+	}
+	:global(html[data-active-board="ring"]) .board-wrapper.steppable:focus-within .board > :global(div) {
+		outline: 2px solid #404040;
+		outline-offset: calc(var(--frame-out, 0px) + 2px);
 	}
 	:global(html[data-active-board="shadow"]) .board-wrapper.steppable:focus-within .board {
 		--active-shadow: 0 5px 14px calc(var(--frame-out, 0px) - 2px) rgba(0, 0, 0, 0.4);

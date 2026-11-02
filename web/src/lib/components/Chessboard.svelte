@@ -1062,7 +1062,6 @@
 		class="board"
 		class:black-border={hasBlackBorder(boardPrefs())}
 		class:puzzle-frame={playedPuzzle}
-		class:frame-room={!inEditor && !flushBottom}
 		class:flush-bottom={flushBottom}
 		class:pointer-squares={clickMoving}
 		class:grab-squares={hoverPiece && !clickMoving}
@@ -1131,45 +1130,36 @@
 	   move line the same outer width. The dark background makes any svg
 	   rasterization slack at fractional zoom read as border, not white. */
 	.board.black-border > :global(div) {
-		border: 3px solid var(--frame-colour);
-		background-color: var(--frame-colour);
+		border: 2px solid #404040;
+		background-color: #404040;
 		border-radius: 2px;
 	}
 	.board.flush-bottom > :global(div) {
 		border-radius: 2px 2px 0 0;
 	}
 	/* a flush bar below overlaps 2px (CardSideEditor); widen the bottom
-	   border so 3px stay visible, matching the other sides */
+	   border so 2px stay visible, matching the other sides */
 	.board.black-border.flush-bottom > :global(div) {
-		border-bottom-width: 5px;
+		border-bottom-width: 4px;
 	}
-	/* The frame: its colour says what the board is (blue for a played
-	   puzzle), its width whether the arrows step it — 3px at rest, 6px
-	   active. What lies past the black border's own 3px is a shadow outside
-	   the box (--frame-out), so the board never changes size, and
-	   --frame-room keeps the strip above and the line below clear of it. */
-	.board {
-		--frame-colour: #404040;
-		--frame-out: 0px;
-	}
+	/* a played puzzle: a 6px blue frame drawn as a shadow outside the box, so
+	   the board keeps its size (a black border turns blue and counts as the
+	   frame's inner 2px); --frame-out is how far it reaches, which the
+	   active-board marks start from */
 	.board.puzzle-frame {
-		--frame-colour: var(--accent);
-		--frame-out: 3px;
+		--frame-out: 6px;
+		--puzzle-ring: 0 0 0 var(--frame-out) var(--accent);
 	}
 	.board.black-border.puzzle-frame {
-		--frame-out: 0px;
+		--frame-out: 4px;
 	}
-	.board.frame-room {
-		--frame-room: 6px;
+	.board.puzzle-frame > :global(div) {
+		margin: var(--frame-out) auto;
+		border-radius: 2px;
 	}
-	.board.black-border.frame-room {
-		--frame-room: 3px;
-	}
-	:global(html:not([data-active-board])) .board-wrapper.steppable:focus-within .board {
-		--frame-out: 6px;
-	}
-	:global(html:not([data-active-board])) .board-wrapper.steppable:focus-within .board.black-border {
-		--frame-out: 3px;
+	.board.black-border.puzzle-frame > :global(div) {
+		border-color: var(--accent);
+		background-color: var(--accent);
 	}
 	/* Containment breaks a sizing feedback loop: the rendered svg and the
 	   --board-px-wide bar/move line all have fixed pixel widths, which would
@@ -1189,9 +1179,8 @@
 	   slotted FEN/Duplicate/Edit bar, the move line) that exact width so
 	   edges align instead of the bar overhanging the board */
 	.board > :global(div) {
-		margin: var(--frame-room, 0px) auto;
-		border-radius: 2px;
-		box-shadow: 0 0 0 var(--frame-out) var(--frame-colour), var(--active-shadow, 0 0 #0000);
+		margin: 0 auto;
+		box-shadow: var(--puzzle-ring, 0 0 #0000), var(--active-shadow, 0 0 #0000);
 	}
 	/* the strip shares the board's exact width, so the number sits over the
 	   board's left edge rather than the cell's */
@@ -1321,21 +1310,23 @@
 		margin-left: auto;
 		margin-right: auto;
 	}
-	/* the board the arrows step is marked by its frame (above), whatever in
-	   it holds the focus */
+	/* the board the arrows step, whatever in it holds the focus */
 	.board-wrapper:focus {
 		outline: none;
 	}
-	/* the /design tryouts in the frame's place (html[data-active-board]) */
-	:global(html[data-active-board="ring"]) .board-wrapper.steppable:focus-within .board > :global(div) {
+	.board-wrapper.steppable:focus-within .board > :global(div) {
 		outline: 2px solid #404040;
-		outline-offset: calc(var(--frame-out) + 2px);
+		outline-offset: calc(var(--frame-out, 0px) + 2px);
+	}
+	/* the /design tryouts in its place (html[data-active-board]) */
+	:global(html[data-active-board]) .board-wrapper.steppable:focus-within .board > :global(div) {
+		outline: none;
 	}
 	:global(html[data-active-board="shadow"]) .board-wrapper.steppable:focus-within .board {
-		--active-shadow: 0 5px 14px calc(var(--frame-out) - 2px) rgba(0, 0, 0, 0.4);
+		--active-shadow: 0 5px 14px calc(var(--frame-out, 0px) - 2px) rgba(0, 0, 0, 0.4);
 	}
 	:global(html[data-active-board="glow"]) .board-wrapper.steppable:focus-within .board {
-		--active-shadow: 0 0 10px calc(var(--frame-out) + 2px) rgba(0, 0, 0, 0.3);
+		--active-shadow: 0 0 10px calc(var(--frame-out, 0px) + 2px) rgba(0, 0, 0, 0.3);
 	}
 	:global(html[data-active-board="dim"]) .board-wrapper.steppable .board {
 		transition: opacity 120ms;

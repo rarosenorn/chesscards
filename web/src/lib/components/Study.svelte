@@ -586,7 +586,7 @@
 	const getTimeUntilDuePreviewText = rating =>
 		formatTimeUntil(preview[rating].card.due, previewAt);
 
-	// The wait, as the rest of "Next review ...". Below a day it is a duration
+	// The wait, as the rest of "Next review: ...". Below a day it is a duration
 	// counted to the minute; past that a card is waiting at a day boundary, so
 	// it is a day on the calendar instead — "tomorrow", never "in 26 hours".
 	const formatNextReview = dueDate => {
@@ -1028,7 +1028,7 @@
 			<p>Congratulations you finished this deck for now! <span class="party"><PartyPopper /></span></p>
 		{/if}
 		{#if nextDue && !cram}
-			<p class="next-review">Next review {formatNextReview(nextDue)}</p>
+			<p class="next-review">Next review: {formatNextReview(nextDue)}</p>
 		{/if}
 	</div>
 {/if}

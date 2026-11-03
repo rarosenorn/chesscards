@@ -239,15 +239,17 @@ create table marketplace_card_instances (
 
 -- tactic reviews log only rating + review time (+ due when re-queued), so the
 -- FSRS columns are nullable.
--- A log names the card it was of, one of the two kinds, for as long as that
--- card exists. It outlives the card (both then null): the answer was given
--- that day whatever became of the card, and the activity heatmap goes on
--- counting it.
+-- A log names the card it was of, one of the two kinds. Plain ids, not
+-- references: a log outlives its card and keeps naming it, so a deleted
+-- card's reviews still read as one card's history (as Anki's revlog keeps its
+-- card id) for the FSRS optimizer, which trains on whole histories. The
+-- answer was given that day whatever became of the card, and the activity
+-- heatmap goes on counting it.
 create table review_logs (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid references "user" ("id") on delete cascade not null,
-	card_id uuid references cards(id) on delete set null,
-	marketplace_card_instance_id uuid references marketplace_card_instances(id) on delete set null,
+	card_id uuid,
+	marketplace_card_instance_id uuid,
 	rating smallint check(rating between 0 and 4) not null,
 	state smallint check(state between 0 and 3),
 	due timestamptz,

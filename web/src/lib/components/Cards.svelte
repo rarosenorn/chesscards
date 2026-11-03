@@ -709,10 +709,10 @@
 		el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT"
 			|| el.isContentEditable;
 
-	// Up/Down move through the cards. Page-level, not on the table: the
-	// preview's boards take focus when clicked or scrolled, and from there
-	// the table is not an ancestor, so a listener on it would never see the
-	// keys. The board itself only claims Left/Right, for its moves.
+	// Ctrl/Cmd+Up/Down move through the cards; plain Up/Down are the
+	// preview board's. Page-level, not on the table: the preview's boards
+	// take focus when clicked or scrolled, and from there the table is not
+	// an ancestor, so a listener on it would never see the keys.
 	const navigateCards = e => {
 		const from = filteredCards.indexOf(selectedCard);
 		let to;
@@ -751,8 +751,8 @@
 			e.preventDefault();
 			startEditing();
 		} else if (
-			(e.key === "ArrowUp" || e.key === "ArrowDown") && selectedCard && !isEditingSelected &&
-			!inField(e.target)
+			(e.key === "ArrowUp" || e.key === "ArrowDown") && (e.ctrlKey || e.metaKey) && !e.altKey &&
+			selectedCard && !isEditingSelected && !inField(e.target)
 		) {
 			navigateCards(e);
 		} else if (

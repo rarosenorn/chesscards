@@ -40,6 +40,7 @@
 	}
 
 	const handleTableNav = e => {
+		if (!(e.ctrlKey || e.metaKey) || e.altKey || e.target.tagName === "INPUT") return;
 		if (e.key === "ArrowUp") {
 			e.preventDefault();
 			selectedCard = filteredCards[Math.max(filteredCards.indexOf(selectedCard) - 1, 0)];
@@ -50,6 +51,8 @@
 	}
 </script>
 
+<svelte:window onkeydown={handleTableNav} />
+
 <div class="browse-container">
 	<div class="left-pane">
 		<input
@@ -59,7 +62,7 @@
 			onkeydown={e => { if (e.key === "Enter") applySearch(); }}
 		/>
 		<div class="table-container">
-			<table role="grid" tabindex="0" onkeydown={handleTableNav}>
+			<table role="grid" tabindex="0">
 				<thead>
 					<tr>
 						<th>Front</th>

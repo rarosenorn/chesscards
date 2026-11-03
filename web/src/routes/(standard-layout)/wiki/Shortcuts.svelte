@@ -22,8 +22,8 @@
 <h3>Browsing a deck</h3>
 <table>
 	<tbody>
-		<tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Previous or next card</td></tr>
-		<tr><td><kbd>Shift</kbd> + <kbd>↑</kbd> <kbd>↓</kbd></td><td>Extend the selection</td></tr>
+		<tr><td><kbd>Ctrl</kbd> + <kbd>↑</kbd> <kbd>↓</kbd></td><td>Previous or next card</td></tr>
+		<tr><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>↑</kbd> <kbd>↓</kbd></td><td>Extend the selection</td></tr>
 		<tr><td><kbd>E</kbd></td><td>Edit the selected card</td></tr>
 		<tr><td><kbd>Delete</kbd></td><td>Delete the selected cards</td></tr>
 		<tr><td><kbd>Esc</kbd></td><td>Close a menu, cancel a drag</td></tr>

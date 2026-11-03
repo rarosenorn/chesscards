@@ -1,5 +1,5 @@
 <script module>
-	// Left/Right pressed with no board holding the keyboard (after a click on
+	// Arrows pressed with no board holding the keyboard (after a click on
 	// the card's text, say) go to a board anyway: the one that held it last,
 	// or else the card's first board with moves, the one that takes focus as
 	// the card arrives
@@ -972,14 +972,12 @@
 		} else if (e.key === "ArrowRight") {
 			e.preventDefault();
 			next();
-		} else if (e.key === "ArrowUp") {
+		} else if ((e.key === "ArrowUp" || e.key === "ArrowDown") && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
 			// lichess's jump to either end of the line: both are jumps, not
-			// steps, so neither is sounded or animated
+			// steps, so neither is sounded or animated. With a modifier they
+			// are the page's (Ctrl+Up/Down walk the Cards tab's list).
 			e.preventDefault();
-			jumpToEnd(false);
-		} else if (e.key === "ArrowDown") {
-			e.preventDefault();
-			jumpToEnd(true);
+			jumpToEnd(e.key === "ArrowDown");
 		}
 	}
 
@@ -990,9 +988,8 @@
 		return () => autoBoards.delete(el);
 	});
 
-	// Up/Down stay the page's: they scroll it, and walk the Cards tab's list
 	const handleStrayArrow = e => {
-		if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+		if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
 		if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || modalState.current) return;
 		if (!wrapperElement || strayArrowBoard() !== wrapperElement) return;
 		if (e.target.isContentEditable || e.target.closest?.(ARROW_OWNERS)) return;

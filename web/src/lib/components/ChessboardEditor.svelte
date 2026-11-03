@@ -1189,12 +1189,12 @@
 	/* border on the whole-pixel inner box so the frame hugs the board; the
 	   dark background makes rasterization slack at fractional zoom read as
 	   border, not white. The FEN bar overlaps 2px, so the bottom border is
-	   widened to keep 3px visible. See Chessboard.svelte. */
+	   widened to keep 2px visible. See Chessboard.svelte. */
 	.board.black-border > :global(div) {
-		border: 3px solid #404040;
+		border: 2px solid #404040;
 		background-color: #404040;
 		border-radius: 2px 2px 0 0;
-		border-bottom-width: 5px;
+		border-bottom-width: 4px;
 	}
 	.board > :global(div) {
 		margin: 0 auto;

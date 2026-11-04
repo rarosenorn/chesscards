@@ -7,6 +7,7 @@
 	import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS, boardStyleProps, hasBlackBorder } from "$lib/board-prefs.js"
 	import { typedConfirmModal } from "$lib/modals.svelte.js"
 	import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
+	import TwoFactorSettings from "$lib/components/TwoFactorSettings.svelte"
 
 	let { data, form } = $props();
 
@@ -227,6 +228,9 @@
 			</p>
 		</fieldset>
 	</form>
+	{#if data.twoFactor.required}
+		<TwoFactorSettings enabled={data.twoFactor.enabled} verified={data.twoFactor.verified} />
+	{/if}
 	<div class="account-actions">
 		<button class="quiet-btn" onclick={logout}>Log out</button>
 		{#if deleteRequested}

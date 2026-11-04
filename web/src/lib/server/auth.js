@@ -1,6 +1,6 @@
 import "dotenv/config"
 import { betterAuth } from "better-auth"
-import { genericOAuth } from "better-auth/plugins"
+import { genericOAuth, twoFactor } from "better-auth/plugins"
 import { pool } from "./pool.js"
 import { sendMail } from "./mail.js"
 import { cleanName } from "../display-name.js"
@@ -63,6 +63,18 @@ export const auth = betterAuth({
 					return name ? { data: { ...user, name } } : false;
 				}
 			}
+		},
+		session: {
+			create: {
+				before: async (session, ctx) => ({
+					data: { ...session, twoFactorVerified: ctx?.path?.startsWith("/two-factor/verify-") ?? false }
+				})
+			}
+		}
+	},
+	session: {
+		additionalFields: {
+			twoFactorVerified: { type: "boolean", defaultValue: false, input: false }
 		}
 	},
 	baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:5173",
@@ -118,7 +130,8 @@ export const auth = betterAuth({
 					getUserInfo: lichessUserInfo
 				}
 			]
-		})
+		}),
+		twoFactor({ issuer: "Chesscards" })
 	],
 	user: {
 		// board preferences and the admin flag live on the user row, so the

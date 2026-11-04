@@ -7,10 +7,12 @@ const handle = async ({ event, resolve }) => {
 	const session = await auth.api.getSession({ headers: event.request.headers });
 	event.locals.user = session?.user;
 	event.locals.userId = session?.user.id;
-	event.locals.isAdmin = session?.user.isAdmin ?? false;
+	event.locals.twoFactorVerified = session?.session.twoFactorVerified ?? false;
+	event.locals.isAdmin = Boolean(session?.user.isAdmin && event.locals.twoFactorVerified);
 
 	// 404 (not 403) so the panel's existence isn't revealed to non-admins
 	if (event.url.pathname.startsWith("/admin") && !event.locals.isAdmin) {
+		if (session?.user.isAdmin) redirect(303, "/profile#two-factor");
 		error(404, "Not Found");
 	}
 

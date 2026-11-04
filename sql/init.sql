@@ -33,7 +33,8 @@ create table "user" (
 	"rolloverHour" smallint default 4 not null check ("rolloverHour" between 0 and 23),
 	-- whose games "Import from a game" lists; asked for once, on that page
 	"chesscomUsername" text,
-	"lichessUsername" text
+	"lichessUsername" text,
+	"twoFactorEnabled" boolean default false not null
 );
 
 -- display names are public (a review is signed with one), so no two accounts
@@ -48,7 +49,8 @@ create table "session" (
 	"updatedAt" timestamptz not null,
 	"ipAddress" text,
 	"userAgent" text,
-	"userId" uuid not null references "user" ("id") on delete cascade
+	"userId" uuid not null references "user" ("id") on delete cascade,
+	"twoFactorVerified" boolean default false not null
 );
 
 create table "account" (
@@ -76,8 +78,20 @@ create table "verification" (
 	"updatedAt" timestamptz default current_timestamp not null
 );
 
+create table "twoFactor" (
+	"id" uuid not null primary key,
+	"secret" text not null,
+	"backupCodes" text not null,
+	"userId" uuid not null references "user" ("id") on delete cascade,
+	"verified" boolean default true not null,
+	"failedVerificationCount" integer default 0 not null,
+	"lockedUntil" timestamptz
+);
+
 create index "session_userId_idx" on "session" ("userId");
 create index "account_userId_idx" on "account" ("userId");
+create index "twoFactor_userId_idx" on "twoFactor" ("userId");
+create index "twoFactor_secret_idx" on "twoFactor" ("secret");
 create index "verification_identifier_idx" on "verification" ("identifier");
 
 create type deck_theme as enum ('openings', 'endgames', 'tactics', 'strategy', 'checkmates');

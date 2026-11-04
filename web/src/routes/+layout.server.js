@@ -7,8 +7,13 @@ const load = async ({ locals }) => {
 	return {
 		user: {
 			email: user.email,
-			isAdmin: user.isAdmin,
+			isAdmin: locals.isAdmin,
 			displayName: user.name
+		},
+		twoFactor: {
+			required: user.isAdmin,
+			enabled: user.twoFactorEnabled,
+			verified: locals.twoFactorVerified
 		},
 		boardPrefs: {
 			pieceSet: user.pieceSet,

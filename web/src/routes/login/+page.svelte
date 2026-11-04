@@ -9,6 +9,9 @@
 	let errors = $state([]);
 	let unverified = $state(false);
 	let submitting = $state(false);
+	let askingCode = $state(false);
+	let useBackupCode = $state(false);
+	let code = $state("");
 
 	const redirectTo = $derived(page.url.searchParams.get("redirect_to") ?? "/my-flashcards");
 
@@ -16,8 +19,12 @@
 		errors = [];
 		unverified = false;
 		submitting = true;
-		const { error } = await authClient.signIn.email({ email, password });
+		const { data, error } = await authClient.signIn.email({ email, password });
 		submitting = false;
+		if (data?.twoFactorRedirect) {
+			askingCode = true;
+			return;
+		}
 		if (!error) {
 			await goto(redirectTo, { invalidateAll: true });
 			return;
@@ -30,6 +37,27 @@
 		}
 	}
 
+	const submitCode = async () => {
+		errors = [];
+		submitting = true;
+		const verify = useBackupCode ? authClient.twoFactor.verifyBackupCode : authClient.twoFactor.verifyTotp;
+		const { error } = await verify({ code: code.trim() });
+		submitting = false;
+		if (!error) {
+			await goto(redirectTo, { invalidateAll: true });
+			return;
+		}
+		if (error.code === "INVALID_CODE" || error.code === "INVALID_BACKUP_CODE") {
+			errors = [useBackupCode ? "That backup code doesn't work" : "Wrong code"];
+		} else if (error.code === "ACCOUNT_TEMPORARILY_LOCKED") {
+			errors = ["Too many wrong codes. Try again later."];
+		} else {
+			askingCode = false;
+			code = "";
+			errors = ["The login timed out. Enter your password again."];
+		}
+	}
+
 	const resendVerification = async () => {
 		await authClient.sendVerificationEmail({ email, callbackURL: "/my-flashcards" });
 		unverified = false;
@@ -39,7 +67,9 @@
 
 <div class="register-and-login-container">
 	<h1>Log in</h1>
-	<SocialSignIn verb="Log in" callbackURL={redirectTo} onError={message => errors = [message]} />
+	{#if !askingCode}
+		<SocialSignIn verb="Log in" callbackURL={redirectTo} onError={message => errors = [message]} />
+	{/if}
 	{#if errors.length > 0}
 		<ul class="errors">
 			{#each errors as error}
@@ -53,18 +83,44 @@
 			<button type="button" class="link-btn" onclick={resendVerification}>Resend verification email</button>
 		</p>
 	{/if}
-	<form onsubmit={e => { e.preventDefault(); submit(); }}>
-		<label for="email">
-			Email
-			<input name="email" id="email" type="email" bind:value={email} required autocomplete="email">
-		</label>
-		<label for="password">
-			Password
-			<input name="password" id="password" type="password" bind:value={password} required autocomplete="current-password">
-		</label>
-		<a class="forgot" href="/forgot-password">Forgot password?</a>
-		<button type="submit" disabled={submitting}>Log in</button>
-	</form>
+	{#if askingCode}
+		<form onsubmit={e => { e.preventDefault(); submitCode(); }}>
+			<label for="code">
+				{useBackupCode ? "Backup code" : "Code from your authenticator app"}
+				<!-- svelte-ignore a11y_autofocus -->
+				<input
+					name="code"
+					id="code"
+					bind:value={code}
+					required
+					autofocus
+					autocomplete="one-time-code"
+					inputmode={useBackupCode ? "text" : "numeric"}
+				>
+			</label>
+			<button
+				type="button"
+				class="link-btn switch-code"
+				onclick={() => { useBackupCode = !useBackupCode; code = ""; errors = []; }}
+			>
+				{useBackupCode ? "Use the authenticator app" : "Use a backup code"}
+			</button>
+			<button type="submit" disabled={submitting}>Log in</button>
+		</form>
+	{:else}
+		<form onsubmit={e => { e.preventDefault(); submit(); }}>
+			<label for="email">
+				Email
+				<input name="email" id="email" type="email" bind:value={email} required autocomplete="email">
+			</label>
+			<label for="password">
+				Password
+				<input name="password" id="password" type="password" bind:value={password} required autocomplete="current-password">
+			</label>
+			<a class="forgot" href="/forgot-password">Forgot password?</a>
+			<button type="submit" disabled={submitting}>Log in</button>
+		</form>
+	{/if}
 </div>
 
 <style>
@@ -129,6 +185,12 @@
 			input:focus {
 				outline: 2px solid var(--accent);
 				outline-offset: -1px;
+			}
+
+			.switch-code {
+				align-self: end;
+				margin-top: -6px;
+				font-size: 0.85rem;
 			}
 
 			.forgot {

@@ -164,8 +164,8 @@
 			{/each}
 		</select>
 
-		<label for="mp-price">Price</label>
-		<input id="mp-price" form="request-details" class="natural-width" type="number" bind:value={price} min="0" max="999.99" step="0.01" required />
+		<label for="mp-price">Price in USD: 0 for free, or 2 to 200</label>
+		<input id="mp-price" form="request-details" class="natural-width" type="number" bind:value={price} min="0" max="200" step="0.01" required />
 
 		{#if errors.length > 0}
 			<ul class="errors">

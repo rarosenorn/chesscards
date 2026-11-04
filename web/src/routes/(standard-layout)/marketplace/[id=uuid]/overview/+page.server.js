@@ -1,5 +1,6 @@
-import { fail, redirect } from "@sveltejs/kit"
+import { error, fail, redirect } from "@sveltejs/kit"
 import * as marketplace from "$lib/server/marketplace.js"
+import * as payments from "$lib/server/payments.js"
 
 export const load = async ({ params, locals }) => {
 	return {
@@ -17,16 +18,34 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // the review actions are also posted to from the Deck tab of someone who has
 // the deck (DeckReviews), which shows the same reviews
 export const actions = {
-	getDeck: async ({ params, locals, url }) => {
+	// free decks, the author's own and decks bought before come straight in;
+	// anything else goes through Stripe Checkout
+	getDeck: async ({ request, params, locals, url }) => {
 		if (!locals.userId) {
 			redirect(303, `/login?redirect_to=${url.pathname}`);
 		}
-		try {
-			await marketplace.createDeckInstance(locals.userId, params.id);
-		} catch (err) {
-			return fail(400, { errors: [err.message] });
+		const deck = await marketplace.getDeckForSale(params.id);
+		if (!deck) error(404);
+		const { owned, inLibrary } = await marketplace.getOwnership(locals.userId, params.id);
+		if (inLibrary) return fail(400, { errors: ["You already have this deck"] });
+
+		if (owned || deck.price_cents === 0 || deck.user_id === locals.userId) {
+			try {
+				await marketplace.createDeckInstance(locals.userId, params.id);
+			} catch (err) {
+				return fail(400, { errors: [err.message] });
+			}
+			redirect(303, "/my-flashcards");
 		}
-		redirect(303, "/my-flashcards");
+
+		const data = await request.formData();
+		if (data.get("waive-withdrawal") !== "on") {
+			return fail(400, { errors: ["Tick the box about getting the deck right away to buy it"] });
+		}
+		const checkoutUrl = await payments.createCheckout({
+			user: locals.user, deck, origin: url.origin, withdrawalWaivedAt: new Date()
+		});
+		redirect(303, checkoutUrl);
 	},
 
 	// a first review, or the rewrite of one posted a moment ago

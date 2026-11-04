@@ -41,8 +41,8 @@ export const actions = {
 		}
 
 		const price = Number(data.get("price"));
-		if (!Number.isFinite(price) || price < 0 || price > 999.99) {
-			return fail(400, { errors: ["Price must be between 0 and 999.99"] });
+		if (!Number.isFinite(price) || (price !== 0 && (price < 2 || price > 200))) {
+			return fail(400, { errors: ["Price must be 0 (free) or from $2 to $200"] });
 		}
 
 		// blocks, like a card's side

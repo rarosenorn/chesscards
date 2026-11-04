@@ -4,8 +4,11 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import ReviewCounts from "$lib/components/ReviewCounts.svelte"
 	import OwnedBadge from "$lib/components/OwnedBadge.svelte"
+	import { isFree, formatPrice } from "$lib/money.js"
 
 	let { data, children } = $props();
+
+	const buying = $derived(!data.ownership.owned && !data.mpDeck.isAuthor && !isFree(data.mpDeck.price));
 
 	const tabs = [
 		{ path: "overview", name: "Overview" },
@@ -38,11 +41,22 @@
 			</div>
 			<div class="buy-row">
 				<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
+					{#if buying && !data.ownership.inLibrary}
+						<label class="waiver">
+							<input type="checkbox" name="waive-withdrawal" required>
+							<span>
+								Give me the deck right away. I understand this ends my 14-day right of
+								withdrawal; the <a href="/terms">30-day money-back guarantee</a> still applies.
+							</span>
+						</label>
+					{/if}
 					<button class="std-btn" disabled={data.ownership.inLibrary}>
-						{#if data.ownership.owned && !data.ownership.inLibrary}
+						{#if !buying && !isFree(data.mpDeck.price) && !data.ownership.inLibrary}
 							Add to my flashcards
+						{:else if isFree(data.mpDeck.price)}
+							Get for free
 						{:else}
-							{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}
+							Buy for {formatPrice(data.mpDeck.price)}
 						{/if}
 					</button>
 				</form>
@@ -110,6 +124,23 @@
 		align-items: start;
 		gap: 10px;
 		margin-top: 8px;
+	}
+	.buy-row form {
+		display: flex;
+		flex-direction: column;
+		align-items: start;
+		gap: 10px;
+	}
+	.waiver {
+		display: flex;
+		align-items: start;
+		gap: 8px;
+		max-width: 46ch;
+		font-size: 0.85rem;
+		color: rgba(0, 0, 0, 0.7);
+	}
+	.waiver input {
+		margin: 2px 0 0 0;
 	}
 	/* you have the deck already: greyed, and deaf to the hover and press of
 	   a live button */

@@ -237,6 +237,14 @@ create table purchases (
 	user_id uuid references "user" ("id") on delete set null,
 	marketplace_deck_id uuid references marketplace_decks(id) not null,
 	price_cents integer not null check (price_cents >= 0),
+	currency text not null default 'usd',
+	tax_cents integer,
+	fee_cents integer,
+	author_share_cents integer,
+	stripe_checkout_session_id text unique,
+	stripe_payment_intent_id text unique,
+	withdrawal_waived_at timestamptz,
+	terms_version text,
 	created_at timestamptz not null default now(),
 	refunded_at timestamptz
 );

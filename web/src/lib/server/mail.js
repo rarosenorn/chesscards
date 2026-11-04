@@ -13,13 +13,16 @@ const transport = nodemailer.createTransport({
 		: undefined
 });
 
-const sendMail = ({ to, subject, text, html }) =>
+const supportEmail = () => process.env.SUPPORT_EMAIL ?? "support@chesscards.local";
+
+const sendMail = ({ to, subject, text, html, replyTo }) =>
 	transport.sendMail({
 		from: process.env.SMTP_FROM ?? "Chesscards <no-reply@chesscards.local>",
 		to,
 		subject,
 		text,
-		html
+		html,
+		replyTo
 	});
 
-export { sendMail }
+export { sendMail, supportEmail }

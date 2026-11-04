@@ -286,61 +286,21 @@ const getOwnership = async (userId, marketplaceDeckId) => {
 	return row;
 }
 
-// Creates an instance of a marketplace deck for the user, with one card
-// instance per marketplace card, initialized like a brand new card.
-const createDeckInstance = async (userId, marketplaceDeckId) => {
-	if ((await getOwnership(userId, marketplaceDeckId)).inLibrary) {
-		throw new Error("You already have this deck");
-	}
+const getDeckForSale = async marketplaceDeckId => {
+	const { rows: [deck] } = await pool.query(
+		"select id, name, user_id, round(price * 100)::int price_cents from marketplace_decks where id = $1",
+		[marketplaceDeckId]
+	);
+	return deck;
+}
 
+const inTransaction = async work => {
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
-		await client.query(`
-			insert into purchases (user_id, marketplace_deck_id, price_cents)
-			values ($1, $2, 0)
-			on conflict (user_id, marketplace_deck_id) where refunded_at is null do nothing`,
-			[userId, marketplaceDeckId]
-		);
-		// it joins the end of the top of the user's list, where their own
-		// decks and the marketplace decks they have taken share the places
-		const { rows: [instance] } = await client.query(
-			`insert into marketplace_deck_instances(user_id, marketplace_deck_id, position)
-			values($1, $2, (select coalesce(max(position), 0) + 1 from (
-				select position from decks where user_id = $1 and parent_id is null
-				union all
-				select position from marketplace_deck_instances where user_id = $1 and parent_id is null) top))
-			returning id`,
-			[userId, marketplaceDeckId]
-		);
-		const emptyCard = createEmptyCard();
-		// tactic cards get null FSRS state (they're scheduled by finished_at/due alone)
-		await client.query(`
-			insert into marketplace_card_instances(
-				marketplace_deck_instance_id, marketplace_card_id, card_type,
-				due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
-			)
-			select $1, id, card_type, $2,
-				case when card_type = 'tactic' then null else $3::numeric end,
-				case when card_type = 'tactic' then null else $4::numeric end,
-				case when card_type = 'tactic' then null else $5::smallint end,
-				case when card_type = 'tactic' then null else $6::smallint end,
-				case when card_type = 'tactic' then null else $7::smallint end,
-				case when card_type = 'tactic' then null else $8::smallint end,
-				case when card_type = 'tactic' then null else $9::smallint end,
-				case when card_type = 'tactic' then null else $10::smallint end,
-				$11::timestamptz
-			from marketplace_cards where marketplace_deck_id = $12`,
-			[
-				instance.id,
-				emptyCard.due, emptyCard.stability, emptyCard.difficulty, emptyCard.elapsed_days,
-				emptyCard.scheduled_days, emptyCard.reps, emptyCard.lapses, emptyCard.learning_steps,
-				emptyCard.state, emptyCard.last_review,
-				marketplaceDeckId
-			]
-		);
+		const result = await work(client);
 		await client.query("commit");
-		return instance.id;
+		return result;
 	} catch (err) {
 		await client.query("rollback");
 		throw err;
@@ -348,6 +308,91 @@ const createDeckInstance = async (userId, marketplaceDeckId) => {
 		client.release();
 	}
 }
+
+// Creates an instance of a marketplace deck for the user, with one card
+// instance per marketplace card, initialized like a brand new card. Null when
+// the user has one already.
+const insertDeckInstance = async (client, userId, marketplaceDeckId) => {
+	// it joins the end of the top of the user's list, where their own
+	// decks and the marketplace decks they have taken share the places
+	const { rows: [instance] } = await client.query(
+		`insert into marketplace_deck_instances(user_id, marketplace_deck_id, position)
+		values($1, $2, (select coalesce(max(position), 0) + 1 from (
+			select position from decks where user_id = $1 and parent_id is null
+			union all
+			select position from marketplace_deck_instances where user_id = $1 and parent_id is null) top))
+		on conflict (user_id, marketplace_deck_id) do nothing
+		returning id`,
+		[userId, marketplaceDeckId]
+	);
+	if (!instance) return null;
+	const emptyCard = createEmptyCard();
+	// tactic cards get null FSRS state (they're scheduled by finished_at/due alone)
+	await client.query(`
+		insert into marketplace_card_instances(
+			marketplace_deck_instance_id, marketplace_card_id, card_type,
+			due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
+		)
+		select $1, id, card_type, $2,
+			case when card_type = 'tactic' then null else $3::numeric end,
+			case when card_type = 'tactic' then null else $4::numeric end,
+			case when card_type = 'tactic' then null else $5::smallint end,
+			case when card_type = 'tactic' then null else $6::smallint end,
+			case when card_type = 'tactic' then null else $7::smallint end,
+			case when card_type = 'tactic' then null else $8::smallint end,
+			case when card_type = 'tactic' then null else $9::smallint end,
+			case when card_type = 'tactic' then null else $10::smallint end,
+			$11::timestamptz
+		from marketplace_cards where marketplace_deck_id = $12`,
+		[
+			instance.id,
+			emptyCard.due, emptyCard.stability, emptyCard.difficulty, emptyCard.elapsed_days,
+			emptyCard.scheduled_days, emptyCard.reps, emptyCard.lapses, emptyCard.learning_steps,
+			emptyCard.state, emptyCard.last_review,
+			marketplaceDeckId
+		]
+	);
+	return instance.id;
+}
+
+const createDeckInstance = async (userId, marketplaceDeckId) => {
+	if ((await getOwnership(userId, marketplaceDeckId)).inLibrary) {
+		throw new Error("You already have this deck");
+	}
+	return inTransaction(async client => {
+		await client.query(`
+			insert into purchases (user_id, marketplace_deck_id, price_cents)
+			values ($1, $2, 0)
+			on conflict (user_id, marketplace_deck_id) where refunded_at is null do nothing`,
+			[userId, marketplaceDeckId]
+		);
+		const instanceId = await insertDeckInstance(client, userId, marketplaceDeckId);
+		if (!instanceId) throw new Error("You already have this deck");
+		return instanceId;
+	});
+}
+
+// A paid purchase, once Stripe has the money: the deck comes into the
+// library unless it is there. "recorded" when this payment was recorded
+// before; "duplicate" when the user owned the deck already.
+const recordPaidPurchase = (purchase) => inTransaction(async client => {
+	const { rowCount } = await client.query(`
+		insert into purchases (user_id, marketplace_deck_id, price_cents, currency, tax_cents, fee_cents, author_share_cents,
+			stripe_checkout_session_id, stripe_payment_intent_id, withdrawal_waived_at, terms_version)
+		values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		on conflict do nothing`,
+		[purchase.userId, purchase.marketplaceDeckId, purchase.priceCents, purchase.currency, purchase.taxCents,
+			purchase.feeCents, purchase.authorShareCents, purchase.checkoutSessionId, purchase.paymentIntentId,
+			purchase.withdrawalWaivedAt, purchase.termsVersion]
+	);
+	if (rowCount === 0) {
+		const { rowCount: recorded } = await client.query(
+			"select 1 from purchases where stripe_checkout_session_id = $1", [purchase.checkoutSessionId]);
+		return recorded ? "recorded" : "duplicate";
+	}
+	await insertDeckInstance(client, purchase.userId, purchase.marketplaceDeckId);
+	return "new";
+});
 
 // A marketplace deck instance's Deck tab: the listing as the marketplace
 // shows it, which is the author's and read-only here
@@ -519,4 +564,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, OWNS, getOwnership, createDeckInstance, getInstanceListing, updateInstanceCardStudyState, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, OWNS, getOwnership, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, createInstanceReviewLog }

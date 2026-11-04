@@ -44,6 +44,7 @@
 		"dotenv": "^17.4.2",
 		"nodemailer": "^9.0.3",
 		"pg": "^8.20.0",
+		"stripe": "^23.1.0",
 		"svelte-dnd-action": "^0.9.74",
 		"ts-fsrs": "^5.4.1",
 		"uqr": "^0.1.3",

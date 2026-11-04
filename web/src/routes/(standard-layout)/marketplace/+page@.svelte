@@ -2,6 +2,7 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import ReviewCounts from "$lib/components/ReviewCounts.svelte"
 	import OwnedBadge from "$lib/components/OwnedBadge.svelte"
+	import { formatPrice } from "$lib/money.js"
 
 	let { data } = $props();
 </script>
@@ -32,7 +33,7 @@
 									<span class="owned-badge"><OwnedBadge /></span>
 								{/if}
 								<span class="price" class:free={Number(mpDeck.price) === 0} class:owned={mpDeck.owned}>
-									{Number(mpDeck.price) === 0 ? "Free" : `${mpDeck.price}$`}
+									{formatPrice(mpDeck.price)}
 								</span>
 							</div>
 						</div>

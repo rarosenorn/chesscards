@@ -274,25 +274,34 @@ const rejectUploadRequest = async (requestId, reason) => {
 	return rowCount === 1;
 }
 
-const userHasDeckInstance = async (userId, marketplaceDeckId) => {
-	const { rowCount } = await pool.query(
-		"select id from marketplace_deck_instances where user_id = $1 and marketplace_deck_id = $2",
+const OWNS = (user, deck) => `exists (select 1 from purchases p
+	where p.user_id = ${user} and p.marketplace_deck_id = ${deck} and p.refunded_at is null)`;
+
+const getOwnership = async (userId, marketplaceDeckId) => {
+	const { rows: [row] } = await pool.query(`
+		select ${OWNS("$1", "$2")} owned,
+			exists (select 1 from marketplace_deck_instances where user_id = $1 and marketplace_deck_id = $2) "inLibrary"`,
 		[userId, marketplaceDeckId]
 	);
-
-	return rowCount > 0;
+	return row;
 }
 
 // Creates an instance of a marketplace deck for the user, with one card
 // instance per marketplace card, initialized like a brand new card.
 const createDeckInstance = async (userId, marketplaceDeckId) => {
-	if (await userHasDeckInstance(userId, marketplaceDeckId)) {
+	if ((await getOwnership(userId, marketplaceDeckId)).inLibrary) {
 		throw new Error("You already have this deck");
 	}
 
 	const client = await pool.connect();
 	try {
 		await client.query("begin");
+		await client.query(`
+			insert into purchases (user_id, marketplace_deck_id, price_cents)
+			values ($1, $2, 0)
+			on conflict (user_id, marketplace_deck_id) where refunded_at is null do nothing`,
+			[userId, marketplaceDeckId]
+		);
 		// it joins the end of the top of the user's list, where their own
 		// decks and the marketplace decks they have taken share the places
 		const { rows: [instance] } = await client.query(
@@ -427,7 +436,7 @@ const saveReview = async (userId, marketplaceDeckId, { recommended, body }) => {
 		select md.id, $1, $3, $4
 		from marketplace_decks md
 		where md.id = $2 and md.user_id <> $1
-			and exists (select 1 from marketplace_deck_instances i where i.user_id = $1 and i.marketplace_deck_id = md.id)
+			and ${OWNS("$1", "md.id")}
 		on conflict (marketplace_deck_id, user_id)
 		do update set recommended = excluded.recommended, body = excluded.body
 		where marketplace_reviews.created_at > now() - ${EDIT_WINDOW}`,
@@ -510,4 +519,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, userHasDeckInstance, createDeckInstance, getInstanceListing, updateInstanceCardStudyState, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, OWNS, getOwnership, createDeckInstance, getInstanceListing, updateInstanceCardStudyState, createInstanceReviewLog }

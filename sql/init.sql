@@ -232,6 +232,17 @@ create table marketplace_deck_instances (
 	unique (user_id, marketplace_deck_id)
 );
 
+create table purchases (
+	id uuid primary key default gen_random_uuid(),
+	user_id uuid references "user" ("id") on delete set null,
+	marketplace_deck_id uuid references marketplace_decks(id) not null,
+	price_cents integer not null check (price_cents >= 0),
+	created_at timestamptz not null default now(),
+	refunded_at timestamptz
+);
+
+create unique index purchases_owned_key on purchases (user_id, marketplace_deck_id) where refunded_at is null;
+
 create table marketplace_card_instances (
 	id uuid default gen_random_uuid() primary key,
 	marketplace_deck_instance_id uuid references marketplace_deck_instances(id) on delete cascade not null,

@@ -18,9 +18,9 @@ export const load = async ({ params, locals }) => {
 
 	return {
 		mpDeck: rows[0],
-		alreadyOwned: locals.userId
-			? await marketplace.userHasDeckInstance(locals.userId, params.id)
-			: false,
+		ownership: locals.userId
+			? await marketplace.getOwnership(locals.userId, params.id)
+			: { owned: false, inLibrary: false },
 		// the page is the deck's: its name is the title
 		pageTitle: rows[0].name
 	}

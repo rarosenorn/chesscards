@@ -38,11 +38,15 @@
 			</div>
 			<div class="buy-row">
 				<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
-					<button class="std-btn" disabled={data.alreadyOwned}>
-						{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}
+					<button class="std-btn" disabled={data.ownership.inLibrary}>
+						{#if data.ownership.owned && !data.ownership.inLibrary}
+							Add to my flashcards
+						{:else}
+							{Number(data.mpDeck.price) === 0 ? "Get for free" : `Buy for ${data.mpDeck.price}$`}
+						{/if}
 					</button>
 				</form>
-				{#if data.alreadyOwned}
+				{#if data.ownership.owned}
 					<OwnedBadge />
 				{/if}
 			</div>

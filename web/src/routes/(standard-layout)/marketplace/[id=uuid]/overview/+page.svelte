@@ -11,7 +11,7 @@
 <DeckReviews
 	marketplaceDeckId={data.mpDeck.id}
 	reviews={data.reviews}
-	canReview={data.alreadyOwned && !data.mpDeck.isAuthor}
+	canReview={data.ownership.owned && !data.mpDeck.isAuthor}
 	isAuthor={data.mpDeck.isAuthor}
 	isAdmin={data.isAdmin}
 />

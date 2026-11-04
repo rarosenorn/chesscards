@@ -8,8 +8,7 @@ export const load = async ({ url, locals }) => {
 
 	const result = await pool.query(`
 		select md.id, md.name, md.theme, md.price, u.name author, count(mc.id) "cardCount",
-			exists (select 1 from marketplace_deck_instances i
-				where i.marketplace_deck_id = md.id and i.user_id = $2::uuid) owned,
+			${marketplace.OWNS("$2::uuid", "md.id")} owned,
 			${marketplace.REVIEW_COUNTS}
 		from marketplace_decks md
 		join "user" u on u.id = md.user_id

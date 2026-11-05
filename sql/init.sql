@@ -174,6 +174,8 @@ create table marketplace_decks (
 	user_id uuid references "user" ("id") on delete set null,
 	author_name text,
 	on_sale boolean not null default true,
+	-- set when an admin takes the deck down, and sent to the author
+	taken_down_reason text,
 	name text not null unique,
 	description jsonb not null,
 	price numeric(5,2) check(price >= 0) not null,
@@ -329,6 +331,7 @@ create table marketplace_upload_requests (
 	status text check(status in ('pending', 'approved', 'rejected')) not null default 'pending',
 	-- admins reject with a reason that is shown to the requester
 	rejection_reason text,
+	author_terms_version text,
 	created_at timestamptz not null default now()
 );
 

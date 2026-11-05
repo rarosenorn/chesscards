@@ -54,7 +54,7 @@
 							<button class="std-btn">Get</button>
 						</form>
 					{/if}
-					{#if data.mpDeck.isAuthor}
+					{#if data.mpDeck.isAuthor && !data.mpDeck.takenDownReason}
 						<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/onSale">
 							<input type="hidden" name="on-sale" value={!data.mpDeck.onSale}>
 							<button class="std-btn">{data.mpDeck.onSale ? "Take off sale" : "Put back on sale"}</button>
@@ -66,6 +66,21 @@
 					</form>
 					{#if buying}
 						<a class="guarantee" href="/terms">30-day money-back guarantee</a>
+					{/if}
+				{/if}
+				{#if data.mpDeck.takenDownReason}
+					<p class="taken-down">Taken down by Chesscards: {data.mpDeck.takenDownReason}</p>
+				{/if}
+				{#if data.user?.isAdmin}
+					{#if data.mpDeck.takenDownReason}
+						<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/restore">
+							<button class="std-btn">Restore</button>
+						</form>
+					{:else}
+						<form class="take-down" method="POST" action="/marketplace/{data.mpDeck.id}/overview?/takeDown">
+							<input name="reason" required placeholder="Reason, sent to the author">
+							<button class="std-btn">Take down</button>
+						</form>
 					{/if}
 				{/if}
 			</div>
@@ -140,6 +155,15 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
+	}
+	.taken-down {
+		margin: 0;
+		max-width: 46ch;
+		font-size: 0.9rem;
+	}
+	.buy-row form.take-down {
+		flex-direction: row;
+		align-items: center;
 	}
 	.guarantee {
 		font-size: 0.85rem;

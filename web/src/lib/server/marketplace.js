@@ -49,7 +49,7 @@ const publishable = async (client, deckId) => {
 // thumbnail. Throws if the user doesn't own the deck, nothing is under it, a
 // marketplace deck taken sits inside it, or a pending/approved request
 // already exists.
-const createUploadRequest = async (userId, deckId, { name, description, theme, price, image, imageType, previewCardIds }) => {
+const createUploadRequest = async (userId, deckId, { name, description, theme, price, image, imageType, previewCardIds, authorTermsVersion }) => {
 	const { rows } = await pool.query(
 		"select d.image is not null has_image from decks d where d.id = $1 and d.user_id = $2",
 		[deckId, userId]
@@ -74,12 +74,12 @@ const createUploadRequest = async (userId, deckId, { name, description, theme, p
 	const preview = (previewCardIds ?? []).filter(id => deckCardIds.has(id));
 
 	const { rows: inserted } = await pool.query(
-		`insert into marketplace_upload_requests(deck_id, user_id, name, description, theme, price, image, image_type, preview_card_ids)
-		select d.id, d.user_id, $3, $4, $5, $6, coalesce($7, d.image), coalesce($8, d.image_type), $9
+		`insert into marketplace_upload_requests(deck_id, user_id, name, description, theme, price, image, image_type, preview_card_ids, author_terms_version)
+		select d.id, d.user_id, $3, $4, $5, $6, coalesce($7, d.image), coalesce($8, d.image_type), $9, $10
 		from decks d where d.id = $1 and d.user_id = $2
 		returning id, name, theme, status`,
 		// the description as JSON text, as pg would send its blocks array as a postgres array
-		[deckId, userId, name, JSON.stringify(description), theme, price, image, imageType, preview]
+		[deckId, userId, name, JSON.stringify(description), theme, price, image, imageType, preview, authorTermsVersion]
 	);
 
 	return inserted[0];
@@ -274,6 +274,8 @@ const rejectUploadRequest = async (requestId, reason) => {
 	return rowCount === 1;
 }
 
+const FOR_SALE = "(md.on_sale and md.taken_down_reason is null)";
+
 const OWNS = (user, deck) => `exists (select 1 from purchases p
 	where p.user_id = ${user} and p.marketplace_deck_id = ${deck} and p.refunded_at is null)`;
 
@@ -291,7 +293,7 @@ const getOwnership = async (userId, marketplaceDeckId) => {
 // the marketplace deck published from a deck of the author's own
 const getListingForDeck = async (userId, deckId) => {
 	const { rows: [listing] } = await pool.query(
-		'select id, name, on_sale "onSale" from marketplace_decks where user_id = $1 and deck_id = $2',
+		'select id, name, on_sale "onSale", taken_down_reason "takenDownReason" from marketplace_decks where user_id = $1 and deck_id = $2',
 		[userId, deckId]
 	);
 	return listing;
@@ -305,9 +307,19 @@ const setOnSale = async (userId, marketplaceDeckId, onSale) => {
 	return rowCount === 1;
 }
 
+// an admin's takedown, with the reason the author is sent; null restores it
+const setTakenDown = async (marketplaceDeckId, reason) => {
+	const { rows: [deck] } = await pool.query(`
+		update marketplace_decks md set taken_down_reason = $2 where md.id = $1
+		returning md.name, (select email from "user" u where u.id = md.user_id) "authorEmail"`,
+		[marketplaceDeckId, reason]
+	);
+	return deck;
+}
+
 const getDeckForSale = async marketplaceDeckId => {
 	const { rows: [deck] } = await pool.query(
-		"select id, name, user_id, on_sale, round(price * 100)::int price_cents from marketplace_decks where id = $1",
+		`select id, name, user_id, ${FOR_SALE} for_sale, round(price * 100)::int price_cents from marketplace_decks md where id = $1`,
 		[marketplaceDeckId]
 	);
 	return deck;
@@ -583,4 +595,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, OWNS, getOwnership, getListingForDeck, setOnSale, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, FOR_SALE, OWNS, getOwnership, getListingForDeck, setOnSale, setTakenDown, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, createInstanceReviewLog }

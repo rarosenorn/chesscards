@@ -5,19 +5,22 @@ vi.mock("$app/state", () => ({ page: { url: new URL("http://localhost/marketplac
 
 const { default: DeckLayout } = await import("./[id=uuid]/+layout@.svelte");
 
-const mpDeck = (price, isAuthor = false, onSale = true) => ({ id: "d", name: "Deck", author: "A", theme: "openings", cardCount: 3, price, isAuthor, onSale, reviewCount: 0, recommendCount: 0 });
+const mpDeck = (price, isAuthor = false, onSale = true, takenDownReason = null) => ({ id: "d", name: "Deck", author: "A", theme: "openings", cardCount: 3, price, isAuthor, onSale, takenDownReason, reviewCount: 0, recommendCount: 0 });
 
-const open = async (ownership, price = "10.00", isAuthor = false, onSale = true) => {
+const open = async (ownership, price = "10.00", isAuthor = false, onSale = true, { takenDownReason = null, isAdmin = false } = {}) => {
 	const target = document.createElement("div");
 	document.body.append(target);
 	const children = createRawSnippet(() => ({ render: () => "<div></div>" }));
-	const app = mount(DeckLayout, { target, props: { data: { mpDeck: mpDeck(price, isAuthor, onSale), ownership }, children } });
+	const user = isAdmin ? { isAdmin: true } : undefined;
+	const app = mount(DeckLayout, { target, props: { data: { mpDeck: mpDeck(price, isAuthor, onSale, takenDownReason), ownership, user }, children } });
 	await tick();
 	const buttons = [...target.querySelectorAll(".buy-row button")];
 	return {
 		buttons: buttons.map(b => [b.textContent.trim(), b.disabled]),
 		badge: !!target.querySelector(".buy-row .owned"),
 		guarantee: !!target.querySelector(".buy-row .guarantee"),
+		note: target.querySelector(".buy-row .taken-down")?.textContent.trim() ?? null,
+		reason: target.querySelector(".buy-row input[name=reason]"),
 		close: () => { unmount(app); target.remove(); }
 	};
 };
@@ -57,6 +60,24 @@ describe("the marketplace deck's buy button", () => {
 		offSale.close();
 		const buyer = await open({ owned: true, inLibrary: true });
 		expect(buyer.buttons).toEqual([["Buy for $10.00", true]]);
+		buyer.close();
+	});
+
+	it("taken down: the author sees why and can't put it back; the admin restores it", async () => {
+		const author = await open({ owned: true, inLibrary: true }, "10.00", true, true, { takenDownReason: "copied from a book" });
+		expect([author.buttons, author.note]).toEqual([[["Buy for $10.00", true]], "Taken down by Chesscards: copied from a book"]);
+		author.close();
+		const admin = await open({ owned: false, inLibrary: false }, "10.00", false, true, { takenDownReason: "copied from a book", isAdmin: true });
+		expect(admin.buttons).toEqual([["Buy for $10.00", false], ["Restore", false]]);
+		admin.close();
+	});
+
+	it("an admin can take a deck down, with a reason", async () => {
+		const admin = await open({ owned: false, inLibrary: false }, "10.00", false, true, { isAdmin: true });
+		expect([admin.buttons.at(-1), admin.reason?.required]).toEqual([["Take down", false], true]);
+		admin.close();
+		const buyer = await open({ owned: false, inLibrary: false });
+		expect(buyer.reason).toBe(null);
 		buyer.close();
 	});
 });

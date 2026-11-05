@@ -14,10 +14,10 @@ export const load = async ({ url, locals }) => {
 		left join "user" u on u.id = md.user_id
 		left join marketplace_cards mc on md.id = mc.marketplace_deck_id
 		where ($1::deck_theme is null or md.theme = $1)
-			and (md.on_sale or md.user_id = $2::uuid or ${marketplace.OWNS("$2::uuid", "md.id")})
+			and (${marketplace.FOR_SALE} or $3 or md.user_id = $2::uuid or ${marketplace.OWNS("$2::uuid", "md.id")})
 		group by md.id, md.name, md.theme, md.price, u.name, md.author_name
 		order by md.name`,
-		[theme, locals.userId ?? null]
+		[theme, locals.userId ?? null, locals.isAdmin ?? false]
 	);
 
 	if (!result) error(500);

@@ -74,6 +74,10 @@
 			<p class="status status-pending">
 				Upload request for "{data.uploadRequest.name}" is pending review ({data.uploadRequest.theme}).
 			</p>
+		{:else if data.listing?.takenDownReason}
+			<p class="section-note">
+				"{data.listing.name}" was taken down by Chesscards: {data.listing.takenDownReason}
+			</p>
 		{:else if data.listing}
 			{#if data.listing.onSale}
 				<p class="status status-approved">

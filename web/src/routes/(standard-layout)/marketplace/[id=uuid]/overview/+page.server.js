@@ -1,6 +1,7 @@
 import { error, fail, redirect } from "@sveltejs/kit"
 import * as marketplace from "$lib/server/marketplace.js"
 import * as payments from "$lib/server/payments.js"
+import { sendMail, supportEmail } from "$lib/server/mail.js"
 
 export const load = async ({ params, locals }) => {
 	return {
@@ -15,6 +16,17 @@ const text = value => value?.toString().replace(/\r\n/g, "\n").trim();
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const tellAuthor = async (deck, message) => {
+	if (!deck.authorEmail) return;
+	await sendMail({
+		to: deck.authorEmail,
+		replyTo: supportEmail(),
+		subject: `Your marketplace deck: ${deck.name}`,
+		text: message,
+		html: message.split("\n\n").map(line => `<p>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>`).join("")
+	}).catch(err => console.error("takedown email failed", err));
+}
+
 // the review actions are also posted to from the Deck tab of someone who has
 // the deck (DeckReviews), which shows the same reviews
 export const actions = {
@@ -27,7 +39,7 @@ export const actions = {
 		const deck = await marketplace.getDeckForSale(params.id);
 		if (!deck) error(404);
 		const { owned, inLibrary } = await marketplace.getOwnership(locals.userId, params.id);
-		if (!deck.on_sale && !owned) error(404);
+		if (!deck.for_sale && !owned) error(404);
 		if (inLibrary) return fail(400, { errors: ["You already have this deck"] });
 
 		if (owned || deck.price_cents === 0) {
@@ -46,6 +58,24 @@ export const actions = {
 	onSale: async ({ request, params, locals }) => {
 		const onSale = (await request.formData()).get("on-sale") === "true";
 		if (!locals.userId || !await marketplace.setOnSale(locals.userId, params.id, onSale)) error(404);
+		redirect(303, `/marketplace/${params.id}/overview`);
+	},
+
+	takeDown: async ({ request, params, locals }) => {
+		if (!locals.isAdmin) error(404);
+		const reason = text((await request.formData()).get("reason"));
+		if (!reason) return fail(400, { errors: ["Write why the deck is taken down; the author is sent it"] });
+		const deck = await marketplace.setTakenDown(params.id, reason);
+		if (!deck) error(404);
+		await tellAuthor(deck, `We have taken "${deck.name}" off the Chesscards marketplace: ${reason}\n\nThose who have the deck keep it. If you think this is wrong, reply to this email.`);
+		redirect(303, `/marketplace/${params.id}/overview`);
+	},
+
+	restore: async ({ params, locals }) => {
+		if (!locals.isAdmin) error(404);
+		const deck = await marketplace.setTakenDown(params.id, null);
+		if (!deck) error(404);
+		await tellAuthor(deck, `"${deck.name}" is back on the Chesscards marketplace.`);
 		redirect(303, `/marketplace/${params.id}/overview`);
 	},
 

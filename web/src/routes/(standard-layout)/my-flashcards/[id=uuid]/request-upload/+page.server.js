@@ -1,6 +1,7 @@
 import { error, fail, redirect } from "@sveltejs/kit"
 import * as decks from "$lib/server/decks.js"
 import * as marketplace from "$lib/server/marketplace.js"
+import { AUTHOR_TERMS_VERSION } from "$lib/server/payments.js"
 import { sideHasContent } from "$lib/card-utils.js"
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -87,7 +88,8 @@ export const actions = {
 				price,
 				image: hasImage ? Buffer.from(await image.arrayBuffer()) : null,
 				imageType: hasImage ? image.type : null,
-				previewCardIds
+				previewCardIds,
+				authorTermsVersion: AUTHOR_TERMS_VERSION
 			});
 		} catch (err) {
 			return fail(400, { errors: [err.message] });

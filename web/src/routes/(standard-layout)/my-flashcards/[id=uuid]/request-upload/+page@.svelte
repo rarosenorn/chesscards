@@ -191,6 +191,7 @@
 					{/each}
 				</ul>
 			{/if}
+			<p class="agree">By requesting, you agree to the <a href="/author-terms" target="_blank">author agreement</a>.</p>
 			<div class="footer-buttons">
 				<button type="button" class="std-btn" onclick={() => step = 1}>Back</button>
 				<button type="button" class="std-btn request-btn" disabled={submitting} onclick={submit}>
@@ -304,6 +305,12 @@
 	}
 	.footer-errors {
 		margin: 0 0 8px 0;
+	}
+	.agree {
+		margin: 0 0 8px 0;
+		text-align: right;
+		font-size: 0.85rem;
+		color: rgba(0, 0, 0, 0.6);
 	}
 	.footer-buttons {
 		display: flex;

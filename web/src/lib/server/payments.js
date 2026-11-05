@@ -7,6 +7,7 @@ import { sendMail, supportEmail } from "./mail.js"
 import { formatCents } from "../money.js"
 
 const TERMS_VERSION = "2026-11-05";
+const AUTHOR_TERMS_VERSION = "2026-11-05";
 const AUTHOR_SHARE = 0.75;
 // on-demand online course, written material
 const TAX_CODE = "txcd_20060358";
@@ -159,4 +160,4 @@ const handleEvent = async event => {
 	}
 }
 
-export { TERMS_VERSION, createCheckout, fulfillCheckout, refundPurchase, constructEvent, handleEvent, authorShare }
+export { TERMS_VERSION, AUTHOR_TERMS_VERSION, createCheckout, fulfillCheckout, refundPurchase, constructEvent, handleEvent, authorShare }

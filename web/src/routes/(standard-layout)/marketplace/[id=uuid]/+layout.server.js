@@ -5,7 +5,8 @@ import * as marketplace from "$lib/server/marketplace.js"
 export const load = async ({ params, locals }) => {
 	const { rows } = await pool.query(`
 		select md.id, md.name, md.theme, md.description, md.price, coalesce(u.name, md.author_name) author, count(mc.id) "cardCount",
-			md.on_sale "onSale",
+			md.on_sale "onSale", md.taken_down_reason "takenDownReason",
+			${marketplace.FOR_SALE} "forSale",
 			coalesce(md.user_id = $2::uuid, false) "isAuthor",
 			${marketplace.REVIEW_COUNTS}
 		from marketplace_decks md
@@ -19,12 +20,14 @@ export const load = async ({ params, locals }) => {
 	const ownership = locals.userId
 		? await marketplace.getOwnership(locals.userId, params.id)
 		: { owned: false, inLibrary: false };
-	if (!rows[0].onSale && !ownership.owned) error(404);
+	const mpDeck = rows[0];
+	if (!mpDeck.forSale && !ownership.owned && !locals.isAdmin) error(404);
+	if (!mpDeck.isAuthor && !locals.isAdmin) mpDeck.takenDownReason = null;
 
 	return {
-		mpDeck: rows[0],
+		mpDeck,
 		ownership,
 		// the page is the deck's: its name is the title
-		pageTitle: rows[0].name
+		pageTitle: mpDeck.name
 	}
 }

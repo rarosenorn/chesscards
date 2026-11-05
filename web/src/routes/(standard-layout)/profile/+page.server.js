@@ -11,14 +11,14 @@ export const load = async ({ locals }) => ({
 	hasPublished: locals.userId
 		? (await pool.query("select 1 from marketplace_decks where user_id = $1 limit 1", [locals.userId])).rowCount > 0
 		: false,
-	payouts: locals.userId && await payouts.isAuthor(locals.userId)
+	payouts: locals.userId && await payouts.sellsDecks(locals.userId)
 		? await payouts.getPayoutDetails(locals.userId)
 		: null
 });
 
 export const actions = {
 	payoutEmail: async ({ request, locals }) => {
-		if (!locals.userId) return fail(401, { failed: "payout", errors: ["Log in first"] });
+		if (!locals.userId || !await payouts.sellsDecks(locals.userId)) return fail(403, { failed: "payout", errors: ["Payouts are for authors of paid marketplace decks"] });
 		const email = (await request.formData()).get("payout-email");
 		const result = await payouts.requestPayoutEmail(locals.user, email);
 		if (result === "invalid") return fail(400, { failed: "payout", errors: ["That doesn't look like an email address"] });

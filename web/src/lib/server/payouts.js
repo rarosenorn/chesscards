@@ -6,12 +6,9 @@ const siteUrl = () => process.env.BETTER_AUTH_URL ?? "http://localhost:5173";
 const hash = token => createHash("sha256").update(token).digest("hex");
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const isAuthor = async userId => {
-	const { rowCount } = await pool.query(`
-		select 1 from marketplace_decks where user_id = $1
-		union all
-		select 1 from marketplace_upload_requests where user_id = $1
-		limit 1`, [userId]);
+const sellsDecks = async userId => {
+	const { rowCount } = await pool.query(
+		"select 1 from marketplace_decks where user_id = $1 and price > 0 limit 1", [userId]);
 	return rowCount > 0;
 }
 
@@ -77,4 +74,4 @@ const confirmPayoutEmail = async token => {
 	return changed.email;
 }
 
-export { isAuthor, getPayoutDetails, requestPayoutEmail, getPendingPayoutEmail, confirmPayoutEmail }
+export { sellsDecks, getPayoutDetails, requestPayoutEmail, getPendingPayoutEmail, confirmPayoutEmail }

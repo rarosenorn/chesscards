@@ -185,7 +185,9 @@ create table marketplace_decks (
 	-- the published deck where it sat
 	tactic_ladder int[],
 	-- the deck's intro and those of the decks inside it (below), copied with them
-	intro jsonb
+	intro jsonb,
+	-- the author's deck it was published from, while they keep it
+	deck_id uuid references decks(id) on delete set null
 );
 
 -- the decks inside a published deck, tree and all, copied from the author's

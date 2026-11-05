@@ -8,7 +8,7 @@ export const load = async ({ url, locals }) => {
 
 	const result = await pool.query(`
 		select md.id, md.name, md.theme, md.price, u.name author, count(mc.id) "cardCount",
-			${marketplace.OWNS("$2::uuid", "md.id")} owned,
+			${marketplace.OWNS("$2::uuid", "md.id")} or md.user_id = $2::uuid owned,
 			${marketplace.REVIEW_COUNTS}
 		from marketplace_decks md
 		join "user" u on u.id = md.user_id

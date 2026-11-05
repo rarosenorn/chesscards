@@ -205,7 +205,7 @@ const approveUploadRequest = async requestId => {
 			// reviews in order is read at the top of the list, so a deck published
 			// from inside another takes it from the deck at the top; its tactic
 			// ladder is the nearest one set, its own or a deck's above
-			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, reviews_in_order, tactic_ladder, intro)
+			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, reviews_in_order, tactic_ladder, intro, deck_id)
 			 select $1, $2, $3, $4, $5, $6, $7, d.in_order, (
 				with recursive up(id, parent_id, reviews_in_order) as (
 					select d.id, d.parent_id, d.reviews_in_order
@@ -220,7 +220,7 @@ const approveUploadRequest = async requestId => {
 					select above.parent_id, above.tactic_ladder, up.depth + 1 from decks above join up on above.id = up.parent_id
 				)
 				select tactic_ladder from up where tactic_ladder is not null order by depth limit 1
-			 ), d.intro from decks d where d.id = $8 returning id`,
+			 ), d.intro, d.id from decks d where d.id = $8 returning id`,
 			// the description as JSON text, as pg would send its blocks array as a postgres array
 			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id]
 		);
@@ -279,11 +279,13 @@ const OWNS = (user, deck) => `exists (select 1 from purchases p
 
 const getOwnership = async (userId, marketplaceDeckId) => {
 	const { rows: [row] } = await pool.query(`
-		select ${OWNS("$1", "$2")} owned,
-			exists (select 1 from marketplace_deck_instances where user_id = $1 and marketplace_deck_id = $2) "inLibrary"`,
+		select ${OWNS("$1", "md.id")} or md.user_id = $1 owned,
+			exists (select 1 from marketplace_deck_instances where user_id = $1 and marketplace_deck_id = md.id)
+				or (md.user_id = $1 and md.deck_id is not null) "inLibrary"
+		from marketplace_decks md where md.id = $2`,
 		[userId, marketplaceDeckId]
 	);
-	return row;
+	return row ?? { owned: false, inLibrary: false };
 }
 
 const getDeckForSale = async marketplaceDeckId => {

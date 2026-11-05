@@ -8,9 +8,9 @@
 
 	let { data, children } = $props();
 
-	// the author owns the deck and has it: it is the one they published
-	const owned = $derived(data.ownership.owned || data.mpDeck.isAuthor);
-	const inLibrary = $derived(data.ownership.inLibrary || data.mpDeck.isAuthor);
+	// the author owns their deck, and has it while they keep the one they
+	// published it from
+	const { owned, inLibrary } = $derived(data.ownership);
 	const buying = $derived(!owned && !isFree(data.mpDeck.price));
 
 	const tabs = [

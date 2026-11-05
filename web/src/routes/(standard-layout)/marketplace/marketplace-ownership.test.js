@@ -34,11 +34,6 @@ describe("the marketplace deck's buy button", () => {
 		free.close();
 	});
 
-	it("the author owns their deck: the price, greyed, with the badge", async () => {
-		const view = await open({ owned: false, inLibrary: false }, "10.00", true);
-		expect([view.label, view.disabled, view.badge, view.waiver]).toEqual(["Buy for $10.00", true, true, null]);
-		view.close();
-	});
 
 	it("owned and in the library: the price, greyed, with the badge", async () => {
 		const paid = await open({ owned: true, inLibrary: true });

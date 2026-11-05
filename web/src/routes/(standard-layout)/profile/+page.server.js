@@ -12,16 +12,20 @@ export const load = async ({ locals }) => ({
 		? (await pool.query("select 1 from marketplace_decks where user_id = $1 limit 1", [locals.userId])).rowCount > 0
 		: false,
 	payouts: locals.userId && await payouts.sellsDecks(locals.userId)
-		? await payouts.getPayoutDetails(locals.userId)
+		? { ...await payouts.getPayoutDetails(locals.userId), ...await payouts.getEarnings(locals.userId) }
 		: null
 });
 
 export const actions = {
-	payoutEmail: async ({ request, locals }) => {
+	payoutDetails: async ({ request, locals }) => {
 		if (!locals.userId || !await payouts.sellsDecks(locals.userId)) return fail(403, { failed: "payout", errors: ["Payouts are for authors of paid marketplace decks"] });
-		const email = (await request.formData()).get("payout-email");
-		const result = await payouts.requestPayoutEmail(locals.user, email);
-		if (result === "invalid") return fail(400, { failed: "payout", errors: ["That doesn't look like an email address"] });
+		const data = await request.formData();
+		const result = await payouts.savePayoutDetails(locals.user, {
+			email: data.get("payout-email"),
+			name: data.get("payout-name"),
+			currency: data.get("payout-currency")
+		});
+		if (result !== "saved" && result !== "sent") return fail(400, { failed: "payout", errors: [result] });
 		return { saved: "payout" };
 	},
 	name: async ({ request, locals }) => {

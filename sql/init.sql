@@ -205,11 +205,30 @@ create table marketplace_decks (
 create table payout_details (
 	user_id uuid primary key,
 	email text,
+	-- as on their bank account, and its currency, for Wise
+	name text,
+	currency text,
 	changed_at timestamptz,
 	pending_email text,
 	pending_token_hash text unique,
 	pending_expires_at timestamptz
 );
+
+-- An author's earnings for the sales before period_end, less refunds of
+-- sales paid before; prepared, then paid by a Wise batch. Deleting one
+-- puts its sales and refunds back to be paid.
+create table payouts (
+	id uuid primary key default gen_random_uuid(),
+	author_id uuid not null,
+	period_end date not null,
+	amount_cents integer not null check (amount_cents > 0),
+	email text not null,
+	name text not null,
+	currency text not null,
+	created_at timestamptz not null default now(),
+	paid_at timestamptz
+);
+create index payouts_author_id_idx on payouts (author_id);
 
 -- an author who deletes their account leaves their decks with those who
 -- have them, off sale
@@ -280,7 +299,11 @@ create table purchases (
 	stripe_payment_intent_id text unique,
 	terms_version text,
 	created_at timestamptz not null default now(),
-	refunded_at timestamptz
+	refunded_at timestamptz,
+	-- the payout that paid the author's share, and the one that took it
+	-- back after a refund
+	payout_id uuid references payouts(id) on delete set null,
+	clawback_payout_id uuid references payouts(id) on delete set null
 );
 
 create unique index purchases_owned_key on purchases (user_id, marketplace_deck_id) where refunded_at is null;

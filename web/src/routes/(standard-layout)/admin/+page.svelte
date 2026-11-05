@@ -2,6 +2,8 @@
 	let { data } = $props();
 </script>
 
+<p><a href="/admin/payouts">Payouts</a></p>
+
 <h2>Pending upload requests</h2>
 {#if data.requests.length === 0}
 	<p>No pending requests</p>

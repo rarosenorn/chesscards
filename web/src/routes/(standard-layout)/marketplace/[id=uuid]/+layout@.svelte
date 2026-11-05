@@ -8,7 +8,10 @@
 
 	let { data, children } = $props();
 
-	const buying = $derived(!data.ownership.owned && !data.mpDeck.isAuthor && !isFree(data.mpDeck.price));
+	// the author owns the deck and has it: it is the one they published
+	const owned = $derived(data.ownership.owned || data.mpDeck.isAuthor);
+	const inLibrary = $derived(data.ownership.inLibrary || data.mpDeck.isAuthor);
+	const buying = $derived(!owned && !isFree(data.mpDeck.price));
 
 	const tabs = [
 		{ path: "overview", name: "Overview" },
@@ -41,7 +44,7 @@
 			</div>
 			<div class="buy-row">
 				<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
-					{#if buying && !data.ownership.inLibrary}
+					{#if buying}
 						<label class="waiver">
 							<input type="checkbox" name="waive-withdrawal" required>
 							<span>
@@ -50,9 +53,9 @@
 							</span>
 						</label>
 					{/if}
-					<button class="std-btn" disabled={data.ownership.inLibrary}>
-						{#if !buying && !isFree(data.mpDeck.price) && !data.ownership.inLibrary}
-							Add to my flashcards
+					<button class="std-btn" disabled={inLibrary}>
+						{#if owned && !inLibrary}
+							Get
 						{:else if isFree(data.mpDeck.price)}
 							Get for free
 						{:else}
@@ -60,7 +63,7 @@
 						{/if}
 					</button>
 				</form>
-				{#if data.ownership.owned}
+				{#if owned}
 					<OwnedBadge />
 				{/if}
 			</div>

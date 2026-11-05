@@ -34,21 +34,26 @@ describe("the marketplace deck's buy button", () => {
 		free.close();
 	});
 
-	it("the author adds their own paid deck free, without the waiver", async () => {
+	it("the author owns their deck: the price, greyed, with the badge", async () => {
 		const view = await open({ owned: false, inLibrary: false }, "10.00", true);
-		expect([view.label, view.disabled, view.waiver]).toEqual(["Add to my flashcards", false, null]);
+		expect([view.label, view.disabled, view.badge, view.waiver]).toEqual(["Buy for $10.00", true, true, null]);
 		view.close();
 	});
 
-	it("owned and in the library: disabled, with the badge", async () => {
-		const view = await open({ owned: true, inLibrary: true });
-		expect([view.disabled, view.badge]).toEqual([true, true]);
-		view.close();
+	it("owned and in the library: the price, greyed, with the badge", async () => {
+		const paid = await open({ owned: true, inLibrary: true });
+		expect([paid.label, paid.disabled, paid.badge, paid.waiver]).toEqual(["Buy for $10.00", true, true, null]);
+		paid.close();
+		const free = await open({ owned: true, inLibrary: true }, "0.00");
+		expect([free.label, free.disabled, free.badge]).toEqual(["Get for free", true, true]);
+		free.close();
 	});
 
-	it("bought, then deleted from the library: add it back at no charge", async () => {
-		const view = await open({ owned: true, inLibrary: false });
-		expect([view.label, view.disabled, view.badge, view.waiver]).toEqual(["Add to my flashcards", false, true, null]);
-		view.close();
+	it("owned, then deleted from the library: Get, at no charge", async () => {
+		for (const price of ["10.00", "0.00"]) {
+			const view = await open({ owned: true, inLibrary: false }, price);
+			expect([view.label, view.disabled, view.badge, view.waiver]).toEqual(["Get", false, true, null]);
+			view.close();
+		}
 	});
 });

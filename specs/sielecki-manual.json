@@ -36,25 +36,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ],
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
@@ -99,25 +80,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ],
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
@@ -164,25 +126,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ],
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
@@ -224,25 +167,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
@@ -280,25 +204,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
@@ -338,42 +243,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
-                  "6": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "8": [
                     [
                       "warning",
@@ -420,42 +289,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
-                  "6": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "8": [
                     [
                       "warning",
@@ -504,42 +337,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
-                  "6": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "8": [
                     [
                       "warning",
@@ -586,42 +383,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
-                  "6": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "8": [
                     [
                       "warning",
@@ -668,40 +429,11 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
                       "f8",
-                      "c5"
-                    ],
-                    [
-                      "warning",
-                      "f8",
                       "b4"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
                     ]
                   ]
                 }
@@ -736,40 +468,11 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
-                      "f8",
-                      "c5"
-                    ],
-                    [
-                      "warning",
                       "d7",
                       "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
                     ]
                   ]
                 }
@@ -804,52 +507,11 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
-                  "6": [
-                    [
-                      "warning",
-                      "f8",
-                      "c5"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ]
-                  ],
                   "8": [
                     [
                       "warning",
                       "d7",
                       "d6"
-                    ],
-                    [
-                      "warning",
-                      "e5",
-                      "d4"
                     ]
                   ]
                 }
@@ -884,52 +546,11 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
-                  "6": [
-                    [
-                      "warning",
-                      "f8",
-                      "c5"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ]
-                  ],
                   "8": [
                     [
                       "warning",
                       "f8",
                       "b4"
-                    ],
-                    [
-                      "warning",
-                      "e5",
-                      "d4"
                     ]
                   ],
                   "10": [
@@ -973,52 +594,11 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
-                  "6": [
-                    [
-                      "warning",
-                      "f8",
-                      "c5"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ]
-                  ],
                   "8": [
                     [
                       "warning",
                       "f8",
                       "b4"
-                    ],
-                    [
-                      "warning",
-                      "e5",
-                      "d4"
                     ]
                   ],
                   "10": [
@@ -1060,54 +640,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
-                  "6": [
-                    [
-                      "warning",
-                      "f8",
-                      "c5"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ]
-                  ],
-                  "8": [
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ]
-                  ],
                   "10": [
                     [
                       "warning",
@@ -1152,54 +684,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
-                  "6": [
-                    [
-                      "warning",
-                      "f8",
-                      "c5"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ]
-                  ],
-                  "8": [
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ]
-                  ],
                   "10": [
                     [
                       "warning",
@@ -1242,54 +726,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "c7",
-                      "c5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
-                  "6": [
-                    [
-                      "warning",
-                      "f8",
-                      "c5"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ]
-                  ],
-                  "8": [
-                    [
-                      "warning",
-                      "f8",
-                      "b4"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ]
-                  ],
                   "10": [
                     [
                       "warning",
@@ -1334,35 +770,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "e7",
-                      "e6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d5"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
@@ -1409,35 +816,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "e7",
-                      "e6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d5"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
@@ -1482,35 +860,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "e7",
-                      "e6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d5"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
@@ -1550,35 +899,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ],
-                    [
-                      "warning",
-                      "e7",
-                      "e6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d5"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "10": [
                     [
                       "warning",
@@ -1618,35 +938,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ],
-                    [
-                      "warning",
-                      "e7",
-                      "e6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d5"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "10": [
                     [
                       "warning",
@@ -1684,35 +975,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d5"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
@@ -1750,35 +1012,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d5"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "6": [
                     [
                       "warning",
@@ -1824,35 +1057,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "e7",
-                      "e6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "8": [
                     [
                       "warning",
@@ -1895,35 +1099,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "e7",
-                      "e6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "8": [
                     [
                       "warning",
@@ -1968,35 +1143,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "e7",
-                      "e6"
-                    ],
-                    [
-                      "warning",
-                      "g8",
-                      "f6"
-                    ]
-                  ],
                   "8": [
                     [
                       "warning",
@@ -2041,35 +1187,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "e7",
-                      "e6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d5"
-                    ]
-                  ],
                   "10": [
                     [
                       "warning",
@@ -2109,35 +1226,6 @@
                 "solutionFrom": 0,
                 "puzzle": true,
                 "arrows": {
-                  "2": [
-                    [
-                      "warning",
-                      "e7",
-                      "e5"
-                    ]
-                  ],
-                  "4": [
-                    [
-                      "warning",
-                      "b8",
-                      "c6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d6"
-                    ],
-                    [
-                      "warning",
-                      "e7",
-                      "e6"
-                    ],
-                    [
-                      "warning",
-                      "d7",
-                      "d5"
-                    ]
-                  ],
                   "10": [
                     [
                       "warning",

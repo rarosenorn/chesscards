@@ -20,18 +20,18 @@
 	<h2>Prices</h2>
 	<p>Prices are in US dollars and include VAT. Payment is handled by Stripe.</p>
 
-	<h2>Right of withdrawal</h2>
-	<p>
-		EU law gives you 14 days to withdraw from an online purchase. Because a deck is digital
-		content you get right away, you agree when buying to receive it immediately and so give up
-		that right. We confirm this by email after the purchase.
-	</p>
-
 	<h2>30-day money-back guarantee</h2>
 	<p>
 		Within 30 days of buying a deck, email {data.supportEmail} and we refund you in full, no
 		questions asked. The guarantee applies once per deck. A refunded deck leaves your library,
 		and your review of it is removed.
+	</p>
+
+	<h2>Right of withdrawal</h2>
+	<p>
+		EU law lets you cancel an online purchase within 14 days. Our 30-day guarantee covers this:
+		to cancel, email {data.supportEmail} with the deck's name and that you want to cancel, and
+		we refund you within 14 days.
 	</p>
 </article>
 

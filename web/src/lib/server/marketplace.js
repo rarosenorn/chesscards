@@ -380,12 +380,12 @@ const createDeckInstance = async (userId, marketplaceDeckId) => {
 const recordPaidPurchase = (purchase) => inTransaction(async client => {
 	const { rowCount } = await client.query(`
 		insert into purchases (user_id, marketplace_deck_id, price_cents, currency, tax_cents, fee_cents, author_share_cents,
-			stripe_checkout_session_id, stripe_payment_intent_id, withdrawal_waived_at, terms_version)
-		values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			stripe_checkout_session_id, stripe_payment_intent_id, terms_version)
+		values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		on conflict do nothing`,
 		[purchase.userId, purchase.marketplaceDeckId, purchase.priceCents, purchase.currency, purchase.taxCents,
 			purchase.feeCents, purchase.authorShareCents, purchase.checkoutSessionId, purchase.paymentIntentId,
-			purchase.withdrawalWaivedAt, purchase.termsVersion]
+			purchase.termsVersion]
 	);
 	if (rowCount === 0) {
 		const { rowCount: recorded } = await client.query(

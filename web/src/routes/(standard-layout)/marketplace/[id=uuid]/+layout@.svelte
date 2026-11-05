@@ -56,17 +56,11 @@
 					{/if}
 				{:else}
 					<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
-						{#if buying}
-							<label class="waiver">
-								<input type="checkbox" name="waive-withdrawal" required>
-								<span>
-									Give me the deck right away. I understand this ends my 14-day right of
-									withdrawal; the <a href="/terms">30-day money-back guarantee</a> still applies.
-								</span>
-							</label>
-						{/if}
 						<button class="std-btn">{priceLabel}</button>
 					</form>
+					{#if buying}
+						<a class="guarantee" href="/terms">30-day money-back guarantee</a>
+					{/if}
 				{/if}
 			</div>
 		</div>
@@ -141,16 +135,9 @@
 		align-items: center;
 		gap: 10px;
 	}
-	.waiver {
-		display: flex;
-		align-items: start;
-		gap: 8px;
-		max-width: 46ch;
+	.guarantee {
 		font-size: 0.85rem;
-		color: rgba(0, 0, 0, 0.7);
-	}
-	.waiver input {
-		margin: 2px 0 0 0;
+		color: rgba(0, 0, 0, 0.6);
 	}
 	/* you have the deck already: greyed, and deaf to the hover and press of
 	   a live button */

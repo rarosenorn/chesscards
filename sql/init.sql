@@ -245,7 +245,6 @@ create table purchases (
 	author_share_cents integer,
 	stripe_checkout_session_id text unique,
 	stripe_payment_intent_id text unique,
-	withdrawal_waived_at timestamptz,
 	terms_version text,
 	created_at timestamptz not null default now(),
 	refunded_at timestamptz

@@ -1,4 +1,16 @@
+<script>
+	import { page } from "$app/state"
+</script>
+
 <dl>
+	<dt>Can I get a refund?</dt>
+	<dd>
+		Yes. Within 30 days of buying a deck, email {page.data.supportEmail} and we refund you in
+		full, no questions asked. This also covers your 14-day right of withdrawal under EU law.
+		It applies once per deck; a refunded deck leaves My flashcards and your review of it is
+		removed. See the <a href="/terms">terms of sale</a>.
+	</dd>
+
 	<dt>Why not subscriptions?</dt>
 	<dd>Because subscriptions suck unless its necessary, like for the gym</dd>
 

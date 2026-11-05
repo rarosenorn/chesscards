@@ -38,13 +38,7 @@ export const actions = {
 			redirect(303, "/my-flashcards");
 		}
 
-		const data = await request.formData();
-		if (data.get("waive-withdrawal") !== "on") {
-			return fail(400, { errors: ["Tick the box about getting the deck right away to buy it"] });
-		}
-		const checkoutUrl = await payments.createCheckout({
-			user: locals.user, deck, origin: url.origin, withdrawalWaivedAt: new Date()
-		});
+		const checkoutUrl = await payments.createCheckout({ user: locals.user, deck, origin: url.origin });
 		redirect(303, checkoutUrl);
 	},
 

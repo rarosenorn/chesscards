@@ -6,7 +6,7 @@ import { removeTaken } from "./decks.js"
 import { sendMail, supportEmail } from "./mail.js"
 import { formatCents } from "../money.js"
 
-const TERMS_VERSION = "2026-11-04";
+const TERMS_VERSION = "2026-11-05";
 const AUTHOR_SHARE = 0.75;
 // on-demand online course, written material
 const TAX_CODE = "txcd_20060358";
@@ -16,7 +16,7 @@ const stripe = () => client ??= new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const siteUrl = () => process.env.BETTER_AUTH_URL ?? "http://localhost:5173";
 
-const createCheckout = async ({ user, deck, origin, withdrawalWaivedAt }) => {
+const createCheckout = async ({ user, deck, origin }) => {
 	const session = await stripe().checkout.sessions.create({
 		mode: "payment",
 		line_items: [{
@@ -34,7 +34,6 @@ const createCheckout = async ({ user, deck, origin, withdrawalWaivedAt }) => {
 		metadata: {
 			userId: user.id,
 			marketplaceDeckId: deck.id,
-			withdrawalWaivedAt: withdrawalWaivedAt.toISOString(),
 			termsVersion: TERMS_VERSION
 		},
 		payment_intent_data: { metadata: { userId: user.id, marketplaceDeckId: deck.id } },
@@ -75,8 +74,7 @@ const sendConfirmation = async ({ userId, deckName, priceCents, date }) => {
 	const support = supportEmail();
 	const lines = [
 		`Thanks for buying ${deckName} for ${formatCents(priceCents)} (VAT included). It's in My flashcards: ${siteUrl()}/my-flashcards`,
-		"You asked to get the deck right away, so the 14-day right of withdrawal no longer applies.",
-		`Our 30-day money-back guarantee does: email ${support} by ${new Date(date.getTime() + 30 * 864e5).toDateString()} and we'll refund you.`,
+		`30-day money-back guarantee: email ${support} by ${new Date(date.getTime() + 30 * 864e5).toDateString()} and we'll refund you in full. It covers your 14-day right of withdrawal under EU law.`,
 		`Terms of sale: ${siteUrl()}/terms`
 	];
 	await sendMail({
@@ -95,7 +93,7 @@ const fulfillCheckout = async (sessionId, expectedUserId) => {
 		expand: ["payment_intent.latest_charge.balance_transaction"]
 	});
 	if (session.status !== "complete" || session.payment_status === "unpaid") return "unpaid";
-	const { userId, marketplaceDeckId, withdrawalWaivedAt, termsVersion } = session.metadata;
+	const { userId, marketplaceDeckId, termsVersion } = session.metadata;
 	if (expectedUserId && userId !== expectedUserId) return "not-yours";
 	const balance = session.payment_intent?.latest_charge?.balance_transaction;
 
@@ -108,7 +106,7 @@ const fulfillCheckout = async (sessionId, expectedUserId) => {
 		authorShareCents: feeCents === null ? null : authorShare({ priceCents, taxCents, feeCents }),
 		checkoutSessionId: session.id,
 		paymentIntentId: session.payment_intent.id,
-		withdrawalWaivedAt, termsVersion
+		termsVersion
 	});
 	if (result === "duplicate") {
 		await stripe().refunds.create({ payment_intent: session.payment_intent.id, metadata: { reason: "deck already owned" } });

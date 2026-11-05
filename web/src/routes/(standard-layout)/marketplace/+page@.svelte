@@ -24,9 +24,8 @@
 							<p class="deck-name">{mpDeck.name}</p>
 							<p class="deck-author">by {mpDeck.author}</p>
 							<p class="deck-meta">
-								{mpDeck.cardCount} cards
+								<span>{mpDeck.cardCount} cards</span>
 								{#if mpDeck.reviewCount > 0}
-									·
 									<ReviewCounts reviewCount={mpDeck.reviewCount} recommendCount={mpDeck.recommendCount} />
 								{/if}
 							</p>
@@ -133,6 +132,7 @@
 	}
 	.deck-meta {
 		display: flex;
+		justify-content: space-between;
 		align-items: center;
 		gap: 5px;
 		font-size: 0.85rem;

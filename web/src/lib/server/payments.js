@@ -17,7 +17,7 @@ const stripe = () => client ??= new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const siteUrl = () => process.env.BETTER_AUTH_URL ?? "http://localhost:5173";
 
-const createCheckout = async ({ user, deck, origin }) => {
+const createCheckout = async ({ user, deck }) => {
 	const session = await stripe().checkout.sessions.create({
 		mode: "payment",
 		line_items: [{
@@ -38,8 +38,8 @@ const createCheckout = async ({ user, deck, origin }) => {
 			termsVersion: TERMS_VERSION
 		},
 		payment_intent_data: { metadata: { userId: user.id, marketplaceDeckId: deck.id } },
-		success_url: `${origin}/marketplace/checkout-complete?session_id={CHECKOUT_SESSION_ID}`,
-		cancel_url: `${origin}/marketplace/${deck.id}/overview`,
+		success_url: `${siteUrl()}/marketplace/checkout-complete?session_id={CHECKOUT_SESSION_ID}`,
+		cancel_url: `${siteUrl()}/marketplace/${deck.id}/overview`,
 		integration_identifier: "deck_purchase_kqwmzrtb"
 	});
 	return session.url;
@@ -94,8 +94,17 @@ const fulfillCheckout = async (sessionId, expectedUserId) => {
 		expand: ["payment_intent.latest_charge.balance_transaction"]
 	});
 	if (session.status !== "complete" || session.payment_status === "unpaid") return "unpaid";
-	const { userId, marketplaceDeckId, termsVersion } = session.metadata;
+	const { userId, marketplaceDeckId, termsVersion } = session.metadata ?? {};
+	if (!userId || !marketplaceDeckId) return "not-a-deck";
 	if (expectedUserId && userId !== expectedUserId) return "not-yours";
+	// refunded before we heard of it, say while the server was down
+	if (session.payment_intent?.latest_charge?.refunded) return "refunded";
+	// the buyer deleted their account before the payment came through
+	const { rowCount: buyerExists } = await pool.query('select 1 from "user" where id = $1', [userId]);
+	if (!buyerExists) {
+		await stripe().refunds.create({ payment_intent: session.payment_intent.id }, { idempotencyKey: `no-buyer-${session.id}` });
+		return "no-buyer";
+	}
 	const balance = session.payment_intent?.latest_charge?.balance_transaction;
 
 	const priceCents = session.amount_total;
@@ -110,7 +119,10 @@ const fulfillCheckout = async (sessionId, expectedUserId) => {
 		termsVersion
 	});
 	if (result === "duplicate") {
-		await stripe().refunds.create({ payment_intent: session.payment_intent.id, metadata: { reason: "deck already owned" } });
+		await stripe().refunds.create(
+			{ payment_intent: session.payment_intent.id, metadata: { reason: "deck already owned" } },
+			{ idempotencyKey: `duplicate-${session.id}` }
+		);
 	}
 	if (result === "new") {
 		const deck = await marketplace.getDeckForSale(marketplaceDeckId);
@@ -118,6 +130,19 @@ const fulfillCheckout = async (sessionId, expectedUserId) => {
 			.catch(err => console.error("purchase confirmation email failed", err));
 	}
 	return result;
+}
+
+// a payment whose fee never reached us (its notification came before the
+// purchase was recorded) gets it from Stripe; run before payouts
+const fillMissingFees = async () => {
+	const { rows } = await pool.query(`
+		select stripe_payment_intent_id id from purchases
+		where fee_cents is null and stripe_payment_intent_id is not null and refunded_at is null`);
+	for (const { id } of rows) {
+		const intent = await stripe().paymentIntents.retrieve(id, { expand: ["latest_charge.balance_transaction"] });
+		const balance = intent.latest_charge?.balance_transaction;
+		if (balance) await recordFee(id, balance);
+	}
 }
 
 // A refund, or a chargeback lost: the purchase no longer counts, and the
@@ -160,4 +185,4 @@ const handleEvent = async event => {
 	}
 }
 
-export { TERMS_VERSION, AUTHOR_TERMS_VERSION, createCheckout, fulfillCheckout, refundPurchase, constructEvent, handleEvent, authorShare }
+export { TERMS_VERSION, AUTHOR_TERMS_VERSION, createCheckout, fillMissingFees, fulfillCheckout, refundPurchase, constructEvent, handleEvent, authorShare }

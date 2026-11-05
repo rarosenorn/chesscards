@@ -6,7 +6,11 @@ import { formatCents } from "../money.js"
 
 const siteUrl = () => process.env.BETTER_AUTH_URL ?? "http://localhost:5173";
 const hash = token => createHash("sha256").update(token).digest("hex");
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// starting with a letter or digit, so a spreadsheet opening the Wise batch
+// file reads it as text, not a formula
+const EMAIL = /^[\p{L}\p{N}][^\s@,;"]*@[^\s@,;"]+\.[^\s@,;"]+$/u;
+const NAME = /^\p{L}[\p{L}\p{M}\p{N} .,'’&()-]*$/u;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const sellsDecks = async userId => {
 	const { rowCount } = await pool.query(
@@ -52,7 +56,7 @@ const requestPayoutEmail = async (user, email) => {
 // name and currency are saved as given; a new email waits for its link
 const savePayoutDetails = async (user, { email, name, currency }) => {
 	name = name?.toString().trim() ?? "";
-	if (!name || name.length > 100) return "Give the name on your bank account";
+	if (!name || name.length > 100 || !NAME.test(name)) return "Give the name on your bank account";
 	if (!PAYOUT_CURRENCIES.includes(currency)) return "Choose your bank account's currency";
 	email = email?.toString().trim() ?? "";
 	if (email.length > 254 || !EMAIL.test(email)) return "That doesn't look like an email address";
@@ -135,7 +139,8 @@ const getDue = async (periodEnd, client = pool) => {
 		left join "user" u on u.id = t.author_id
 		left join payout_details pd on pd.user_id = t.author_id
 		order by t.total desc`, [periodEnd.toISOString()]);
-	return rows.map(row => ({
+	// a deleted author's refunds can't be taken from anything
+	return rows.filter(row => !(row.deleted && row.total <= 0)).map(row => ({
 		...row,
 		emailChanged: Boolean(row.changedAt && row.lastPaidAt && row.changedAt > row.lastPaidAt),
 		firstPayout: !row.lastPaidAt,
@@ -188,10 +193,14 @@ const preparePayouts = async periodEnd => {
 const PAYOUT_FIELDS = `p.id, p.period_end::text "periodEnd", p.amount_cents "amountCents", p.email, p.name, p.currency,
 	p.created_at "createdAt", p.paid_at "paidAt"`;
 
+// latest: only an author's latest payout can be undone, so a refund taken
+// from a later one is never taken twice
 const getPayouts = async () => {
 	const { rows } = await pool.query(`
 		select ${PAYOUT_FIELDS},
-			coalesce(u.name, (select author_name from marketplace_decks where former_author_id = p.author_id limit 1)) author
+			coalesce(u.name, (select author_name from marketplace_decks where former_author_id = p.author_id limit 1)) author,
+			not exists (select 1 from payouts later where later.author_id = p.author_id and later.created_at > p.created_at) latest,
+			(select count(*)::int from purchases where payout_id = p.id and refunded_at is not null) "refundedSales"
 		from payouts p left join "user" u on u.id = p.author_id
 		order by p.paid_at desc nulls first, p.created_at desc
 		limit 200`);
@@ -232,7 +241,11 @@ const markPaid = async () => {
 }
 
 const cancelPayout = async id => {
-	const { rowCount } = await pool.query("delete from payouts where id = $1", [id]);
+	if (!UUID.test(id ?? "")) return false;
+	const { rowCount } = await pool.query(`
+		delete from payouts p where p.id = $1
+			and not exists (select 1 from payouts later where later.author_id = p.author_id and later.created_at > p.created_at)`,
+		[id]);
 	return rowCount === 1;
 }
 

@@ -13,7 +13,11 @@
 		email: Wise writes to it and you collect the money into your bank account. Under $10 waits
 		for the next month.
 	</p>
-	<p>Earned and not yet paid: <strong>{formatCents(payouts.owedCents)}</strong></p>
+	{#if payouts.owedCents < 0}
+		<p>Refunds of sales already paid, to be taken from your next payouts: <strong>{formatCents(-payouts.owedCents)}</strong></p>
+	{:else}
+		<p>Earned and not yet paid: <strong>{formatCents(payouts.owedCents)}</strong></p>
+	{/if}
 	{#if payouts.payouts.length > 0}
 		<ul class="history">
 			{#each payouts.payouts as payout (payout.id)}

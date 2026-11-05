@@ -63,7 +63,7 @@
 {:else}
 	<table>
 		<thead>
-			<tr><th>Author</th><th>Payout to</th><th>Amount</th><th></th></tr>
+			<tr><th>Author</th><th>Payout to</th><th>Amount</th><th></th><th></th></tr>
 		</thead>
 		<tbody>
 			{#each data.prepared as payout (payout.id)}
@@ -72,10 +72,17 @@
 					<td>{payout.name}, {payout.email}, {payout.currency}</td>
 					<td>{formatCents(payout.amountCents)}</td>
 					<td>
-						<form method="POST" action="?/cancel" use:enhance>
-							<input type="hidden" name="id" value={payout.id}>
-							<button class="std-btn">Cancel</button>
-						</form>
+						{#if payout.refundedSales}
+							<span class="flag">{payout.refundedSales} sale{payout.refundedSales === 1 ? "" : "s"} refunded since: cancel and prepare again</span>
+						{/if}
+					</td>
+					<td>
+						{#if payout.latest}
+							<form method="POST" action="?/cancel" use:enhance>
+								<input type="hidden" name="id" value={payout.id}>
+								<button class="std-btn">Cancel</button>
+							</form>
+						{/if}
 					</td>
 				</tr>
 			{/each}
@@ -108,16 +115,18 @@
 					<td>{payout.name}, {payout.email}, {payout.currency}</td>
 					<td>{formatCents(payout.amountCents)}</td>
 					<td>
-						<form method="POST" action="?/cancel" use:enhance>
-							<input type="hidden" name="id" value={payout.id}>
-							<button class="std-btn">Undo</button>
-						</form>
+						{#if payout.latest}
+							<form method="POST" action="?/cancel" use:enhance>
+								<input type="hidden" name="id" value={payout.id}>
+								<button class="std-btn">Undo</button>
+							</form>
+						{/if}
 					</td>
 				</tr>
 			{/each}
 		</tbody>
 	</table>
-	<p class="steps">Undo a payout Wise couldn't deliver: its sales are owed again.</p>
+	<p class="steps">Undo a payout Wise couldn't deliver: its sales are owed again. Only an author's latest payout can be undone.</p>
 {/if}
 
 <style>

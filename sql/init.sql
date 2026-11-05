@@ -196,7 +196,10 @@ create table marketplace_decks (
 	-- the deck's intro and those of the decks inside it (below), copied with them
 	intro jsonb,
 	-- the author's deck it was published from, while they keep it
-	deck_id uuid references decks(id) on delete set null
+	deck_id uuid references decks(id) on delete set null,
+	-- the author agreement accepted with the upload request, kept here since
+	-- the request goes with the author's deck
+	author_terms_version text
 );
 
 -- where an author's earnings are paid, by Wise to an email; not tied to
@@ -234,6 +237,11 @@ create index payouts_author_id_idx on payouts (author_id);
 -- have them, off sale
 create function keep_authors_decks() returns trigger language plpgsql as $$
 begin
+	-- payout details stay only while something is owed
+	if not exists (select 1 from purchases p join marketplace_decks md on md.id = p.marketplace_deck_id
+		where md.user_id = old.id and p.payout_id is null and p.refunded_at is null and p.author_share_cents is not null) then
+		delete from payout_details where user_id = old.id;
+	end if;
 	update marketplace_decks set author_name = old.name, former_author_id = old.id, on_sale = false,
 		user_id = null, deck_id = null
 	where user_id = old.id;

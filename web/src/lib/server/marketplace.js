@@ -189,7 +189,7 @@ const approveUploadRequest = async requestId => {
 	try {
 		await client.query("begin");
 		const { rows: [request] } = await client.query(`
-			select deck_id, user_id, name, description, theme, price, image, image_type, preview_card_ids
+			select deck_id, user_id, name, description, theme, price, image, image_type, preview_card_ids, author_terms_version
 			from marketplace_upload_requests
 			where id = $1 and status = 'pending'
 			for update`,
@@ -205,7 +205,7 @@ const approveUploadRequest = async requestId => {
 			// reviews in order is read at the top of the list, so a deck published
 			// from inside another takes it from the deck at the top; its tactic
 			// ladder is the nearest one set, its own or a deck's above
-			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, reviews_in_order, tactic_ladder, intro, deck_id)
+			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, reviews_in_order, tactic_ladder, intro, deck_id, author_terms_version)
 			 select $1, $2, $3, $4, $5, $6, $7, d.in_order, (
 				with recursive up(id, parent_id, reviews_in_order) as (
 					select d.id, d.parent_id, d.reviews_in_order
@@ -220,9 +220,9 @@ const approveUploadRequest = async requestId => {
 					select above.parent_id, above.tactic_ladder, up.depth + 1 from decks above join up on above.id = up.parent_id
 				)
 				select tactic_ladder from up where tactic_ladder is not null order by depth limit 1
-			 ), d.intro, d.id from decks d where d.id = $8 returning id`,
+			 ), d.intro, d.id, $9 from decks d where d.id = $8 returning id`,
 			// the description as JSON text, as pg would send its blocks array as a postgres array
-			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id]
+			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id, request.author_terms_version]
 		);
 		// The decks inside it travel with the cards, each with its intro, its
 		// in order / mixed and its tactic ladder. Every one gets its new id up front (copies),

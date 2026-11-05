@@ -3,7 +3,10 @@ import * as marketplace from "$lib/server/marketplace.js"
 import * as payments from "$lib/server/payments.js"
 import { sendMail, supportEmail } from "$lib/server/mail.js"
 
-export const load = async ({ params, locals }) => {
+export const load = async ({ params, locals, parent }) => {
+	// the layout decides who may see the deck; a page's data is sent even
+	// when its layout refuses, unless the page waits for it
+	await parent();
 	return {
 		contents: await marketplace.getDeckContents(params.id),
 		reviews: await marketplace.getReviews(params.id, locals.userId),
@@ -51,7 +54,7 @@ export const actions = {
 			redirect(303, "/my-flashcards");
 		}
 
-		const checkoutUrl = await payments.createCheckout({ user: locals.user, deck, origin: url.origin });
+		const checkoutUrl = await payments.createCheckout({ user: locals.user, deck });
 		redirect(303, checkoutUrl);
 	},
 

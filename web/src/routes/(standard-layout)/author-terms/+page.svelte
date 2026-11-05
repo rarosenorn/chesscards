@@ -48,7 +48,7 @@
 	<p>
 		Your decks stay with those who have them, off sale, under the name you last had. What you
 		have earned and not yet been paid is paid with the next monthly payout, whatever the
-		amount, and we keep your payout email until then.
+		amount, to the payout email you gave, which we keep until then.
 	</p>
 
 	<h2>Changes</h2>

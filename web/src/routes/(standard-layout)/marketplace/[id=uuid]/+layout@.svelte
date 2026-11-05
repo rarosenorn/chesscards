@@ -12,6 +12,7 @@
 	// published it from
 	const { owned, inLibrary } = $derived(data.ownership);
 	const buying = $derived(!owned && !isFree(data.mpDeck.price));
+	const priceLabel = $derived(isFree(data.mpDeck.price) ? "Get for free" : `Buy for ${formatPrice(data.mpDeck.price)}`);
 
 	const tabs = [
 		{ path: "overview", name: "Overview" },
@@ -43,28 +44,29 @@
 				</p>
 			</div>
 			<div class="buy-row">
-				<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
-					{#if buying}
-						<label class="waiver">
-							<input type="checkbox" name="waive-withdrawal" required>
-							<span>
-								Give me the deck right away. I understand this ends my 14-day right of
-								withdrawal; the <a href="/terms">30-day money-back guarantee</a> still applies.
-							</span>
-						</label>
-					{/if}
-					<button class="std-btn" disabled={inLibrary}>
-						{#if owned && !inLibrary}
-							Get
-						{:else if isFree(data.mpDeck.price)}
-							Get for free
-						{:else}
-							Buy for {formatPrice(data.mpDeck.price)}
-						{/if}
-					</button>
-				</form>
 				{#if owned}
-					<OwnedBadge />
+					<div class="owned-row">
+						<button class="std-btn" disabled>{priceLabel}</button>
+						<OwnedBadge />
+					</div>
+					{#if !inLibrary}
+						<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
+							<button class="std-btn">Get</button>
+						</form>
+					{/if}
+				{:else}
+					<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
+						{#if buying}
+							<label class="waiver">
+								<input type="checkbox" name="waive-withdrawal" required>
+								<span>
+									Give me the deck right away. I understand this ends my 14-day right of
+									withdrawal; the <a href="/terms">30-day money-back guarantee</a> still applies.
+								</span>
+							</label>
+						{/if}
+						<button class="std-btn">{priceLabel}</button>
+					</form>
 				{/if}
 			</div>
 		</div>
@@ -132,6 +134,11 @@
 		display: flex;
 		flex-direction: column;
 		align-items: start;
+		gap: 10px;
+	}
+	.owned-row {
+		display: flex;
+		align-items: center;
 		gap: 10px;
 	}
 	.waiver {

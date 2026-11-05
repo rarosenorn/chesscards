@@ -23,10 +23,13 @@
 						<div class="card-body">
 							<p class="deck-name">{mpDeck.name}</p>
 							<p class="deck-author">by {mpDeck.author}</p>
-							{#if mpDeck.reviewCount > 0}
-								<p class="deck-meta"><ReviewCounts reviewCount={mpDeck.reviewCount} recommendCount={mpDeck.recommendCount} /></p>
-							{/if}
-							<p class="deck-meta">{mpDeck.cardCount} cards</p>
+							<p class="deck-meta">
+								{mpDeck.cardCount} cards
+								{#if mpDeck.reviewCount > 0}
+									·
+									<ReviewCounts reviewCount={mpDeck.reviewCount} recommendCount={mpDeck.recommendCount} />
+								{/if}
+							</p>
 							<div class="card-footer">
 								<span class="theme-chip">{mpDeck.theme}</span>
 								{#if mpDeck.owned}

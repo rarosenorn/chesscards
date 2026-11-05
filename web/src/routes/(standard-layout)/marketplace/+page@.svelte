@@ -24,8 +24,10 @@
 							<p class="deck-name">{mpDeck.name}</p>
 							<p class="deck-author">by {mpDeck.author}</p>
 							<p class="deck-meta">
-								{mpDeck.cardCount} cards ·
-								<ReviewCounts reviewCount={mpDeck.reviewCount} recommendCount={mpDeck.recommendCount} />
+								{mpDeck.cardCount} cards
+								{#if mpDeck.reviewCount > 0}
+									<span class="reviews"><ReviewCounts reviewCount={mpDeck.reviewCount} recommendCount={mpDeck.recommendCount} /></span>
+								{/if}
 							</p>
 							<div class="card-footer">
 								<span class="theme-chip">{mpDeck.theme}</span>
@@ -126,6 +128,9 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+	.reviews {
+		margin-left: 8px;
 	}
 	.deck-meta {
 		display: flex;

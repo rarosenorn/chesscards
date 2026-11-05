@@ -23,12 +23,10 @@
 						<div class="card-body">
 							<p class="deck-name">{mpDeck.name}</p>
 							<p class="deck-author">by {mpDeck.author}</p>
-							<p class="deck-meta">
-								{mpDeck.cardCount} cards
-								{#if mpDeck.reviewCount > 0}
-									<span class="reviews"><ReviewCounts reviewCount={mpDeck.reviewCount} recommendCount={mpDeck.recommendCount} /></span>
-								{/if}
-							</p>
+							{#if mpDeck.reviewCount > 0}
+								<p class="deck-meta"><ReviewCounts reviewCount={mpDeck.reviewCount} recommendCount={mpDeck.recommendCount} /></p>
+							{/if}
+							<p class="deck-meta">{mpDeck.cardCount} cards</p>
 							<div class="card-footer">
 								<span class="theme-chip">{mpDeck.theme}</span>
 								{#if mpDeck.owned}
@@ -110,6 +108,7 @@
 		object-fit: cover;
 	}
 	.card-body {
+		flex: 1;
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
@@ -129,9 +128,6 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-	.reviews {
-		margin-left: 8px;
-	}
 	.deck-meta {
 		display: flex;
 		align-items: center;
@@ -143,7 +139,8 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-top: 8px;
+		margin-top: auto;
+		padding-top: 8px;
 	}
 	.theme-chip {
 		font-size: 0.75rem;

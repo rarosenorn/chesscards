@@ -13,6 +13,7 @@ export const load = async ({ locals, params, parent }) => {
 	return {
 		pageTitle: "Settings",
 		uploadRequest: own && await marketplace.getUploadRequestForDeck(locals.userId, params.id),
+		listing: own && await marketplace.getListingForDeck(locals.userId, params.id),
 		// a marketplace deck taken inside it keeps it off the marketplace
 		holdsTaken: own?.holdsTaken ?? false
 	}
@@ -58,6 +59,10 @@ export const actions = {
 	delete: async ({ params, locals }) => {
 		if (!await decks.remove(locals.userId, params.id)) await decks.removeTaken(locals.userId, params.id);
 		redirect(303, "/my-flashcards");
+	},
+	onSale: async ({ params, request, locals }) => {
+		const onSale = (await request.formData()).get("on-sale") === "true";
+		if (!await marketplace.setOnSale(locals.userId, params.id, onSale)) return fail(404, { errors: ["This deck is not on the marketplace"] });
 	},
 	rename: async ({ params, request, locals }) => {
 		const data = await request.formData();

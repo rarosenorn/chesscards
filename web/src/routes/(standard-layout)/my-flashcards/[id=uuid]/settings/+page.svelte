@@ -74,6 +74,20 @@
 			<p class="status status-pending">
 				Upload request for "{data.uploadRequest.name}" is pending review ({data.uploadRequest.theme}).
 			</p>
+		{:else if data.listing}
+			{#if data.listing.onSale}
+				<p class="status status-approved">
+					This deck is on the marketplace as "{data.listing.name}".
+				</p>
+			{:else}
+				<p class="section-note">
+					"{data.listing.name}" is off sale: only those who have it can see it on the marketplace.
+				</p>
+			{/if}
+			<form method="POST" action="?/onSale" use:enhance>
+				<input type="hidden" name="on-sale" value={!data.listing.onSale}>
+				<button class="std-btn">{data.listing.onSale ? "Take off sale" : "Put back on sale"}</button>
+			</form>
 		{:else if data.uploadRequest?.status === "approved"}
 			<p class="status status-approved">
 				This deck is on the marketplace as "{data.uploadRequest.name}" ({data.uploadRequest.theme}).

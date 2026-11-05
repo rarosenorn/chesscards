@@ -6,7 +6,10 @@ import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 
 export const load = async ({ locals }) => ({
 	pageTitle: "Settings",
-	rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR
+	rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR,
+	hasPublished: locals.userId
+		? (await pool.query("select 1 from marketplace_decks where user_id = $1 limit 1", [locals.userId])).rowCount > 0
+		: false
 });
 
 export const actions = {

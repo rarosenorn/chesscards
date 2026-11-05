@@ -279,18 +279,35 @@ const OWNS = (user, deck) => `exists (select 1 from purchases p
 
 const getOwnership = async (userId, marketplaceDeckId) => {
 	const { rows: [row] } = await pool.query(`
-		select ${OWNS("$1", "md.id")} or md.user_id = $1 owned,
+		select ${OWNS("$1", "md.id")} or md.user_id is not distinct from $1 owned,
 			exists (select 1 from marketplace_deck_instances where user_id = $1 and marketplace_deck_id = md.id)
-				or (md.user_id = $1 and md.deck_id is not null) "inLibrary"
+				or (md.user_id is not distinct from $1 and md.deck_id is not null) "inLibrary"
 		from marketplace_decks md where md.id = $2`,
 		[userId, marketplaceDeckId]
 	);
 	return row ?? { owned: false, inLibrary: false };
 }
 
+// the marketplace deck published from a deck of the author's own
+const getListingForDeck = async (userId, deckId) => {
+	const { rows: [listing] } = await pool.query(
+		'select id, name, on_sale "onSale" from marketplace_decks where user_id = $1 and deck_id = $2',
+		[userId, deckId]
+	);
+	return listing;
+}
+
+const setOnSale = async (userId, deckId, onSale) => {
+	const { rowCount } = await pool.query(
+		"update marketplace_decks set on_sale = $3 where user_id = $1 and deck_id = $2",
+		[userId, deckId, onSale]
+	);
+	return rowCount === 1;
+}
+
 const getDeckForSale = async marketplaceDeckId => {
 	const { rows: [deck] } = await pool.query(
-		"select id, name, user_id, round(price * 100)::int price_cents from marketplace_decks where id = $1",
+		"select id, name, user_id, on_sale, round(price * 100)::int price_cents from marketplace_decks where id = $1",
 		[marketplaceDeckId]
 	);
 	return deck;
@@ -400,13 +417,13 @@ const recordPaidPurchase = (purchase) => inTransaction(async client => {
 // shows it, which is the author's and read-only here
 const getInstanceListing = async (userId, instanceId) => {
 	const { rows } = await pool.query(`
-		select i.id, md.id "marketplaceDeckId", md.name, md.description, md.theme, u.name author,
+		select i.id, md.id "marketplaceDeckId", md.name, md.description, md.theme, coalesce(u.name, md.author_name) author,
 			(select count(*) from marketplace_cards mc where mc.marketplace_deck_id = md.id)::int "cardCount",
-			md.user_id = i.user_id "isAuthor",
+			md.user_id is not distinct from i.user_id "isAuthor",
 			${REVIEW_COUNTS}
 		from marketplace_deck_instances i
 		join marketplace_decks md on md.id = i.marketplace_deck_id
-		join "user" u on u.id = md.user_id
+		left join "user" u on u.id = md.user_id
 		where i.user_id = $1 and i.id = $2`,
 		[userId, instanceId]
 	);
@@ -482,7 +499,7 @@ const saveReview = async (userId, marketplaceDeckId, { recommended, body }) => {
 		insert into marketplace_reviews(marketplace_deck_id, user_id, recommended, body)
 		select md.id, $1, $3, $4
 		from marketplace_decks md
-		where md.id = $2 and md.user_id <> $1
+		where md.id = $2 and md.user_id is distinct from $1
 			and ${OWNS("$1", "md.id")}
 		on conflict (marketplace_deck_id, user_id)
 		do update set recommended = excluded.recommended, body = excluded.body
@@ -566,4 +583,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, OWNS, getOwnership, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, OWNS, getOwnership, getListingForDeck, setOnSale, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, createInstanceReviewLog }

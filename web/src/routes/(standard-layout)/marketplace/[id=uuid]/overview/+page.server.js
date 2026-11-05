@@ -27,9 +27,10 @@ export const actions = {
 		const deck = await marketplace.getDeckForSale(params.id);
 		if (!deck) error(404);
 		const { owned, inLibrary } = await marketplace.getOwnership(locals.userId, params.id);
+		if (!deck.on_sale && !owned) error(404);
 		if (inLibrary) return fail(400, { errors: ["You already have this deck"] });
 
-		if (owned || deck.price_cents === 0 || deck.user_id === locals.userId) {
+		if (owned || deck.price_cents === 0) {
 			try {
 				await marketplace.createDeckInstance(locals.userId, params.id);
 			} catch (err) {

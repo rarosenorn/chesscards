@@ -91,7 +91,8 @@
 	const requestDelete = async () => {
 		const confirmed = await typedConfirmModal({
 			title: "Delete account",
-			message: "Deleting your account deletes your decks, cards and review history.",
+			message: "Deleting your account deletes your decks, cards and review history."
+				+ (data.hasPublished ? " Decks you published stay with those who have them, off sale." : ""),
 			requiredText: data.user.email,
 			confirmLabel: "Delete account"
 		});

@@ -169,7 +169,11 @@ create table cards (
 
 create table marketplace_decks (
 	id uuid primary key default gen_random_uuid(),
-	user_id uuid references "user" ("id") on delete cascade not null,
+	-- null once the author has deleted their account; author_name keeps the
+	-- name they last had
+	user_id uuid references "user" ("id") on delete set null,
+	author_name text,
+	on_sale boolean not null default true,
 	name text not null unique,
 	description jsonb not null,
 	price numeric(5,2) check(price >= 0) not null,
@@ -189,6 +193,17 @@ create table marketplace_decks (
 	-- the author's deck it was published from, while they keep it
 	deck_id uuid references decks(id) on delete set null
 );
+
+-- an author who deletes their account leaves their decks with those who
+-- have them, off sale
+create function keep_authors_decks() returns trigger language plpgsql as $$
+begin
+	update marketplace_decks set author_name = old.name, on_sale = false, user_id = null, deck_id = null
+	where user_id = old.id;
+	return old;
+end $$;
+create trigger keep_authors_decks before delete on "user"
+	for each row execute function keep_authors_decks();
 
 -- the decks inside a published deck, tree and all, copied from the author's
 -- at upload approval (parent_id null: directly inside the published deck)

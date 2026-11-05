@@ -34,7 +34,42 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ],
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "c8",
+                      "g4"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -62,7 +97,42 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ],
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "c8",
+                      "g4"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "f8",
+                      "e7"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -92,7 +162,35 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ],
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "e5",
+                      "d4"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -124,7 +222,35 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -152,7 +278,35 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -182,7 +336,59 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "c5",
+                      "f2"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "c5",
+                      "d6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -212,7 +418,59 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "c5",
+                      "f2"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "c5",
+                      "d4"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -244,7 +502,59 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "c6",
+                      "e5"
+                    ]
+                  ],
+                  "12": [
+                    [
+                      "warning",
+                      "e5",
+                      "g6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -274,7 +584,59 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "c6",
+                      "e5"
+                    ]
+                  ],
+                  "12": [
+                    [
+                      "warning",
+                      "d8",
+                      "f6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -304,7 +666,45 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -334,7 +734,45 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -364,7 +802,57 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "e5",
+                      "d4"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -394,7 +882,64 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "e5",
+                      "d4"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "e5",
+                      "d4"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -426,7 +971,64 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "e5",
+                      "d4"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "c8",
+                      "d7"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -456,7 +1058,69 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -486,7 +1150,69 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "c6",
+                      "d4"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -514,7 +1240,69 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "c7",
+                      "c5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "f8",
+                      "c5"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "c6",
+                      "d4"
+                    ],
+                    [
+                      "warning",
+                      "f8",
+                      "b4"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -544,7 +1332,52 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d5"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -574,7 +1407,52 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d5"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -602,7 +1480,45 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d5"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "c5",
+                      "d4"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -632,7 +1548,45 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d5"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -662,7 +1616,45 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d5"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "g7",
+                      "g6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -690,7 +1682,45 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d5"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "d7",
+                      "d5"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -718,7 +1748,45 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d5"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "6": [
+                    [
+                      "warning",
+                      "c5",
+                      "d4"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -754,7 +1822,50 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -782,7 +1893,50 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "c5",
+                      "d4"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -812,7 +1966,50 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ],
+                    [
+                      "warning",
+                      "g8",
+                      "f6"
+                    ]
+                  ],
+                  "8": [
+                    [
+                      "warning",
+                      "c5",
+                      "d4"
+                    ],
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -842,7 +2039,45 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d5"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ]
+                  ]
+                }
               }
             ]
           },
@@ -872,7 +2107,45 @@
                 ],
                 "orientation": "w",
                 "solutionFrom": 0,
-                "puzzle": true
+                "puzzle": true,
+                "arrows": {
+                  "2": [
+                    [
+                      "warning",
+                      "e7",
+                      "e5"
+                    ]
+                  ],
+                  "4": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d6"
+                    ],
+                    [
+                      "warning",
+                      "e7",
+                      "e6"
+                    ],
+                    [
+                      "warning",
+                      "d7",
+                      "d5"
+                    ]
+                  ],
+                  "10": [
+                    [
+                      "warning",
+                      "b8",
+                      "c6"
+                    ]
+                  ]
+                }
               }
             ]
           },

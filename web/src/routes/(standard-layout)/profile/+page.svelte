@@ -8,6 +8,7 @@
 	import { typedConfirmModal } from "$lib/modals.svelte.js"
 	import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import TwoFactorSettings from "$lib/components/TwoFactorSettings.svelte"
+	import PayoutSettings from "$lib/components/PayoutSettings.svelte"
 
 	let { data, form } = $props();
 
@@ -229,6 +230,9 @@
 			</p>
 		</fieldset>
 	</form>
+	{#if data.payouts}
+		<PayoutSettings payouts={data.payouts} accountEmail={data.user.email} {form} />
+	{/if}
 	{#if data.twoFactor.required}
 		<TwoFactorSettings enabled={data.twoFactor.enabled} verified={data.twoFactor.verified} />
 	{/if}

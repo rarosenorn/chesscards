@@ -1,5 +1,6 @@
 import { fail } from "@sveltejs/kit"
 import { pool } from "$lib/server/pool.js"
+import * as payouts from "$lib/server/payouts.js"
 import { cleanName } from "$lib/display-name.js"
 import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS } from "$lib/board-prefs.js"
 import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
@@ -9,10 +10,20 @@ export const load = async ({ locals }) => ({
 	rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR,
 	hasPublished: locals.userId
 		? (await pool.query("select 1 from marketplace_decks where user_id = $1 limit 1", [locals.userId])).rowCount > 0
-		: false
+		: false,
+	payouts: locals.userId && await payouts.isAuthor(locals.userId)
+		? await payouts.getPayoutDetails(locals.userId)
+		: null
 });
 
 export const actions = {
+	payoutEmail: async ({ request, locals }) => {
+		if (!locals.userId) return fail(401, { failed: "payout", errors: ["Log in first"] });
+		const email = (await request.formData()).get("payout-email");
+		const result = await payouts.requestPayoutEmail(locals.user, email);
+		if (result === "invalid") return fail(400, { failed: "payout", errors: ["That doesn't look like an email address"] });
+		return { saved: "payout" };
+	},
 	name: async ({ request, locals }) => {
 		const data = await request.formData();
 		const displayName = cleanName(data.get("display-name"));

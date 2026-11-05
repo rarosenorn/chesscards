@@ -173,6 +173,9 @@ create table marketplace_decks (
 	-- name they last had
 	user_id uuid references "user" ("id") on delete set null,
 	author_name text,
+	-- the author's id after they deleted their account, for the payouts
+	-- still owed to them
+	former_author_id uuid,
 	on_sale boolean not null default true,
 	-- set when an admin takes the deck down, and sent to the author
 	taken_down_reason text,
@@ -196,11 +199,24 @@ create table marketplace_decks (
 	deck_id uuid references decks(id) on delete set null
 );
 
+-- where an author's earnings are paid, by Wise to an email; not tied to
+-- the user row, since it outlives a deleted account until the last payout.
+-- A new email waits for the link sent to the account's email.
+create table payout_details (
+	user_id uuid primary key,
+	email text,
+	changed_at timestamptz,
+	pending_email text,
+	pending_token_hash text unique,
+	pending_expires_at timestamptz
+);
+
 -- an author who deletes their account leaves their decks with those who
 -- have them, off sale
 create function keep_authors_decks() returns trigger language plpgsql as $$
 begin
-	update marketplace_decks set author_name = old.name, on_sale = false, user_id = null, deck_id = null
+	update marketplace_decks set author_name = old.name, former_author_id = old.id, on_sale = false,
+		user_id = null, deck_id = null
 	where user_id = old.id;
 	return old;
 end $$;

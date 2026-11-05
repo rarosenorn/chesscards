@@ -62,7 +62,8 @@ export const actions = {
 	},
 	onSale: async ({ params, request, locals }) => {
 		const onSale = (await request.formData()).get("on-sale") === "true";
-		if (!await marketplace.setOnSale(locals.userId, params.id, onSale)) return fail(404, { errors: ["This deck is not on the marketplace"] });
+		const listing = await marketplace.getListingForDeck(locals.userId, params.id);
+		if (!listing || !await marketplace.setOnSale(locals.userId, listing.id, onSale)) return fail(404, { errors: ["This deck is not on the marketplace"] });
 	},
 	rename: async ({ params, request, locals }) => {
 		const data = await request.formData();

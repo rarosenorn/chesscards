@@ -43,6 +43,12 @@ export const actions = {
 		redirect(303, checkoutUrl);
 	},
 
+	onSale: async ({ request, params, locals }) => {
+		const onSale = (await request.formData()).get("on-sale") === "true";
+		if (!locals.userId || !await marketplace.setOnSale(locals.userId, params.id, onSale)) error(404);
+		redirect(303, `/marketplace/${params.id}/overview`);
+	},
+
 	// a first review, or the rewrite of one posted a moment ago
 	saveReview: async ({ request, params, locals, url }) => {
 		if (!locals.userId) {

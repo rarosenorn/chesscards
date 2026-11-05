@@ -297,10 +297,10 @@ const getListingForDeck = async (userId, deckId) => {
 	return listing;
 }
 
-const setOnSale = async (userId, deckId, onSale) => {
+const setOnSale = async (userId, marketplaceDeckId, onSale) => {
 	const { rowCount } = await pool.query(
-		"update marketplace_decks set on_sale = $3 where user_id = $1 and deck_id = $2",
-		[userId, deckId, onSale]
+		"update marketplace_decks set on_sale = $3 where user_id = $1 and id = $2",
+		[userId, marketplaceDeckId, onSale]
 	);
 	return rowCount === 1;
 }

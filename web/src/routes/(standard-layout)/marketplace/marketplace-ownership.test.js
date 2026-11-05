@@ -5,13 +5,13 @@ vi.mock("$app/state", () => ({ page: { url: new URL("http://localhost/marketplac
 
 const { default: DeckLayout } = await import("./[id=uuid]/+layout@.svelte");
 
-const mpDeck = (price, isAuthor = false) => ({ id: "d", name: "Deck", author: "A", theme: "openings", cardCount: 3, price, isAuthor, reviewCount: 0, recommendCount: 0 });
+const mpDeck = (price, isAuthor = false, onSale = true) => ({ id: "d", name: "Deck", author: "A", theme: "openings", cardCount: 3, price, isAuthor, onSale, reviewCount: 0, recommendCount: 0 });
 
-const open = async (ownership, price = "10.00", isAuthor = false) => {
+const open = async (ownership, price = "10.00", isAuthor = false, onSale = true) => {
 	const target = document.createElement("div");
 	document.body.append(target);
 	const children = createRawSnippet(() => ({ render: () => "<div></div>" }));
-	const app = mount(DeckLayout, { target, props: { data: { mpDeck: mpDeck(price, isAuthor), ownership }, children } });
+	const app = mount(DeckLayout, { target, props: { data: { mpDeck: mpDeck(price, isAuthor, onSale), ownership }, children } });
 	await tick();
 	const buttons = [...target.querySelectorAll(".buy-row button")];
 	return {
@@ -46,5 +46,17 @@ describe("the marketplace deck's buy button", () => {
 		const view = await open({ owned: true, inLibrary: false });
 		expect([view.buttons, view.badge, view.guarantee]).toEqual([[["Buy for $10.00", true], ["Get", false]], true, false]);
 		view.close();
+	});
+
+	it("the author takes their deck off sale, or puts it back, under the greyed price", async () => {
+		const onSale = await open({ owned: true, inLibrary: true }, "10.00", true);
+		expect(onSale.buttons).toEqual([["Buy for $10.00", true], ["Take off sale", false]]);
+		onSale.close();
+		const offSale = await open({ owned: true, inLibrary: false }, "10.00", true, false);
+		expect(offSale.buttons).toEqual([["Buy for $10.00", true], ["Get", false], ["Put back on sale", false]]);
+		offSale.close();
+		const buyer = await open({ owned: true, inLibrary: true });
+		expect(buyer.buttons).toEqual([["Buy for $10.00", true]]);
+		buyer.close();
 	});
 });

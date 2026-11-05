@@ -54,6 +54,12 @@
 							<button class="std-btn">Get</button>
 						</form>
 					{/if}
+					{#if data.mpDeck.isAuthor}
+						<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/onSale">
+							<input type="hidden" name="on-sale" value={!data.mpDeck.onSale}>
+							<button class="std-btn">{data.mpDeck.onSale ? "Take off sale" : "Put back on sale"}</button>
+						</form>
+					{/if}
 				{:else}
 					<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
 						<button class="std-btn">{priceLabel}</button>

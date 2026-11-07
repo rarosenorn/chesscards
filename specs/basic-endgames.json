@@ -1,0 +1,159 @@
+{
+  "deck": "Basic Endgames",
+  "chapters": [
+    {
+      "name": "Pawn Endgames",
+      "cards": [
+        {
+          "id": "pe-shepherd",
+          "front": {
+            "text": "White to move. What is this position called, why is it a win, and what are the next 5 plies?",
+            "boards": [
+              {
+                "fen": "8/3k1K2/8/4P3/8/8/8/8 w - - 0 1",
+                "moves": [
+                  "e6+",
+                  "Kd6",
+                  "e7",
+                  "Kd5",
+                  "e8=Q"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "The shepherding position. This is the simplest win. The White king controls the three final squares the pawn must cross, and Black cannot stop promotion.\n\n- 1.e6+ claude: The pawn steps onto e6, a square the king on f7 covers.\n- 1...Kd6 claude: The black king can't get in front of the pawn.\n- 2.e7 claude: Again a square the king covers.\n- 2...Kd5 claude: Nothing helps; e8 is covered by the king too.\n- 3.e8=Q claude: The pawn promotes."
+        },
+        {
+          "id": "pe-opp",
+          "front": {
+            "text": "Black to move. What is this position about, and who wins?",
+            "boards": [
+              {
+                "fen": "5k2/8/4P1K1/8/8/8/8/8 w - - 0 1",
+                "moves": [
+                  "Kf6"
+                ],
+                "orientation": "w",
+                "openAt": 1
+              }
+            ]
+          },
+          "back": "The opposition. This is probably the most important position in king and pawn endgames. The pawn has reached the 6th rank and the kings stand facing each other. Each side wants the other king to have to move out of the way.\n\nIf the defending king has to move, the attacker wins."
+        },
+        {
+          "id": "pe-opp-line",
+          "front": {
+            "text": "White to move. What are the next 7 plies?",
+            "boards": [
+              {
+                "fen": "5k2/8/4P1K1/8/8/8/8/8 w - - 0 1",
+                "moves": [
+                  "Kf6",
+                  "Ke8",
+                  "e7",
+                  "Kd7",
+                  "Kf7",
+                  "Kd6",
+                  "e8=Q"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 1.Kf6 The pawn has reached the 6th rank and the kings stand facing each other. If the defending king has to move, the attacker wins.\n- 1...Ke8 claude: Black has to give way.\n- 2.e7 claude: The pawn advances, covered by the king.\n- 2...Kd7 claude: The black king can't stay in front of the pawn.\n- 3.Kf7 claude: The king covers e8.\n- 3...Kd6 claude: Nothing helps.\n- 4.e8=Q claude: The pawn promotes."
+        },
+        {
+          "id": "pe-opp-draw",
+          "front": {
+            "text": "White to move. What are the next 4 plies, and how does it end?",
+            "boards": [
+              {
+                "fen": "8/8/8/8/8/4pk2/8/6K1 w - - 0 1",
+                "moves": [
+                  "Kf1",
+                  "e2+",
+                  "Ke1",
+                  "Ke3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "If the attacker has to move, the defender can draw by stalemate.\n\n- 1.Kf1 claude: The kings face each other, and Black has to move.\n- 1...e2+ claude: Black pushes the pawn with check.\n- 2.Ke1 claude: The king stays in front of the pawn.\n- 2...Ke3 claude: Protecting the pawn stalemates White; anything else loses it."
+        },
+        {
+          "id": "pe-fifth",
+          "front": {
+            "text": "Black to move. Who wins positions with the pawn on the 5th and the king in front of it, and when is it easy?",
+            "boards": [
+              {
+                "fen": "4k3/8/3K4/4P3/8/8/8/8 w - - 0 1",
+                "moves": [
+                  "Ke6"
+                ],
+                "orientation": "w",
+                "openAt": 1
+              }
+            ]
+          },
+          "back": "Positions with the pawn on the 5th and the king in front of it always win except for rook pawns. If the attacker has opposition (ie the defender's king has to move) it is very easy."
+        },
+        {
+          "id": "pe-fifth-line",
+          "front": {
+            "text": "White to move. What are the next 5 plies?",
+            "boards": [
+              {
+                "fen": "4k3/8/3K4/4P3/8/8/8/8 w - - 0 1",
+                "moves": [
+                  "Ke6",
+                  "Kd8",
+                  "Kf7",
+                  "Kd7",
+                  "e6+"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 1.Ke6 claude: The king steps in front of the pawn and takes the opposition, so the defender's king has to move.\n- 1...Kd8 claude: Black has to give way.\n- 2.Kf7 claude: The king takes the squares in front of the pawn.\n- 2...Kd7 White has reached the shepherding position and the pawn marches home.\n- 3.e6+ claude: The pawn marches home with check."
+        },
+        {
+          "id": "pe-fifth-att",
+          "front": {
+            "text": "White to move. What are the next 9 plies, and why does White still win?",
+            "boards": [
+              {
+                "fen": "4k3/8/4K3/4P3/8/8/8/8 w - - 0 1",
+                "moves": [
+                  "Kd6",
+                  "Kd8",
+                  "e6",
+                  "Ke8",
+                  "e7",
+                  "Kf7",
+                  "Kd7",
+                  "Kf6",
+                  "e8=Q"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "On the other hand, if White has to move, he still reaches the favourable opposition win from before.\n\n- 1.Kd6 claude: The king steps aside, keeping d7 and e7 covered.\n- 1...Kd8 claude: Black takes the opposition.\n- 2.e6 claude: The pawn reaches the 6th with Black to move: the winning opposition position from before.\n- 2...Ke8 claude: Black has to give way.\n- 3.e7 claude: The pawn advances, covered by the king.\n- 3...Kf7 claude: The black king can't stay in front of the pawn.\n- 4.Kd7 claude: The king covers e8.\n- 4...Kf6 claude: Nothing helps.\n- 5.e8=Q claude: The pawn promotes."
+        }
+      ]
+    }
+  ]
+}

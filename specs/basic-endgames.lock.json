@@ -1,0 +1,12 @@
+{
+  "deck": "Basic Endgames",
+  "cards": {
+    "pe-shepherd": "1bd7984a-aa62-45e6-9de6-46db8d02d0ca",
+    "pe-opp": "8428a239-6cca-4542-9ab4-960b52c8065e",
+    "pe-opp-line": "a201c842-d23b-4263-9f22-5f840495007a",
+    "pe-opp-draw": "805eceaf-150b-4928-b383-1f39b72102e1",
+    "pe-fifth": "185920e1-a5eb-4332-9f03-f5724a0c758f",
+    "pe-fifth-line": "bdb522ab-24b7-4c97-a3b5-511f667d95e2",
+    "pe-fifth-att": "c3e5fde4-44b8-4497-a609-74a0f1304b2e"
+  }
+}

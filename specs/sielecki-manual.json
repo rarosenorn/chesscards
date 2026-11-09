@@ -2223,6 +2223,26 @@
                 ]
               },
               "back": "- 6.Bf4 The most aggressive move. We plan to play Qd2 and O-O-O next. With our king safely positioned on the queenside, we may attack the kingside by pushing our pawns (f3&g4 comes to mind).\n- 6...O-O Black gets their king to safety.\n- 7.Qd2 We continue with our plan: secure our king on the queenside and attack on the other side of the board.\n- 7...Nc6 claude: Black develops the knight.\n- 8.O-O-O We have completed queenside castling and are ready to attack on the kingside.\n- 8...Nxd4 claude: Black trades knights.\n- 9.Qxd4 claude: we recapture with the queen.\n- 9...Re8 claude: Black brings the rook to the e-file.\n- 10.f3 followed by g4 and h4, the pawn storm on the kingside. It is difficult for Black to generate any counterplay.\n\nWhite has some good alternatives, in particular [6.g3], intending Bg2 and O-O. Both sides' forces are not in direct contact, which gives us a range of options."
+            },
+            {
+              "id": "ph-conclusion",
+              "front": {
+                "text": "What is the conclusion on the Philidor Defense?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "e4",
+                      "e5",
+                      "Nf3",
+                      "d6"
+                    ],
+                    "orientation": "w",
+                    "openAt": 4
+                  }
+                ]
+              },
+              "back": "The Philidor Defense is fairly unpopular because it is too passive. Black's f8-bishop remains inactive for a while, compared to [2...Nc6], when Black often manages to develop the bishop to a better spot.\n\nBlack's relatively best option is the capture [3.d4 exd4], leading to the chapter's main line. I suggest aiming for O-O-O here, playing as aggressively as possible. Black's modest setup invites a more ambitious play, which we should happily go for."
             }
           ]
         },
@@ -3773,7 +3793,7 @@
                   }
                 ]
               },
-              "back": "- [4...Nxe5 5.d4] is the most common. We restore material equality and gain some advantage, but there are a few traps to avoid.\n- [4...Bxf2+]?! is dubious but leads to fun complications. Black returns the piece and thus avoids the fork trick.\n- [4...Nf6 5.Nxc6 dxc6 6.h3]: White is much better, as Black has no compensation for the pawn.\n- [4...Qh4 5.g3] or [4...Qf6 5.Ng4] are easily defused attempts at a Scholar's Mate."
+              "back": "- [4...Nxe5 5.d4] is the most common. We restore material equality and gain some advantage, but there are a few traps to avoid.\n- [4...Bxf2+]?! is dubious but leads to fun complications. Black returns the piece and thus avoids the fork trick.\n- [4...Nf6]? [4...Nf6 | 5.Nxc6 dxc6 6.h3]: White is much better, as Black has no compensation for the pawn.\n- [4...Qh4]? [4...Qh4 | 5.g3] or [4...Qf6]? [4...Qf6 | 5.Ng4] are easily defused attempts at a Scholar's Mate."
             },
             {
               "id": "tk-qh4",
@@ -3850,7 +3870,7 @@
             {
               "id": "tk-nf6-next3",
               "front": {
-                "text": "What are the next 3 plies following 4...Nf6?",
+                "text": "After 4...Nf6?, what are the next 3 plies?",
                 "boards": [
                   {
                     "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -4948,7 +4968,7 @@
                   }
                 ]
               },
-              "back": "- 7.Be2 We must get our king to safety and develop the kingside, so we 'castle by hand': we can't play O-O anymore, but Be2, Rf1 and Kg1 reach the same setup. [7.Bc4] has a similar idea.\n- 7...d6 claude: Black opens the way for the c8-bishop.\n- 8.Rf1 Continuing to castle by hand.\n- 8...Nf6 Black develops.\n- 9.Kg1 Our 'castling by hand' is complete and the king is safe.\n\n[7.Bd3 Qf6+] is less precise, as our d-pawn is hanging."
+              "back": "- 7.Be2 We must get our king to safety and develop the kingside, so we 'castle by hand': we can't play O-O anymore, but Be2, Rf1 and Kg1 reach the same setup. [7.Bc4] has a similar idea.\n- 7...d6 claude: Black opens the way for the c8-bishop.\n- 8.Rf1 Continuing to castle by hand.\n- 8...Nf6 claude: Black develops.\n- 9.Kg1 Our 'castling by hand' is complete and the king is safe.\n\n[7.Bd3 Qf6+] is less precise, as our d-pawn is hanging."
             },
             {
               "id": "tk-kg1-threat",
@@ -5917,10 +5937,6 @@
                 ]
               },
               "back": "We can't play [8.dxe5 Bxf2+]. claude: the pawn has left d4, so the b6-bishop's diagonal to f2 is open and our king is driven out."
-            },
-            {
-              "keep": "1e1f3bd4-21eb-4066-8d03-1180ac6c31de",
-              "note": "What is the best move here (a king and bishop position, made in the app; no back)"
             }
           ]
         }
@@ -11752,7 +11768,7 @@
                   }
                 ]
               },
-              "back": "On the master level, Black usually chooses between two replies to the Alapin: [2...Nf6] and 2...d5. Both moves share a common concept: Black attacks our e-pawn immediately and forces our pawn to capture or advance.\n\nWe don't get the opportunity to realize our main strategic goal, which is to establish a perfect pawn duo in the center. Lines like [2...d6 3.d4] or [2...e6 3.d4] allow us to build the desired pawn formation."
+              "back": "On the master level, Black usually chooses between two replies to the Alapin: [2...Nf6] and 2...d5. Both moves share a common concept: Black attacks our e-pawn immediately and forces our pawn to capture or advance.\n\nWe don't get the opportunity to realize our main strategic goal, which is to establish a perfect pawn duo in the center. Lines like [2...d6]?! [2...d6 | 3.d4] or [2...e6 3.d4] allow us to build the desired pawn formation."
             },
             {
               "id": "ad5-line",
@@ -11997,7 +12013,7 @@
                   }
                 ]
               },
-              "back": "- 6.Nc3 Developing with tempo.\n- 6...Qd8 Black has a choice of various queen moves. Most popular is 6...Qd8.\n- 7.Bc4 A normal development move like 7.Bc4 gives us some advantage.\n\nIt is interesting to compare this position to the Caro-Kann, as 1.e4 [1...c6 2.d4 d5 3.exd5 cxd5 4.c4 Nf6 5.Nc3 dxc4 6.Bxc4] may lead to the same position. It pays off to follow similar concepts across different openings, as you reach familiar structures."
+              "back": "- 6.Nc3 Developing with tempo.\n- 6...Qd8 Black has a choice of various queen moves. Most popular is 6...Qd8.\n- 7.Bc4 A normal development move like 7.Bc4 gives us some advantage.\n\nIt is interesting to compare this position to the Caro-Kann, as 1.e4 [1...c6 2.d4 d5 3.exd5 cxd5 4.c4 Nf6 5.Nc3 dxc4]?! [1...c6 2.d4 d5 3.exd5 cxd5 4.c4 Nf6 5.Nc3 dxc4 | 6.Bxc4] may lead to the same position. It pays off to follow similar concepts across different openings, as you reach familiar structures."
             },
             {
               "id": "ad5x-nf3",

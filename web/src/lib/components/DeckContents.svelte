@@ -1,4 +1,5 @@
 <script>
+	import { SvelteSet } from "svelte/reactivity"
 	import { deckOutline, deckSubtree } from "$lib/deck-tree.js"
 
 	// What a deck holds, for someone deciding whether to take it: the outline
@@ -8,20 +9,60 @@
 	// with the count of its own cards (those directly inside it at the top).
 	let { subdecks } = $props();
 
-	let rows = $derived(deckOutline(subdecks).map(({ deck, level }) => {
+	let rows = $derived(deckOutline(subdecks).map(({ deck, level, holdsDecks }) => {
 		const inside = deckSubtree(subdecks, deck.id);
 		const cards = subdecks.filter(other => inside.has(other.id)).reduce((sum, other) => sum + other.cards, 0);
-		return { id: deck.id, name: deck.name, level: level + 1, cards };
+		return { id: deck.id, name: deck.name, level: level + 1, cards, holdsDecks };
 	}));
+
+	const expanded = new SvelteSet();
+	let foldable = $derived(rows.filter(row => row.holdsDecks));
+	let allOpen = $derived(foldable.every(row => expanded.has(row.id)));
+	const toggle = id => {
+		if (!expanded.delete(id)) expanded.add(id);
+	}
+	const toggleAll = () => {
+		if (allOpen) expanded.clear();
+		else for (const row of foldable) expanded.add(row.id);
+	}
+
+	let visible = $derived.by(() => {
+		const shown = [];
+		let closedAt = null;
+		for (const row of rows) {
+			if (closedAt !== null && row.level > closedAt) continue;
+			closedAt = row.holdsDecks && !expanded.has(row.id) ? row.level : null;
+			shown.push(row);
+		}
+		return shown;
+	});
 </script>
 
 {#if rows.length > 0}
 	<section class="contents">
-		<h3>Contents</h3>
+		<div class="head">
+			<h3>Contents</h3>
+			{#if foldable.length > 0}
+				<button class="toggle-all" onclick={toggleAll}>{allOpen ? "Fold all" : "Expand all"}</button>
+			{/if}
+		</div>
 		<ul>
-			{#each rows as row (row.id)}
-				<li class:top={row.level === 1} style:padding-left="{(row.level - 1) * 18}px">
-					<span class="name">{row.name}</span>
+			{#each visible as row (row.id)}
+				<li class:top={row.level === 1} style:padding-left="{(row.level - 1) * 20}px">
+					<span class="name">
+						{#if foldable.length > 0}
+							<button
+								class="expander"
+								class:open={expanded.has(row.id)}
+								class:empty={!row.holdsDecks}
+								aria-label={`${expanded.has(row.id) ? "Hide" : "Show"} the decks inside`}
+								aria-expanded={expanded.has(row.id)}
+								tabindex={row.holdsDecks ? 0 : -1}
+								onclick={() => toggle(row.id)}
+							></button>
+						{/if}
+						{row.name}
+					</span>
 					<span class="cards">{row.cards} {row.cards === 1 ? "card" : "cards"}</span>
 				</li>
 			{/each}
@@ -43,10 +84,28 @@
 		margin: 0 -25px 25px;
 		background-color: #efefef;
 	}
-	h3 {
-		font-size: 1.1rem;
+	.head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 16px;
 		padding-bottom: 8px;
 		border-bottom: 1px solid #e3e1e1;
+	}
+	h3 {
+		font-size: 1.1rem;
+	}
+	.toggle-all {
+		padding: 0;
+		border: none;
+		background: none;
+		cursor: pointer;
+		font: inherit;
+		font-size: 0.9rem;
+		color: rgba(0, 0, 0, 0.55);
+	}
+	.toggle-all:hover {
+		color: black;
 	}
 	ul {
 		list-style: none;
@@ -66,6 +125,38 @@
 	li.top {
 		font-weight: 600;
 		color: black;
+	}
+	.expander {
+		position: relative;
+		width: 16px;
+		height: 16px;
+		margin-right: 4px;
+		padding: 0;
+		border: none;
+		background: none;
+		cursor: pointer;
+		vertical-align: baseline;
+		font: inherit;
+		font-weight: 400;
+		line-height: 16px;
+		color: #404040;
+	}
+	.expander::before {
+		content: "+";
+	}
+	.expander::after {
+		content: "";
+		position: absolute;
+		inset: -4px -5px -4px -5px;
+	}
+	.expander.open::before {
+		content: "\2212";
+	}
+	.expander:hover {
+		color: black;
+	}
+	.expander.empty {
+		visibility: hidden;
 	}
 	.cards {
 		flex: none;

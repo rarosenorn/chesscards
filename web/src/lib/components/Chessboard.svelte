@@ -613,6 +613,7 @@
 		const pgn = encodeURIComponent(start + line.map(san => san.replace(/[+#]/g, "")).join(" ")).replaceAll("%20", "_");
 		return pgn.length > 4500 ? position : `https://lichess.org/analysis/pgn/${pgn}${color}#${ply}`;
 	});
+	let playUrl = $derived(isPositionFinished(displayFen) ? null : `https://lichess.org/?fen=${encodeURIComponent(displayFen)}#ai`);
 
 	// Everything that is not a step arrives at once: the position is written
 	// into the board and drawn in the very frame the rest of the card changed
@@ -1086,6 +1087,7 @@
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse</a>
+			{#if playUrl}<a class="analysis-link" href={playUrl} target="_blank" rel="noopener noreferrer">Play vs computer</a>{/if}
 		{/if}
 	</div>
 	<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- keyboard stepping lives on the focusable wrapper -->
@@ -1308,6 +1310,9 @@
 		color: rgba(0, 0, 0, 0.55);
 		text-decoration: none;
 		transition: transform 80ms ease-out;
+	}
+	.analysis-link + .analysis-link {
+		margin-left: 0;
 	}
 	.analysis-link:hover {
 		background-color: #ebebeb;

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from "vitest"
 import { mount, unmount, tick } from "svelte"
 import Chessboard from "./Chessboard.svelte"
 
-describe("the Play vs computer link", () => {
+describe("the Play link", () => {
 	beforeAll(() => {
 		globalThis.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
 		globalThis.AudioContext = class { constructor() { this.state = "running" } createBufferSource() { return { connect() {}, start() {} } } };
@@ -21,14 +21,15 @@ describe("the Play vs computer link", () => {
 		document.body.appendChild(target);
 		const app = mount(Chessboard, { target, props: { board: { annotations: {}, orientation: "w", ...board }, analysis: true } });
 		await tick();
-		const link = [...target.querySelectorAll("a")].find(a => a.textContent === "Play vs computer");
+		const link = [...target.querySelectorAll("a")].find(a => a.textContent === "Play");
 		unmount(app);
 		return link;
 	}
 
-	it("opens Lichess's game against the computer from the position the board shows", async () => {
+	it("opens Lichess's practice against Stockfish from the position the board shows, as the side it is seen from", async () => {
 		const link = await show({ fen: "8/4p3/4k3/8/3K4/8/8/8 w - - 0 1", moves: ["Ke4", "Kd6", "Kd4"], openAt: 1 });
-		expect(link.getAttribute("href")).toBe("https://lichess.org/?fen=8%2F4p3%2F4k3%2F8%2F4K3%2F8%2F8%2F8%20b%20-%20-%201%201#ai");
+		expect(link.getAttribute("href")).toBe("https://lichess.org/analysis/8/4p3/4k3/8/4K3/8/8/8_b_-_-_1_1?color=white#practice");
+		expect((await show({ fen: "8/4p3/4k3/8/3K4/8/8/8 w - - 0 1", moves: [], orientation: "b" })).getAttribute("href")).toBe("https://lichess.org/analysis/8/4p3/4k3/8/3K4/8/8/8_w_-_-_0_1?color=black#practice");
 		expect(link.getAttribute("target")).toBe("_blank");
 	});
 

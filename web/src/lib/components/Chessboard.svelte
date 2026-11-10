@@ -613,7 +613,11 @@
 		const pgn = encodeURIComponent(start + line.map(san => san.replace(/[+#]/g, "")).join(" ")).replaceAll("%20", "_");
 		return pgn.length > 4500 ? position : `https://lichess.org/analysis/pgn/${pgn}${color}#${ply}`;
 	});
-	let playUrl = $derived(isPositionFinished(displayFen) ? null : `https://lichess.org/?fen=${encodeURIComponent(displayFen)}#ai`);
+	// Lichess's practice mode: you play the side at the bottom against
+	// Stockfish's best move (the tablebase's in small endgames). Its game
+	// against the computer cannot be opened at a chosen strength.
+	let playUrl = $derived(isPositionFinished(displayFen) ? null
+		: `https://lichess.org/analysis/${displayFen.replaceAll(" ", "_")}?color=${normalized.orientation === "b" ? "black" : "white"}#practice`);
 
 	// Everything that is not a step arrives at once: the position is written
 	// into the board and drawn in the very frame the rest of the card changed
@@ -1087,7 +1091,7 @@
 		{/if}
 		{#if analysis}
 			<a class="analysis-link" href={analysisUrl} target="_blank" rel="noopener noreferrer">Analyse</a>
-			{#if playUrl}<a class="analysis-link" href={playUrl} target="_blank" rel="noopener noreferrer">Play vs computer</a>{/if}
+			{#if playUrl}<a class="analysis-link" href={playUrl} target="_blank" rel="noopener noreferrer">Play</a>{/if}
 		{/if}
 	</div>
 	<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -- keyboard stepping lives on the focusable wrapper -->

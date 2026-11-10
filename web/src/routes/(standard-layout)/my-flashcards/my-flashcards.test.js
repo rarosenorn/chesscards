@@ -241,4 +241,36 @@ describe("My flashcards", () => {
 		expect(remote.moveDeck).toHaveBeenLastCalledWith({ id: "Empty", parentId: null, index: 1 });
 		page.close();
 	})
+
+	it("reads the counts again every 10 minutes while shown, and when the tab is shown again", async () => {
+		const { invalidateAll } = await import("$app/navigation");
+		invalidateAll.mockClear();
+		let visibility = "visible";
+		Object.defineProperty(document, "visibilityState", { configurable: true, get: () => visibility });
+		vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+		try {
+			const page = await open();
+			vi.advanceTimersByTime(10 * 60 * 1000 - 1);
+			expect(invalidateAll).not.toHaveBeenCalled();
+			vi.advanceTimersByTime(1);
+			expect(invalidateAll).toHaveBeenCalledTimes(1);
+
+			visibility = "hidden";
+			document.dispatchEvent(new Event("visibilitychange"));
+			vi.advanceTimersByTime(30 * 60 * 1000);
+			expect(invalidateAll).toHaveBeenCalledTimes(1);
+
+			visibility = "visible";
+			document.dispatchEvent(new Event("visibilitychange"));
+			expect(invalidateAll).toHaveBeenCalledTimes(2);
+
+			page.close();
+			vi.advanceTimersByTime(10 * 60 * 1000);
+			document.dispatchEvent(new Event("visibilitychange"));
+			expect(invalidateAll).toHaveBeenCalledTimes(2);
+		} finally {
+			vi.useRealTimers();
+			delete document.visibilityState;
+		}
+	})
 })

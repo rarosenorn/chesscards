@@ -42,6 +42,19 @@
 		keepExpanded();
 	}
 
+	const REFRESH_MS = 10 * 60 * 1000;
+	$effect(() => {
+		const refresh = () => {
+			if (document.visibilityState === "visible" && !drag?.started) invalidateAll();
+		};
+		const id = setInterval(refresh, REFRESH_MS);
+		document.addEventListener("visibilitychange", refresh);
+		return () => {
+			clearInterval(id);
+			document.removeEventListener("visibilitychange", refresh);
+		};
+	});
+
 	// the rows that show: each level only under an open row, so a closed deck
 	// keeps everything inside it out of the list
 	let visible = $derived.by(() => {

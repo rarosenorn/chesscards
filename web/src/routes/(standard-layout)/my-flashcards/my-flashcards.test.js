@@ -223,6 +223,41 @@ describe("My flashcards", () => {
 		page.close();
 	})
 
+	it("draws one line for a gap between two rows, in as far as the level the deck would land at", async () => {
+		const page = await open();
+		page.rowEl("Course").querySelector(".expander").click();
+		await tick();
+		const rows = page.shown();
+		for (const [index, id] of rows.entries()) {
+			page.rowEl(id).getBoundingClientRect = () => ({ top: index * 20, bottom: index * 20 + 20, height: 20, left: 0, right: 500 });
+		}
+		document.elementFromPoint = (x, y) => page.rowEl(rows[Math.floor(y / 20)])?.querySelector("td") ?? null;
+		// the line while Taken is held at y: [the row it is drawn on, its side, its indent]
+		const lineAt = y => {
+			const at = rows.indexOf("Taken") * 20 + 10;
+			page.rowEl("Taken").dispatchEvent(new MouseEvent("mousedown", { button: 0, clientX: 10, clientY: at, bubbles: true }));
+			window.dispatchEvent(new MouseEvent("mousemove", { clientX: 10, clientY: at - 8 }));
+			window.dispatchEvent(new MouseEvent("mousemove", { clientX: 10, clientY: y }));
+			flushSync();
+			const lines = [...page.target.querySelectorAll("tr.drop-line-above, tr.drop-line-below")]
+				.map(tr => [tr.dataset.rowId, tr.classList.contains("drop-line-above") ? "above" : "below", tr.style.getPropertyValue("--drop-indent")]);
+			window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+			window.dispatchEvent(new MouseEvent("mouseup", {}));
+			flushSync();
+			return lines;
+		}
+		const y = (id, part) => rows.indexOf(id) * 20 + part;
+		// the bottom of Ch1 and the top of Ch2 are the same gap
+		expect(lineAt(y("Ch1", 18))).toEqual([["Ch2", "above", "30px"]]);
+		expect(lineAt(y("Ch2", 2))).toEqual([["Ch2", "above", "30px"]]);
+		// the bottom of Ch2 lands inside Course, the top of Empty at the top level
+		expect(lineAt(y("Ch2", 18))).toEqual([["Empty", "above", "30px"]]);
+		expect(lineAt(y("Empty", 2))).toEqual([["Empty", "above", "4px"]]);
+		// just under the open Course: its first deck, one level in
+		expect(lineAt(y("Course", 18))).toEqual([["Ch1", "above", "30px"]]);
+		page.close();
+	})
+
 	it("drops just under an open marketplace deck before it, not after all it holds", async () => {
 		const page = await open();
 		page.rowEl("Taken").querySelector(".expander").click();

@@ -282,6 +282,21 @@
 			: null;
 	}
 
+	// A gap between two rows has one line, whichever of the two the pointer
+	// is on: it is drawn along the lower row's top edge (along the last row's
+	// bottom at the end, and along the upper row's bottom when the lower one
+	// is in hand). It starts where a deck at the level it would land at starts.
+	const zoneOf = row => drag?.started && drag.drop?.targetId === row.id ? drag.drop.zone : null;
+	const landingLevel = row => drag.drop.parentId === row.id ? row.level + 1 : row.level;
+	const lifted = row => drag?.started && drag.within.has(row.id);
+	const dropLineAt = i => {
+		const row = visible[i], above = visible[i - 1], below = visible[i + 1];
+		if (zoneOf(row) === "before") return { side: "above", level: landingLevel(row) };
+		if (above && zoneOf(above) === "after" && !lifted(row)) return { side: "above", level: landingLevel(above) };
+		if (zoneOf(row) === "after" && (!below || lifted(below))) return { side: "below", level: landingLevel(row) };
+		return null;
+	}
+
 	const handleWindowMouseUp = async () => {
 		const d = drag;
 		if (!d) return;
@@ -441,14 +456,15 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each visible as row (row.id)}
-				{@const dropHere = drag?.started && drag.drop?.targetId === row.id ? drag.drop.zone : null}
+			{#each visible as row, i (row.id)}
+				{@const line = dropLineAt(i)}
 				<tr
 					data-row-id={row.id}
-					class:drop-inside={dropHere === "inside"}
-					class:drop-before={dropHere === "before"}
-					class:drop-after={dropHere === "after"}
-					class:lifted={drag?.started && drag.within.has(row.id)}
+					class:drop-inside={zoneOf(row) === "inside"}
+					class:drop-line-above={line?.side === "above"}
+					class:drop-line-below={line?.side === "below"}
+					style:--drop-indent={line ? `${4 + line.level * 26}px` : undefined}
+					class:lifted={lifted(row)}
 					onmousedown={e => handleRowMouseDown(e, row)}
 					oncontextmenu={e => handleRowContextMenu(e, row)}
 				>
@@ -712,12 +728,26 @@
 	table.dragging tbody > tr.drop-inside:hover {
 		background-color: var(--accent-subtle-strong);
 	}
-	table.dragging tbody > tr.drop-before td {
-		box-shadow: inset 0 2px 0 var(--accent);
-	}
-	table.dragging tbody > tr.drop-after td,
+	table.dragging tbody > tr.drop-line-above td,
+	table.dragging tbody > tr.drop-line-below td,
 	table.drop-end tbody > tr:last-child td {
-		box-shadow: inset 0 -2px 0 var(--accent);
+		background-image: linear-gradient(var(--accent), var(--accent));
+		background-repeat: no-repeat;
+		background-size: 100% 2px;
+		background-position: 0 0;
+	}
+	table.dragging tbody > tr.drop-line-below td,
+	table.drop-end tbody > tr:last-child td {
+		background-position: 0 100%;
+	}
+	table.dragging tbody > tr.drop-line-above td:first-child {
+		background-position: var(--drop-indent) 0;
+	}
+	table.dragging tbody > tr.drop-line-below td:first-child {
+		background-position: var(--drop-indent) 100%;
+	}
+	table.drop-end tbody > tr:last-child td:first-child {
+		background-position: 4px 100%;
 	}
 	/* the deck in hand, and everything inside it, steps back where it stood */
 	tbody tr.lifted td {

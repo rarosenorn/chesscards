@@ -1,0 +1,1563 @@
+{
+  "deck": "My First Opening Repertoire for Black - Christof Sielecki",
+  "chapters": [
+    {
+      "name": "Quickstart",
+      "cards": [
+        {
+          "id": "qs-tr-nf3",
+          "front": {
+            "text": "Play the Tarrasch line with 4.Nf3 from White's first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "d4",
+                  "d5",
+                  "c4",
+                  "e6",
+                  "Nc3",
+                  "c5",
+                  "Nf3",
+                  "cxd4",
+                  "Nxd4",
+                  "e5",
+                  "Nf3",
+                  "d4",
+                  "Nxe5",
+                  "f6"
+                ],
+                "orientation": "b",
+                "openAt": 1,
+                "solutionFrom": 1,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 1...d5 claude: We claim the center with a pawn of our own.\n- 2.c4 claude: The Queen's Gambit: White attacks our d5-pawn.\n- 2...e6 The starting position of the Queen's Gambit. claude: We cover d5 with a pawn.\n- 3.Nc3 White develops their knight and increases the pressure on the d5-pawn.\n- 3...c5 And we reach the starting point of the Queen's Gambit Tarrasch. We take our claim in the center and attack White's d-pawn, just as White attacked ours.\n- 4.Nf3 A natural move, but it gives us an attractive option to reach an active position.\n- 4...cxd4 The most ambitious and challenging move.\n- 5.Nxd4 claude: White recaptures with the knight.\n- 5...e5 Here we go! We make huge strides in the center while chasing White's knight(s) around.\n- 6.Nf3 White's most common reply.\n- 6...d4 Our position is excellent. We have gained a lot of central space, and our pieces can develop rapidly.\n- 7.Nxe5 This move is scarce but could be a shock. White's idea is that 7...dxc3 8.Qxd8+ Kxd8 9.Nxf7+ is a huge fork.\n- 7...f6! Very strong! We attack both knights now."
+        },
+        {
+          "id": "qs-tr-e3",
+          "front": {
+            "text": "Play the Tarrasch line with 4.e3 from White's first move.",
+            "boards": [
+              {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                "moves": [
+                  "d4",
+                  "d5",
+                  "c4",
+                  "e6",
+                  "Nc3",
+                  "c5",
+                  "e3",
+                  "Nf6",
+                  "Nf3",
+                  "Nc6",
+                  "a3",
+                  "dxc4",
+                  "Bxc4",
+                  "a6",
+                  "O-O",
+                  "b5"
+                ],
+                "orientation": "b",
+                "openAt": 1,
+                "solutionFrom": 1,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 1...d5 claude: We claim the center with a pawn of our own.\n- 2.c4 claude: The Queen's Gambit: White attacks our d5-pawn.\n- 2...e6 The starting position of the Queen's Gambit. claude: We cover d5 with a pawn.\n- 3.Nc3 White develops their knight and increases the pressure on the d5-pawn.\n- 3...c5 And we reach the starting point of the Queen's Gambit Tarrasch. We take our claim in the center and attack White's d-pawn, just as White attacked ours.\n- 4.e3 White opts for a cautious setup, the Symmetrical Variation.\n- 4...Nf6 Playing this knight first covers the d-pawn.\n- 5.Nf3 Played most of the time.\n- 5...Nc6 Completing the symmetry.\n- 6.a3 White's main choice at the master level if they want to deviate from the main lines.\n- 6...dxc4 Simple and good.\n- 7.Bxc4 claude: White takes back the pawn.\n- 7...a6 This is the real point of the capture. We want to play ...b5 next and clear the excellent square b7 for our bishop.\n- 8.O-O claude: White castles.\n- 8...b5 According to plan. We'll play ...Bb7 next and then complete our kingside development with ...Be7 or ...Bd6, followed by ...O-O."
+        }
+      ]
+    },
+    {
+      "name": "Tarrasch Sidelines",
+      "chapters": [
+        {
+          "name": "4.Nf3",
+          "cards": [
+            {
+              "id": "tr-d5",
+              "front": {
+                "text": "What is your move after 1.d4 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 1,
+                    "solutionFrom": 1,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "1": [
+                        [
+                          "success",
+                          "d7",
+                          "d5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "1...d5 claude: We claim the center with a pawn of our own."
+            },
+            {
+              "id": "tr-e6",
+              "front": {
+                "text": "What is your move after 2.c4, and what is the position called?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 3,
+                    "solutionFrom": 3,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "3": [
+                        [
+                          "success",
+                          "e7",
+                          "e6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "2...e6 The starting position of the Queen's Gambit. claude: We cover d5 with a pawn.\n\n2.c4 claude: The Queen's Gambit: White attacks our d5-pawn."
+            },
+            {
+              "id": "tr-e6-replies",
+              "front": {
+                "text": "What are White's 4 main moves after 2...e6, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 4,
+                    "solutionArrows": {
+                      "4": [
+                        [
+                          "success",
+                          "b1",
+                          "c3"
+                        ],
+                        [
+                          "success",
+                          "g1",
+                          "f3"
+                        ],
+                        [
+                          "success",
+                          "c4",
+                          "d5"
+                        ],
+                        [
+                          "success",
+                          "e2",
+                          "e3"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [3.Nc3] We focus on 3.Nc3, as it is the most popular move and the one that features some variations where concrete knowledge is needed.\n- [3.Nf3] is a common move, but it has very little independent value for us. We play [3.Nf3 | 3...c5].\n- [3.cxd5] is possible, but we play ...c5 as fast as possible and get back to the positions of 3.Nc3 c5 4.cxd5 exd5.\n- [3.e3] [3.e3 c5 4.Nc3 Nf6] is a different way to reach 3.Nc3 c5 4.e3 Nf6.\n\nWhite can stop our ...c5 idea with [3.c5]? though, which is premature."
+            },
+            {
+              "id": "tr-nf3",
+              "front": {
+                "text": "What is your move after 3.Nf3 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nf3",
+                      "c5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 5,
+                    "solutionFrom": 5,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "5": [
+                        [
+                          "success",
+                          "c7",
+                          "c5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "3...c5 You see that we play ...c5 as fast as possible.\n\n3.Nf3 is a common move, but it has very little independent value for us."
+            },
+            {
+              "id": "tr-nf3-replies",
+              "front": {
+                "text": "What are White's 3 main moves after 3.Nf3 c5, and where do they lead?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nf3",
+                      "c5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 6,
+                    "solutionArrows": {
+                      "6": [
+                        [
+                          "success",
+                          "b1",
+                          "c3"
+                        ],
+                        [
+                          "success",
+                          "c4",
+                          "d5"
+                        ],
+                        [
+                          "success",
+                          "e2",
+                          "e3"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [4.Nc3 cxd4] is covered via 3.Nc3 c5 4.Nf3.\n- [4.cxd5 exd5 5.Nc3] transposes to our Tarrasch main line chapter.\n- [4.e3 Nc6 5.Nc3 Nf6] leads to the line that we discuss via 3.Nc3 c5 4.e3."
+            },
+            {
+              "id": "tr-cxd5",
+              "front": {
+                "text": "What is your move after 3.cxd5, and what comes next?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "cxd5",
+                      "exd5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 5,
+                    "solutionFrom": 5,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "5": [
+                        [
+                          "success",
+                          "e6",
+                          "d5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "3...exd5 claude: We take back with the e-pawn and keep our pawn on d5.\n\nThen ...c5 as fast as possible: [4.Nc3 c5], [4.Nf3 c5] or [4.e3 c5] will lead us back to positions we reach via 3.Nc3 c5 4.cxd5 exd5."
+            },
+            {
+              "id": "tr-e3",
+              "front": {
+                "text": "What is your move after 3.e3, and which line do you reach?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "e3",
+                      "c5",
+                      "Nc3",
+                      "Nf6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 5,
+                    "solutionFrom": 5,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "5": [
+                        [
+                          "success",
+                          "c7",
+                          "c5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "3...c5 You see that we play ...c5 as fast as possible.\n\n3.e3 c5 4.Nc3 Nf6 is a different way to reach 3.Nc3 c5 4.e3 Nf6, covered via this move order."
+            },
+            {
+              "id": "tr-c5-early",
+              "front": {
+                "text": "How do you show that 3.c5? is premature? Play the next 3 plies.",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "c5",
+                      "b6",
+                      "b4",
+                      "a5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 5,
+                    "solutionFrom": 5,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 3...b6 claude: We attack the c5-pawn at once.\n- 4.b4 claude: White supports it.\n- 4...a5! shows that their pawn expansion was premature.\n\n3.c5? White stops our ...c5 idea this way."
+            },
+            {
+              "id": "tr-c5",
+              "front": {
+                "text": "What is your move after 3.Nc3, and which opening do you reach?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 5,
+                    "solutionFrom": 5,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "5": [
+                        [
+                          "success",
+                          "c7",
+                          "c5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "3...c5 And we reach the starting point of the Queen's Gambit Tarrasch. We play 3...c5, taking our claim in the center and attacking White's d-pawn, just as White attacked ours.\n\n3.Nc3 White develops their knight and increases the pressure on the d5-pawn. It is a logical follow-up to 2.c4, which is all about pressurizing our center pawn too."
+            },
+            {
+              "id": "tr-c5-replies",
+              "front": {
+                "text": "What are White's 5 main moves after 3...c5, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 6,
+                    "solutionArrows": {
+                      "6": [
+                        [
+                          "success",
+                          "c4",
+                          "d5"
+                        ],
+                        [
+                          "success",
+                          "g1",
+                          "f3"
+                        ],
+                        [
+                          "success",
+                          "e2",
+                          "e3"
+                        ],
+                        [
+                          "success",
+                          "d4",
+                          "c5"
+                        ],
+                        [
+                          "success",
+                          "c1",
+                          "f4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [4.cxd5 exd5] White's main line. It usually leads to [4.cxd5 exd5 | 5.Nf3 Nc6], covered in the chapter on the main lines. Here we examine the alternatives, particularly [4.cxd5 exd5 | 5.dxc5 d4]!, which is fun to study and often gives us a great game.\n- [4.Nf3 cxd4 5.Nxd4 e5] is aggressive and leads to exciting play. We quickly expand in the center and pose serious problems.\n- [4.e3] is White's cautious option, covering their central pawns. It's symmetrical but will still lead to complications once the central pawn structure changes.\n- [4.dxc5] A rare move with some fun points. It has some similarities to 4.cxd5 exd5 5.dxc5, but there are differences.\n- [4.Bf4]? A rare move, and mistaken."
+            },
+            {
+              "id": "tr-dxc5",
+              "front": {
+                "text": "Which 2 moves can you play after 4.dxc5 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "dxc5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 7,
+                    "solutionArrows": {
+                      "7": [
+                        [
+                          "success",
+                          "d5",
+                          "d4"
+                        ],
+                        [
+                          "success",
+                          "f8",
+                          "c5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [4...d4] We can play 4...d4.\n- [4...Bxc5 5.cxd5 Nf6 6.dxe6 Qxd1+ 7.Nxd1 Bxe6] There is also the surprising option 4...Bxc5!? 5.cxd5 Nf6!, when Black has fantastic development for a pawn."
+            },
+            {
+              "id": "tr-bxc5",
+              "front": {
+                "text": "After 4.dxc5 Bxc5!? 5.cxd5, what are the next 5 plies, and what does Black get?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "dxc5",
+                      "Bxc5",
+                      "cxd5",
+                      "Nf6",
+                      "dxe6",
+                      "Qxd1+",
+                      "Nxd1",
+                      "Bxe6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 9,
+                    "solutionFrom": 9,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 5...Nf6! claude: We develop instead of taking back on d5.\n- 6.dxe6 claude: White grabs a second pawn.\n- 6...Qxd1+ claude: We trade queens with check.\n- 7.Nxd1 claude: White takes back.\n- 7...Bxe6 Black has fantastic development for a pawn."
+            },
+            {
+              "id": "tr-bf4",
+              "front": {
+                "text": "4.Bf4? is mistaken. What are the next 3 plies?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Bf4",
+                      "cxd4",
+                      "Nb5",
+                      "e5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 7,
+                    "solutionFrom": 7,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 4...cxd4 claude: We take the d4-pawn.\n- 5.Nb5 claude: White hits d4 and eyes c7, which the f4-bishop covers.\n- 5...e5! refutes White's concept. The simpler [5...Bb4+] works too."
+            },
+            {
+              "id": "nf3-cxd4",
+              "front": {
+                "text": "What is your move after 4.Nf3, and why not 4...dxc4 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4"
+                    ],
+                    "orientation": "b",
+                    "openAt": 7,
+                    "solutionFrom": 7,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "7": [
+                        [
+                          "success",
+                          "c5",
+                          "d4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "4...cxd4 The most ambitious and challenging move. There is nothing wrong with playing [4...Nc6] or [4...Nf6], but we want to seize the chance to start an early grab of the initiative. White has many ways to go wrong in the upcoming complications.\n\nIt's less convincing to capture c4, as White has promising answers like [4...dxc4 5.d5] or [4...dxc4 5.e4].\n\n4.Nf3 A natural move, but it gives us an attractive option to reach an active position. It is popular below master-level but almost extinct amongst stronger players. They want to avoid the following line and prefer [4.cxd5 exd5 5.Nf3], the main line."
+            },
+            {
+              "id": "nf3-cxd4-replies",
+              "front": {
+                "text": "What are White's 2 main moves after 4...cxd4, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4"
+                    ],
+                    "orientation": "b",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "f3",
+                          "d4"
+                        ],
+                        [
+                          "success",
+                          "d1",
+                          "d4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [5.Nxd4] claude: The natural recapture, which we meet with ...e5.\n- [5.Qxd4]? After [5.Qxd4 Nc6 6.Qd1 d4 7.Nb5 e5], Black is much better already."
+            },
+            {
+              "id": "nf3-qxd4",
+              "front": {
+                "text": "5.Qxd4? is a mistake. What are the next 5 plies?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Qxd4",
+                      "Nc6",
+                      "Qd1",
+                      "d4",
+                      "Nb5",
+                      "e5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 9,
+                    "solutionFrom": 9,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 5...Nc6 claude: We develop with tempo on the queen.\n- 6.Qd1 claude: The queen retreats.\n- 6...d4 claude: We gain space and hit the c3-knight.\n- 7.Nb5 claude: The knight jumps forward.\n- 7...e5 Black is much better already. We gained space and time with our pawn advances."
+            },
+            {
+              "id": "nf3-e5",
+              "front": {
+                "text": "What is your move after 5.Nxd4, and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 9,
+                    "solutionFrom": 9,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "9": [
+                        [
+                          "success",
+                          "e6",
+                          "e5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "5...e5 Here we go! We make huge strides in the center while chasing White's knight(s) around."
+            },
+            {
+              "id": "nf3-e5-replies",
+              "front": {
+                "text": "What are White's 3 main moves after 5...e5, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 10,
+                    "solutionArrows": {
+                      "10": [
+                        [
+                          "success",
+                          "d4",
+                          "f3"
+                        ],
+                        [
+                          "success",
+                          "d4",
+                          "b3"
+                        ],
+                        [
+                          "success",
+                          "d4",
+                          "b5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [6.Nf3] White's most common reply. The other knight moves are no improvement.\n- [6.Nb3 d4 7.Nd5 Nf6] is similar to 6.Nf3 d4 7.Nd5 Nf6.\n- [6.Ndb5 a6]! 6.Ndb5 is more interesting, when 6...a6! is best."
+            },
+            {
+              "id": "nf3-nb3",
+              "front": {
+                "text": "What are the next 3 plies following 6.Nb3 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5",
+                      "Nb3",
+                      "d4",
+                      "Nd5",
+                      "Nf6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 11,
+                    "solutionFrom": 11,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 6...d4 claude: We gain space with tempo on the c3-knight.\n- 7.Nd5 claude: The knight jumps to d5.\n- 7...Nf6 claude: We develop and challenge the d5-knight.\n\n6.Nb3 d4 7.Nd5 Nf6 is similar to 6.Nf3 d4 7.Nd5 Nf6."
+            },
+            {
+              "id": "nf3-ndb5",
+              "front": {
+                "text": "What is your move after 6.Ndb5, and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5",
+                      "Ndb5",
+                      "a6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 11,
+                    "solutionFrom": 11,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "11": [
+                        [
+                          "success",
+                          "a7",
+                          "a6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "6...a6! is best. claude: We chase the knight at once.\n\n6.Ndb5 is more interesting than the other knight moves."
+            },
+            {
+              "id": "nf3-a6-replies",
+              "front": {
+                "text": "What are White's 2 moves after 6...a6!, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5",
+                      "Ndb5",
+                      "a6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 12,
+                    "solutionArrows": {
+                      "12": [
+                        [
+                          "success",
+                          "b5",
+                          "a3"
+                        ],
+                        [
+                          "success",
+                          "d1",
+                          "a4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [7.Na3]? [7.Na3 d4] is great for Black.\n- [7.Qa4]! Only [7.Qa4 Bd7 8.cxd5 Nf6] works."
+            },
+            {
+              "id": "nf3-na3",
+              "front": {
+                "text": "7.Na3? is a mistake. What is your move?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5",
+                      "Ndb5",
+                      "a6",
+                      "Na3",
+                      "d4"
+                    ],
+                    "orientation": "b",
+                    "openAt": 13,
+                    "solutionFrom": 13,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "13": [
+                        [
+                          "success",
+                          "d5",
+                          "d4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "7...d4 is great for Black. claude: We gain space with tempo on the c3-knight, while White's other knight sits on the edge at a3."
+            },
+            {
+              "id": "nf3-qa4",
+              "front": {
+                "text": "After 7.Qa4!, what are the next 3 plies, and what is White's problem?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5",
+                      "Ndb5",
+                      "a6",
+                      "Qa4",
+                      "Bd7",
+                      "cxd5",
+                      "Nf6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 13,
+                    "solutionFrom": 13,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 7...Bd7! claude: The b5-knight is now pinned to the queen.\n- 8.cxd5 claude: White grabs a pawn.\n- 8...Nf6 This is a funny position, as White has gotten into a terrible self-pin. We can continue to develop (...Bc5 and ...O-O), while White struggles to coordinate their forces."
+            },
+            {
+              "id": "nf3-d4",
+              "front": {
+                "text": "What is your move after 6.Nf3, and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5",
+                      "Nf3",
+                      "d4"
+                    ],
+                    "orientation": "b",
+                    "openAt": 11,
+                    "solutionFrom": 11,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "11": [
+                        [
+                          "success",
+                          "d5",
+                          "d4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "6...d4 It's funny to see that we only played pawn moves so far. :-) Our position is excellent though. We have gained a lot of central space, and our pieces can develop rapidly.\n\n6.Nf3 White's most common reply."
+            },
+            {
+              "id": "nf3-d4-replies",
+              "front": {
+                "text": "What are White's 3 main moves after 6...d4, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5",
+                      "Nf3",
+                      "d4"
+                    ],
+                    "orientation": "b",
+                    "openAt": 12,
+                    "solutionArrows": {
+                      "12": [
+                        [
+                          "success",
+                          "c3",
+                          "d5"
+                        ],
+                        [
+                          "success",
+                          "c3",
+                          "e4"
+                        ],
+                        [
+                          "success",
+                          "f3",
+                          "e5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [7.Nd5 Nf6] One of the two most common moves, when we get a good game by simple means.\n- [7.Ne4]? The other common move, and even worse: [7.Ne4 f5 8.Ng3 f4 9.Ne4 Nf6] gives Black a fabulous game.\n- [7.Nxe5] Wait, what?! This move is scarce but could be a shock."
+            },
+            {
+              "id": "nf3-nd5",
+              "front": {
+                "text": "Which 2 moves are good after 7.Nd5, and why?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5",
+                      "Nf3",
+                      "d4",
+                      "Nd5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 13,
+                    "solutionArrows": {
+                      "13": [
+                        [
+                          "success",
+                          "g8",
+                          "f6"
+                        ],
+                        [
+                          "success",
+                          "b8",
+                          "c6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "[7...Nf6] or [7...Nc6] catches up in development while we keep the central space advantage."
+            },
+            {
+              "id": "nf3-ne4",
+              "front": {
+                "text": "7.Ne4? is even worse. What are the next 5 plies?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5",
+                      "Nf3",
+                      "d4",
+                      "Ne4",
+                      "f5",
+                      "Ng3",
+                      "f4",
+                      "Ne4",
+                      "Nf6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 13,
+                    "solutionFrom": 13,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 7...f5! claude: Another pawn move with tempo on the knight.\n- 8.Ng3 claude: The knight retreats.\n- 8...f4 claude: And we chase it again.\n- 9.Ne4 claude: Back to e4.\n- 9...Nf6 gives Black a fabulous game. We have a huge attack after just nine moves."
+            },
+            {
+              "id": "nf3-f6",
+              "front": {
+                "text": "What is your move after 7.Nxe5, and why not 7...dxc3 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "Nf3",
+                      "cxd4",
+                      "Nxd4",
+                      "e5",
+                      "Nf3",
+                      "d4",
+                      "Nxe5",
+                      "f6",
+                      "Qa4+",
+                      "Nd7",
+                      "Nxd7",
+                      "Bxd7"
+                    ],
+                    "orientation": "b",
+                    "openAt": 13,
+                    "solutionFrom": 13,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "13": [
+                        [
+                          "success",
+                          "f7",
+                          "f6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "7...f6! Very strong! We attack both knights now, and 8.Qa4+ Nd7 9.Nxd7 Bxd7 doesn't save the piece. The variation 4.Nf3 cxd4 leads to sharp and fun positions that are full of traps for White.\n\nWhite's idea is that [7...dxc3 8.Qxd8+ Kxd8 9.Nxf7+] is a huge fork. This line is unclear, as White's knight likely will be stuck in the corner. There is a better solution though.\n\n7.Nxe5 Wait, what?! This move is scarce but could be a shock."
+            }
+          ]
+        },
+        {
+          "name": "4.e3",
+          "cards": [
+            {
+              "id": "e3-nf6",
+              "front": {
+                "text": "What is your move after 4.e3, and why this knight first?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 7,
+                    "solutionFrom": 7,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "7": [
+                        [
+                          "success",
+                          "g8",
+                          "f6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "4...Nf6 Playing this knight first covers the d-pawn. There is nothing wrong with [4...Nc6] though: after [4...Nc6 5.cxd5 exd5 6.dxc5 Nf6], Black will regain the pawn later. It is still much simpler to prevent this option.\n\n4.e3 White opts for a cautious setup, the Symmetrical Variation. White is a tempo up, but the position is closed and has no serious significance."
+            },
+            {
+              "id": "e3-nf6-replies",
+              "front": {
+                "text": "What are White's 2 main moves after 4...Nf6, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 8,
+                    "solutionArrows": {
+                      "8": [
+                        [
+                          "success",
+                          "g1",
+                          "f3"
+                        ],
+                        [
+                          "success",
+                          "c4",
+                          "d5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [5.Nf3] Played most of the time.\n- [5.cxd5 exd5 6.Nf3] We transpose to the chapter on the Tarrasch main lines."
+            },
+            {
+              "id": "e3-nc6",
+              "front": {
+                "text": "What is your move after 5.Nf3 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6",
+                      "Nf3",
+                      "Nc6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 9,
+                    "solutionFrom": 9,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "9": [
+                        [
+                          "success",
+                          "b8",
+                          "c6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "5...Nc6 Completing the symmetry. White may play 6.cxd5 exd5 again to go for a Tarrasch main line, but they can also keep the tension in the center.\n\n5.Nf3 Played most of the time."
+            },
+            {
+              "id": "e3-nc6-replies",
+              "front": {
+                "text": "What are White's 4 main moves after 5...Nc6, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6",
+                      "Nf3",
+                      "Nc6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 10,
+                    "solutionArrows": {
+                      "10": [
+                        [
+                          "success",
+                          "f1",
+                          "d3"
+                        ],
+                        [
+                          "success",
+                          "f1",
+                          "e2"
+                        ],
+                        [
+                          "success",
+                          "c4",
+                          "d5"
+                        ],
+                        [
+                          "success",
+                          "a2",
+                          "a3"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [6.Bd3] A simple developing move, and far more likely than 6.a3. I suggest [6.Bd3 | 6...dxc4 7.Bxc4 a6], shooting for a queenside expansion.\n- [6.Be2] The same: [6.Be2 | 6...dxc4 7.Bxc4 a6]. White takes two moves to capture c4, making these two moves rather toothless.\n- [6.cxd5 exd5] White goes for a Tarrasch main line.\n- [6.a3] is White's main choice at the master level if they want to deviate from the main lines. We meet it the same way: [6.a3 dxc4 7.Bxc4 a6]."
+            },
+            {
+              "id": "e3-bd3",
+              "front": {
+                "text": "What are the next 3 plies following 6.Bd3 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6",
+                      "Nf3",
+                      "Nc6",
+                      "Bd3",
+                      "dxc4",
+                      "Bxc4",
+                      "a6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 11,
+                    "solutionFrom": 11,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 6...dxc4 I suggest taking on c4.\n- 7.Bxc4 White takes two moves to capture c4, making 6.Bd3 rather toothless.\n- 7...a6 shooting for a queenside expansion."
+            },
+            {
+              "id": "e3-be2",
+              "front": {
+                "text": "What are the next 3 plies following 6.Be2 ?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6",
+                      "Nf3",
+                      "Nc6",
+                      "Be2",
+                      "dxc4",
+                      "Bxc4",
+                      "a6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 11,
+                    "solutionFrom": 11,
+                    "puzzle": true
+                  }
+                ]
+              },
+              "back": "- 6...dxc4 claude: The same as against 6.Bd3.\n- 7.Bxc4 White takes two moves to capture c4, making 6.Be2 rather toothless.\n- 7...a6 shooting for a queenside expansion."
+            },
+            {
+              "id": "e3-a3",
+              "front": {
+                "text": "After 6.a3, what is your move, and why is 6...Bd6?! dubious?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6",
+                      "Nf3",
+                      "Nc6",
+                      "a3",
+                      "dxc4"
+                    ],
+                    "orientation": "b",
+                    "openAt": 11,
+                    "solutionFrom": 11,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "11": [
+                        [
+                          "success",
+                          "d5",
+                          "c4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "6...dxc4 Simple and good. White has the extra move a3, compared to 6.Bd3 or 6.Be2. A closer look shows that it does not have a serious impact, so we can deal with White's bishop moves and 6.a3 similarly.\n\nAfter [6...Bd6 7.dxc5 Bxc5 8.b4], White plays the same queenside expansion we employ. It is a sophisticated idea, but it is still rather slow.\n\n6.a3 White's main choice at the master level if they want to deviate from the main lines. You are far more likely to encounter 6.Be2 or 6.Bd3, when we gain a tempo. If we prove to be in good shape after 6.a3 dxc4, the overall concept is sound."
+            },
+            {
+              "id": "e3-a6",
+              "front": {
+                "text": "What is your move after 7.Bxc4, and what is the point?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6",
+                      "Nf3",
+                      "Nc6",
+                      "a3",
+                      "dxc4",
+                      "Bxc4",
+                      "a6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 13,
+                    "solutionFrom": 13,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "13": [
+                        [
+                          "success",
+                          "a7",
+                          "a6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "7...a6 This is the real point of the capture. We want to play ...b5 next and clear the excellent square b7 for our bishop."
+            },
+            {
+              "id": "e3-a6-replies",
+              "front": {
+                "text": "What are White's 2 main moves after 7...a6, and how do they turn out?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6",
+                      "Nf3",
+                      "Nc6",
+                      "a3",
+                      "dxc4",
+                      "Bxc4",
+                      "a6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 14,
+                    "solutionArrows": {
+                      "14": [
+                        [
+                          "success",
+                          "e1",
+                          "g1"
+                        ],
+                        [
+                          "success",
+                          "a3",
+                          "a4"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "- [8.O-O b5] claude: White castles, and we go on with our plan.\n- [8.a4] The odd move 8.a4 would stop our idea, but [8.a4 | 8...b6] would still be a good preparation for the bishop development."
+            },
+            {
+              "id": "e3-b5",
+              "front": {
+                "text": "What is your move after 8.O-O, and what is your plan?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6",
+                      "Nf3",
+                      "Nc6",
+                      "a3",
+                      "dxc4",
+                      "Bxc4",
+                      "a6",
+                      "O-O",
+                      "b5"
+                    ],
+                    "orientation": "b",
+                    "openAt": 15,
+                    "solutionFrom": 15,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "15": [
+                        [
+                          "success",
+                          "b7",
+                          "b5"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "8...b5 According to plan. White has various bishop moves, but we don't need to examine this position any deeper. We'll play ...Bb7 next and then complete our kingside development with ...Be7 or ...Bd6, followed by ...O-O. We have gained space on the queenside, and all our pieces have obtained active posts."
+            },
+            {
+              "id": "e3-a4",
+              "front": {
+                "text": "What is your move after 8.a4, and why is White's move welcome?",
+                "boards": [
+                  {
+                    "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                    "moves": [
+                      "d4",
+                      "d5",
+                      "c4",
+                      "e6",
+                      "Nc3",
+                      "c5",
+                      "e3",
+                      "Nf6",
+                      "Nf3",
+                      "Nc6",
+                      "a3",
+                      "dxc4",
+                      "Bxc4",
+                      "a6",
+                      "a4",
+                      "b6"
+                    ],
+                    "orientation": "b",
+                    "openAt": 15,
+                    "solutionFrom": 15,
+                    "puzzle": true,
+                    "solutionArrows": {
+                      "15": [
+                        [
+                          "success",
+                          "b7",
+                          "b6"
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "back": "8...b6 would still be a good preparation for the bishop development.\n\n8.a4 The odd move would stop our idea. White's a4-move weakens their queenside (b4-square), which is welcomed."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

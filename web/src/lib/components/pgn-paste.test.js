@@ -81,6 +81,35 @@ describe("pasting a PGN where a FEN goes", () => {
 		view.close();
 	})
 
+	it("replaces a board's line, back side and later arrows, keeping the start's arrows as a pasted FEN does", async () => {
+		const arrow = (from, to) => ({ arrows: [{ type: "success", from, to }] });
+		const view = await open({
+			...boardOf(START, ["e4", "e5", "Nf3"]), openAt: 1, solutionFrom: 2,
+			annotations: { 0: arrow("e2", "e4"), 2: arrow("g1", "f3") }, solutionAnnotations: { 3: arrow("b8", "c6") }
+		});
+		paste(view.target.querySelector(".button-row input"), "1. d4 d5 2. c4");
+		await settle();
+		const board = await view.saved();
+		expect(board.moves).toEqual(["d4", "d5", "c4"]);
+		expect(board.annotations).toEqual({ 0: arrow("e2", "e4") });
+		expect(board.solutionAnnotations ?? {}).toEqual({});
+		expect(board.solutionFrom ?? null).toBeNull();
+		expect(board.openAt ?? null).toBeNull();
+		view.close();
+	})
+
+	it("is one step to undo", async () => {
+		const view = await open(boardOf(KINGS, ["Kd2"]));
+		paste(view.target.querySelector(".button-row input"), "1. e4 e5");
+		await settle();
+		const doc = view.target.querySelector(".ProseMirror");
+		doc.dispatchEvent(new KeyboardEvent("keydown", { key: "z", code: "KeyZ", ctrlKey: true, bubbles: true, cancelable: true }));
+		await settle();
+		const board = await view.saved();
+		expect([board.fen, board.moves]).toEqual([KINGS, ["Kd2"]]);
+		view.close();
+	})
+
 	it("leaves a pasted FEN to the field as before", async () => {
 		const view = await open(boardOf(KINGS));
 		const field = view.target.querySelector(".button-row input");

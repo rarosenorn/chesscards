@@ -27,7 +27,7 @@ const ask = async deck => {
 		// One picked up after a reload and already forgotten by the server
 		// most likely finished long ago — its cards came with the reload —
 		// so it is dropped without a word.
-		if (err?.status === 404) current.job = job.resumed ? null : { ...job, phase: "failed", error: err.body?.message ?? "The import is gone" };
+		if (err?.status >= 400 && err?.status < 500) current.job = job.resumed ? null : { ...job, phase: "failed", error: err.body?.message ?? "The import is gone" };
 	}
 	if (isActive(current.job)) timer = setTimeout(() => ask(deck), 1000);
 }

@@ -81,6 +81,18 @@
 	}
 
 	const LICHESS = "https://lichess.org/api/games/user";
+	// Lichess answers a second download from the same place with 429 while
+	// the first is still running, so they go one after the other, each read
+	// to its end before the next starts
+	let lichessLine = Promise.resolve();
+	const lichessFetch = (url, options) => {
+		const result = lichessLine.then(async () => {
+			const response = await fetch(url, options);
+			return { status: response.status, ok: response.ok, body: await response.text() };
+		});
+		lichessLine = result.catch(() => {});
+		return result;
+	}
 	const fromLichess = (game, player) => {
 		const side = color => {
 			const who = game.players[color];
@@ -112,18 +124,20 @@
 				perfType: "ultraBullet,bullet,blitz,rapid,classical,correspondence"
 			});
 			if (until != null) query.set("until", until);
-			const response = await fetch(`${LICHESS}/${encodeURIComponent(name)}?${query}`, { headers: { Accept: "application/x-ndjson" } });
+			const response = await lichessFetch(`${LICHESS}/${encodeURIComponent(name)}?${query}`, { headers: { Accept: "application/x-ndjson" } });
 			if (response.status === 404) throw new Error(`No Lichess player called "${name}"`);
 			// Two limits answer 429 and neither says how long. Too many
 			// requests: Lichess's rule is a full minute. A download it still
 			// counts as running ("only run 1 request(s) at a time", e.g. one
 			// cut off halfway): it forgets that within the hour.
 			if (response.status === 429) {
-				const stuck = /at a time/.test((await response.json().catch(() => null))?.error ?? "");
+				let said = null;
+				try { said = JSON.parse(response.body); } catch {}
+				const stuck = /at a time/.test(said?.error ?? "");
 				throw new Error(`Lichess rate limit reached. ${stuck ? "It can take up to 1 hour to clear." : "Please try again in 1 minute."}`);
 			}
 			if (!response.ok) throw new Error("Lichess did not answer");
-			const page = (await response.text()).split("\n").filter(Boolean).map(line => JSON.parse(line));
+			const page = response.body.split("\n").filter(Boolean).map(line => JSON.parse(line));
 			if (page.length > 0) until = page.at(-1).createdAt - 1;
 			return {
 				games: page.filter(game => game.variant === "standard" && game.pgn).map(game => fromLichess(game, player)),
@@ -187,12 +201,14 @@
 	}
 
 	const showEarlier = async () => {
+		if (loading) return;
 		shown += PAGE;
 		if (shown <= games.length || !hasEarlier) return;
 		const load = latestLoad;
 		loading = true;
 		try {
-			const { games: found, more } = await nextBatch();
+			let found = [], more = true;
+			while (found.length === 0 && more && load === latestLoad) ({ games: found, more } = await nextBatch());
 			if (load !== latestLoad) return;
 			games = [...games, ...found];
 			hasEarlier = more;

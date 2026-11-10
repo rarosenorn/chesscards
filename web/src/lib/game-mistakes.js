@@ -31,17 +31,34 @@ export const judge = (prev, cur, mover) => {
 
 export const KINDS = ["blunder", "mistake", "inaccuracy"]
 
+// How the last move ended the game, if it did. A draw the last move made is
+// judged like any move: its position is worth 0, whatever an engine without
+// the game's history would make of it.
+export const DRAWS = ["stalemate", "repetition", "insufficient", "fifty"]
+const endingOf = chess =>
+	chess.isCheckmate() ? "checkmate"
+	: chess.isStalemate() ? "stalemate"
+	: chess.isThreefoldRepetition() ? "repetition"
+	: chess.isInsufficientMaterial() ? "insufficient"
+	: chess.fen().split(" ")[4] === "100" ? "fifty"
+	: null
+
 // The game as the positions an engine is asked about. `moves` are chess.js's
-// verbose moves; fens[i] is the position before moves[i]. A position with no
-// legal move (mate, stalemate) is not one to analyse.
+// verbose moves; fens[i] is the position before moves[i]. A position the game
+// ended in is not one to analyse.
 export const readGame = pgn => {
 	const chess = new Chess()
 	chess.loadPgn(pgn)
 	const moves = chess.history({ verbose: true })
 	if (moves.length === 0) throw new Error("The game has no moves")
 	const fens = [moves[0].before, ...moves.map(m => m.after)]
-	return { moves, fens, finished: chess.moves().length === 0, headers: chess.getHeaders() }
+	const ending = endingOf(chess)
+	return { moves, fens, ending, finished: ending != null, headers: chess.getHeaders() }
 }
+
+// the eval of the position the game ended in: a draw is level, a mate needs
+// none (the mating move is never a mistake)
+export const finalEval = ({ ending }) => DRAWS.includes(ending) ? { cp: 0, pv: [] } : null
 
 const uciOf = move => move.from + move.to + (move.promotion ?? "")
 
@@ -69,7 +86,7 @@ const PLAN_PLIES = 12
 // `evals[i]` is the engine on fens[i]: { cp | mate, pv: [uci...] }, or null
 // where it was not asked. Like Lichess, a move the engine would have played
 // itself is never judged, whatever the numbers did around it.
-export const findMistakes = ({ moves, fens }, evals, color, kinds = KINDS) => {
+export const findMistakes = ({ moves, fens, ending }, evals, color, kinds = KINDS) => {
 	const found = []
 	moves.forEach((move, ply) => {
 		if (move.color !== color) return
@@ -83,8 +100,9 @@ export const findMistakes = ({ moves, fens }, evals, color, kinds = KINDS) => {
 		const missedMate = mate > 0 ? mate : null
 		const better = lineSan(fens[ply], prev.pv, missedMate ? 2 * missedMate - 1 : LINE_PLIES)
 		if (better.length === 0) return
+		const drawBy = ply === moves.length - 1 && DRAWS.includes(ending) ? ending : null
 		found.push({
-			ply, kind, move, missedMate,
+			ply, kind, move, missedMate, drawBy,
 			better,
 			plan: missedMate ? better : lineSan(fens[ply], prev.pv, PLAN_PLIES),
 			followUp: lineSan(fens[ply + 1], cur.pv ?? [], LINE_PLIES),
@@ -113,8 +131,8 @@ const isTempting = (move, chess) => (/[+#]/.test(move.san) || move.captured && (
 // the played one the player's, at each of their turns, the engine's own move
 // aside. `at` counts the line's moves made before the try; the played line
 // starts with the mistake itself. A missed mate has nothing to argue.
-export const triesToCheck = ({ move, better, followUp, missedMate }) => {
-	if (missedMate) return []
+export const triesToCheck = ({ move, better, followUp, missedMate, drawBy }) => {
+	if (missedMate || drawBy) return []
 	const asks = []
 	for (const [line, moves, first] of [["better", better, 1], ["played", [move, ...followUp], 2]])
 		for (let at = first; at <= moves.length; at += 2) {
@@ -161,6 +179,13 @@ const reason = text => {
 	return said && `${keeps ? said : said[0].toLowerCase() + said.slice(1)}.`
 }
 
+const DRAWN = {
+	stalemate: side => `it stalemates ${side}, which is a draw`,
+	repetition: () => "it repeats the position a third time, which is a draw",
+	insufficient: () => "it leaves too little material to mate, which is a draw",
+	fifty: () => "it is the fiftieth move without a capture or a pawn move, which is a draw"
+}
+
 // The card for one mistake, as a spec for card-spec.js. The board carries the
 // game up to and including the move and opens with it already played (the
 // board tints the squares of the move it stands on, so it needs no arrow); what follows the move
@@ -173,7 +198,7 @@ const reason = text => {
 // parentheses, from the move it answers. A missed mate needs none: that it
 // was missed is the whole reason, and the mate itself the answer.
 export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
-	const { ply, kind, move, better, followUp, missedMate } = mistake
+	const { ply, kind, move, better, followUp, missedMate, drawBy } = mistake
 	const label = numbered(move)
 	const a = kind === "inaccuracy" ? "an" : "a"
 	// moves of the better line, numbered so they hang off the board at the
@@ -199,7 +224,7 @@ export const mistakeCardSpec = ({ moves, fens }, mistake, why = null) => {
 			}]
 		},
 		back: [
-			`- ${label} was ${a} ${kind}${missedMate ? ` because it misses mate in ${missedMate}.` : reason(why?.bad) ? ` because ${reason(why.bad)}` : "."}${variations("played")}`,
+			`- ${label} was ${a} ${kind}${missedMate ? ` because it misses mate in ${missedMate}.` : drawBy ? ` because ${DRAWN[drawBy](move.color === "w" ? "Black" : "White")}.` : reason(why?.bad) ? ` because ${reason(why.bad)}` : "."}${variations("played")}`,
 			`- ${numbered(better[0])} was the best move${missedMate ? ` because it ${missedMate === 1 ? "is" : "starts the"} mate:` : reason(why?.better) ? ` because ${reason(why.better)}` : ":"} [${betterLine}]${variations("better")}`
 		].join("\n")
 	}

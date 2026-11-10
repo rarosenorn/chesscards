@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { judge, readGame, findMistakes, triesToCheck, withTries, mistakeCardSpec } from "./game-mistakes.js"
+import { judge, readGame, finalEval, findMistakes, triesToCheck, withTries, mistakeCardSpec } from "./game-mistakes.js"
 import { cardBuilder } from "./card-spec.js"
 import games from "./fixtures/lichess-judgments.json"
 
@@ -128,6 +128,41 @@ describe("the edges of a game", () => {
 		cardBuilder(msg => problems.push(msg)).buildCard(spec, "card")
 		return problems
 	}
+
+	it("judges a move that stalemates as the draw it is", () => {
+		const game = readGame('[SetUp "1"]\n[FEN "k7/3Q4/1K6/8/8/8/8/8 w - - 0 60"]\n\n60. Qc7')
+		expect(game.ending).toBe("stalemate")
+		const evals = [{ cp: 900, pv: ["d7b7"] }, finalEval(game)]
+		const [mistake] = findMistakes(game, evals, "w")
+		expect([mistake.kind, mistake.drawBy]).toEqual(["blunder", "stalemate"])
+		expect(triesToCheck(mistake)).toEqual([])
+		const spec = mistakeCardSpec(game, mistake, { bad: "ignored", better: "it mates", tries: [] })
+		expect(spec.back).toBe("- 60.Qc7 was a blunder because it stalemates Black, which is a draw.\n- 60.Qb7# was the best move because it mates. [60.Qb7#]")
+		expect(spec.front.boards[0].solutionFrom).toBeUndefined()
+		expect(built(spec)).toEqual([])
+	})
+
+	it("judges a move that repeats the position a third time as the draw it is", () => {
+		const game = readGame("1. Nf3 Nf6 2. Ng1 Ng8 3. Nf3 Nf6 4. Ng1 Ng8")
+		expect(game.ending).toBe("repetition")
+		const evals = game.fens.map(() => ({ cp: 0, pv: ["e2e4"] }))
+		evals[7] = { cp: -500, pv: ["e7e5"] }
+		evals[8] = finalEval(game)
+		const [mistake] = findMistakes(game, evals, "b")
+		expect([mistake.ply, mistake.kind, mistake.drawBy]).toEqual([7, "blunder", "repetition"])
+		expect(mistakeCardSpec(game, mistake).back.split("\n")[0]).toBe("- 4...Ng8 was a blunder because it repeats the position a third time, which is a draw.")
+	})
+
+	it("calls fifty moves a draw on the move that makes them, not on one played past them", () => {
+		expect(readGame('[SetUp "1"]\n[FEN "k7/8/8/8/8/8/8/K6R w - - 99 80"]\n\n80. Rh2').ending).toBe("fifty")
+		expect(readGame('[SetUp "1"]\n[FEN "k7/8/8/8/8/8/8/K6R w - - 100 80"]\n\n80. Rh2').ending).toBeNull()
+	})
+
+	it("gives a mated position no eval, and a game that did not end none either", () => {
+		expect(finalEval(readGame("1. f3 e5 2. g4 Qh4#"))).toBeNull()
+		expect(finalEval(readGame("1. e4 e5"))).toBeNull()
+		expect(readGame("1. e4 e5").ending).toBeNull()
+	})
 
 	it("makes a card of the very first move, which has no move before it", () => {
 		const game = readGame("1. f3 e5 2. g4 Qh4#")

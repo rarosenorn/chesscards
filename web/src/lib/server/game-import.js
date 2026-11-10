@@ -2,7 +2,7 @@ import { createEmptyCard } from "ts-fsrs"
 import * as decks from "./decks.js"
 import { analysePositions, analyseMoves, isInstalled, BINARY } from "./stockfish.js"
 import { explainMistake } from "./explain.js"
-import { readGame, findMistakes, triesToCheck, withTries, mistakeCardSpec, KINDS } from "../game-mistakes.js"
+import { readGame, finalEval, findMistakes, triesToCheck, withTries, mistakeCardSpec, KINDS } from "../game-mistakes.js"
 import { cardBuilder } from "../card-spec.js"
 
 // A game becoming cards: the engine goes through it, the mistakes of the
@@ -20,6 +20,7 @@ import { cardBuilder } from "../card-spec.js"
 const MAX_PLIES = 400;
 const MAX_PGN = 100_000;
 const KEEP_FINISHED = 10 * 60_000;
+const WRITERS = 4;
 
 // on globalThis, so a dev-server reload of this module keeps the line
 const state = globalThis.__gameImports ??= { jobs: new Map(), queue: [], running: false };
@@ -29,13 +30,30 @@ const state = globalThis.__gameImports ??= { jobs: new Map(), queue: [], running
 class Cancelled extends Error {}
 const check = job => { if (job.cancelled) throw new Cancelled(); }
 
+// an error whose message is for the user; any other is logged and said
+// generically
+class ImportError extends Error {}
+
+const limiter = limit => {
+	let running = 0;
+	const waiting = [];
+	const next = () => {
+		if (running >= limit || waiting.length === 0) return;
+		running += 1;
+		const { task, done } = waiting.shift();
+		Promise.resolve().then(task).then(done, () => done(null)).finally(() => { running -= 1; next(); });
+	};
+	return task => new Promise(done => { waiting.push({ task, done }); next(); });
+}
+
 const run = async job => {
 	job.phase = "analysing";
-	const skip = job.game.finished ? [job.game.fens.length - 1] : [];
+	const last = job.game.fens.length - 1;
 	const evals = await analysePositions(job.game.fens, {
-		skip,
+		skip: job.game.ending ? [last] : [],
 		onProgress: (done, total) => { check(job); job.done = done; job.total = total; }
 	});
+	if (job.game.ending) evals[last] = finalEval(job.game);
 	const found = findMistakes(job.game, evals, job.color, job.kinds);
 
 	// The engine goes from one mistake to the next, refuting the tempting
@@ -48,13 +66,16 @@ const run = async job => {
 	const mistakes = new Array(found.length);
 	const reasons = new Array(found.length);
 	const writing = [];
+	const write = limiter(WRITERS);
 	for (const [index, mistake] of found.entries()) {
 		check(job);
 		const asks = triesToCheck(mistake);
 		mistakes[index] = withTries(mistake, asks, await analyseMoves(asks, { onProgress: () => check(job) }));
 		writing.push((async () => {
-			// a missed mate is its own reason; the card writes it out itself
-			reasons[index] = mistake.missedMate ? null : await explainMistake(job.game, mistakes[index]);
+			// a missed mate and a drawn ending are their own reasons; the
+			// card writes them out itself
+			reasons[index] = mistake.missedMate || mistake.drawBy ? null
+				: await write(() => job.cancelled ? null : explainMistake(job.game, mistakes[index]));
 			job.done += 1;
 		})());
 	}
@@ -70,10 +91,15 @@ const run = async job => {
 	const problems = [];
 	const { buildCard } = cardBuilder(problem => problems.push(problem));
 	const cards = mistakes.map((mistake, i) => buildCard(mistakeCardSpec(job.game, mistake, reasons[i]), `move ${mistake.ply + 1}`));
-	if (problems.length > 0) throw new Error(`The cards did not build: ${problems[0]}`);
-	const cardIds = cards.length > 0
-		? await decks.addCards(job.userId, job.targetId, cards, Object.values(createEmptyCard()))
-		: [];
+	if (problems.length > 0) {
+		console.error("game import: cards did not build:", problems);
+		throw new ImportError("The cards could not be made from this game");
+	}
+	let cardIds = [];
+	if (cards.length > 0) {
+		if (!await decks.userIdOwnsDeckId(job.userId, job.targetId)) throw new ImportError("The deck the cards were going into is gone");
+		cardIds = await decks.addCards(job.userId, job.targetId, cards, Object.values(createEmptyCard()));
+	}
 	job.result = { cardIds };
 }
 
@@ -88,9 +114,9 @@ const work = async () => {
 		} catch (error) {
 			if (error instanceof Cancelled) job.phase = "cancelled";
 			else {
-				console.error("game import:", error);
+				if (!(error instanceof ImportError)) console.error("game import:", error);
 				job.phase = "failed";
-				job.error = error.message;
+				job.error = error instanceof ImportError ? error.message : "Something went wrong while making the cards";
 			}
 		}
 		// the game itself is the bulk of a job, and nothing asks for it again
@@ -102,24 +128,29 @@ const work = async () => {
 
 const isActive = job => !job.cancelled && !["done", "failed", "cancelled"].includes(job.phase);
 
-// Returns the job's id. Throws an Error whose message is for the user.
+// Returns the job's id. Throws an ImportError whose message is for the
+// user; anything else it throws is not.
 // targetId: the deck of the user's own the cards go in. deckId: the deck
 // whose page started it (the target, or a deck it is inside), which a
 // reload of that page follows again (active, below).
 const start = async (userId, { deckId, targetId, pgn, color, kinds, url }) => {
-	if (!isInstalled()) throw new Error(`Stockfish is not installed on the server (${BINARY})`);
-	const UUID = /^[0-9a-f-]{36}$/i;
-	if (!UUID.test(deckId ?? "") || !UUID.test(targetId ?? "") || !await decks.userIdOwnsDeckId(userId, targetId)) throw new Error("Unauthorized");
-	if (!["w", "b"].includes(color)) throw new Error("Which side did you play?");
+	if (!isInstalled()) {
+		console.error(`game import: no Stockfish at ${BINARY}`);
+		throw new ImportError("The engine is not available on the server");
+	}
+	const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+	if (typeof deckId !== "string" || typeof targetId !== "string" || !UUID.test(deckId) || !UUID.test(targetId)
+		|| !await decks.userIdOwnsDeckId(userId, targetId)) throw new ImportError("Unauthorized");
+	if (!["w", "b"].includes(color)) throw new ImportError("Which side did you play?");
 	const wanted = KINDS.filter(kind => Array.isArray(kinds) && kinds.includes(kind));
-	if (wanted.length === 0) throw new Error("Nothing to look for: pick blunders, mistakes or inaccuracies");
-	if (typeof pgn !== "string" || pgn.length > MAX_PGN) throw new Error("That is not a game");
+	if (wanted.length === 0) throw new ImportError("Nothing to look for: pick blunders, mistakes or inaccuracies");
+	if (typeof pgn !== "string" || pgn.length > MAX_PGN) throw new ImportError("That is not a game");
 	let game;
-	try { game = readGame(pgn); } catch { throw new Error("The game could not be read"); }
-	if (game.moves.length > MAX_PLIES) throw new Error("The game is too long to analyse");
+	try { game = readGame(pgn); } catch { throw new ImportError("The game could not be read"); }
+	if (game.moves.length > MAX_PLIES) throw new ImportError("The game is too long to analyse");
 	// one at a time each: the line is everyone's
 	if ([...state.jobs.values()].some(job => job.userId === userId && isActive(job)))
-		throw new Error("You already have a game being analysed");
+		throw new ImportError("You already have a game being analysed");
 
 	const job = {
 		id: crypto.randomUUID(), userId, deckId, targetId, color, kinds: wanted, game,
@@ -168,4 +199,4 @@ const active = userId => {
 	return job ? { jobId: job.id, deckId: job.deckId, url: job.url } : null;
 }
 
-export { start, status, cancel, active }
+export { start, status, cancel, active, ImportError }

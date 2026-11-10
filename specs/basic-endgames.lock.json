@@ -7,6 +7,12 @@
     "pe-opp-draw": "805eceaf-150b-4928-b383-1f39b72102e1",
     "pe-fifth": "185920e1-a5eb-4332-9f03-f5724a0c758f",
     "pe-fifth-line": "bdb522ab-24b7-4c97-a3b5-511f667d95e2",
-    "pe-fifth-att": "c3e5fde4-44b8-4497-a609-74a0f1304b2e"
+    "pe-fifth-att": "c3e5fde4-44b8-4497-a609-74a0f1304b2e",
+    "pe-back-draw": "ee6c8eba-537f-4b2e-8126-73facf20710e",
+    "pe-back-draw-line": "be7add3a-2d6c-4922-9885-421127deb6c4",
+    "pe-beside-back": "cca04010-da28-4f2b-bc89-842e9c8eb6fb",
+    "pe-beside-back-line": "f6448847-20f6-4cf9-83be-245c713232f7",
+    "pe-knight": "3cc95520-a4fc-4193-8385-57c46c3b4bad",
+    "pe-knight-line": "b196efd2-5dea-47d2-8b54-478e709b8f9e"
   }
 }

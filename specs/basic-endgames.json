@@ -152,6 +152,150 @@
             ]
           },
           "back": "On the other hand, if White has to move, he still reaches the favourable opposition win from before.\n\n- 1.Kd6 claude: The king steps aside, keeping d7 and e7 covered.\n- 1...Kd8 claude: Black takes the opposition.\n- 2.e6 claude: The pawn reaches the 6th with Black to move: the winning opposition position from before.\n- 2...Ke8 claude: Black has to give way.\n- 3.e7 claude: The pawn advances, covered by the king.\n- 3...Kf7 claude: The black king can't stay in front of the pawn.\n- 4.Kd7 claude: The king covers e8.\n- 4...Kf6 claude: Nothing helps.\n- 5.e8=Q claude: The pawn promotes."
+        },
+        {
+          "id": "pe-back-draw",
+          "front": {
+            "text": "Black to move. Who wins, and how does White draw?",
+            "boards": [
+              {
+                "fen": "8/4p3/4k3/8/3K4/8/8/8 w - - 0 1",
+                "moves": [
+                  "Ke4"
+                ],
+                "orientation": "w",
+                "openAt": 1
+              }
+            ]
+          },
+          "back": "Here the White king gets in the way and it is Black to move. Black can force his pawn down the board, but only draws because of stalemate.\n\nThe drawing technique is simple:\n- Prevent the enemy king from getting any further in front of his pawn.\n- If the enemy king is not threatening to advance, stay directly in front of the pawn.\n- When you have to retreat your king, stay on the same file as the pawn."
+        },
+        {
+          "id": "pe-back-draw-line",
+          "front": {
+            "text": "White to move. What are the next 28 plies, and how does it end?",
+            "boards": [
+              {
+                "fen": "8/4p3/4k3/8/3K4/8/8/8 w - - 0 1",
+                "moves": [
+                  "Ke4",
+                  "Kd6",
+                  "Kd4",
+                  "Ke6",
+                  "Ke4",
+                  "Kf6",
+                  "Kf4",
+                  "e6",
+                  "Ke4",
+                  "e5",
+                  "Ke3",
+                  "Kf5",
+                  "Kf3",
+                  "e4+",
+                  "Ke3",
+                  "Ke5",
+                  "Ke2",
+                  "Kd4",
+                  "Kd2",
+                  "e3+",
+                  "Ke2",
+                  "Ke4",
+                  "Ke1",
+                  "Kd3",
+                  "Kd1",
+                  "e2+",
+                  "Ke1",
+                  "Ke3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 1.Ke4 claude: The king steps in front of the pawn and takes the opposition.\n- 1...Kd6 claude: Black tries to go round on the queenside.\n- 2.Kd4 The drawing technique is simple: prevent the enemy king from getting any further in front of his pawn.\n- 2...Ke6 claude: Black goes back.\n- 3.Ke4 claude: Again the king blocks the way.\n- 3...Kf6 claude: Black tries the kingside.\n- 4.Kf4 claude: Again the king blocks the way.\n- 4...e6 claude: Black pushes the pawn instead.\n- 5.Ke4 And if the enemy king is not threatening to advance, stay directly in front of the pawn.\n- 5...e5 claude: The pawn advances and White's king has to give way.\n- 6.Ke3 When you have to retreat your king, stay on the same file as the pawn.\n- 6...Kf5 claude: The black king comes up beside its pawn.\n- 7.Kf3 claude: White takes the opposition, so the black king can't come further forward.\n- 7...e4+ claude: The pawn advances with check.\n- 8.Ke3 claude: The king goes back in front of the pawn.\n- 8...Ke5 claude: Black takes the opposition.\n- 9.Ke2 claude: White has to give way and retreats on the pawn's file.\n- 9...Kd4 claude: The black king comes up beside its pawn.\n- 10.Kd2 claude: White takes the opposition.\n- 10...e3+ claude: The pawn advances with check.\n- 11.Ke2 claude: The king goes back in front of the pawn.\n- 11...Ke4 claude: Black takes the opposition.\n- 12.Ke1 claude: White retreats on the pawn's file.\n- 12...Kd3 claude: The black king comes up beside its pawn.\n- 13.Kd1 claude: White takes the opposition.\n- 13...e2+ claude: The pawn reaches the 2nd rank with check.\n- 14.Ke1 claude: The king stays in front of the pawn.\n- 14...Ke3 Stalemate. claude: Protecting the pawn stalemates White; anything else loses it."
+        },
+        {
+          "id": "pe-beside-back",
+          "front": {
+            "text": "Black to move. Who wins, and why?",
+            "boards": [
+              {
+                "fen": "8/8/8/8/2pk4/8/3K4/8 w - - 0 1",
+                "moves": [
+                  "Kc2"
+                ],
+                "orientation": "w",
+                "openAt": 1
+              }
+            ]
+          },
+          "back": "With the attacker's king beside his pawn and the pawn any further back than its 6th rank, it is always a draw.\n\nIf the position were one rank further down the board White would be losing here."
+        },
+        {
+          "id": "pe-beside-back-line",
+          "front": {
+            "text": "White to move. What are the next 8 plies, and how does it end?",
+            "boards": [
+              {
+                "fen": "8/8/8/8/2pk4/8/3K4/8 w - - 0 1",
+                "moves": [
+                  "Kc2",
+                  "c3",
+                  "Kc1",
+                  "Kd3",
+                  "Kd1",
+                  "c2+",
+                  "Kc1",
+                  "Kc3"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 1.Kc2 claude: The king steps in front of the pawn.\n- 1...c3 claude: The pawn advances.\n- 2.Kc1 claude: The king stays in front of the pawn.\n- 2...Kd3 claude: The black king comes up beside its pawn.\n- 3.Kd1 claude: White takes the opposition.\n- 3...c2+ claude: The pawn advances with check.\n- 4.Kc1 claude: The king stays in front of the pawn.\n- 4...Kc3 claude: Protecting the pawn stalemates White; anything else loses it."
+        },
+        {
+          "id": "pe-knight",
+          "front": {
+            "text": "White to move. What must White be careful about with a knight's pawn?",
+            "boards": [
+              {
+                "fen": "1k6/8/1K6/1P6/8/8/8/8 w - - 0 1",
+                "moves": [],
+                "orientation": "w"
+              }
+            ]
+          },
+          "back": "With a knight's pawn the attacker has to be a little careful. He has to send his king to the rook's file."
+        },
+        {
+          "id": "pe-knight-line",
+          "front": {
+            "text": "White to move. What are the next 9 plies?",
+            "boards": [
+              {
+                "fen": "1k6/8/1K6/1P6/8/8/8/8 w - - 0 1",
+                "moves": [
+                  "Ka6",
+                  "Ka8",
+                  "b6",
+                  "Kb8",
+                  "b7",
+                  "Kc7",
+                  "Ka7",
+                  "Kd6",
+                  "b8=Q+"
+                ],
+                "orientation": "w",
+                "solutionFrom": 0,
+                "puzzle": true
+              }
+            ]
+          },
+          "back": "- 1.Ka6 He has to send his king to the rook's file.\n- 1...Ka8 claude: Black stays in the corner.\n- 2.b6 claude: The pawn advances, covered by the king.\n- 2...Kb8 claude: Black's only move.\n- 3.b7 claude: The pawn advances, covered by the king.\n- 3...Kc7 claude: Black's only move.\n- 4.Ka7 claude: The king covers b8.\n- 4...Kd6 claude: Nothing helps.\n- 5.b8=Q+ claude: The pawn promotes with check."
         }
       ]
     }

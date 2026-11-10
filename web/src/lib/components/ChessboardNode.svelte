@@ -6,6 +6,7 @@
 	import EyeIcon from "$lib/icons/Eye.svelte"
 	import EyeOffIcon from "$lib/icons/EyeOff.svelte"
 	import { isValidFen } from "$lib/isValidFen.js"
+	import { boardFromPgn } from "$lib/pgn.js"
 
 	// The Svelte face of a chessboard PM node (mounted by tiptap-chessboard's
 	// node view). board comes from the node's attrs; every change goes back out
@@ -87,7 +88,7 @@
 	const shownFen = $derived(fenDraft ?? board.fenInput ?? board.fen);
 	const fenInvalid = $derived((fenDraft ?? board.fenInput) != null && !isValidFen(fenDraft ?? board.fenInput));
 
-	const commitFen = value => {
+	const commitFen = (value, moves = []) => {
 		const next = { ...board };
 		if (board.moves.length > 0) {
 			next.moves = [];
@@ -98,6 +99,7 @@
 		}
 		if (isValidFen(value)) {
 			next.fen = value;
+			next.moves = moves;
 			next.fenInput = undefined;
 		} else {
 			next.fenInput = value;
@@ -112,6 +114,19 @@
 	// the commit-on-change contract, so the flag comes from the paste event.
 	let fenPasted = false;
 	let openInMoves = $state(false);
+	// A pasted PGN is read off the clipboard, before the one-line field
+	// drops its line breaks and glues moves together
+	const handleFenPaste = e => {
+		const game = boardFromPgn(e.clipboardData?.getData("text/plain") ?? "");
+		if (!game) {
+			fenPasted = true;
+			return;
+		}
+		e.preventDefault();
+		fenDraft = null;
+		openInMoves = true;
+		commitFen(game.fen, game.moves);
+	}
 	const handleFenInput = e => {
 		fenDraft = e.target.value;
 		if (!fenPasted) return;
@@ -225,7 +240,7 @@
 					class:invalid-fen={fenInvalid}
 					value={shownFen}
 					oninput={handleFenInput}
-					onpaste={() => fenPasted = true}
+					onpaste={handleFenPaste}
 					onchange={e => commitFen(e.target.value)}
 					onkeydown={e => { if (e.key === "Enter") e.target.blur() }}
 				/>

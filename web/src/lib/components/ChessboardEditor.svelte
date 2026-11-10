@@ -14,6 +14,7 @@
 	import { RightClickAnnotator } from "cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js"
 	import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
 	import { isValidFen } from "$lib/isValidFen.js"
+	import { boardFromPgn } from "$lib/pgn.js"
 	import { FLIPPED_MOVE_PREFIX, flipTurn, looseChess, applyFreeMove, replayMoves, serializeAnnotations, hasAnnotations, showAnnotations, arrowKey, markerKey, isPositionFinished } from "$lib/board-utils.js"
 	import { castleSquare } from "$lib/puzzle.js"
 	import { DEFAULT_BOARD_PREFS, boardStyleProps, hasBlackBorder, withSpriteCache } from "$lib/board-prefs.js"
@@ -156,7 +157,24 @@
 	// editor moves on to recording. Typing the same characters must not switch
 	// mid-FEN, hence the flag rather than a check inside handleFenInput
 	let fenPasted = false;
-	const handleFenPaste = () => { fenPasted = true; }
+	// A pasted PGN is read off the clipboard, before the one-line field
+	// drops its line breaks and glues moves together
+	const handleFenPaste = e => {
+		const game = boardFromPgn(e.clipboardData?.getData("text/plain") ?? "");
+		if (!game) {
+			fenPasted = true;
+			return;
+		}
+		e.preventDefault();
+		clearMoves();
+		currentFen = game.fen;
+		acceptedFen = game.fen;
+		moves = game.moves;
+		snapNextPosition = true;
+		currentIndex = moves.length;
+		switchMode("moves");
+		tick().then(() => boardElement?.focus({ preventScroll: true }));
+	}
 
 	const handleFenInput = () => {
 		clearMoves();

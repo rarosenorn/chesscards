@@ -277,6 +277,7 @@
 		// its side. With neither side focused it acts on both.
 		if (e.key === "F9") {
 			e.preventDefault();
+			if (article) return;
 			const wraps = [...(container?.querySelectorAll(".editor-wrap") ?? [])];
 			const focused = wraps.findIndex(w => w.contains(document.activeElement));
 			if (focused === -1) toggleFrozenBoth();
@@ -303,12 +304,10 @@
 
 <svelte:window onkeydown={handleKeyDown} onpagehide={flushDraft} />
 
-<!-- shown: whether the side's name is written; an article's is not, its
-     freeze button still names it -->
-{#snippet sideLabel(label, side, style = "", shown = true)}
+{#snippet sideLabel(label, side, style = "")}
 	<p class="side-indicator" {style}>
 		<span class="side-name">
-			{#if shown}{label}{/if}
+			{label}
 			<!-- the duplicated cards: browse filters on the exact front of the
 			     card this one duplicates, boards and all -->
 			{#if side === "front" && duplicateFront}
@@ -376,7 +375,11 @@
 			/>
 		{/if}
 	</div>
-	{@render sideLabel(article ? "Article" : "Front", "front", "", !article)}
+	<!-- an article has no side to name, and nothing to freeze for the
+	     next: each one is a page of its own -->
+	{#if !article}
+		{@render sideLabel("Front", "front")}
+	{/if}
 	{#if formAttemptedAndInvalid}
 		<p style="color: red; margin-left: 16px; margin-top: 4px; margin-bottom: 4px;">The card must have atleast 1 non-empty text field or 1 chessboard</p>
 	{/if}
@@ -466,8 +469,9 @@
 				// a frozen side stays for the next card, boards and all; an
 				// unfrozen one clears down to the single boards frozen inside
 				// it (captured before the clear, which takes the docs away)
-				const keptFront = frozenSides.front ? null : frozenBoardsOf(front);
-				const keptBack = frozenSides.back ? null : frozenBoardsOf(back);
+				// An article keeps nothing, and its hidden back is left alone.
+				const keptFront = article ? [] : frozenSides.front ? null : frozenBoardsOf(front);
+				const keptBack = article ? null : frozenSides.back ? null : frozenBoardsOf(back);
 				if (keptFront) frontEditor.clearKeeping(keptFront);
 				if (keptBack) backEditor.clearKeeping(keptBack);
 				pruneFrozenBoards();

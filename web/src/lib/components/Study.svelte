@@ -406,8 +406,6 @@
 		openedIntro = null;
 		window.scrollTo(0, 0);
 	}
-	// the Intro button: the page nearest the card
-	const openIntro = () => openedIntro = introTrail.findLast(place => place.blocks)?.key ?? null;
 
 	let isTactic = $derived(currentCard?.card_type === "tactic");
 	// which of the three the card on screen came out of
@@ -1043,11 +1041,6 @@
 			<button class="page-btn" onclick={endCram}>End cram</button>
 		{:else if studyCards.length}
 			<button class="page-btn" onclick={chooseCram}>Cram</button>
-		{/if}
-		<!-- the intro page of what is being studied, to read again; not over
-		     a card being edited -->
-		{#if !intro && !editingCard && introTrail.some(place => place.blocks)}
-			<button class="page-btn" onclick={openIntro}>Intro</button>
 		{/if}
 		<button
 			class="page-btn"

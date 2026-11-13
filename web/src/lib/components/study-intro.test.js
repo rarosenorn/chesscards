@@ -130,28 +130,11 @@ describe("an intro page in study", () => {
 		page.close();
 	})
 
-	it("is read again from the Intro button, the one nearest the card", async () => {
-		const page = await study(deckOf([card("one", "a"), card("two", "b")]));
-		await page.press("Study");
-		await page.press("Study");
-		expect(page.button("Intro")).toBeTruthy();
-
-		await page.press("Intro");
-		expect(page.title()).toBe("First");
-		expect(page.button("Intro")).toBeFalsy();
-		await page.press("Study");
-		expect(page.question()).toBe("Question one");
-		page.close();
-	})
-
 	it("does not come up for what has been begun", async () => {
 		// a card of First met before: the deck and First are begun
 		const page = await study(deckOf([card("one", "a", true), { ...card("three", "a"), position: 2 }, card("two", "b")]));
 		expect(page.title()).toBe(null);
 		expect(page.question()).toBe("Question three");
-		// ...and their pages are still there to read
-		await page.press("Intro");
-		expect(page.title()).toBe("First");
 		page.close();
 	})
 
@@ -204,7 +187,6 @@ describe("an intro page in study", () => {
 		const page = await study(deckOf([card("one", "b")], { intro: null }));
 		expect(page.title()).toBe(null);
 		expect(page.question()).toBe("Question one");
-		expect(page.button("Intro")).toBeFalsy();
 		page.close();
 	})
 
@@ -251,16 +233,5 @@ describe("an intro page in study", () => {
 		expect(question()).toBe("Question b1");
 		unmount(app);
 		target.remove();
-	})
-
-	it("can be read with no card up, and closed", async () => {
-		// nothing due: the deck is done for now
-		const page = await study(deckOf([card("one", "a", true)]));
-		expect(page.question()).toBe(null);
-		await page.press("Intro");
-		expect(page.title()).toBe("The deck");
-		await page.press("Close");
-		expect(page.title()).toBe(null);
-		page.close();
 	})
 })

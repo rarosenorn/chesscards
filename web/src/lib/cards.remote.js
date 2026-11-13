@@ -31,6 +31,18 @@ export const updateCardStudyStateAndAddLog =
 		await decks.createReviewLog(locals.userId, card.id, log);
 	})
 
+// an article read in study: finished for good, so it is not shown again on
+// any device (a card of a taken deck is the studier's copy of it)
+export const markArticleRead =
+	command("unchecked", async ({ cardId, instance }) => {
+		const { locals } = getRequestEvent();
+		checkIds(cardId);
+		const read = instance
+			? await marketplace.markInstanceArticleRead(locals.userId, cardId)
+			: await decks.markArticleRead(locals.userId, cardId);
+		if (!read) error(403, "Unauthorized");
+	})
+
 // an answer given as practice in a cram session: it changes nothing about
 // the card, and is kept only as study done that day
 export const logPractice =
@@ -71,7 +83,7 @@ export const updateCardType =
 	command("unchecked", async ({ cardId, cardType }) => {
 		const { locals } = getRequestEvent();
 		checkIds(cardId);
-		const type = cardType === "tactic" ? "tactic" : "basic";
+		const type = ["tactic", "article"].includes(cardType) ? cardType : "basic";
 		const card = await decks.updateCardType(locals.userId, cardId, type, Object.values(createEmptyCard()));
 		if (!card) error(403, "Unauthorized");
 		return card;

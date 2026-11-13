@@ -73,8 +73,7 @@ describe("the Cards tab", () => {
 			"1 Front x1", "2 Front x2",
 			"# First", "1.1 Front y1",
 			"# Inner", "1.1.1 Front z1",
-			"# Taken", "2.1 Front m1",
-			"Deck intro"
+			"# Taken", "2.1 Front m1"
 		]);
 		view.close();
 	})
@@ -154,8 +153,7 @@ describe("the Cards tab", () => {
 			"# Taken", "2.1 Front m1",
 			"# First", "1.1 Front y1",
 			"# Inner", "1.1.1 Front z1",
-			"2 Front x2", "1 Front x1",
-			"Deck intro"
+			"2 Front x2", "1 Front x1"
 		]);
 		view.close();
 	})
@@ -166,7 +164,29 @@ describe("the Cards tab", () => {
 			decks: [{ id: "deck", name: "The deck", position: 1, parent_id: null, in_order: true }],
 			cards: [card("x1", "deck", 1), card("x2", "deck", 2)]
 		});
-		expect(view.rows()).toEqual(["1 Front x1", "2 Front x2", "Deck intro"]);
+		expect(view.rows()).toEqual(["1 Front x1", "2 Front x2"]);
+		view.close();
+	})
+
+	it("shows an article as its page, typed Article, with no state", async () => {
+		const article = card("p1", "deck", 1, {
+			card_type: "article", state: null, stability: null, difficulty: null, reps: null,
+			front: text("Front p1"), back: null
+		});
+		const view = await open({
+			...deckOf(),
+			decks: [{ id: "deck", name: "The deck", position: 1, parent_id: null, in_order: true }],
+			cards: [article, card("x1", "deck", 2)]
+		});
+		const row = view.row("p1");
+		expect(row.querySelector(".type-select").value).toBe("article");
+		expect([...row.querySelectorAll(".type-select option")].map(option => option.textContent)).toEqual(["Basic", "Tactic", "Article"]);
+		// due as an unseen tactic is, no FSRS state
+		expect(row.children[3].textContent.trim()).toBe("New");
+		expect(row.children[5].textContent.trim()).toBe("-");
+		// the first card is the one previewed: the page, not a card's two sides
+		expect(view.target.querySelector(".selected-card-container article.article .body").textContent.trim()).toBe("Front p1");
+		expect(view.target.querySelector(".selected-card-container .flashcard.card-surface")).toBe(null);
 		view.close();
 	})
 })

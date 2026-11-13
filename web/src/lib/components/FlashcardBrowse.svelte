@@ -4,6 +4,7 @@
 	import { ttGenerateHTML } from "../tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "../card-utils.js"
 	import Chessboard from "./Chessboard.svelte"
+	import ArticleView from "./ArticleView.svelte"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 
 	let { card } = $props();
@@ -81,6 +82,10 @@
 </div>
 {/snippet}
 
+<!-- an article is a page, shown as study shows it, less its title -->
+{#if card.card_type === "article"}
+	<ArticleView blocks={card.front} />
+{:else}
 <div
 	class="flashcard card-surface"
 	bind:this={cardElement}
@@ -93,6 +98,7 @@
 	{/if}
 	{@render side(card.back, frontBoardCount, false, true)}
 </div>
+{/if}
 
 <style>
 	/* board/text layout inside the card comes from app.css ("card board

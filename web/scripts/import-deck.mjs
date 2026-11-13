@@ -28,7 +28,7 @@
 // so if it had been studied).
 //
 // Changing a card's "type" is the one edit that costs history: the
-// tactic_cards_have_no_fsrs_state constraint forces the schedule to reset.
+// only_basic_cards_have_fsrs_state constraint forces the schedule to reset.
 //
 // Spec format
 // -----------
@@ -51,20 +51,24 @@
 // spec order among themselves, as cards do; a deck inside that the spec does
 // not name keeps its place.
 //
-// The deck and any chapter may carry an intro, the page study shows before
-// the first card there:
+// The deck and any chapter may carry an intro: an Article (a first exposure
+// article, the page study shows once, before the cards after it), made the
+// first card of that deck, ahead of the spec's "cards":
 //
 //   "intro": [ "# Heading\n\ntext with [moves]", { "boards": [ <board> ] }, "more text" ]
 //
 // Text and boards in reading order, or one string for text alone. Text is
 // written as a card side's is, and a line starting "# " or "## " is a
 // heading. The boards count down the page; [moves](2) names the second, and
-// with no number the board above the text (or the first below). An intro the
-// spec leaves out stays as it is in the deck; "intro": null takes it away.
+// with no number the board above the text (or the first below). Its id is
+// "intro:" and the deck's name, or a chapter's names down from the deck
+// ("intro:Chapter / Subchapter"). A card
+// of type "article" anywhere among the cards is written the same way, as its
+// front; an article has no back.
 //
 // <card> = {
 //   "id":   "ov-first-moves",            // stable id; edits update in place
-//   "type": "basic" | "tactic",          // optional, default "basic"
+//   "type": "basic" | "tactic" | "article", // optional, default "basic"
 //   "front": <side>,
 //   "back":  <side>                      // optional
 // }
@@ -177,9 +181,6 @@ if (!(spec.chapters?.length > 0) && !(spec.cards?.length > 0)) bad("spec: no cha
 
 // build + validate everything before touching the database
 const specIds = new Set()
-// undefined (not in the spec) is left alone, null removes
-const introOf = (holder, label) => holder.intro == null ? holder.intro : buildIntro(holder.intro, label)
-const deckIntro = introOf(spec, "deck intro")
 const buildCards = (cards, here) => (cards ?? []).map((card, i) => {
 	const label = `"${here}" card ${i + 1}`
 	if (card.keep != null) {
@@ -187,14 +188,21 @@ const buildCards = (cards, here) => (cards ?? []).map((card, i) => {
 		return { keep: card.keep }
 	}
 	const type = card.type ?? "basic"
-	if (!["basic", "tactic"].includes(type)) bad(`${label}: unknown type "${type}"`)
+	if (!["basic", "tactic", "article"].includes(type)) bad(`${label}: unknown type "${type}"`)
 	if (card.id != null) {
 		if (typeof card.id !== "string" || !card.id.trim()) bad(`${label}: id must be a non-empty string`)
 		else if (specIds.has(card.id)) bad(`${label}: duplicate id "${card.id}"`)
 		else specIds.add(card.id)
 	}
+	if (type === "article") {
+		if (card.back != null) bad(`${label}: an article has no back`)
+		return { id: card.id ?? null, type, front: buildIntro(card.front, `${label} front`), back: null }
+	}
 	return { id: card.id ?? null, type, ...buildCard(card, label) }
 })
+// a deck's intro, as the article that is its first card
+const withIntro = (holder, cards, here) =>
+	holder.intro == null ? cards : [{ id: `intro:${here}`, type: "article", front: holder.intro }, ...cards]
 // the chapters inside a deck or a chapter, their names said once among them
 const buildChapters = (list, here, path) => {
 	const names = new Set()
@@ -210,12 +218,11 @@ const buildChapter = (chapter, ci, path) => {
 	if (chapter.chapters != null && (!Array.isArray(chapter.chapters) || chapter.chapters.length === 0)) bad(`"${here}": chapters must be a non-empty list`)
 	return {
 		name: chapter.name,
-		intro: introOf(chapter, `"${here}" intro`),
-		cards: buildCards(chapter.cards, here),
+		cards: buildCards(withIntro(chapter, chapter.cards ?? [], here), here),
 		chapters: Array.isArray(chapter.chapters) ? buildChapters(chapter.chapters, here, `${here} / `) : []
 	}
 }
-const root = { name: spec.deck, intro: deckIntro, cards: buildCards(spec.cards, spec.deck), chapters: buildChapters(spec.chapters, spec.deck, "") }
+const root = { name: spec.deck, cards: buildCards(withIntro(spec, spec.cards ?? [], spec.deck), spec.deck), chapters: buildChapters(spec.chapters, spec.deck, "") }
 
 const countCards = chapter => chapter.cards.length + chapter.chapters.reduce((n, c) => n + countCards(c), 0)
 const total = countCards(root)
@@ -228,7 +235,7 @@ if (problems.length > 0) {
 
 const pool = new pg.Pool()
 const client = await pool.connect()
-let inserted = 0, updated = 0, unchanged = 0, adopted = 0, retyped = 0, kept = 0, moved = 0, intros = 0
+let inserted = 0, updated = 0, unchanged = 0, adopted = 0, retyped = 0, kept = 0, moved = 0
 const pruned = []
 const nextLock = { deck: spec.deck, cards: {} }
 try {
@@ -243,7 +250,7 @@ try {
 	// (where the user's decks and the marketplace decks they have taken share
 	// the places)
 	const { rows: named } = await client.query(
-		"select id, name, position, intro, parent_id from decks where user_id = $1 and name = $2 order by parent_id is not null",
+		"select id, name, position, parent_id from decks where user_id = $1 and name = $2 order by parent_id is not null",
 		[user.id, spec.deck])
 	if (named.length > 1 && named[0].parent_id != null)
 		throw new Error(`${named.length} decks are named "${spec.deck}", none at the top: rename all but the one to import into`)
@@ -255,15 +262,7 @@ try {
 				select position from decks where user_id = $1 and parent_id is null
 				union all
 				select position from marketplace_deck_instances where user_id = $1 and parent_id is null) top))
-			returning id, name, position, intro`, [user.id, spec.deck]))
-	}
-
-	// an intro the spec names is written where it differs from the deck's
-	const importIntro = async (row, intro, said) => {
-		if (intro === undefined || canonical(row.intro ?? null) === canonical(intro)) return
-		await client.query("update decks set intro = $2 where id = $1", [row.id, intro && JSON.stringify(intro)])
-		console.log(`${said}: intro ${!intro ? "removed" : row.intro ? "updated" : "new"}`)
-		intros++
+			returning id, name, position`, [user.id, spec.deck]))
 	}
 
 	// every card under the deck, wherever inside it it stands
@@ -284,7 +283,7 @@ try {
 	// (the spec's deck at the top), matched by name among its siblings
 	const childByName = async (parentId, name) => {
 		const { rows: [found] } = await client.query(
-			"select id, name, position, intro from decks where user_id = $1 and parent_id = $2 and name = $3", [user.id, parentId, name])
+			"select id, name, position from decks where user_id = $1 and parent_id = $2 and name = $3", [user.id, parentId, name])
 		return found
 	}
 
@@ -326,13 +325,13 @@ try {
 					&& row.deck_id === target.id
 					&& row.position === position
 				if (same) { unchanged++; continue }
-				// a type flip must satisfy tactic_cards_have_no_fsrs_state, which
+				// a type flip must satisfy only_basic_cards_have_fsrs_state, which
 				// means resetting the schedule — the one edit that costs history
 				if (row.card_type !== card.type) {
 					retyped++
-					const fsrs = card.type === "tactic"
-						? [new Date(), null, null, null, null, null, null, null, null, null]
-						: Object.values(createEmptyCard())
+					const fsrs = card.type === "basic"
+						? Object.values(createEmptyCard())
+						: [new Date(), null, null, null, null, null, null, null, null, null]
 					await client.query(`update cards set front=$2, back=$3, card_type=$4, deck_id=$5, position=$6,
 						due=$7, stability=$8, difficulty=$9, elapsed_days=$10, scheduled_days=$11,
 						reps=$12, lapses=$13, learning_steps=$14, state=$15, last_review=$16 where id=$1`,
@@ -350,9 +349,9 @@ try {
 				continue
 			}
 
-			const fsrs = card.type === "tactic"
-				? [new Date(), null, null, null, null, null, null, null, null, null]
-				: Object.values(createEmptyCard())
+			const fsrs = card.type === "basic"
+				? Object.values(createEmptyCard())
+				: [new Date(), null, null, null, null, null, null, null, null, null]
 			const { rows: [made] } = await client.query(`insert into cards(
 					deck_id, position, front, back, card_type,
 					due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review)
@@ -378,12 +377,11 @@ try {
 						select position from decks where parent_id = $3
 						union all
 						select position from marketplace_deck_instances where parent_id = $3) siblings))
-					returning id, name, position, intro`, [user.id, chapter.name, target.id]))
+					returning id, name, position`, [user.id, chapter.name, target.id]))
 				console.log(`${indent}chapter "${chapter.name}" (new)`)
 			} else {
 				console.log(`${indent}chapter "${chapter.name}" (existing)`)
 			}
-			await importIntro(child, chapter.intro, `${indent}  "${chapter.name}"`)
 			await importDeck(chapter, child, depth + 1)
 			decks.push(child)
 		}
@@ -394,7 +392,6 @@ try {
 			child.position = places[i]
 		}
 	}
-	await importIntro(deck, deckIntro, `  deck "${spec.deck}"`)
 	await importDeck(root, deck, 0)
 
 	// cards this spec used to own but no longer lists (pruned before the
@@ -418,7 +415,6 @@ try {
 
 	console.log(`\n${spec.deck}: ${inserted} new, ${updated} updated, ${unchanged} unchanged ` +
 		`(${total} in spec, deck ${deckExisted ? "existed" : "created"})`)
-	if (intros > 0) console.log(`  ${intros} intro page(s) written`)
 	if (kept > 0) console.log(`  ${kept} hand-made card(s) kept as they are` + (moved > 0 ? `, ${moved} of them moved to their place` : ""))
 	if (adopted > 0) console.log(`  ${adopted} pre-existing card(s) adopted by id — their history is preserved`)
 	if (retyped > 0) console.log(`  ${retyped} card(s) changed type, which resets their schedule`)

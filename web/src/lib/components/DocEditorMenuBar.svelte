@@ -36,7 +36,7 @@ the editor when a menu button is pressed, click still fires -->
 		</button>
 	</div>
 	{#if headings}
-		<!-- an intro page's two levels of heading, under its title -->
+		<!-- an article's two levels of heading -->
 		<span class="seperator"></span>
 		<div class="button-row">
 			{#each [1, 2] as level}

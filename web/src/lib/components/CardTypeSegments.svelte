@@ -1,11 +1,13 @@
 <script>
-	// The Basic/Tactic pills of the card editors (add cards, study's edit),
-	// each with a tooltip on how the type is scheduled
+	// The Basic/Tactic/Article pills of the card editors (add cards, study's
+	// and the Cards tab's edit), each with a tooltip on how the type is
+	// scheduled
 	let { value, onchoose, labelledby } = $props();
 
 	const types = [
 		["basic", "Basic", "Basic card type: Card is scheduled following FSRS (Free Spaced Repetition Scheduler)"],
-		["tactic", "Tactic", "Tactic card type: Card has fixed intervals of default 14, 60 and 180 days if solved. If incorrect the card resets."]
+		["tactic", "Tactic", "Tactic card type: Card has fixed intervals of default 14, 60 and 180 days if solved. If incorrect the card resets."],
+		["article", "Article", "First exposure article: A page shown once in study, before the cards that follow it. Not scheduled."]
 	];
 </script>
 

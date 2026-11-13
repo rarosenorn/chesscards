@@ -132,9 +132,6 @@ create table decks (
 	image bytea,
 	image_type text,
 	preview_card_ids uuid[] not null default '{}',
-	-- The deck's intro: a page read before its first card is studied. Blocks,
-	-- like the description, with headings among the text; null for none.
-	intro jsonb,
 	-- a name says which deck it is among its siblings only, as Anki's full
 	-- name does: two courses can each have a "Chapter 1"
 	unique nulls not distinct (user_id, parent_id, name)
@@ -142,9 +139,11 @@ create table decks (
 
 -- Tactic cards are graded Correct/Incorrect instead of FSRS: Correct climbs
 -- their deck's ladder (reps is the rung) and past its last step finishes the
--- card for good (finished_at); Incorrect starts it over a day later. They
--- carry no FSRS memory state, so the FSRS columns stay null for them (state is
--- the constraint's representative for the group).
+-- card for good (finished_at); Incorrect starts it over a day later. Articles
+-- (first exposure articles) are a page read once, before the cards after
+-- them: reading one finishes it (finished_at, last_review). Neither carries
+-- FSRS memory state, so the FSRS columns stay null for them (state is the
+-- constraint's representative for the group).
 create table cards (
 	id uuid primary key default gen_random_uuid(),
 	-- the deck the card sits in; position is its place there, 1..n
@@ -152,7 +151,7 @@ create table cards (
 	position smallint not null,
 	front jsonb not null,
 	back jsonb,
-	card_type text not null default 'basic' check (card_type in ('basic', 'tactic')),
+	card_type text not null default 'basic' check (card_type in ('basic', 'tactic', 'article')),
 	finished_at timestamptz,
 	due timestamptz not null,
 	stability numeric,
@@ -164,7 +163,7 @@ create table cards (
 	learning_steps smallint,
 	state smallint check(state between 0 and 3),
 	last_review timestamptz,
-	constraint tactic_cards_have_no_fsrs_state check ((card_type = 'tactic') = (state is null))
+	constraint only_basic_cards_have_fsrs_state check ((card_type = 'basic') = (state is not null))
 );
 
 create table marketplace_decks (
@@ -193,8 +192,6 @@ create table marketplace_decks (
 	-- the author's tactic ladder (as decks.tactic_ladder), as it stood for
 	-- the published deck where it sat
 	tactic_ladder int[],
-	-- the deck's intro and those of the decks inside it (below), copied with them
-	intro jsonb,
 	-- the author's deck it was published from, while they keep it
 	deck_id uuid references decks(id) on delete set null,
 	-- the author agreement accepted with the upload request, kept here since
@@ -259,8 +256,7 @@ create table marketplace_subdecks (
 	name text not null,
 	position smallint not null,
 	in_order boolean not null default true,
-	tactic_ladder int[],
-	intro jsonb
+	tactic_ladder int[]
 );
 
 create table marketplace_cards (
@@ -271,7 +267,7 @@ create table marketplace_cards (
 	position smallint not null,
 	front jsonb not null,
 	back jsonb,
-	card_type text not null default 'basic' check (card_type in ('basic', 'tactic')),
+	card_type text not null default 'basic' check (card_type in ('basic', 'tactic', 'article')),
 	-- position among the deck's public preview cards; null = not in the preview
 	preview_order smallint
 );
@@ -320,7 +316,7 @@ create table marketplace_card_instances (
 	id uuid default gen_random_uuid() primary key,
 	marketplace_deck_instance_id uuid references marketplace_deck_instances(id) on delete cascade not null,
 	marketplace_card_id uuid references marketplace_cards(id) on delete cascade not null,
-	card_type text not null default 'basic' check (card_type in ('basic', 'tactic')),
+	card_type text not null default 'basic' check (card_type in ('basic', 'tactic', 'article')),
 	finished_at timestamptz,
 	due timestamptz not null,
 	stability numeric,
@@ -332,7 +328,7 @@ create table marketplace_card_instances (
 	learning_steps smallint,
 	state smallint check(state between 0 and 3),
 	last_review timestamptz,
-	constraint tactic_instances_have_no_fsrs_state check ((card_type = 'tactic') = (state is null))
+	constraint only_basic_instances_have_fsrs_state check ((card_type = 'basic') = (state is not null))
 );
 
 -- tactic reviews log only rating + review time (+ due when re-queued), so the

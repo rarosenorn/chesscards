@@ -3,7 +3,6 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import FormErrors from "$lib/components/FormErrors.svelte"
 	import { typedConfirmModal } from "$lib/modals.svelte.js"
-	import { forgetIntrosRead } from "$lib/intros.js"
 
 	let { data, form } = $props();
 
@@ -208,13 +207,12 @@
 			</p>
 		{/if}
 		<div class="danger-actions">
-			<!-- the cards under it are new again, so their intro pages come up again -->
+			<!-- the cards under it are new again, its articles unread again -->
 			<form
 				bind:this={resetForm}
 				method="POST"
 				action="?/reset"
-				use:enhance={() => async ({ result, update }) => {
-					if (result.type === "success") forgetIntrosRead(data.deck);
+				use:enhance={() => async ({ update }) => {
 					await update();
 				}}
 			>

@@ -3,8 +3,6 @@ import { error } from "@sveltejs/kit"
 import { createEmptyCard } from "ts-fsrs"
 import * as decks from "$lib/server/decks.js"
 import { checkIds, checkIdList, checkIndex } from "$lib/server/ids.js"
-import { sideHasContent } from "$lib/card-utils.js"
-import { isIntroBlocks } from "$lib/intros.js"
 import { deckOutline } from "$lib/deck-tree.js"
 
 // The card ops renumber positions across the decks they touch, so each
@@ -21,23 +19,6 @@ const refused = err => {
 	if (err.message === "Unauthorized") error(403, "Unauthorized");
 	throw err;
 }
-
-// The intro page of a deck of the user's own: blocks, as a card's side is
-// stored. One with nothing on it is no intro. What was stored goes back, for
-// the client to put in the shared deck.
-export const saveIntro =
-	command("unchecked", async ({ deckId, intro }) => {
-		const { locals } = getRequestEvent();
-		checkIds(deckId);
-		if (!isIntroBlocks(intro)) error(400, "Bad request");
-		// only what a block is made of is kept, whatever else was sent with it
-		const page = intro.map(({ type, content }) => ({ type, content }));
-		const blocks = sideHasContent(page) ? page : null;
-		if (!await decks.updateIntro(locals.userId, deckId, blocks)) {
-			error(403, "Unauthorized");
-		}
-		return blocks;
-	})
 
 // Cards go to index (the end without one) of a deck of the user's own: a
 // drag on the Cards tab, a typed place, or sending them to another deck

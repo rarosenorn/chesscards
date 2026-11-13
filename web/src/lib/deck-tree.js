@@ -21,14 +21,16 @@ const GRADUATED_SHARE = 0.8;
 
 // a tactic card carries no FSRS state; its grades stamp last_review
 // (seen) and reps (its ladder rung). It graduates on its first climb —
-// finishing the ladder takes months, too long to hold a deck shut
-const isSeen = card => card.card_type === "tactic"
-	? card.finished_at != null || card.last_review != null
-	: card.state !== 0;
+// finishing the ladder takes months, too long to hold a deck shut. An
+// article has no state either: read, it is finished, so seen and graduated
+// at once.
+const isSeen = card => card.card_type === "basic"
+	? card.state !== 0
+	: card.finished_at != null || card.last_review != null;
 
-const isGraduated = card => card.card_type === "tactic"
-	? card.finished_at != null || (card.reps ?? 0) > 0
-	: card.state === 2 || card.state === 3;
+const isGraduated = card => card.card_type === "basic"
+	? card.state === 2 || card.state === 3
+	: card.finished_at != null || (card.reps ?? 0) > 0;
 
 // A tactic card's ladder: the days a solve waits, step by step; one more
 // solve after the last retires the card. A deck's own, or else the nearest

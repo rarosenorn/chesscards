@@ -12,8 +12,10 @@
 	// menu bar, board-editing ui and the Cancel/Save row under the card
 	// (placed like the add-cards page's Add card button); Ctrl+Enter saves too. session
 	// (optional) is a bag { boardUi, frontDoc, backDoc } owned by the host,
-	// letting an in-progress edit survive host navigation.
-	let { card, session = null, onSave, onCancel } = $props();
+	// letting an in-progress edit survive host navigation. An article
+	// (article, the type chosen above the editor) is its front alone, with
+	// headings: the back is hidden and kept as it was, for a type turned back.
+	let { card, article = false, session = null, onSave, onCancel } = $props();
 
 	// svelte-ignore state_referenced_locally -- session is an init-time bag, never swapped
 	const bag = session ?? {
@@ -79,7 +81,7 @@
 	let movesBoards = $state([]);
 	let movesEditor = null;
 	const cardBoards = () =>
-		[...docBoardsBlocks(frontEditor?.getJson()), ...docBoardsBlocks(backEditor?.getJson())]
+		[...docBoardsBlocks(frontEditor?.getJson()), ...(article ? [] : docBoardsBlocks(backEditor?.getJson()))]
 			.map((board, i) => ({ number: i + 1, fen: board.fen, moves: board.moves ?? [] }));
 	const openMoves = () => {
 		movesEditor = menu.editor ?? frontEditor?.getEditor();
@@ -114,14 +116,14 @@
 		const frontCount = docCountBoardsBlocks(front);
 		invalidFenNumbers = [
 			...docInvalidBoardNumbersBlocks(front, 0, boardUi),
-			...docInvalidBoardNumbersBlocks(back, frontCount, boardUi)
+			...(article ? [] : docInvalidBoardNumbersBlocks(back, frontCount, boardUi))
 		];
 		emptyPuzzleNumbers = [
 			...docPuzzlesWithoutBackBlocks(front, 0),
-			...docPuzzlesWithoutBackBlocks(back, frontCount)
+			...(article ? [] : docPuzzlesWithoutBackBlocks(back, frontCount))
 		];
 		if (invalidFenNumbers.length > 0 || emptyPuzzleNumbers.length > 0) return;
-		if (!docHasContentBlocks(front) && !docHasContentBlocks(back)) {
+		if (!docHasContentBlocks(front) && (article || !docHasContentBlocks(back))) {
 			noContentAttempted = true;
 			return;
 		}
@@ -182,7 +184,8 @@
 		{menu}
 		onAddChessboard={addChessboard}
 		onInsertMoves={openMoves}
-		movesDisabled={frontBoards + backBoards === 0}
+		movesDisabled={frontBoards + (article ? 0 : backBoards) === 0}
+		headings={article}
 	/>
 	{#if movesOpen}
 		<MoveRefDialog
@@ -192,7 +195,7 @@
 		/>
 	{/if}
 </div>
-<p class="side-indicator">Front</p>
+<p class="side-indicator">{article ? "Article" : "Front"}</p>
 {#if invalidFenNumbers.length > 0}
 	<p class="edit-error">{invalidFenMessage(invalidFenNumbers)}</p>
 {/if}
@@ -202,10 +205,11 @@
 {#if noContentAttempted}
 	<p class="edit-error">The card must have atleast 1 non-empty text field or 1 chessboard</p>
 {/if}
-<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} class:boards-solo={!frontPair} class:boards-left={frontPair} style="--board-offset: 0">
+<div class="editor-wrap" class:show-board-numbers={frontBoards + (article ? 0 : backBoards) > 1} class:boards-solo={!frontPair} class:boards-left={frontPair} style="--board-offset: 0">
 	<CardSideBlockEditor
 		bind:this={frontEditor}
 		{boardUi}
+		headings
 		initialDoc={initialFront}
 		onDocChanged={clearErrors}
 		onEditorFocus={handleEditorFocus}
@@ -213,8 +217,8 @@
 		onEditorTransaction={handleEditorRefresh}
 	/>
 </div>
-<p class="side-indicator" style="margin-top: 14px;">Back</p>
-<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} class:boards-solo={!backPair} class:boards-left={backPair} style="--board-offset: {frontBoards}">
+<p class="side-indicator" style="margin-top: 14px;" hidden={article}>Back</p>
+<div class="editor-wrap" hidden={article} class:show-board-numbers={frontBoards + backBoards > 1} class:boards-solo={!backPair} class:boards-left={backPair} style="--board-offset: {frontBoards}">
 	<CardSideBlockEditor
 		bind:this={backEditor}
 		{boardUi}

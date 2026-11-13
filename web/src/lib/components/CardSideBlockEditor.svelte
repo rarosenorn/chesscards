@@ -133,7 +133,8 @@
 				customOrderedList, customBulletList, ListItem, UndoRedo,
 				Dropcursor, BlockNavigation, Gapcursor, chessboardShortcut,
 				MoveRef,
-				// an intro page's headings; a card's side has none
+				// an article's headings: the card editors load them on the front
+				// of every card, so its type can turn to Article mid-edit
 				...(headings ? [Heading] : []),
 				BlockNode.configure({ ui: boardUi, isBack })
 			],

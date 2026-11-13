@@ -12,7 +12,7 @@ const load = async ({ parent }) => {
 const actions = {
 	default: async ({ params, request, locals }) => {
 		const data = await request.formData();
-		const cardType = data.get("cardType") === "tactic" ? "tactic" : "basic";
+		const cardType = ["tactic", "article"].includes(data.get("cardType")) ? data.get("cardType") : "basic";
 		const FSRSValues = Object.values(createEmptyCard());
 		// returned so the client can add it to the shared deck context, making
 		// it visible in browse/study without a reload
@@ -21,7 +21,8 @@ const actions = {
 		if (!isUuid(deckId)) error(400, "Bad request");
 		try {
 			const card = await decks.addCard(
-				locals.userId, deckId, data.get("front"), data.get("back"), cardType, FSRSValues
+				// an article is a page: it has no back
+				locals.userId, deckId, data.get("front"), cardType === "article" ? null : data.get("back"), cardType, FSRSValues
 			)
 			return { card };
 		} catch (err) {

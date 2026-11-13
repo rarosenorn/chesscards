@@ -1,5 +1,5 @@
 import { pool } from "./pool.js"
-import { deckOutline, deckTrail } from "../deck-tree.js"
+import { deckOutline } from "../deck-tree.js"
 import { createEmptyCard } from "ts-fsrs"
 
 const themes = ["openings", "endgames", "tactics", "strategy", "checkmates"];
@@ -99,10 +99,8 @@ const getPendingUploadRequests = async () => {
 }
 
 // The request with what approving it would publish, for the admin to look
-// through: the cards under the deck, in its reading order, and its intro
-// pages (intros: the deck's, then those of the decks inside it in reading
-// order, each { crumbs, blocks } as IntroView takes them) — the ones
-// approveUploadRequest copies.
+// through: the cards under the deck, in its reading order (articles among
+// them) — the ones approveUploadRequest copies.
 const getUploadRequestWithCards = async requestId => {
 	const { rows: [request] } = await pool.query(`
 		select r.id, r.deck_id, r.status, r.theme, r.name, r.description, r.price, r.preview_card_ids "previewCardIds", u.email
@@ -115,23 +113,19 @@ const getUploadRequestWithCards = async requestId => {
 
 	const { rows: decks } = await pool.query(`
 		with recursive ${under("$1::uuid")}
-		select d.id, case when d.id = $1 then null else d.parent_id end parent_id, d.name, d.position, d.intro
+		select d.id, case when d.id = $1 then null else d.parent_id end parent_id, d.name, d.position
 		from decks d where d.id in (select id from under)`, [request.deck_id]);
 	const outline = deckOutline(decks);
 	const order = new Map(outline.map(({ deck }, index) => [deck.id, index]));
 	const { rows: cards } = await pool.query(`
-		select c.id, c.deck_id, c.position, c.front, c.back from cards c where c.deck_id = any($1::uuid[])`,
+		select c.id, c.deck_id, c.position, c.front, c.back, c.card_type from cards c where c.deck_id = any($1::uuid[])`,
 		[decks.map(deck => deck.id)]);
 	cards.sort((a, b) => order.get(a.deck_id) - order.get(b.deck_id) || a.position - b.position);
 
 	const { deck_id, ...shown } = request;
 	return {
 		...shown,
-		cards: cards.map(({ id, front, back }) => ({ id, front, back })),
-		intros: outline.filter(({ deck }) => deck.intro).map(({ deck }) => ({
-			crumbs: [request.name, ...deckTrail(decks, deck.id).slice(1)].map(name => ({ name })),
-			blocks: deck.intro
-		}))
+		cards: cards.map(({ id, front, back, card_type }) => ({ id, front, back, card_type }))
 	};
 }
 
@@ -148,7 +142,7 @@ const getUploadRequestImage = async requestId => {
 // The cards chosen for a marketplace deck's public preview, in preview order
 const getDeckPreviewCards = async marketplaceDeckId => {
 	const { rows } = await pool.query(`
-		select id, front, coalesce(back, '[]'::jsonb) back
+		select id, front, coalesce(back, '[]'::jsonb) back, card_type
 		from marketplace_cards
 		where marketplace_deck_id = $1 and preview_order is not null
 		order by preview_order`,
@@ -205,7 +199,7 @@ const approveUploadRequest = async requestId => {
 			// reviews in order is read at the top of the list, so a deck published
 			// from inside another takes it from the deck at the top; its tactic
 			// ladder is the nearest one set, its own or a deck's above
-			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, reviews_in_order, tactic_ladder, intro, deck_id, author_terms_version)
+			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, reviews_in_order, tactic_ladder, deck_id, author_terms_version)
 			 select $1, $2, $3, $4, $5, $6, $7, d.in_order, (
 				with recursive up(id, parent_id, reviews_in_order) as (
 					select d.id, d.parent_id, d.reviews_in_order
@@ -220,27 +214,27 @@ const approveUploadRequest = async requestId => {
 					select above.parent_id, above.tactic_ladder, up.depth + 1 from decks above join up on above.id = up.parent_id
 				)
 				select tactic_ladder from up where tactic_ladder is not null order by depth limit 1
-			 ), d.intro, d.id, $9 from decks d where d.id = $8 returning id`,
+			 ), d.id, $9 from decks d where d.id = $8 returning id`,
 			// the description as JSON text, as pg would send its blocks array as a postgres array
 			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id, request.author_terms_version]
 		);
-		// The decks inside it travel with the cards, each with its intro, its
-		// in order / mixed and its tactic ladder. Every one gets its new id up front (copies),
+		// The decks inside it travel with the cards, each with its in order /
+		// mixed and its tactic ladder. Every one gets its new id up front (copies),
 		// so a copy can name its parent's copy (none for those directly
 		// inside the published deck) and each card its deck's (none for the
 		// published deck's own), all in the one statement. array_position
 		// gives the preview cards their requested order and leaves
 		// non-preview cards (and since-deleted preview ids) at null.
 		await client.query(`
-			with recursive inside(id, parent_id, name, position, in_order, tactic_ladder, intro) as (
-				select id, null::uuid, name, position, in_order, tactic_ladder, intro from decks where parent_id = $2
+			with recursive inside(id, parent_id, name, position, in_order, tactic_ladder) as (
+				select id, null::uuid, name, position, in_order, tactic_ladder from decks where parent_id = $2
 				union all
-				select d.id, d.parent_id, d.name, d.position, d.in_order, d.tactic_ladder, d.intro from decks d join inside on d.parent_id = inside.id
+				select d.id, d.parent_id, d.name, d.position, d.in_order, d.tactic_ladder from decks d join inside on d.parent_id = inside.id
 			), copies as (
 				select inside.*, gen_random_uuid() copy_id from inside
 			), copied_decks as (
-				insert into marketplace_subdecks(id, marketplace_deck_id, parent_id, name, position, in_order, tactic_ladder, intro)
-				select copy.copy_id, $1, parent.copy_id, copy.name, copy.position, copy.in_order, copy.tactic_ladder, copy.intro
+				insert into marketplace_subdecks(id, marketplace_deck_id, parent_id, name, position, in_order, tactic_ladder)
+				select copy.copy_id, $1, parent.copy_id, copy.name, copy.position, copy.in_order, copy.tactic_ladder
 				from copies copy
 				left join copies parent on parent.id = copy.parent_id
 			)
@@ -358,21 +352,22 @@ const insertDeckInstance = async (client, userId, marketplaceDeckId) => {
 	);
 	if (!instance) return null;
 	const emptyCard = createEmptyCard();
-	// tactic cards get null FSRS state (they're scheduled by finished_at/due alone)
+	// tactic cards and articles get null FSRS state (they're scheduled by
+	// finished_at/due alone)
 	await client.query(`
 		insert into marketplace_card_instances(
 			marketplace_deck_instance_id, marketplace_card_id, card_type,
 			due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, learning_steps, state, last_review
 		)
 		select $1, id, card_type, $2,
-			case when card_type = 'tactic' then null else $3::numeric end,
-			case when card_type = 'tactic' then null else $4::numeric end,
-			case when card_type = 'tactic' then null else $5::smallint end,
-			case when card_type = 'tactic' then null else $6::smallint end,
-			case when card_type = 'tactic' then null else $7::smallint end,
-			case when card_type = 'tactic' then null else $8::smallint end,
-			case when card_type = 'tactic' then null else $9::smallint end,
-			case when card_type = 'tactic' then null else $10::smallint end,
+			case when card_type <> 'basic' then null else $3::numeric end,
+			case when card_type <> 'basic' then null else $4::numeric end,
+			case when card_type <> 'basic' then null else $5::smallint end,
+			case when card_type <> 'basic' then null else $6::smallint end,
+			case when card_type <> 'basic' then null else $7::smallint end,
+			case when card_type <> 'basic' then null else $8::smallint end,
+			case when card_type <> 'basic' then null else $9::smallint end,
+			case when card_type <> 'basic' then null else $10::smallint end,
 			$11::timestamptz
 		from marketplace_cards where marketplace_deck_id = $12`,
 		[
@@ -453,6 +448,17 @@ const updateInstanceCardStudyState = async (userId, card) => {
 		[card.due, card.stability, card.difficulty, card.elapsed_days, card.scheduled_days, card.reps, card.lapses, card.learning_steps, card.state, card.last_review, card.finished_at ?? null, card.id, userId]
 	);
 
+	return rowCount === 1;
+}
+
+// An article of a taken deck read: finished for good; the join enforces
+// ownership
+const markInstanceArticleRead = async (userId, cardId) => {
+	const { rowCount } = await pool.query(`
+		update marketplace_card_instances ci set last_review = now(), finished_at = now(), due = now()
+		from marketplace_deck_instances i
+		where ci.id = $2 and ci.marketplace_deck_instance_id = i.id and i.user_id = $1 and ci.card_type = 'article'`,
+		[userId, cardId]);
 	return rowCount === 1;
 }
 
@@ -595,4 +601,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, FOR_SALE, OWNS, getOwnership, getListingForDeck, setOnSale, setTakenDown, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, FOR_SALE, OWNS, getOwnership, getListingForDeck, setOnSale, setTakenDown, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, markInstanceArticleRead, createInstanceReviewLog }

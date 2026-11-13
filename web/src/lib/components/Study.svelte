@@ -9,15 +9,14 @@
 	import { DEFAULT_TACTIC_LADDER, isSeen, readingOrder, byReadingOrder, cardsUnder, unlockedDeckIds, firstLockedDeck, newCardRanks, deckProgress, deckTrail } from "$lib/deck-tree.js"
 	import { isDueAt, isDueSoonAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
-	import IntroView from "$lib/components/IntroView.svelte"
+	import ArticleView from "$lib/components/ArticleView.svelte"
 	import CardTypeSegments from "$lib/components/CardTypeSegments.svelte"
-	import { introPlaces, pendingIntro, readMarks, markIntroRead } from "$lib/intros.js"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState, settleModal } from "$lib/modals.svelte.js"
 	import { PRACTICE_AGAIN_MS, startCram, answerCounts, backAt, takeNext, settle, forget, cardsLeft, resumeCram } from "$lib/cram.js"
 	import { zen, zenActive, resetZen, setZen } from "$lib/zen-state.svelte.js"
-	import { updateCardStudyStateAndAddLog, logPractice, completeCramSession, updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
+	import { updateCardStudyStateAndAddLog, markArticleRead, logPractice, completeCramSession, updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
 
 	// The deck studied, with every deck inside it (deck.decks, it first) and
 	// all their cards: studying a deck studies everything under it. A card
@@ -166,7 +165,8 @@
 	// a card is new while it has never been graded, learning while it is
 	// stepping through the short intervals, due once it is on a real
 	// schedule. Gated and finished cards are not waiting, so they are not
-	// counted. The learning count reaches as far as learn-ahead does, as
+	// counted, and an article is read, not studied, so it is in none of
+	// them. The learning count reaches as far as learn-ahead does, as
 	// Anki's: a step a few minutes off is this session's, and the card shown
 	// early is never counted as none.
 	const queueOf = card =>
@@ -174,10 +174,11 @@
 			: card.state === 0 || (card.state == null && card.last_review == null) ? "new"
 			: "review";
 	let counts = $derived.by(() => {
-		const due = studyCards.filter(isDue);
+		const studied = studyCards.filter(card => card.card_type !== "article");
+		const due = studied.filter(isDue);
 		return {
 			new: due.filter(card => queueOf(card) === "new").length,
-			learn: studyCards.filter(card => queueOf(card) === "learn" && (isDue(card) || isDueSoon(card))).length,
+			learn: studied.filter(card => queueOf(card) === "learn" && (isDue(card) || isDueSoon(card))).length,
 			review: due.filter(card => queueOf(card) === "review").length
 		};
 	});
@@ -236,7 +237,7 @@
 		try {
 			const saved = JSON.parse(localStorage.getItem(CRAM_PREFIX + key));
 			if (!saved || !sameStudyDay(saved.savedAt)) return null;
-			return resumeCram(saved, new Set(studyCards.map(card => card.id)));
+			return resumeCram(saved, new Set(crammable(studyCards).map(card => card.id)));
 		} catch {
 			return null;
 		}
@@ -307,8 +308,10 @@
 		try { localStorage.setItem(CRAM_KEY, JSON.stringify(cramChoice)); } catch {}
 		beginCram(cramChoice);
 	}
+	// an article is read once, not crammed: it is read again in the Cards tab
+	const crammable = cards => cards.filter(card => card.card_type !== "article");
 	const beginCram = ({ order, counts }) => {
-		studyState.cram = { scopeKey, ...startCram([...studyCards].sort(byDeckOrder), { order, counts }) };
+		studyState.cram = { scopeKey, ...startCram(crammable(studyCards).sort(byDeckOrder), { order, counts }) };
 		cramAdvance();
 	}
 	// The next card of the session, read against a fresh clock. With none
@@ -358,53 +361,24 @@
 		isCardTurned = false;
 	});
 
-	// --- intros ---
-	// A deck's intro is a page read before the first card under it is
-	// studied (lib/intros.js). It stands where the card would, with a Study
-	// button that passes it: first the outermost deck's, then each deck's
-	// inside it down to the card's own. A page passed is remembered in this browser, so
-	// a reload before the first grade does not bring it back; once a card
-	// under it has been studied it never comes up by itself again.
-	// null until the browser has been asked: a page that may have been passed
-	// is held back for that moment, not flashed
-	let introsRead = $state(null);
-	onMount(() => { introsRead = readMarks() });
-	// The pages on the way to the card's deck, or with no card up, to the
-	// deck being studied.
-	let introTrail = $derived(introPlaces(deck, currentCard?.deck_id ?? null));
-	// a page opened by hand (the Intro button, a name above a page's title)
-	let openedIntro = $state(null);
-	// ...and it stays open only while it is on the way to what is up: Study
-	// turned to another deck closes it for good, not until that one
-	// happens to come round again
-	$effect(() => {
-		if (openedIntro && !introTrail.some(place => place.key === openedIntro)) openedIntro = null;
-	});
-	let intro = $derived.by(() => {
-		if (editingCard) return null;
-		const opened = introTrail.find(place => place.blocks && place.key === openedIntro);
-		if (opened || !currentCard) return opened ?? null;
-		return pendingIntro(deck, deck.cards, currentCard.deck_id, introsRead ?? new Set());
-	});
-	// the page with the names it sits under, each leading to its own page
-	let introCrumbs = $derived(intro
-		? introTrail.slice(0, introTrail.findIndex(place => place.key === intro.key) + 1).map(place => ({
-			name: place.name,
-			onclick: place.blocks && place.key !== intro.key ? () => openedIntro = place.key : undefined
-		}))
+	// --- articles ---
+	// An article (a first exposure article) is a page read once, before the
+	// cards after it. It waits among the new cards where it sits, and when
+	// it comes up it is the page, with a Continue button that finishes it
+	// for good: on the account, so it does not come up again on any device.
+	// It is read again in the Cards tab, not here.
+	let isArticle = $derived(currentCard?.card_type === "article");
+	// over its title, the decks it sits inside; the deck it is in is the title
+	let articleCrumbs = $derived(isArticle
+		? [...(deck.ancestors ?? []).map(at => at.name), ...deckTrail(deck.decks, currentCard.deck_id)].map(name => ({ name }))
 		: []);
-	// the Study button: on to the next page on the way, or to the card
-	const passIntro = () => {
-		if (!intro) return;
-		// held before the marks change: they decide which page is up, so
-		// `intro` is already the next one (or none) the moment they do
-		const key = intro.key;
-		// kept here as well as in the browser: where the browser keeps
-		// nothing, the pages passed on this visit still stay passed
-		introsRead = new Set([...introsRead ?? [], key]);
-		markIntroRead(key);
-		openedIntro = null;
+	const readArticle = async () => {
+		const card = currentCard;
+		const at = new Date().toISOString();
+		advanceQueueClock();
+		deck.cards[deck.cards.indexOf(card)] = { ...card, last_review: at, finished_at: at, due: at };
 		window.scrollTo(0, 0);
+		await markArticleRead({ cardId: card.id, instance: !!card.marketplace_deck_instance_id });
 	}
 
 	let isTactic = $derived(currentCard?.card_type === "tactic");
@@ -673,7 +647,7 @@
 	// is the end of the session, and the page's chrome belongs back on it.
 	// The mode itself stays on, so the next card enters zen again.
 	$effect(() => {
-		zen.studying = currentCard != null && !intro;
+		zen.studying = currentCard != null && !isArticle;
 		if (!currentCard) zen.peeking = false;
 	});
 
@@ -694,13 +668,12 @@
 		// while editing, the card editor owns the keyboard (Ctrl+Enter saves),
 		// and a modal owns it while it is up
 		if (editingCard || modalState.current) return;
-		// an intro page is up: Enter is its Study button, unless it is
-		// pressing a button of the page's own, and the card under it takes
-		// no keys
-		if (intro) {
-			if (introsRead && e.key === "Enter" && !e.target.closest?.("button, a")) {
+		// an article is up: Enter is its Continue button, unless it is
+		// pressing a button or link of the page's own; it takes no other keys
+		if (isArticle) {
+			if (e.key === "Enter" && !e.target.closest?.("button, a")) {
 				e.preventDefault();
-				passIntro();
+				readArticle();
 			}
 			return;
 		}
@@ -837,14 +810,12 @@
 </div>
 {/snippet}
 
-{#if intro && introsRead}
-	<IntroView crumbs={introCrumbs} blocks={intro.blocks}>
-		<div class="intro-study">
-			<button class="std-btn" onclick={passIntro}>{currentCard ? "Study" : "Close"}</button>
+{#if isArticle}
+	<ArticleView crumbs={articleCrumbs} blocks={currentCard.front}>
+		<div class="article-continue">
+			<button class="std-btn" onclick={readArticle}>Continue</button>
 		</div>
-	</IntroView>
-{:else if intro}
-	<!-- nothing, for the moment before the browser says which pages were passed -->
+	</ArticleView>
 {:else if currentCard && editingCard && CardBlockEdit}
 	<!-- the add-cards type row, above the card and on the page's own ground -->
 	<div class="edit-type-row">
@@ -852,7 +823,7 @@
 		<CardTypeSegments value={editCardType} onchoose={type => editCardType = type} labelledby="edit-card-type-label" />
 	</div>
 	<div class="flashcard-edit">
-		<CardBlockEdit card={currentCard} onSave={saveEdit} onCancel={() => editingCard = false} />
+		<CardBlockEdit card={currentCard} article={editCardType === "article"} onSave={saveEdit} onCancel={() => editingCard = false} />
 	</div>
 {:else if currentCard}
 	<div
@@ -1086,7 +1057,7 @@
 <style>
 	/* bottom right of the window, out of the card's way: they belong to the
 	   page rather than to the card, and the card is centred */
-	.intro-study {
+	.article-continue {
 		display: flex;
 		justify-content: center;
 		margin-top: 24px;

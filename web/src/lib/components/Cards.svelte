@@ -163,13 +163,13 @@
 	const sortValues = {
 		order: card => deckIndex.get(card.deck_id) * 100000 + card.position,
 		front: card => getFrontIndicator(card.front)?.toLowerCase() ?? null,
-		type: card => (card.card_type === "tactic" ? 1 : 0),
+		type: card => ["basic", "tactic", "article"].indexOf(card.card_type),
 		// the due date itself, so ascending is soonest-due first — the order
 		// study takes them in — with cards finished for good last
 		due: card => (card.finished_at ? null : Date.parse(card.due)),
 		reps: card => card.reps ?? 0,
 		// the FSRS states run New, Learning, Review, Relearning in value order
-		state: card => (card.card_type === "tactic" ? null : card.state)
+		state: card => (card.card_type === "basic" ? card.state : null)
 	};
 
 	const compareBy = (column, descending) => (a, b) => {
@@ -690,6 +690,7 @@
 	}
 
 	const stateNames = ["New", "Learning", "Review", "Relearning"];
+	const typeNames = { basic: "Basic", tactic: "Tactic", article: "Article" };
 
 	// the day the card arrives, which for a day-scale card is its rollover
 	// day — a card due at 2am belongs to the day that began at 4am the
@@ -698,7 +699,7 @@
 
 	const formatDue = card => {
 		if (card.finished_at) return null;
-		if (card.card_type === "tactic")
+		if (card.card_type !== "basic")
 			return Date.parse(card.due) > Date.now() ? dueDay(card) : "New";
 		return card.state === 0 ? "New" : dueDay(card);
 	}
@@ -963,7 +964,7 @@
 					</td>
 					<td class:type-cell={!isBought(card)}>
 						{#if isBought(card)}
-							{card.card_type === "tactic" ? "Tactic" : "Basic"}
+							{typeNames[card.card_type]}
 						{:else}
 							<!-- the press is kept off the row: picking a type is not
 							     selecting or sweeping through cards -->
@@ -975,12 +976,13 @@
 							>
 								<option value="basic">Basic</option>
 								<option value="tactic">Tactic</option>
+								<option value="article">Article</option>
 							</select>
 						{/if}
 					</td>
 					<td>{@render cellOrDash(formatDue(card))}</td>
 					<td>{@render cellOrDash(card.reps ?? 0)}</td>
-					<td>{@render cellOrDash(card.card_type === "tactic" ? null : stateNames[card.state])}</td>
+					<td>{@render cellOrDash(card.card_type === "basic" ? stateNames[card.state] : null)}</td>
 			{/snippet}
 			<tbody>
 				{#if displayGroups}
@@ -1031,17 +1033,6 @@
 							{/each}
 						{/if}
 					{/each}
-					{#if !readonly}
-						<!-- the way to the deck's intro page; the decks inside are
-						     made and arranged in My flashcards -->
-						<tr class="add-subdeck-row">
-							<td colspan="6">
-								<div class="subdeck-head">
-									<a class="add-subdeck-btn" href="/my-flashcards/{deck.id}/intro" onmousedown={e => e.stopPropagation()}>Deck intro</a>
-								</div>
-							</td>
-						</tr>
-					{/if}
 				{:else}
 					{#each filteredCards as card (card.id)}
 						<tr
@@ -1069,6 +1060,7 @@
 					</div>
 					<CardBlockEdit
 						card={selectedCard}
+						article={draft.session.cardType === "article"}
 						session={draft.session}
 						onSave={saveCard}
 						onCancel={stopEditing}
@@ -1460,45 +1452,21 @@
 	.collapse-arrow.collapsed {
 		transform: none;
 	}
-	.add-subdeck-btn {
-		width: 100%;
-		padding: 4px 8px;
-		border: none;
-		background: none;
-		text-align: left;
-		font-size: 0.8rem;
-		color: rgba(0, 0, 0, 0.45);
-		cursor: pointer;
-	}
-	.add-subdeck-btn:hover {
-		color: black;
-	}
-	a.add-subdeck-btn {
-		text-decoration: none;
-	}
-	tbody tr.add-subdeck-row td,
-	tbody tr.add-subdeck-row:hover td {
-		background-color: white;
-		border-right: none;
-		padding: 0;
-		cursor: default;
-	}
 	/* --- reordering --- */
 	/* What a card row is painted while a drag is in flight. These out-weigh
 	   the zebra, the hover and the selection rules all at once, so the whole
 	   set has to be restated here — but only for CARD rows: the subdeck
-	   bands and the add-subdeck row keep their own colours, which is what
-	   the :not()s are for (they also lift these above the plain hover rule,
+	   bands keep their own colours, which is what the :not()s are for (they also lift these above the plain hover rule,
 	   so hovering paints nothing while the pointer is in a gesture).
 	   No stripes: the stripe belongs to a row's PLACE, so a row re-slotting
 	   took its new grey while it was still sliding out of the old one. */
-	.reordering tbody tr:not(.subdeck-row):not(.add-subdeck-row) td {
+	.reordering tbody tr:not(.subdeck-row) td {
 		background-color: transparent;
 	}
-	.reordering tbody tr.multi-selected:not(.subdeck-row):not(.add-subdeck-row) td {
+	.reordering tbody tr.multi-selected:not(.subdeck-row) td {
 		background-color: var(--accent-subtle-strong);
 	}
-	.reordering tbody tr.active:not(.subdeck-row):not(.add-subdeck-row) td {
+	.reordering tbody tr.active:not(.subdeck-row) td {
 		background-color: var(--accent-subtle-strong);
 	}
 	.reordering tbody tr:hover .grip {

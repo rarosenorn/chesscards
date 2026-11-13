@@ -45,24 +45,26 @@ const dueSoon = c => `(${c}.finished_at is null
 	and ${c}.due <= now() + make_interval(secs => ${LEARN_AHEAD_MS / 1000}))`;
 
 // What is seen of a card (alias c) — the SQL twin of isSeen (lib/deck-tree.js).
-// A tactic card carries no FSRS state, so its last_review stands in.
-const seen = c => `case when ${c}.card_type = 'tactic'
-	then ${c}.finished_at is not null or ${c}.last_review is not null
-	else ${c}.state <> 0 end`;
+// A tactic card or an article carries no FSRS state, so its last_review
+// stands in (an article read is finished as well).
+const seen = c => `case when ${c}.card_type = 'basic'
+	then ${c}.state <> 0
+	else ${c}.finished_at is not null or ${c}.last_review is not null end`;
 
 // The list's raw numbers for a group of cards (alias c): what progression
 // goes by — the SQL twins of isSeen and isGraduated — and what is due, in
 // anki's three columns. A tactic card never answered is new, otherwise it is
-// a card coming round again (no learning step).
+// a card coming round again (no learning step). An article is read, not
+// studied: it is in no column (Study's counts leave it out the same way).
 const listCounts = c => `
 	count(*)::int total,
 	count(*) filter (where ${seen(c)})::int seen,
-	count(*) filter (where case when ${c}.card_type = 'tactic'
-		then ${c}.finished_at is not null or coalesce(${c}.reps, 0) > 0
-		else ${c}.state in (2, 3) end)::int graduated,
-	count(*) filter (where ${due(c)} and (${c}.state = 0 or (${c}.state is null and ${c}.last_review is null)))::int "new",
+	count(*) filter (where case when ${c}.card_type = 'basic'
+		then ${c}.state in (2, 3)
+		else ${c}.finished_at is not null or coalesce(${c}.reps, 0) > 0 end)::int graduated,
+	count(*) filter (where ${due(c)} and ${c}.card_type <> 'article' and (${c}.state = 0 or (${c}.state is null and ${c}.last_review is null)))::int "new",
 	count(*) filter (where (${due(c)} or ${dueSoon(c)}) and ${c}.state in (1, 3))::int learn,
-	count(*) filter (where ${due(c)} and (${c}.state = 2 or (${c}.state is null and ${c}.last_review is not null)))::int review`;
+	count(*) filter (where ${due(c)} and ${c}.card_type <> 'article' and (${c}.state = 2 or (${c}.state is null and ${c}.last_review is not null)))::int review`;
 
 // the deck a bought card sits in: the one inside the marketplace deck, or
 // the marketplace deck itself (its instance)
@@ -120,19 +122,6 @@ const getListing = async (userId, when) => {
 	}));
 }
 
-// the intros of these decks, by id (instanceIds: the ones that are
-// marketplace decks taken, whose intro is the marketplace deck's)
-const introsOf = async (ids, instanceIds) => {
-	const { rows } = await pool.query(`
-		select id, intro from decks where id = any($1::uuid[])
-		union all
-		select i.id, md.intro from marketplace_deck_instances i
-		join marketplace_decks md on md.id = i.marketplace_deck_id where i.id = any($2::uuid[])
-		union all
-		select ms.id, ms.intro from marketplace_subdecks ms where ms.id = any($1::uuid[])`, [ids, instanceIds]);
-	return new Map(rows.map(row => [row.id, row.intro]));
-}
-
 // A bought card as study and the Cards tab take it, shaped as a card of the
 // user's own: content from marketplace_cards, progress from the instance,
 // deck_id the deck it sits in.
@@ -148,11 +137,9 @@ const BOUGHT_CARD = `json_build_object(
 	'card_type', ci.card_type, 'finished_at', ci.finished_at)`;
 
 // A deck of the library as its pages take it: the deck, everything inside it
-// (decks: it first, then the rest in reading order, each with its intro), the
-// cards of all of them in reading order, and the decks it sits inside
-// (ancestors, outermost first, each with its intro and whether anything
-// under it has been studied, which is what decides its intro). Undefined
-// when the id is none of the user's.
+// (decks: it first, then the rest in reading order), the cards of all of them
+// in reading order, and the decks it sits inside (ancestors, outermost
+// first). Undefined when the id is none of the user's.
 const getDeck = async (userId, id) => {
 	const library = await getLibrary(userId);
 	const deck = library.find(entry => entry.id === id);
@@ -177,23 +164,6 @@ const getDeck = async (userId, id) => {
 		[own, instances, userId, [...inside]]);
 	cards.sort(byReadingOrder(readingOrder(decks)));
 
-	// what has been studied under each of the decks around it
-	let begun = new Set();
-	if (ancestors.length) {
-		const { rows } = await pool.query(`
-			select c.deck_id from cards c join decks d on d.id = c.deck_id
-			where d.user_id = $1 and ${seen("c")} group by c.deck_id
-			union
-			select ${BOUGHT_DECK} from marketplace_card_instances ci
-			join marketplace_cards mc on mc.id = ci.marketplace_card_id
-			join marketplace_deck_instances i on i.id = ci.marketplace_deck_instance_id
-			where i.user_id = $1 and ${seen("ci")} group by 1`, [userId]);
-		begun = new Set(rows.map(row => row.deck_id));
-	}
-
-	const around = [...decks, ...ancestors];
-	const intros = await introsOf(around.map(entry => entry.id),
-		around.filter(entry => entry.bought && entry.id === entry.instance_id).map(entry => entry.id));
 	return {
 		id: deck.id,
 		name: deck.name,
@@ -205,14 +175,10 @@ const getDeck = async (userId, id) => {
 		parentLadder: tacticLadder(byId, deck.parent_id),
 		isMarketplace: deck.bought,
 		instanceId: deck.instance_id,
-		intro: intros.get(deck.id) ?? null,
-		ancestors: ancestors.map(entry => ({
-			id: entry.id, name: entry.name, bought: entry.bought, intro: intros.get(entry.id) ?? null,
-			begun: [...deckSubtree(library, entry.id)].some(under => begun.has(under))
-		})),
+		ancestors: ancestors.map(entry => ({ id: entry.id, name: entry.name, bought: entry.bought })),
 		// each with the tactic ladder its cards climb, found through the decks
 		// around it too
-		decks: decks.map(entry => ({ ...entry, intro: intros.get(entry.id) ?? null, ladder: tacticLadder(byId, entry.id) })),
+		decks: decks.map(entry => ({ ...entry, ladder: tacticLadder(byId, entry.id) })),
 		cards
 	};
 }
@@ -388,8 +354,9 @@ const setTacticLadder = async (userId, id, ladder) => {
 }
 
 // Every card under a deck back to new, its type kept (that is content, not
-// progress), the marketplace decks taken inside it as well. Review history is
-// untouched: it lives in review_logs, keyed by card.
+// progress), the marketplace decks taken inside it as well: an article is
+// unread again. Review history is untouched: it lives in review_logs, keyed
+// by card.
 const reset = async (userId, id, FSRSValues) => {
 	const library = await getLibrary(userId);
 	if (!library.some(entry => entry.id === id)) return 0;
@@ -398,32 +365,24 @@ const reset = async (userId, id, FSRSValues) => {
 	const basicSet = `finished_at = null,
 		due = $3, stability = $4, difficulty = $5, elapsed_days = $6, scheduled_days = $7,
 		reps = $8, lapses = $9, learning_steps = $10, state = $11, last_review = $12`;
-	const tacticSet = `finished_at = null, due = now(),
+	const unscheduledSet = `finished_at = null, due = now(),
 		stability = null, difficulty = null, elapsed_days = null, scheduled_days = null,
 		reps = null, lapses = null, learning_steps = null, state = null, last_review = null`;
 	const ownCards = (set, type) => `
 		update cards c set ${set} from decks d
-		where c.deck_id = d.id and d.user_id = $1 and d.id = any($2::uuid[]) and c.card_type = '${type}'`;
+		where c.deck_id = d.id and d.user_id = $1 and d.id = any($2::uuid[]) and (c.card_type = 'basic') = ${type === "basic"}`;
 	const boughtCards = (set, type) => `
 		update marketplace_card_instances ci set ${set}
 		from marketplace_cards mc, marketplace_deck_instances i
 		where mc.id = ci.marketplace_card_id and i.id = ci.marketplace_deck_instance_id
-			and i.user_id = $1 and ${BOUGHT_DECK} = any($2::uuid[]) and ci.card_type = '${type}'`;
+			and i.user_id = $1 and ${BOUGHT_DECK} = any($2::uuid[]) and (ci.card_type = 'basic') = ${type === "basic"}`;
 	const counts = await Promise.all([
 		pool.query(ownCards(basicSet, "basic"), [userId, own, ...FSRSValues]),
-		pool.query(ownCards(tacticSet, "tactic"), [userId, own]),
+		pool.query(ownCards(unscheduledSet, "unscheduled"), [userId, own]),
 		pool.query(boughtCards(basicSet, "basic"), [userId, inside, ...FSRSValues]),
-		pool.query(boughtCards(tacticSet, "tactic"), [userId, inside])
+		pool.query(boughtCards(unscheduledSet, "unscheduled"), [userId, inside])
 	]);
 	return counts.reduce((sum, result) => sum + result.rowCount, 0);
-}
-
-// A deck's intro: blocks, or null to have none. It goes as JSON text, as a
-// description does.
-const updateIntro = async (userId, id, intro) => {
-	const { rowCount } = await pool.query(
-		"update decks set intro = $3 where user_id = $1 and id = $2", [userId, id, intro && JSON.stringify(intro)]);
-	return rowCount === 1;
 }
 
 const userIdOwnsDeckId = async (userId, deckId) => {
@@ -514,11 +473,12 @@ const normalizeCard = card => ({
 });
 
 // the scheduling columns of a card of this type, in the order the queries
-// below list them: a tactic card is due immediately and carries no FSRS state
-// (the tactic_cards_have_no_fsrs_state constraint holds it to that)
-const scheduleValues = (cardType, FSRSValues) => cardType === "tactic"
-	? [new Date(), null, null, null, null, null, null, null, null, null]
-	: FSRSValues;
+// below list them: a tactic card or an article is due immediately and
+// carries no FSRS state (the only_basic_cards_have_fsrs_state constraint
+// holds it to that)
+const scheduleValues = (cardType, FSRSValues) => cardType === "basic"
+	? FSRSValues
+	: [new Date(), null, null, null, null, null, null, null, null, null];
 
 // The deck of the user's own that cards are about to land at the end of,
 // locked so two arrivals cannot take the same places. `last` is the place of
@@ -556,8 +516,8 @@ const addCards = (userId, deckId, cards, FSRSValues) => inTransaction(async clie
 	return ids;
 });
 
-// Switching type restarts the card: the two types keep incompatible
-// scheduling (a tactic card has no FSRS state at all), so there is nothing to
+// Switching type restarts the card: the types keep incompatible scheduling
+// (a tactic card or an article has no FSRS state at all), so there is nothing to
 // carry across — the review history in review_logs stays, the card's own
 // progress does not.
 const updateCardType = async (userId, cardId, cardType, FSRSValues) => {
@@ -661,6 +621,17 @@ const updateCardStudyState = async (userId, card) => {
 	return rowCount === 1;
 }
 
+// An article read: finished for good, so it never comes round again. Only a
+// card in a deck of the user's own, and only an article.
+const markArticleRead = async (userId, cardId) => {
+	const { rowCount } = await pool.query(`
+		update cards c set last_review = now(), finished_at = now(), due = now()
+		from decks d
+		where c.id = $2 and c.deck_id = d.id and d.user_id = $1 and c.card_type = 'article'`,
+		[userId, cardId]);
+	return rowCount === 1;
+}
+
 const createReviewLog = async (userId, cardId, log) => {
 	await pool.query(`
 		insert into review_logs(user_id, card_id, rating, state, due, stability, difficulty, elapsed_days, last_elapsed_days, scheduled_days, learning_steps, review)
@@ -668,4 +639,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, due, listCounts, BOUGHT_DECK, getLibrary, getListing, getDeck, create, rename, move, remove, removeTaken, flatten, setInOrder, setReviewsInOrder, setTacticLadder, reset, updateIntro, userIdOwnsDeckId, getOwnListing, getImage, updateListing, updatePreviewCards, addCard, addCards, updateCardType, updateCardContent, deleteCards, moveCards, copyCards, updateCardStudyState, createReviewLog }
+export { BOUNDS, due, listCounts, BOUGHT_DECK, getLibrary, getListing, getDeck, create, rename, move, remove, removeTaken, flatten, setInOrder, setReviewsInOrder, setTacticLadder, reset, userIdOwnsDeckId, getOwnListing, getImage, updateListing, updatePreviewCards, addCard, addCards, updateCardType, updateCardContent, deleteCards, moveCards, copyCards, updateCardStudyState, markArticleRead, createReviewLog }

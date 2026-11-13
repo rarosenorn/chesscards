@@ -39,6 +39,10 @@
 		cardType = value;
 		saveCardType(deckId, value);
 	}
+	// an article (a first exposure article) is its front alone, with
+	// headings: the back is hidden while it is the type, and kept for a type
+	// turned back
+	let article = $derived(cardType === "article");
 
 	// which deck the cards are filed into — the deck itself, or one inside it
 	// (never a marketplace deck's) — like the type, a sticky mode of writing
@@ -222,7 +226,7 @@
 	let movesEditor = null;
 	// the card's boards in reading order, numbered as the card numbers them
 	const cardBoards = () =>
-		[...docBoardsBlocks(frontEditor?.getJson()), ...docBoardsBlocks(backEditor?.getJson())]
+		[...docBoardsBlocks(frontEditor?.getJson()), ...(article ? [] : docBoardsBlocks(backEditor?.getJson()))]
 			.map((board, i) => ({ number: i + 1, fen: board.fen, moves: board.moves ?? [] }));
 	const openMoves = () => {
 		movesEditor = menu.editor ?? frontEditor?.getEditor();
@@ -359,7 +363,8 @@
 			{menu}
 			onAddChessboard={addChessboard}
 			onInsertMoves={openMoves}
-			movesDisabled={frontBoards + backBoards === 0}
+			movesDisabled={frontBoards + (article ? 0 : backBoards) === 0}
+			headings={article}
 		/>
 		{#if movesOpen}
 			<MoveRefDialog
@@ -369,14 +374,15 @@
 			/>
 		{/if}
 	</div>
-	{@render sideLabel("Front", "front")}
+	{@render sideLabel(article ? "Article" : "Front", "front")}
 	{#if formAttemptedAndInvalid}
 		<p style="color: red; margin-left: 16px; margin-top: 4px; margin-bottom: 4px;">The card must have atleast 1 non-empty text field or 1 chessboard</p>
 	{/if}
-	<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} class:boards-solo={!frontPair} class:boards-left={frontPair} style="--board-offset: 0">
+	<div class="editor-wrap" class:show-board-numbers={frontBoards + (article ? 0 : backBoards) > 1} class:boards-solo={!frontPair} class:boards-left={frontPair} style="--board-offset: 0">
 	<CardSideBlockEditor
 		bind:this={frontEditor}
 		{boardUi}
+		headings
 		initialDoc={storedDraft?.front}
 		duplicate={duplicateFront}
 		onDocChanged={handleFrontChanged}
@@ -385,8 +391,10 @@
 		onEditorTransaction={handleEditorRefresh}
 	/>
 	</div>
-	{@render sideLabel("Back", "back", "margin-top: 12px;")}
-	<div class="editor-wrap" class:show-board-numbers={frontBoards + backBoards > 1} class:boards-solo={!backPair} class:boards-left={backPair} style="--board-offset: {frontBoards}">
+	{#if !article}
+		{@render sideLabel("Back", "back", "margin-top: 12px;")}
+	{/if}
+	<div class="editor-wrap" hidden={article} class:show-board-numbers={frontBoards + backBoards > 1} class:boards-solo={!backPair} class:boards-left={backPair} style="--board-offset: {frontBoards}">
 	<CardSideBlockEditor
 		bind:this={backEditor}
 		{boardUi}
@@ -424,17 +432,17 @@
 			const frontCount = docCountBoardsBlocks(front);
 			invalidFenNumbers = [
 				...docInvalidBoardNumbersBlocks(front, 0, boardUi),
-				...docInvalidBoardNumbersBlocks(back, frontCount, boardUi)
+				...(article ? [] : docInvalidBoardNumbersBlocks(back, frontCount, boardUi))
 			];
 			emptyPuzzleNumbers = [
 				...docPuzzlesWithoutBackBlocks(front, 0),
-				...docPuzzlesWithoutBackBlocks(back, frontCount)
+				...(article ? [] : docPuzzlesWithoutBackBlocks(back, frontCount))
 			];
 			if (invalidFenNumbers.length > 0 || emptyPuzzleNumbers.length > 0) {
 				cancel();
 				return;
 			}
-			if (!docHasContentBlocks(front) && !docHasContentBlocks(back)) {
+			if (!docHasContentBlocks(front) && (article || !docHasContentBlocks(back))) {
 				formAttemptedAndInvalid = true;
 				cancel();
 				return;
@@ -468,7 +476,7 @@
 				// holding a frozen board counts as kept
 				const frontKept = frozenSides.front || keptFront?.length > 0;
 				const backKept = frozenSides.back || keptBack?.length > 0;
-				(frontKept && !backKept ? backEditor : frontEditor).focus();
+				(frontKept && !backKept && !article ? backEditor : frontEditor).focus();
 				showAddedToast();
 			}
 		}}

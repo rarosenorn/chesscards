@@ -10,7 +10,7 @@ const frozenBoardsKey = deckId => `chesscards:frozen-boards:${deckId}`;
 const subdeckKey = deckId => `chesscards:add-cards-subdeck:${deckId}`;
 
 // Anki-style mode: applies to every card added until changed
-const CARD_TYPES = ["basic", "tactic"];
+const CARD_TYPES = ["basic", "tactic", "article"];
 const DEFAULT_CARD_TYPE = "basic";
 
 // localStorage is absent during SSR and throws outright in a locked-down

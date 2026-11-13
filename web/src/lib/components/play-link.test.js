@@ -26,10 +26,9 @@ describe("the Play link", () => {
 		return link;
 	}
 
-	it("opens Lichess's practice against Stockfish from the position the board shows, as the side it is seen from", async () => {
+	it("opens Lichess's game against the computer from the position the board shows", async () => {
 		const link = await show({ fen: "8/4p3/4k3/8/3K4/8/8/8 w - - 0 1", moves: ["Ke4", "Kd6", "Kd4"], openAt: 1 });
-		expect(link.getAttribute("href")).toBe("https://lichess.org/analysis/8/4p3/4k3/8/4K3/8/8/8_b_-_-_1_1?color=white#practice");
-		expect((await show({ fen: "8/4p3/4k3/8/3K4/8/8/8 w - - 0 1", moves: [], orientation: "b" })).getAttribute("href")).toBe("https://lichess.org/analysis/8/4p3/4k3/8/3K4/8/8/8_w_-_-_0_1?color=black#practice");
+		expect(link.getAttribute("href")).toBe("https://lichess.org/?fen=8%2F4p3%2F4k3%2F8%2F4K3%2F8%2F8%2F8%20b%20-%20-%201%201#ai");
 		expect(link.getAttribute("target")).toBe("_blank");
 	});
 

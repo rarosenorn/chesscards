@@ -613,11 +613,7 @@
 		const pgn = encodeURIComponent(start + line.map(san => san.replace(/[+#]/g, "")).join(" ")).replaceAll("%20", "_");
 		return pgn.length > 4500 ? position : `https://lichess.org/analysis/pgn/${pgn}${color}#${ply}`;
 	});
-	// Lichess's practice mode: you play the side at the bottom against
-	// Stockfish's best move (the tablebase's in small endgames). Its game
-	// against the computer cannot be opened at a chosen strength.
-	let playUrl = $derived(isPositionFinished(displayFen) ? null
-		: `https://lichess.org/analysis/${displayFen.replaceAll(" ", "_")}?color=${normalized.orientation === "b" ? "black" : "white"}#practice`);
+	let playUrl = $derived(isPositionFinished(displayFen) ? null : `https://lichess.org/?fen=${encodeURIComponent(displayFen)}#ai`);
 
 	// Everything that is not a step arrives at once: the position is written
 	// into the board and drawn in the very frame the rest of the card changed

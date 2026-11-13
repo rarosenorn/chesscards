@@ -221,6 +221,7 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 - Since there are many settings, maybe once they become relevant show popup so user can read and make decision. e.g. for chapters first time they hit chapter limit explain why chapters and let them decide the config. Same with: study ahead 20 min incl. explanation,
 - ?allow images in flashcard for e.g. easily inserting image of your blunder instead of copying fen and creating board and inserting fen?
 - Live engine on the board: Stockfish running in the browser while you step through a card's position, like Lichess's local engine, with its settings (engine build, search time, multiple lines, threads, memory). Separate from the server analysis that makes blunder cards, which stays fixed at Lichess's setting.
+- maybe later: Play and Analyse on our own board instead of opening Lichess. Stockfish in the browser (the live engine above); Play turns the board into a game against it, Analyse shows eval and best-move arrows. Mainly for mobile, where switching to a Lichess tab hurts. For now both open Lichess.
 
 ## Personalized blunder and mistake cards
 - Would be cool to have a feature that imports mistakes and blunders from your own game and creates a flashcard from it into your blunder deck with explanation why your move was bad and what the best move is and why. make it automatic like lichess game analysis extension to analyze your game, find bad moves, make flashcard from it with explanation

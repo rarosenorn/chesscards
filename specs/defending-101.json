@@ -261,7 +261,7 @@
 								]
 							},
 							"back": {
-								"text": "1.Rf5 pins the d5-pawn to the black king, which stops [1.f7 d4#]. Then the f-pawn wins the game for White."
+								"text": "1.Rf5 pins the d5-pawn to the black king, and the f-pawn then wins the game for White. Anything slower allows mate: [1.f7 d4#]."
 							}
 						}
 					]
@@ -893,7 +893,7 @@
 								]
 							},
 							"back": {
-								"text": "1...Re5 protects the knight and frees e7 for the king, which also stops [1...Nd6 2.Rh8#]."
+								"text": "1...Re5 protects the knight and frees e7 for the king. Moving the knight instead allows mate: [1...Nd6 2.Rh8#]."
 							}
 						},
 						{

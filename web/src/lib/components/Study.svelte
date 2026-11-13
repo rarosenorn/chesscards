@@ -669,9 +669,10 @@
 		// and a modal owns it while it is up
 		if (editingCard || modalState.current) return;
 		// an article is up: Enter is its Continue button, unless it is
-		// pressing a button or link of the page's own; it takes no other keys
+		// pressing a button or link of the page's own; it takes no other keys.
+		// A held Enter repeats, and would read the next article unseen.
 		if (isArticle) {
-			if (e.key === "Enter" && !e.target.closest?.("button, a")) {
+			if (e.key === "Enter" && !e.repeat && !e.target.closest?.("button, a")) {
 				e.preventDefault();
 				readArticle();
 			}
@@ -811,11 +812,17 @@
 {/snippet}
 
 {#if isArticle}
+	<!-- each article a page of its own: a Continue that had the focus goes
+	     with its page, and a held Enter does not read the next one -->
+	{#key currentCard.id}
 	<ArticleView crumbs={articleCrumbs} blocks={currentCard.front}>
 		<div class="article-continue">
-			<button class="std-btn" onclick={readArticle}>Continue</button>
+			<!-- the second click of a double click would land on the next
+			     article's Continue, standing where this one did -->
+			<button class="std-btn" onclick={e => e.detail < 2 && readArticle()}>Continue</button>
 		</div>
 	</ArticleView>
+	{/key}
 {:else if currentCard && editingCard && CardBlockEdit}
 	<!-- the add-cards type row, above the card and on the page's own ground -->
 	<div class="edit-type-row">

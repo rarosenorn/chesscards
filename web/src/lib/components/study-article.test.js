@@ -130,6 +130,30 @@ describe("an article in study", () => {
 		page.close();
 	})
 
+	it("is read one at a time: a double click or a held Enter does not read the next one unseen", async () => {
+		const page = await study(deckOf([article("top", "deck"), article("inside", "a"), article("deeper", "a", { position: 2 }), card("one", "a", 3)]));
+		expect(page.body()).toBe("Page top");
+		// the second click of a double click lands where Continue stood
+		page.button("Continue").dispatchEvent(new MouseEvent("click", { detail: 1, bubbles: true }));
+		await tick(); await tick();
+		page.button("Continue").dispatchEvent(new MouseEvent("click", { detail: 2, bubbles: true }));
+		await tick(); await tick();
+		expect(page.body()).toBe("Page inside");
+		// Enter held down repeats
+		document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", repeat: true, bubbles: true }));
+		await tick(); await tick();
+		expect(page.body()).toBe("Page inside");
+		expect(markArticleRead).toHaveBeenCalledTimes(1);
+		// Continue had the focus: the next one's does not, so a held Enter on
+		// it repeats nowhere
+		const pressed = page.button("Continue");
+		pressed.focus();
+		pressed.click();
+		await tick(); await tick();
+		expect(document.activeElement).not.toBe(page.button("Continue"));
+		page.close();
+	})
+
 	it("does not come up once read", async () => {
 		const page = await study(deckOf([article("intro", "deck", { read: true }), card("one", "deck", 2)]));
 		expect(page.title()).toBe(null);

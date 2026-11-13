@@ -122,63 +122,229 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] Zen mode works while cramming
 [ ] while the Cram prompt (or any dialog) is open, Space / 1-4 and the tab shortcuts do nothing to the page behind
 
-## Intro pages
-### Writing an intro
-[ ] Cards: "Deck intro" at the bottom opens the deck's intro page (a deck inside: open it and use its own Cards tab)
-[ ] a page with no intro opens straight in the editor (Save only, no Cancel); one with an intro opens to read, with "Edit"
-[ ] e opens the editor (not while typing in a field); Ctrl+Enter saves; Cancel drops the changes
-[ ] H1 / H2 buttons in the editor bar (only on intro pages, not on cards or the deck description); text, bold/italic, boards and moves all work
-[ ] saving a page with nothing on it removes the intro (shows "No intro")
-[ ] a bad board (invalid FEN) shows an error under the editor and does not save; with the server stopped, "Could not save the intro..." shows
-[ ] the names above the title lead to the outer pages (for the owner all of them, also ones with no intro yet); open the editor, click one: the other page loads, editor closed or open as that page needs
-[ ] a reload after saving shows the saved page (headings included)
-[ ] "Study" under a page goes to study of that deck
-### Reading an intro
-[ ] 3 or more headings: a contents list under the title, H2s indented; clicking one scrolls to it; a heading with no words is not listed and the others still scroll to the right place
-[ ] 2 or fewer headings: no contents list
-[ ] long page: the page scrolls, nothing scrolls inside it
-[ ] paragraphs read from the left, not centred as on a card
-### Study: when an intro comes up
-[ ] fresh deck with a deck intro: Study shows the intro before the first card; "Study" (or Enter) goes on to the card
-[ ] deck intro + intro of a deck inside + of one inside that: they come one after another, outermost first, then the card
-[ ] the crumbs above an inner deck's page lead back to the outer pages that have an intro (not to ones without)
-[ ] a deck inside with no intro, under a deck with one: only the outer one comes up
-[ ] pass an intro, reload before grading: it does not come back
-[ ] pass the last page of a run, reload: it does not come back either
-[ ] grade a card, then clear browser storage (or another browser / device): no intro comes up, since the deck has been begun
-[ ] another browser / device before any card is graded: the intro comes up again there
-[ ] moving on to the next deck inside (unlocked by progression) with its own intro: that intro comes up before its first card
-[ ] a deck where some cards have been studied but the intro was written afterwards: it does not come up by itself (Intro button only)
-[ ] a flattened deck: only its own intro is left (the decks inside, and their intros, are gone)
-[ ] studying a deck inside another directly (from My flashcards or the breadcrumb): the outer decks' intros first (unless begun), then its own, then the card
-[ ] Enter while a button or link on the page has focus does what that button does, not "Study"
-[ ] while an intro is up, Space / 1-4 / z / e do nothing to the card behind it
-[ ] zen mode on: the intro shows with the normal chrome, zen comes back on the card
-[ ] cram on a never-studied deck with an intro: the intro comes up first, then the cram cards
-[ ] no flash of the intro on load when it has already been passed
-### Study: Intro button
-[ ] "Intro" at the bottom right shows when the card's deck or one around it has an intro; opens the nearest one
-[ ] on a page opened this way the button reads "Close" when no card is up, "Study" when one is; it goes back to the card
-[ ] the crumbs on that page open the outer pages
-[ ] not shown while editing a card (e); not shown when nothing on the way has an intro
-[ ] opened intro, then switch deck in the breadcrumb: the page closes (does not reappear later when that deck comes round)
-[ ] done screen (no card up): Intro still opens the page of what is being studied
-### Mixed decks
-[ ] a Mixed deck with two decks inside, each with an intro: each one's intro comes up before its own first card, not the other's
-[ ] the Intro button opens the intro of the deck the card on screen is from
+## Articles
+### Writing an article
+[ ] Add cards: the Type row has Basic / Tactic / Article; hovering Article shows "First exposure article: Card that is seen once to introduce what is subsequently studied with flashcards"
+[ ] Article chosen: one editor, no "Front" / "Back" labels, no snowflake; H1 / H2 buttons in the bar; the input sits as far below the bar as Add card below it
+[ ] F9 does nothing while Article is chosen
+[ ] Add card with nothing written: "The card must have atleast 1 non-empty text field or 1 chessboard"
+[ ] Add card: the editor clears completely ("Card added"); the article is at the end of the chosen deck in Cards
+[ ] write a Back on a Basic card, switch to Article, then back to Basic: the Back is still there
+[ ] the type is remembered for the deck, like Basic / Tactic (reload, leave and come back)
+[ ] boards and moves in an article: the moves (e4) dialog lists only the article's boards
+### Cards tab
+[ ] an article previews as a page, no Front / Back divider; headings render; 3 or more headings give a contents list that scrolls to them
+[ ] Type column: Article; Due "New" until read, "-" after; State "-"
+[ ] the Type dropdown turns a Basic card into an Article and back; the preview follows
+[ ] Edit card on an article: Article selected in the Type row, one editor with H1 / H2, no Back; Save keeps the headings
+[ ] sort by Type: Basic, then Tactic, then Article
+[ ] copy an article to another deck: the copy comes up unread in study; moving one keeps it read or unread
+### Study
+[ ] an unread article comes up where it sits among the new cards, as a page titled with its deck's name, the decks around it named above
+[ ] Continue (or Enter) goes on to the next card; the article does not come back, also after a reload, in another browser or on another device
+[ ] two articles in a row: double-clicking Continue, holding Enter, or pressing Enter with Continue focused reads only the first
+[ ] while an article is up, Space / 1-4 / e / Delete / z do nothing
+[ ] the new count (blue) leaves articles out, in study and in My flashcards
+[ ] Cram leaves articles out: the counter's total has none, read or not
+[ ] zen mode on: the article shows with the bars, zen comes back on the next card
+[ ] In order deck: the next deck unlocks once the one before has its article read and its cards passed
+[ ] Mixed deck: each deck inside has its article come before that deck's own cards
+[ ] no Intro button at the bottom right any more
+[ ] Edit a Basic card in study, change it to Article, Save: it shows as a page; Continue reads it
+[ ] with the server stopped, Continue still goes on; after a reload the article comes up again
 ### Reset
-[ ] Settings → Reset deck: the intros of the deck and of every deck inside it come up again in study on this browser
-[ ] another deck's passed intros are not affected by the reset
+[ ] Settings → Reset deck: the articles of the deck and of every deck inside it come up again
 ### Marketplace
-[ ] upload a deck with intros: the admin review has an "Intros" tab with the deck's page and those of the decks inside it (with their trail), in reading order; "No intro pages" when there are none
-[ ] after approval, taking the deck: intros come up in study as for an own deck
-[ ] marketplace deck's intro page: read only (no Edit, no e, no editor), crumbs lead only to pages that have an intro
-[ ] the author editing their intro after publishing does not change the published one
+[ ] upload a deck with articles: the admin Browse shows them as pages; there is no Intros tab
+[ ] after approval, taking the deck: the articles come up once in study for the buyer; reading one changes nothing for the author or other buyers
+[ ] a sample card that is an article shows as a page on the deck's marketplace page
+### Old intro pages
+[ ] decks that had an intro page now have an Article as their first card; ones begun before have it read (Defending 101: the deck's and Defend your king › Picking the right square's)
+[ ] /my-flashcards/<id>/intro is gone (404)
 ### Importer
-[ ] a spec with deck / chapter intros writes them ("N intro page(s) written")
-[ ] re-importing keeps intros up to date and does not duplicate them
+[ ] a spec with "intro" makes an Article the deck's / chapter's first card; re-importing does not duplicate it
+[ ] "type": "article" cards import as articles anywhere among the cards; one with a back is refused
+
+## Payments
+### Setup
+[ ] restart the dev server after .env changes (STRIPE_WEBHOOK_SECRET, SUPPORT_EMAIL)
+[ ] keep running: stripe listen --forward-to localhost:5173/api/stripe/webhook --events checkout.session.completed,checkout.session.async_payment_succeeded,charge.updated,charge.refunded,charge.dispute.closed
+[ ] test card 4242 4242 4242 4242, any future date, any CVC; emails land in Mailpit (localhost:8025)
+[ ] use a second account as the buyer; your own account is the author of both test decks
+
+### Buying a deck
+[ ] logged out: Buy sends you to log in
+[ ] a paid deck you don't own: "Buy for $X" with "30-day money-back guarantee" under it (link to the terms); no checkbox
+[ ] Buy opens Stripe Checkout: the deck's name, the price in USD with VAT included (shows VAT for an EU address)
+[ ] cancel in Checkout: back on the deck page, nothing bought
+[ ] pay: you land in My flashcards with the deck there; the confirmation email names the deck, the price, the 30-day guarantee with its last date, and that it covers the 14-day withdrawal right
+[ ] a free deck: "Get for free", straight into My flashcards, no Checkout
+[ ] declined card (4000 0000 0000 0002): Checkout says so, nothing bought
+[ ] two tabs: buy the same deck in both; the second payment is refunded by itself (Stripe dashboard) and you have one deck
+
+### Owned decks
+[ ] owned and in My flashcards: the price button greyed out with the green Owned to its right
+[ ] delete it from My flashcards, then open its marketplace page: greyed price, Owned, and a Get button below; Get brings it back free, progress starts over
+[ ] the Owned badge also shows on the marketplace list tile
+[ ] your own deck as author: greyed price and Owned; Get only if you have deleted the deck you published from
+[ ] the buyer can review the deck; the author can't review their own
+
+### Refunds and chargebacks
+[ ] refund a purchase in the Stripe dashboard (full amount): the deck leaves the buyer's My flashcards, their review is gone, the deck page offers Buy again
+[ ] a partial refund changes nothing
+[ ] buy again after a refund: works, a new purchase
+[ ] wiki FAQ "Can I get a refund?" and the terms say the same: 30 days, email support@chesscards.io, once per deck
+
+### Off sale and taken down
+[ ] author, deck settings or the marketplace page: "Take off sale"; then a buyer still sees it in the list and opens it, someone without it doesn't see it in the list and gets 404 on its page
+[ ] off sale: an owner can still delete it and Get it back
+[ ] "Put back on sale" brings it back for everyone
+[ ] delete the deck you published from: the marketplace page still has the on/off sale button
+[ ] admin (2FA session): every deck page has a reason field and "Take down"; empty reason is refused; the author gets an email with the reason
+[ ] taken down: the author sees "Taken down by Chesscards: reason" on the page and in deck settings, and no on-sale button; owners keep it; others get 404
+[ ] admin sees taken-down decks in the list and can Restore; the author is emailed
+
+### Author deletes their account
+[ ] the delete dialog says published decks stay with those who have them, off sale
+[ ] after deleting: buyers still have the deck, the author shows as the name they last had, buyers can still review it; others get 404
+
+### Payout details (author of a paid deck)
+[ ] Settings has a Payouts section; an author of only free decks, or a non-author, doesn't
+[ ] Save asks for payout email, name on the bank account and its currency; a name or email starting with = or + is refused
+[ ] a new payout email isn't used until you click the link sent to your account email; the link page only shows it, Confirm sets it; the link works once and for a day
+[ ] changing it again: the old payout email gets "Your Chesscards payout email was changed"
+[ ] Settings shows "Earned and not yet paid" and past payouts
+
+### Monthly payouts (admin, /admin/payouts)
+[ ] to test now, move a test sale into last month: update purchases set created_at = now() - interval '35 days' where id = '...';
+[ ] Due lists each author: sales, earned, refunds, total; under $10 rolls over; no payout details rolls over; first payout and changed payout email are flagged
+[ ] this month's sales and refunded-before-payout sales aren't in it
+[ ] Prepare: payouts appear under Prepared; preparing again adds nothing
+[ ] Download Wise batch file: one row per payout, USD source, the author's currency
+[ ] Mark paid: moves to Paid, each author gets an email; the author's Settings shows it
+[ ] refund a sale that was paid out: next month's due takes its share off; Settings shows it as refunds to be taken from the next payouts
+[ ] Undo on the latest paid payout: its sales are due again; an older payout has no Undo
+[ ] a sale refunded after Prepare: the prepared payout is flagged "cancel and prepare again"
+
+## Cards from a game
+### Fetching games
+[ ] Add cards → Import from game: the Chess.com and Lichess fields hold the last name that found games (also after a reload)
+[ ] Fetch shows the newest 3 games; Load more adds 30 at a time, going back month by month (Chess.com) / page by page (Lichess)
+[ ] double-click Load more: every game shows once, nothing breaks
+[ ] press Fetch twice quickly on Lichess: the list loads, no "rate limit" error
+[ ] an unknown name: "No Chess.com player called …" / "No Lichess player called …"
+[ ] a player with no games: "No games yet."
+[ ] Chess960 and other variants are not listed
+[ ] a row: speed icon, time control ("3 + 2", "10 min", "3 days"), both players with ratings, Won / Draw / Lost from your side, the date
+[ ] Fetch on the other site replaces the list
+[ ] a marketplace deck has no Import from game (the page is not found)
+
+### Making cards
+[ ] clicking a game asks "Make cards from this game" with Blunders / Mistakes / Inaccuracies and, with decks inside, the Deck picker
+[ ] all three unticked: "Nothing to look for: pick blunders, mistakes or inaccuracies"
+[ ] progress: "Analysing the game: position x of y" → "Writing explanations: x of y" → "Adding the cards" → "n cards added."
+[ ] only your side's moves become cards, and only the kinds ticked
+[ ] a game with nothing to card: "Nothing to make a card of in this game."
+[ ] the new cards are in Cards and Study straight away, in the deck chosen
+[ ] the imported game is marked in the list
+[ ] Cancel while analysing or writing stops it and adds no cards; there is no Cancel while "Adding the cards"
+[ ] start another game while one runs: "You already have a game being analysed"
+[ ] leave for Cards and come back, or reload: the progress carries on and the cards arrive
+[ ] a second tab on the same deck shows the same progress; Cancel in one clears the other
+[ ] delete the deck the cards go into while it analyses: "The deck the cards were going into is gone"
+[ ] sign out in another tab while it runs: the page stops with an error instead of asking forever
+
+### The cards
+[ ] front "Why was 27.Qxg5 a blunder, and what is a better move?"; the board is from your side and opens with your move played
+[ ] turning it plays the opponent's punishment on the board, with a green arrow for the better move
+[ ] back: "27.Qxg5 was a blunder because …" and "27.Qf3 was the best move because … [line]"; the line steps on the board
+[ ] a variation in parentheses after a bullet steps through on the board too
+[ ] a missed mate: "because it misses mate in N", the whole mate as the line
+[ ] stalemating when winning: "because it stalemates Black, which is a draw"
+[ ] repeating a third time when winning: "because it repeats the position a third time, which is a draw"
+[ ] trading down to a draw by material when winning: "because it leaves too little material to mate, which is a draw"
+[ ] the move that let you get mated is a card; your own mating move never is
+[ ] castling and promotion are never called mistakes when they were the engine's move
+[ ] the reasons name only moves that are on the card; no square brackets, no "T1", no evaluation numbers
+
+## PGN paste
+### On a board in a card (Add cards)
+[ ] paste a PGN (Lichess "Copy PGN", Chess.com share → PGN) into the FEN field under a board: the board gets the game's moves from the usual start; the arrows step through them
+[ ] a game set up from a position (PGN with a [FEN] tag): the board starts from that position
+[ ] comments, clock times and variations in the PGN: only the main line comes in
+[ ] a PGN of several games (a whole Lichess study): the first game comes in
+[ ] a board that already had moves, arrows and a back side: moves, back side and the arrows after the start are replaced; arrows on the starting position stay
+[ ] Ctrl+Z right after the paste brings the old board back
+[ ] Edit on the pasted board opens on the moves, at the last move
+[ ] pasting a FEN works as before
+[ ] pasting text that is neither ("hello", a PGN with an illegal move): the field turns red and Add card is blocked
+
+### In the open board editor
+[ ] paste a PGN into the editor's FEN field: the field shows the start FEN, the move list shows the game, the board stands on the last move, and you can record on from there
+[ ] Cancel after pasting brings the old board back; Save keeps the game
+[ ] the same on a board on the back side
+
+### Editing a card
+[ ] the same on a board when editing a card from the Cards tab
+
+## Boards: Analyse and Play
+[ ] card boards (study, Cards, the deck's sample cards) show "Analyse" then "Play" at the top right
+[ ] Analyse opens Lichess's analysis board in a new tab: seen from the board's side, with the line so far, on the move the board stands on
+[ ] following a move from the text, Analyse opens that line instead
+[ ] a puzzle not yet solved: Analyse and Play give only the position shown, never the hidden moves
+[ ] Play opens Lichess's game against the computer from the position shown, as the side the board is seen from
+[ ] a mated or stalemated position: no Play
+[ ] articles' and deck descriptions' boards have Analyse and Play too
+
+## Defending 101
+### Order
+[ ] My flashcards: Defending 101 › Defend your king (6 decks inside) › Defend your pieces (6) › Synthesis
+[ ] each method: its Article, then "Describe the defence ...", then 2 puzzles; only the first puzzle names the method
+[ ] Synthesis unlocks only once both parts have passed (the deck is In order)
+### Content
+[ ] every puzzle plays with the defender to move and the board turned to the defender
+[ ] clickable moves in the articles and answers play on the right board
+[ ] Pinning the attacker (king), 2nd puzzle: "Anything slower allows mate"; Protecting the piece, 1st puzzle: "Moving the knight instead allows mate"
+
+## Deck switcher (the arrow beside the deck's name)
+### Every tab
+[ ] the arrow shows on Study, Cards, Add cards, Deck and Settings of a deck with decks inside it or around it; not on a deck with neither
+[ ] it lists the decks around this one, then this one and the decks inside it, indented; this one is marked
+[ ] choosing a deck opens the same tab of that deck (Cards → its Cards, Settings → its Settings, ...)
+[ ] the names before the deck's name in the breadcrumb also open that same tab of their deck
+[ ] from Add cards, a marketplace deck taken (or a deck inside one) opens its Study, since it has no Add cards; from Cards it opens its Cards
+[ ] from Import from game (under Add cards), a deck of your own opens its Add cards
+### Turning to another deck
+[ ] Add cards: write something, turn to another deck: its Add cards opens with its own draft and type, and "Show duplicates" leads to that deck; turn back: the first deck's draft is still there
+[ ] Cards: search, select a card, turn to another deck: its Cards opens unfiltered, on its first card
+[ ] Cards: open a card in the editor, turn to another deck: "Unsaved changes" asks; Cancel stays; Leave goes, and the edit is gone when you come back
+[ ] after one Leave, editing again and turning to yet another deck asks again
+[ ] Study: a card showing its answer, turn to another deck: its card comes front up; a cram session is left and resumes when you turn back the same day
+[ ] Settings: the rename field and the In order / Mixed choice show the deck turned to, not the one before
 
 # Needed before launch
+## today
+[y] refunds by EU law
+[y] how to handle refunds
+[y] payment processing for buying decks
+[y] payment system for importing decks
+[y] paying authors of decks, what split etc.
+[y] Delete marketplace deck (its removed from your my flashcards and progress is deleted, but you still "have" the deck and can go to marketplace and get it again, for free if it was paid
+[ ] maybe call intro for first exposure articles instead? And maybe do "First exposure articles" a card type that can be put anywhere and is then only shown once do introduce what subsequent cards are about?
+
+## payment stuff
+[ ] company: Danish sole proprietorship or Bulgarian company, decided with a DK–BG tax adviser before the live Stripe account
+[ ] live Stripe account in the company's name: live restricted key, live webhook endpoint (checkout.session.completed, checkout.session.async_payment_succeeded, charge.updated, charge.refunded, charge.dispute.closed), real EU OSS VAT registration
+[ ] accountant: confirm tax code txcd_20060358, bookkeeping of sales and author payouts (self-billing invoices?), how long to keep records
+[ ] Stripe settles in USD to a Wise USD account (avoids ~2% conversion); turn on Link and Adaptive Pricing
+[ ] Wise Business account; download its "send by email" batch template and match the CSV headers in wiseBatchCsv (payouts.js)
+[ ] support@chesscards.io receives mail (forward to Gmail); a production SMTP provider
+[ ] seller identity on /terms: company name, address, CVR/VAT number
+[ ] lawyer review of /terms and /author-terms; privacy policy covering purchases and payout details
+[ ] a real live-mode purchase and refund with a small amount before launch
+
+## general stuff
+[ ] fsrs optimizer that uses reviews
 [ ] slug for deck and study?subdeck better?
 [ ] in zen mode should be able to change subdeck
 [ ] fsrs learning from machine learning reviews
@@ -188,25 +354,30 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] db migrations
 [ ] reporting reviews / decks
 [ ] claude: Legal pages: terms of service, a privacy policy (GDPR), and a copyright and takedown policy. The last one matters because decks can be built from books and paid courses.
-[ ] refunds by EU law
-[ ] payment processing for buying decks
-[ ] payment system for importing decks
-[ ] paying authors of decks, what split etc.
+[ ] author stats page to see stats of their marketplace decks, sales, refunds etc.
 [ ] better request upload to marketplace UI
 [~] cram mode
 [ ] how to handle updating marketplace deck with what people alrdy have, if it all? (versioning)
 [ ] lichess, chess.com and google login / signup
 [ ] claude api insteado f my own for importing bad moves from games
-[~] subdecks and metadecks
-[~] heatmap
-[ ] archive marketplace (and mb normal) decks so you dont have to see them in your list
+[y] heatmap
 [ ] responsive
 [ ] phone app
-[ ] maybe allow subdecks alone to be put into metadeck?
 [ ] should deck progression be auto or allow to unlock when you reach end of current cards?
-[ ] maybe call intro for first exposure articles instead? And maybe do "First exposure articles" a card type that can be put anywhere and is then only shown once do introduce what subsequent cards are about?
-[ ] update tactic card tooltip
 [ ] maybe do tactic card intervals and #reps customizable to so creator can make fit different decks, but with sensible defaults.
+[ ] go through alternate line ui
+## better UI for:
+[ ] settings choosing stuff
+[ ] request upload to marketplace
+
+## Play-out boards (endgame drills)
+Like Chess.com Drills: a board in a card that you play against the computer until a goal. Useful for endgame decks especially.
+- Card editor: a board can be set to "Play out against the computer", with a goal: Checkmate, Promote, or Hold the draw (held at stalemate, insufficient material or repetition, or after N moves with the draw kept).
+- Opponent: Lichess tablebase API (tablebase.lichess.ovh), perfect play up to 7 pieces and the longest defence when losing. Covers basic endgames without an engine download. Over 7 pieces: Stockfish on our server, later.
+- Fails the moment your move makes the result worse (a win becomes a draw, a draw becomes a loss), showing that move, with "Retry" from the start. Winning slowly is fine while it stays a win.
+- Grades itself like played tactics: goal reached first try = Good, any failure = Again, one Next button.
+- Tests: mount tests playing through a win, a held draw and a thrown win, with the tablebase answers stubbed.
+- Before relying on it: check Lichess's rate limits and terms for the tablebase API in a paid app.
 
 # Currently working on
 
@@ -216,12 +387,16 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 - deck / card ownership logic
 
 ## others
+- statistics page on your studying, maybe compared to others and maybe total?, maybe including total time spent studying?
+- maybe do option to not have learning step for account || deck. some people may find annoying seeing same card 2 times the first day, either in general or for some specific deck.
+- video in first exposure article
 - maybe do puzzle type where you have to move for both Black and White? e.g. "what are the first 2 moves of Phillidor's Defense?"
 - better prompt/popup design wise, e.g. confirm delete
 - Since there are many settings, maybe once they become relevant show popup so user can read and make decision. e.g. for chapters first time they hit chapter limit explain why chapters and let them decide the config. Same with: study ahead 20 min incl. explanation,
 - ?allow images in flashcard for e.g. easily inserting image of your blunder instead of copying fen and creating board and inserting fen?
 - Live engine on the board: Stockfish running in the browser while you step through a card's position, like Lichess's local engine, with its settings (engine build, search time, multiple lines, threads, memory). Separate from the server analysis that makes blunder cards, which stays fixed at Lichess's setting.
 - maybe later: Play and Analyse on our own board instead of opening Lichess. Stockfish in the browser (the live engine above); Play turns the board into a game against it, Analyse shows eval and best-move arrows. Mainly for mobile, where switching to a Lichess tab hurts. For now both open Lichess.
+- maybe setting to change to piece symbols instead of e.g. B for bishop
 
 ## Personalized blunder and mistake cards
 - Would be cool to have a feature that imports mistakes and blunders from your own game and creates a flashcard from it into your blunder deck with explanation why your move was bad and what the best move is and why. make it automatic like lichess game analysis extension to analyze your game, find bad moves, make flashcard from it with explanation
@@ -421,3 +596,4 @@ then make the code match.
   blocks and sides. Pasting with a text caret joins a block that touches it
   (nothing but the line boundary between), else creates a new block at the
   caret's line. Native paste of block HTML regenerates all ids.
+

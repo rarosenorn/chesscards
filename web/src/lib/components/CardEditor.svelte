@@ -452,6 +452,7 @@
 									<Chessboard
 										{board}
 										flushBottom
+										analysis
 										authorView={!block.answer}
 										revealed={block.answer ? true : (showBackBoards[board.id] ?? true)}
 										number={showBoardNumbers ? boardsBefore(blocks, blockIndex) + boardIndex + 1 : null}

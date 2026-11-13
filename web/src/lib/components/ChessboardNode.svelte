@@ -231,6 +231,7 @@
 			minWidth={boardMinWidth}
 			flushBottom
 			inEditor
+			analysis
 			authorView={!isBack}
 			revealed={isBack ? true : showBack}
 			onSolutionFromChange={value => onUpdate({ ...board, solutionFrom: value })}

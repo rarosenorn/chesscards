@@ -502,6 +502,7 @@
 									<Chessboard
 										{board}
 										flushBottom
+										analysis
 										authorView={!isBack}
 										revealed={isBack ? true : (showBackBoards[board.id] ?? true)}
 										number={showBoardNumbers ? boardNumberOffset + boardsBefore(side, blockIndex) + boardIndex + 1 : null}

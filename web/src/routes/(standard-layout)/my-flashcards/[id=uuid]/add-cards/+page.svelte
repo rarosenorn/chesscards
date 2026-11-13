@@ -383,7 +383,7 @@
 	{#if formAttemptedAndInvalid}
 		<p style="color: red; margin-left: 16px; margin-top: 4px; margin-bottom: 4px;">The card must have atleast 1 non-empty text field or 1 chessboard</p>
 	{/if}
-	<div class="editor-wrap" class:show-board-numbers={frontBoards + (article ? 0 : backBoards) > 1} class:boards-solo={!frontPair} class:boards-left={frontPair} style="--board-offset: 0">
+	<div class="editor-wrap" class:article-wrap={article} class:show-board-numbers={frontBoards + (article ? 0 : backBoards) > 1} class:boards-solo={!frontPair} class:boards-left={frontPair} style="--board-offset: 0">
 	<CardSideBlockEditor
 		bind:this={frontEditor}
 		{boardUi}
@@ -664,6 +664,11 @@
 	.add-form {
 		align-self: end;
 		margin-top: 12px;
+	}
+	/* an article has no label row over its editor: the bar's rule stands as
+	   far above it as the Add card button below it (4 + 4 + 8 = 4 + 12) */
+	.article-wrap {
+		margin-top: 8px;
 	}
 	/* a sticky note in the card's bottom-left corner, gone before it is read
 	   twice; positioned against the card so the button row never moves */

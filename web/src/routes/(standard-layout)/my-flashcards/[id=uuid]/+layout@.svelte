@@ -1,6 +1,9 @@
 <script module>
 	// once per app load, across every deck the tab visits
 	let editorWarmed = false;
+	// the deck's tabs, a marketplace deck's without the editing one
+	const PATHS = ["study", "browse", "add-cards", "deck", "settings"];
+	const MARKETPLACE_PATHS = ["study", "browse", "deck", "settings"];
 </script>
 
 <script>
@@ -115,22 +118,30 @@
 		});
 	});
 	let base = $derived(`/my-flashcards/${page.params.id}`);
-	let onStudy = $derived(page.url.pathname === `${base}/study`);
+	// the tab the page is on, or one of its pages (Add cards' import from a
+	// game): its first step after the deck
+	let tab = $derived(page.url.pathname.slice(base.length + 1).split("/")[0]);
+	// The same tab of another deck, where that deck has it: a marketplace
+	// deck taken, and the decks inside it, have no Add cards (nor do the pages
+	// off the tabs travel), and those go to its Study.
+	const tabOf = (id, bought) =>
+		`/my-flashcards/${id}/${(bought ? MARKETPLACE_PATHS : PATHS).includes(tab) ? tab : "study"}`;
 
-	// What Study can be turned to: the decks around this one, up to the top
-	// of the list, and the decks inside it, as one outline. A deck inside
-	// that its progression still holds shut can be studied all the same.
+	// What the page can be turned to: the decks around this one, up to the
+	// top of the list, and the decks inside it, as one outline, each on the
+	// tab the page is on. A deck inside that its progression still holds
+	// shut can be studied all the same.
 	let switcher = $derived.by(() => {
-		if (!onStudy || (deck.ancestors.length === 0 && deck.decks.length === 1)) return null;
+		if (deck.ancestors.length === 0 && deck.decks.length === 1) return null;
 		return {
-			label: "Choose what to study",
+			label: tab === "study" ? "Choose what to study" : "Choose a deck",
 			options: [
 				...deck.ancestors.map((around, index) => ({
-					name: around.name, href: `/my-flashcards/${around.id}/study`, depth: index, current: false
+					name: around.name, href: tabOf(around.id, around.bought), depth: index, current: false
 				})),
 				...deckOutline(deck.decks).map(({ deck: inside, level }) => ({
 					name: inside.name,
-					href: `/my-flashcards/${inside.id}/study`,
+					href: tabOf(inside.id, inside.bought),
 					depth: deck.ancestors.length + level,
 					current: inside.id === deck.id
 				}))
@@ -145,9 +156,7 @@
 	// tabs: the block editor won, and only it is offered
 	// (derived: the crumbs and the switcher lead from one deck to another
 	// without leaving this layout)
-	let paths = $derived(deck.isMarketplace
-		? ["study", "browse", "deck", "settings"]
-		: ["study", "browse", "add-cards", "deck", "settings"]);
+	let paths = $derived(deck.isMarketplace ? MARKETPLACE_PATHS : PATHS);
 	let names = $derived(deck.isMarketplace
 		? ["Study", "Cards", "Deck", "Settings"]
 		: ["Study", "Cards", "Add cards", "Deck", "Settings"]);
@@ -163,7 +172,7 @@
      own pages. -->
 <DeckNavBar
 	crumbs={[
-		...deck.ancestors.map((around, index) => ({ name: around.name, href: `/my-flashcards/${around.id}/study`, separator: index ? "›" : "->" })),
+		...deck.ancestors.map((around, index) => ({ name: around.name, href: tabOf(around.id, around.bought), separator: index ? "›" : "->" })),
 		{ name: deck.name, separator: deck.ancestors.length ? "›" : "->" }
 	]}
 	tabs={paths.map((path, index) => ({

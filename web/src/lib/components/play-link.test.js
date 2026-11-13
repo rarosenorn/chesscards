@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest"
 import { mount, unmount, tick } from "svelte"
 import Chessboard from "./Chessboard.svelte"
+import DescriptionView from "./DescriptionView.svelte"
 
 describe("the Play link", () => {
 	beforeAll(() => {
@@ -35,5 +36,14 @@ describe("the Play link", () => {
 	it("is not there on a stalemate, where there is nothing to play", async () => {
 		expect(await show({ fen: "8/8/8/8/8/2k5/2p5/2K5 w - - 2 5", moves: [] })).toBeUndefined();
 		expect(await show({ fen: "8/8/8/8/2pk4/8/3K4/8 w - - 0 1", moves: ["Kc2", "c3", "Kc1", "Kd3", "Kd1", "c2+", "Kc1", "Kc3"], openAt: 8 })).toBeUndefined();
+	});
+
+	it("is on the boards of articles and deck descriptions, beside Analyse", async () => {
+		const target = document.createElement("div");
+		document.body.appendChild(target);
+		const app = mount(DescriptionView, { target, props: { blocks: [{ type: "chessboards", content: [{ fen: "8/4p3/4k3/8/3K4/8/8/8 w - - 0 1", moves: [], annotations: {}, orientation: "w" }] }] } });
+		await tick();
+		expect([...target.querySelectorAll("a")].map(a => a.textContent)).toEqual(["Analyse", "Play"]);
+		unmount(app);
 	});
 });

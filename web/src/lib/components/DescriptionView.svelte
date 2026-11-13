@@ -53,6 +53,7 @@
 							<Chessboard
 								board={chessboard}
 								onBack
+								analysis
 								minWidth="280px"
 								number={showBoardNumbers ? n : null}
 								aside={asides[n]}

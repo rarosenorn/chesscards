@@ -665,10 +665,10 @@
 		align-self: end;
 		margin-top: 12px;
 	}
-	/* an article has no label row over its editor: the bar's rule stands as
-	   far above it as the Add card button below it (4 + 4 + 8 = 4 + 12) */
+	/* an article has no label row over its editor: the bar's rule stands a
+	   touch closer above it than the Add card button below it */
 	.article-wrap {
-		margin-top: 8px;
+		margin-top: 6px;
 	}
 	/* a sticky note in the card's bottom-left corner, gone before it is read
 	   twice; positioned against the card so the button row never moves */

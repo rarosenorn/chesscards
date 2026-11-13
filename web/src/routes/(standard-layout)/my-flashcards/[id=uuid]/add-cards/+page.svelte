@@ -303,10 +303,12 @@
 
 <svelte:window onkeydown={handleKeyDown} onpagehide={flushDraft} />
 
-{#snippet sideLabel(label, side, style = "")}
+<!-- shown: whether the side's name is written; an article's is not, its
+     freeze button still names it -->
+{#snippet sideLabel(label, side, style = "", shown = true)}
 	<p class="side-indicator" {style}>
 		<span class="side-name">
-			{label}
+			{#if shown}{label}{/if}
 			<!-- the duplicated cards: browse filters on the exact front of the
 			     card this one duplicates, boards and all -->
 			{#if side === "front" && duplicateFront}
@@ -374,7 +376,7 @@
 			/>
 		{/if}
 	</div>
-	{@render sideLabel(article ? "Article" : "Front", "front")}
+	{@render sideLabel(article ? "Article" : "Front", "front", "", !article)}
 	{#if formAttemptedAndInvalid}
 		<p style="color: red; margin-left: 16px; margin-top: 4px; margin-bottom: 4px;">The card must have atleast 1 non-empty text field or 1 chessboard</p>
 	{/if}

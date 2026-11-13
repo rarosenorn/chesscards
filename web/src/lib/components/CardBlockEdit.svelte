@@ -195,7 +195,9 @@
 		/>
 	{/if}
 </div>
-<p class="side-indicator">{article ? "Article" : "Front"}</p>
+{#if !article}
+	<p class="side-indicator">Front</p>
+{/if}
 {#if invalidFenNumbers.length > 0}
 	<p class="edit-error">{invalidFenMessage(invalidFenNumbers)}</p>
 {/if}

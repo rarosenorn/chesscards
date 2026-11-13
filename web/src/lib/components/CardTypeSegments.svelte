@@ -7,7 +7,7 @@
 	const types = [
 		["basic", "Basic", "Basic card type: Card is scheduled following FSRS (Free Spaced Repetition Scheduler)"],
 		["tactic", "Tactic", "Tactic card type: Card has fixed intervals of default 14, 60 and 180 days if solved. If incorrect the card resets and is due after 1 day"],
-		["article", "Article", "First exposure article: An article that is seen once to introduce what is subsequently studied with flashcards"]
+		["article", "Article", "First exposure article: Card that is seen once to introduce what is subsequently studied with flashcards"]
 	];
 </script>
 

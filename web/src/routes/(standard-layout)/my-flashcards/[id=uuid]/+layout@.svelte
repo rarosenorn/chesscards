@@ -88,17 +88,30 @@
 	// set once the user confirmed leaving, so the re-navigation passes through
 	let leaveConfirmed = false;
 
+	// What is kept for this deck's pages goes when the deck is left. Turned to
+	// another deck (the arrow, a name before it) the layout stays, so it is
+	// let go here rather than with the layout.
+	const discardDrafts = () => {
+		cardDrafts.addCards = null;
+		cardDrafts.addCards2 = null;
+		cardDrafts.browse = null;
+	}
+
 	beforeNavigate(nav => {
 		// live tiptap content only lives in the editor components; flush it
 		// into block state before any navigation unmounts them
 		for (const side of draftSides()) syncTextBlocks(side);
 
-		if (leaveConfirmed) return;
 		const base = `/my-flashcards/${page.params.id}`;
 		const path = nav.to?.url.pathname;
 		if (path === base || path?.startsWith(base + "/")) return;
 		const places = unsavedPlaces();
-		if (places.length === 0) return;
+		// once for the navigation confirmed: the next deck left asks again
+		if (leaveConfirmed || places.length === 0) {
+			leaveConfirmed = false;
+			discardDrafts();
+			return;
+		}
 		if (nav.willUnload) {
 			nav.cancel(); // browser shows its own leave dialog
 			return;
@@ -185,4 +198,8 @@
 	{switcher}
 />
 
-{@render children()}
+<!-- each deck's pages start afresh: turned to another deck, a page would
+     otherwise go on with what it took from the deck before -->
+{#key page.params.id}
+	{@render children()}
+{/key}

@@ -613,7 +613,8 @@
 		const pgn = encodeURIComponent(start + line.map(san => san.replace(/[+#]/g, "")).join(" ")).replaceAll("%20", "_");
 		return pgn.length > 4500 ? position : `https://lichess.org/analysis/pgn/${pgn}${color}#${ply}`;
 	});
-	let playUrl = $derived(isPositionFinished(displayFen) ? null : `https://lichess.org/?fen=${encodeURIComponent(displayFen)}#ai`);
+	let playUrl = $derived(isPositionFinished(displayFen) ? null
+		: `https://lichess.org/?fen=${encodeURIComponent(displayFen)}&color=${normalized.orientation === "b" ? "black" : "white"}#ai`);
 
 	// Everything that is not a step arrives at once: the position is written
 	// into the board and drawn in the very frame the rest of the card changed

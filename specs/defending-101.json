@@ -1,3055 +1,1041 @@
 {
-  "deck": "Defending 101",
-  "intro": [
-    "# Why defending is harder than attacking\n\nTake this position with White to move. You would show no hesitation and finish the game at once with 2.Qc7#.",
-    {
-      "boards": [
-        {
-          "fen": "3Q4/5p2/4p3/2k5/2Pq1p1P/P4P2/3p2PK/8 w - - 1 2",
-          "moves": [
-            "Qc7#"
-          ],
-          "orientation": "w"
-        }
-      ]
-    },
-    "Now go one move back and switch sides. The black king is still on d6, it is Black to move, and you have to find the best defence. Would you still be able to foresee White's mate in one and pick the right king move for Black?",
-    {
-      "boards": [
-        {
-          "fen": "3Q4/5p2/3kp3/8/2Pq1p1P/P4P2/3p2PK/8 b - - 0 1",
-          "moves": [
-            "Kc5",
-            "Qc7#"
-          ],
-          "orientation": "b"
-        }
-      ]
-    },
-    "This is Rogers-Kortchnoi, Biel 1986. Kortchnoi is facing a skewer, and both 1...Kc5 and 1...Ke5 protect the queen. The task is to pick the right square for the king. Kortchnoi played 1...Kc5?? and was mated, where [1...Ke5 2.Qg5+ Kd6] repeats moves.\n\nIf a top grandmaster misses a mate in one like this, it is very easy to find loads of similar defensive mistakes in lower-rated games. Keeping your own king safe is much harder than mating the enemy king. There are several reasons why spotting a tactical opportunity for your opponent is hard:\n\n- We have to visualize one extra move (our own move). C: on the first board the mate is one move away. On the second it is two: Black first has to picture 1...Kc5, a move that is not on the board yet, and only then can see 2.Qc7# against it.\n- We have to switch perspectives and think from our opponent's point of view\n- We have to sort through multiple threats to devise an optimal defence against the most serious threat\n- We do many more training exercises with attacking motifs than with defending motifs\n\nLuckily, you can improve your defensive skills by learning the right techniques and, most important, by solving as many defensive exercises as possible.\n\n# How this deck works\n\nC: a defender is in one of three situations, and each has its own set of defences:\n\n1. Your king is in check\n2. Mate is threatened, but your king is not in check\n3. One of your pieces is in danger\n\nEach situation is a subdeck. It opens with a page like this one, which shows its defences on the book's examples. Then come cards that ask you to describe each defence, and then the book's exercises as puzzles. The first puzzle after a defence says which defence to use; the ones after it only say what the situation is.\n\nIn the subdeck after those, Defend and name the technique, nobody tells you the defence: you find the move and say which technique it was. The last subdeck, Synthesis, asks for the lists of defences side by side."
-  ],
-  "chapters": [
-    {
-      "name": "Basics",
-      "cards": [
-        {
-          "id": "basics-why",
-          "front": "Why is spotting a tactic for your opponent harder than spotting one for yourself?",
-          "back": {
-            "text": "- We have to visualize one extra move (our own move)\n- We have to switch perspectives and think from our opponent's point of view\n- We have to sort through multiple threats to devise an optimal defence against the most serious threat\n- We do many more training exercises with attacking motifs than with defending motifs\n\nEven a top grandmaster misses a mate in one this way: in Rogers-Kortchnoi, Biel 1986, Black played 1...Kc5?? and was mated, where [1...Ke5 2.Qg5+ Kd6] repeats moves.",
-            "boards": [
-              {
-                "fen": "3Q4/5p2/3kp3/8/2Pq1p1P/P4P2/3p2PK/8 b - - 0 1",
-                "moves": [
-                  "Kc5",
-                  "Qc7#"
-                ],
-                "orientation": "b"
-              }
-            ]
-          }
-        },
-        {
-          "id": "basics-situations",
-          "front": "Which three situations can a defender be in, each with its own set of defences?",
-          "back": {
-            "text": "C: sorted by what is under fire:\n\n1. Your king is in check\n2. Mate is threatened, but your king is not in check\n3. One of your pieces is in danger"
-          }
-        }
-      ]
-    },
-    {
-      "name": "King in check",
-      "intro": [
-        "# Three ways out of a check\n\nC: a check has to be answered at once, and there are only three ways to do it: move the king, block the check, or capture the checking piece.\n\n# Picking the right square\n\nPicking the right square is often easier said than done. You have to consider every king move, calculate the consequences of these moves and make sure you pick the one that does not lead to a mating pattern.\n\nWhere should the black king go?",
-        {
-          "boards": [
-            {
-              "fen": "5Q2/8/p4kp1/2p4p/1pP1P3/1P2KP2/8/7q b - - 0 1",
-              "moves": [
-                "Ke6",
-                "Qe8+",
-                "Kf6",
-                "Qf8+",
-                "Ke6"
-              ],
-              "orientation": "b"
-            }
-          ]
-        },
-        "Three king moves need to be assessed:\n\n- [1...Kg5 2.Qf4#] The king could only move on to h6 and h4, and the queen attacks both squares and the king in one move.\n- [1...Ke5 2.Qe7#] Here the king only has the d6- and e6-squares, and again the queen attacks both squares and the king in one move.\n- 1...Ke6 The king is relatively safe here. White can give many different checks, but will never get more than a draw, because we always have enough escape squares: 2.Qe8+ Kf6 3.Qf8+ Ke6 repeats moves.\n\n## Mate is not the only danger\n\nC: the wrong square can also lose a piece. The king can walk into a skewer, a knight fork or other double attack, or a discovered attack.",
-        {
-          "boards": [
-            {
-              "fen": "2Q5/3p4/4q3/3KP2p/pP5P/5P2/P2k4/8 w - - 0 1",
-              "moves": [
-                "Kd4"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "Here the king has to stay on the d-file to avoid a discovered attack: [1.Kc5 d6+ 2.exd6 Qxc8+]; [1.Ke4 d5+ 2.Kf4 Qxc8].\n\n# Blocking the check\n\nC: a piece or pawn steps between the checking piece and the king. Only a check from a queen, rook or bishop can be blocked: a knight or pawn check has no line to step into.",
-        {
-          "boards": [
-            {
-              "fen": "8/3r1p2/kp5P/3K1N2/2P1P1n1/P7/1R6/8 w - - 0 1",
-              "moves": [
-                "Nd6"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "Here blocking the d-file is the only way to avoid a direct mate: [1.Kc6 Ne5#].\n\n## When blocking backfires\n\nC: the blocker takes a flight square away from its own king, so the next check can be mate.",
-        {
-          "boards": [
-            {
-              "fen": "8/1k6/3p3P/QpqP4/5pb1/KP6/P5B1/8 w - - 0 1",
-              "moves": [
-                "Kb2"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "Here the king must retreat, because the two blocking moves lead to a direct mate: [1.Qb4 Qc1#]; [1.b4 Qc3#].\n\n# Capturing the checking piece\n\nC: you take the piece that gives check, with the king or with another piece. A capture with the king is a king move like any other: the square has to be safe.",
-        {
-          "boards": [
-            {
-              "fen": "8/p1p1Kp1p/Q7/3pk3/5P2/2P2P2/8/2q5 b - - 0 1",
-              "moves": [
-                "Qxf4"
-              ],
-              "orientation": "b"
-            }
-          ]
-        },
-        "Here the queen takes. The king moves run into a direct mate or a deadly skewer: [1...Kf5 2.Qf6#]; [1...Kxf4 2.Qh6+ Kg3 3.Qxc1]."
-      ],
-      "cards": [
-        {
-          "id": "check-square",
-          "front": "Your king is in check. Describe the defence \"picking the right square\".",
-          "back": {
-            "text": "You have to consider every king move, calculate the consequences of these moves and make sure you pick the one that does not lead to a mating pattern.\n\nHere [1...Kg5 2.Qf4#] and [1...Ke5 2.Qe7#] are mate, so the king goes to e6, where White never gets more than a draw.",
-            "boards": [
-              {
-                "fen": "5Q2/8/p4kp1/2p4p/1pP1P3/1P2KP2/8/7q b - - 0 1",
-                "moves": [
-                  "Ke6",
-                  "Qe8+",
-                  "Kf6",
-                  "Qf8+",
-                  "Ke6"
-                ],
-                "orientation": "b"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-781",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
-            "boards": [
-              {
-                "fen": "8/4q2k/3p4/2pP2Kp/2P4P/1P3P2/6Q1/8 w - - 0 1",
-                "moves": [
-                  "Kxh5"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The king must avoid the f-file: [1.Kf4 Qe5#]; [1.Kf5 Qe5#]."
-          }
-        },
-        {
-          "id": "ex-783",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/5k2/p7/1r6/1KpBp2P/2P1P3/5PR1/3b4 w - - 0 1",
-                "moves": [
-                  "Ka3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The pawn was poisoned: [1.Kxc4 Be2#]."
-          }
-        },
-        {
-          "id": "ex-784",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "4Q3/7p/8/2p2p1k/p4P2/6P1/7K/2q5 b - - 0 1",
-                "moves": [
-                  "Kh6"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black had to pick the right square for the king: [1...Kg4 2.Qe2#]."
-          }
-        },
-        {
-          "id": "ex-787",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "5k2/2qp4/5p2/8/QP6/P1r1K3/4PR2/8 w - - 0 1",
-                "moves": [
-                  "Kd2"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The king had to stay away from the fourth rank: [1.Kd4 Qe5#]; [1.Ke4 Qe5#]."
-          }
-        },
-        {
-          "id": "ex-789",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/4Q3/5pk1/6pP/7p/1pq2P1P/8/3K4 b - - 0 1",
-                "moves": [
-                  "Kh6"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This is the only safe square for the king: [1...Kf5 2.Qe4#]; [1...Kxh5 2.Qh7#]."
-          }
-        },
-        {
-          "id": "ex-792",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/3pn2p/p1b1k3/1p4NK/1P2P3/8/3B4/8 b - - 0 1",
-                "moves": [
-                  "Ke5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This is the right square for the king. Black has a clear advantage. Not [1...Kf6 2.Bc3#] or [1...Kd6 2.Bf4#]."
-          }
-        },
-        {
-          "id": "check-square-tactics",
-          "front": "You are in check and pick the wrong square for the king. Apart from mate, what can it run into?",
-          "back": {
-            "text": "C: a tactic that wins a piece: a skewer, a knight fork or other double attack, or a discovered attack.\n\nHere the king has to stay on the d-file to avoid a discovered attack: [1.Kc5 d6+ 2.exd6 Qxc8+]; [1.Ke4 d5+ 2.Kf4 Qxc8].",
-            "boards": [
-              {
-                "fen": "2Q5/3p4/4q3/3KP2p/pP5P/5P2/P2k4/8 w - - 0 1",
-                "moves": [
-                  "Kd4"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-877",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend by picking the right square for the king.",
-            "boards": [
-              {
-                "fen": "Q7/p7/3p4/1P1k1K2/2p2P2/8/8/q7 b - - 0 1",
-                "moves": [
-                  "Kc5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This is the right square. The alternative runs into a skewer: [1...Kd4 2.Qh8+]."
-          }
-        },
-        {
-          "id": "ex-883",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "7Q/2q1Kp2/8/3P1p2/1P3Pk1/2P5/8/8 w - - 0 1",
-                "moves": [
-                  "Kf8",
-                  "Qc8+",
-                  "Kg7"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The king has to stay close to the queen and avoid the long diagonal: [1.Ke8 Qc8+ 2.Ke7 Qxh8]; [1.Kf6 Qxc3+ 2.Ke7 Qxh8]."
-          }
-        },
-        {
-          "id": "ex-887",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/2p2pk1/pp3n2/1n6/3K3P/1P6/P4P1B/1B6 w - - 0 1",
-                "moves": [
-                  "Kd3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "1.Kd3 is the only way for White to stay out of trouble. Other moves run into a knight fork: [1.Kc4 Na3+ 2.Kd3 Nxb1]; [1.Ke5 Ng4+ 2.Kf4 Nxh2]; [1.Ke3 Ng4+ 2.Kf4 Nxh2]."
-          }
-        },
-        {
-          "id": "ex-889",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/p4p2/2p4p/5b2/k4Pp1/1BP4P/P4rP1/4R2K b - - 0 1",
-                "moves": [
-                  "Ka3"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The right square! The king had to stay away from the fifth rank to avoid a double attack: [1...Ka5 2.Re5+ Kb6 3.Rxf5]; [1...Kb5 2.Re5+ Kb6 3.Rxf5]."
-          }
-        },
-        {
-          "id": "check-block",
-          "front": "Your king is in check. Describe the defence \"blocking the check\".",
-          "back": {
-            "text": "C: a piece or pawn steps between the checking piece and the king. Only a check from a queen, rook or bishop can be blocked: a knight or pawn check has no line to step into.\n\nHere blocking the d-file was the only way to avoid a direct mate: [1.Kc6 Ne5#].",
-            "boards": [
-              {
-                "fen": "8/3r1p2/kp5P/3K1N2/2P1P1n1/P7/1R6/8 w - - 0 1",
-                "moves": [
-                  "Nd6"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "check-block-backfires",
-          "front": "You are in check. Why can blocking lose where a king move holds?",
-          "back": {
-            "text": "C: the blocker takes a flight square away from its own king, so the next check is mate.\n\nHere the king must retreat, because the two blocking alternatives lead to a direct mate: [1.Qb4 Qc1#]; [1.b4 Qc3#].",
-            "boards": [
-              {
-                "fen": "8/1k6/3p3P/QpqP4/5pb1/KP6/P5B1/8 w - - 0 1",
-                "moves": [
-                  "Kb2"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-791",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend by blocking the check.",
-            "boards": [
-              {
-                "fen": "k7/8/P3p1pp/1p3p2/5P2/1K6/1P2P1Q1/1q6 b - - 0 1",
-                "moves": [
-                  "Qe4"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black must block the diagonal to prevent mate on the next move: [1...Ka7 2.Qb7#]; [1...Kb8 2.Qb7#]."
-          }
-        },
-        {
-          "id": "ex-810",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "r7/2R4p/4ppk1/4P1p1/p2b2P1/3B2P1/6K1/8 b - - 0 1",
-                "moves": [
-                  "f5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black has to block the diagonal to reach a winning position: [1...Kh6 2.Rxh7#]."
-          }
-        },
-        {
-          "id": "ex-897",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "Q7/5pp1/k3p2p/1pq1N3/1n6/1K4P1/5P2/8 b - - 0 1",
-                "moves": [
-                  "Qa7"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "1...Qa7! keeps the game level. 1...Kb6 was the game, and Black lost a queen: [1...Kb6 2.Nd7+ Kc7 3.Nxc5]."
-          }
-        },
-        {
-          "id": "check-capture",
-          "front": "Your king is in check. Describe the defence \"capturing the checking piece\".",
-          "back": {
-            "text": "C: you take the piece that gives check, with the king or with another piece. A capture with the king is a king move like any other: the square has to be safe.\n\nHere the queen takes. The king moves run into a direct mate or a deadly skewer: [1...Kf5 2.Qf6#]; [1...Kxf4 2.Qh6+ Kg3 3.Qxc1].",
-            "boards": [
-              {
-                "fen": "8/p1p1Kp1p/Q7/3pk3/5P2/2P2P2/8/2q5 b - - 0 1",
-                "moves": [
-                  "Qxf4"
-                ],
-                "orientation": "b"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-794",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "3K4/6p1/4k1P1/5p2/2Q2P2/8/5p2/4q3 b - - 0 1",
-                "moves": [
-                  "Kd6",
-                  "Qc7+",
-                  "Kd5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The king must keep a safe distance from the white pawns: [1...Kf6 2.Qf7#]. After 2.Qc7+ it was, again, the only move: [2...Ke6 3.Qc6#]."
-          }
-        },
-        {
-          "id": "ex-795",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/p4k2/6p1/2p2n1p/1pP1N2K/1P6/P3nBPP/8 w - - 0 1",
-                "moves": [
-                  "Kg5"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "1.Kg5 gives White an advantage. [1.Kh3 Nf4#] was the game."
-          }
-        },
-        {
-          "id": "ex-796",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "B1Q5/6k1/6p1/1p2p3/3p1pPK/3Pb3/2P2q1P/8 w - - 0 1",
-                "moves": [
-                  "Kh3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The right square, and the game is level. [1.Kg5 f3#] was the game."
-          }
-        },
-        {
-          "id": "ex-797",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/3R4/k1PpB1Pp/8/K7/P7/8/2rb4 w - - 0 1",
-                "moves": [
-                  "Kb4"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The right choice! It was not a good time to block the diagonal: [1.Bb3 Rc4#]."
-          }
-        },
-        {
-          "id": "ex-803",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/5Q1p/3p2p1/p3pk2/3q4/7P/6PK/8 b - - 0 1",
-                "moves": [
-                  "Kg5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This is the right square for the king! [1...Ke4 2.Qf3#] was the game."
-          }
-        },
-        {
-          "id": "ex-804",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/kpQ2p2/p7/4N2q/3nP3/8/5PPK/8 w - - 0 1",
-                "moves": [
-                  "Kg1"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This modest king retreat keeps the game balanced. [1.Kg3 Ne2#] was the game."
-          }
-        },
-        {
-          "id": "ex-805",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "4Q3/p7/8/3p1p2/P3k1p1/1P6/5PPK/3q4 b - - 0 1",
-                "moves": [
-                  "Kd3"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The king had to leave the fourth rank to stay safe: [1...Kd4 2.Qe3#]; [1...Kf4 2.Qe3#]."
-          }
-        },
-        {
-          "id": "ex-807",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "7k/8/Q4P1p/8/4P1p1/3p2Kr/R6P/7q w - - 0 1",
-                "moves": [
-                  "Kf4"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The king must move towards the centre to stay safe: [1.Kf2 Rf3#]; [1.Kxg4 Qf3#]."
-          }
-        },
-        {
-          "id": "ex-808",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/P7/1B1R3p/7P/4bp2/2k1p3/4P1K1/r7 w - - 0 1",
-                "moves": [
-                  "Kh3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The king must move away from the back rank to keep the game level: [1.Kh2 Rh1#]."
-          }
-        },
-        {
-          "id": "ex-809",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/1r5p/8/3N4/R7/5PP1/K2kP2P/2n5 w - - 0 1",
-                "moves": [
-                  "Ka1"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This is the right square for the king! [1.Ka3 Rb3#] was the game."
-          }
-        },
-        {
-          "id": "ex-811",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "7k/4p3/p7/1p4Q1/8/1KP5/PP6/3q4 w - - 0 1",
-                "moves": [
-                  "Kb4",
-                  "Qa4+",
-                  "Kc5"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The king should avoid the rim: [1.Ka3 Qa4#]."
-          }
-        },
-        {
-          "id": "ex-813",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/8/8/r1p5/1kR5/8/6r1/1KR5 b - - 0 1",
-                "moves": [
-                  "Kb5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "It was essential to stay away from the third rank: [1...Kb3 2.R1c3#]; [1...Ka3 2.R1c3#]."
-          }
-        },
-        {
-          "id": "ex-815",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/8/6p1/7p/3p4/1Q1k3P/3p2PK/4q3 b - - 0 1",
-                "moves": [
-                  "Ke4"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The centre is the safest place for the king: [1...Ke2 2.Qf3#]."
-          }
-        },
-        {
-          "id": "ex-892",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/1p3q2/2p5/8/p1N5/P1P1k3/1P3p2/2K2B2 b - - 0 1",
-                "moves": [
-                  "Kf4"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black avoids a double attack and is winning: [1...Ke4 2.Nd6+ Ke5 3.Nxf7+]; [1...Kf3 2.Ne5+ Ke4 3.Nxf7]."
-          }
-        },
-        {
-          "id": "ex-895",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "5Q2/8/1p3p2/3k1P2/2P5/2K5/8/7q b - - 0 1",
-                "moves": [
-                  "Ke5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The black king must leave the long diagonal as quickly as possible to avoid a skewer: [1...Kc6 2.Qa8+ Kc7 3.Qxh1]; [1...Ke4 2.Qa8+ Kf4 3.Qxh1]."
-          }
-        },
-        {
-          "id": "ex-904",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/2p2p2/p2p3k/4K3/B5Pb/P3P2N/4n1P1/8 w - - 0 1",
-                "moves": [
-                  "Kf5"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "1.Kf5 avoids a double attack and keeps the game level: [1.Ke4 Nc3+ 2.Kf5 Nxa4]; [1.Kd5 Nc3+ 2.Kc4 Nxa4]."
-          }
-        },
-        {
-          "id": "ex-907",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/7R/1k6/1pn5/8/2K1r3/1P1N4/8 w - - 0 1",
-                "moves": [
-                  "Kc2"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This is the right square for the king. Not [1.Kb4 Na6#], and 1.Kd4 runs into a double attack: [1.Kd4 Rd3+ 2.Ke5 Rxd2]."
-          }
-        },
-        {
-          "id": "ex-909",
-          "type": "tactic",
-          "front": {
-            "text": "You are in check. Defend.",
-            "boards": [
-              {
-                "fen": "8/q2p3Q/8/7p/3K4/P4P1P/1P1k2P1/8 w - - 0 1",
-                "moves": [
-                  "Kd5"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The king picks the only square where the d-pawn (the front piece) cannot attack it. The king has to stay on the d-file to avoid the discovered attack: [1.Ke4 d5+ 2.Kxd5 Qxh7]; [1.Ke5 d6+ 2.Kxd6 Qxh7]; [1.Kc4 d5+ 2.Kxd5 Qxh7]."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Mate threatened",
-      "intro": [
-        "# More ways to defend\n\nSometimes we must defend positions in which our king is not under attack. This provides us with more opportunities to parry the threat. C: the book tries them in the order below, each one when the one before it is not available.\n\n# Trading the attacker\n\nAn effective way to neutralize your opponent's attack is to trade the attacker. It is the most effective defensive tool.",
-        {
-          "boards": [
-            {
-              "fen": "8/5p1k/5QpP/1p4P1/1P6/pq3P2/3PK3/8 b - - 0 1",
-              "moves": [
-                "Qe6+",
-                "Qxe6",
-                "fxe6"
-              ],
-              "orientation": "b"
-            }
-          ]
-        },
-        "The black king is stuck in the corner and is facing the immediate threat of 2.Qg7#. Black can only neutralize this by trading queens: 1...Qe6+ 2.Qxe6 fxe6. The black king is safe, and the passed a-pawn will soon decide the game.\n\n# Pinning the attacker\n\nIf we cannot force a trade, we can try to pin the attacker to neutralize the threat.",
-        {
-          "boards": [
-            {
-              "fen": "8/8/8/6pk/3P4/2r3PK/r7/1R5R w - - 0 1",
-              "moves": [
-                "Rb5"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "Black threatens 1...g4#. After 1.Rb5 the g-pawn is pinned, and Black cannot make any progress.\n\n## Pin, then trade\n\nC: a pinned piece cannot run away, so it can often be traded on the next move.",
-        {
-          "boards": [
-            {
-              "fen": "1B6/7P/8/3p4/p2Pn3/P3p2B/4Pb2/1k1K4 w - - 0 1",
-              "moves": [
-                "Bf5",
-                "Kb2",
-                "Bxe4",
-                "dxe4",
-                "h8=Q"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "Here the knight threatens 1...Nc3#. White pins it with 1.Bf5 and trades it a move later, which decides the game with the passed h-pawn.\n\n# Blocking a file or diagonal\n\nIf we cannot trade or pin the attacker, we can try to diminish its influence by blocking a file or diagonal.",
-        {
-          "boards": [
-            {
-              "fen": "7B/b2pp3/P7/1R1P4/5Ppk/2P3p1/1P4K1/r7 w - - 0 1",
-              "moves": [
-                "Bd4"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "Both black pieces control the g1-square and they threaten to mate our king with 1...Rg1#. 1.Bd4! blocks the diagonal: the black bishop is locked out, so our king is no longer in danger.\n\n# Defending a critical square\n\nIf we cannot lock the enemy pieces out, we can try to defend the critical square and make sure our opponent cannot use it for delivering the mate.",
-        {
-          "boards": [
-            {
-              "fen": "3B4/2p5/1pP3p1/1P1P3p/p2b4/P2n3P/K1k3PN/8 w - - 0 1",
-              "moves": [
-                "Bg5"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "c1 is a critical square, because Black is ready to use it to mate our king with 1...Nc1#. 1.Bg5! controls the c1-square and parries the threat.\n\n## Getting there in time\n\nC: when the defender is too far away, it can use targeting: an attack on the enemy king lets it reach its square with tempo.",
-        {
-          "boards": [
-            {
-              "fen": "6k1/1p1p1p1p/5BpQ/p1KP4/4p2P/4P3/4P1q1/2b5 b - - 0 1",
-              "moves": [
-                "Ba3+",
-                "Kb6",
-                "Bf8"
-              ],
-              "orientation": "b"
-            }
-          ]
-        },
-        "Black must protect the g7-square against 2.Qg7#, and brings the bishop to f8 with a check on the way: 1...Ba3+ 2.Kb6 Bf8. The bishop controls g7 and chases the attacking queen away.\n\n# Creating an escape square\n\nIf we cannot neutralize the attackers or control the important squares, we can try to defend ourselves by creating an escape square for our king.",
-        {
-          "boards": [
-            {
-              "fen": "2r5/1Rb1B3/6pk/7p/4K2P/2p5/2P5/8 b - - 0 1",
-              "moves": [
-                "g5"
-              ],
-              "orientation": "b"
-            }
-          ]
-        },
-        "1...g5! Black needs the g6-square to keep the king safe. Three alternatives allow a direct mate or lose a piece: [1...Bd8 2.Bf8#]; [1...Kh7 2.Bd6], and the bishop is pinned; [1...Re8 2.Rxc7].\n\nC: mostly it is a pawn stepping forward that frees the square, even if that costs the pawn.\n\n# Stepping away with the king\n\nC: the king leaves the mating net before the check comes, while it still has a safe square to go to. (The book files this under picking the right square.)",
-        {
-          "boards": [
-            {
-              "fen": "8/8/7p/p7/1p3NnP/1Pk3P1/2P5/2K5 b - - 0 1",
-              "moves": [
-                "Kd4"
-              ],
-              "orientation": "b"
-            }
-          ]
-        },
-        "Here the threat is 2.Ne2#, and the king must reach a safe square to avoid direct mate. [1...Ne3 2.Ne2#] was the game."
-      ],
-      "cards": [
-        {
-          "id": "threat-trade",
-          "front": "Mate is threatened, but you are not in check. Describe the defence \"trading the attacker\".",
-          "back": {
-            "text": "An effective way to neutralize your opponent's attack is to trade the attacker: the most effective defensive tool.\n\nHere White threatens 2.Qg7#, and Black avoids mate by trading the dangerous white queen.",
-            "boards": [
-              {
-                "fen": "8/5p1k/5QpP/1p4P1/1P6/pq3P2/3PK3/8 b - - 0 1",
-                "moves": [
-                  "Qe6+",
-                  "Qxe6",
-                  "fxe6"
-                ],
-                "orientation": "b"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-786",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend by trading the attacker.",
-            "boards": [
-              {
-                "fen": "7k/1bp4B/1p2p2K/p3N2p/P4P2/8/5nP1/8 b - - 0 1",
-                "moves": [
-                  "Ng4+"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Trading the attacker! 1...Be4 protects the g6-square, but does not solve Black's problem: [1...Be4 2.Nf7#]."
-          }
-        },
-        {
-          "id": "ex-793",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend.",
-            "boards": [
-              {
-                "fen": "7k/1q6/p2p1NQ1/2pP4/5p2/5P1p/3n3P/7K b - - 0 1",
-                "moves": [
-                  "Qb1+"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black trades the attacker and reaches a winning knight ending. 1...Qg7 still leads to mate: [1...Qg7 2.Qh5+ Qh7 3.Qxh7#]."
-          }
-        },
-        {
-          "id": "ex-812",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend.",
-            "boards": [
-              {
-                "fen": "7k/5pp1/Q1p3p1/p5P1/8/bPq5/P1P2PB1/1K6 w - - 0 1",
-                "moves": [
-                  "Qc8+",
-                  "Kh7",
-                  "Qh3+",
-                  "Qxh3",
-                  "Bxh3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "White uses the targeting technique to move the queen to h3 with tempo. White must trade queens to avoid a direct mate. The white king is safe and the game will most likely end in a draw. C: the threat was 1...Qb2#."
-          }
-        },
-        {
-          "id": "ex-900",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend.",
-            "boards": [
-              {
-                "fen": "1k4b1/p3p2r/B1Rp4/5P2/3P2p1/8/5P2/6K1 b - - 0 1",
-                "moves": [
-                  "Rh1+",
-                  "Kxh1",
-                  "Bd5+",
-                  "Kh2",
-                  "Bxc6"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black uses a combination to trade the attacker and reach a winning bishop ending. Not [1...Bd5 2.Rc8#]."
-          }
-        },
-        {
-          "id": "threat-pin",
-          "front": "Mate is threatened, but you are not in check. Describe the defence \"pinning the attacker\".",
-          "back": {
-            "text": "If we cannot force a trade, we can try to pin the attacker to neutralize the threat.\n\nHere the black pawn is the most dangerous attacker and threatens 1...g4#. White neutralizes the threat by pinning this pawn.",
-            "boards": [
-              {
-                "fen": "8/8/8/6pk/3P4/2r3PK/r7/1R5R w - - 0 1",
-                "moves": [
-                  "Rb5"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "threat-pin-then-trade",
-          "front": "You have pinned the piece that threatened mate. What do you often do with it on the next move?",
-          "back": {
-            "text": "C: trade it. A pinned piece cannot run away.\n\nHere White must pin the knight, which threatened 1...Nc3#, and trade it on the next move to decide the game with the passed h-pawn.",
-            "boards": [
-              {
-                "fen": "1B6/7P/8/3p4/p2Pn3/P3p2B/4Pb2/1k1K4 w - - 0 1",
-                "moves": [
-                  "Bf5",
-                  "Kb2",
-                  "Bxe4",
-                  "dxe4",
-                  "h8=Q"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-798",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend by pinning the attacker.",
-            "boards": [
-              {
-                "fen": "8/1p3p1k/pqn2Q2/2p4p/4pP1K/1P6/PB2P3/8 b - - 0 1",
-                "moves": [
-                  "Qd8"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Pinning the attacker! Black can trade queens and reach a level endgame. C: the threat was 2.Qg7#."
-          }
-        },
-        {
-          "id": "ex-806",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend.",
-            "boards": [
-              {
-                "fen": "8/8/2p2P1p/P1kp3P/1r6/1PK1p3/3rP2R/5R2 w - - 0 1",
-                "moves": [
-                  "Rf5"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "White must pin the pawn to keep the king safe and reach a winning advantage: [1.f7 d4#]."
-          }
-        },
-        {
-          "id": "threat-block",
-          "front": "Mate is threatened, but you are not in check. Describe the defence \"blocking the line\".",
-          "back": {
-            "text": "If we cannot trade or pin the attacker, we can try to diminish its influence by blocking a file or diagonal.\n\nHere both black pieces control the g1-square and threaten 1...Rg1#. The bishop blocks the a7-g1 diagonal and locks the enemy bishop out.",
-            "boards": [
-              {
-                "fen": "7B/b2pp3/P7/1R1P4/5Ppk/2P3p1/1P4K1/r7 w - - 0 1",
-                "moves": [
-                  "Bd4"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "threat-guard",
-          "front": "Mate is threatened, but you are not in check. Describe the defence \"defending the critical square\".",
-          "back": {
-            "text": "If we cannot lock the enemy pieces out, we can try to defend the critical square and make sure our opponent cannot use it for delivering the mate.\n\nHere c1 is the critical square, because Black is ready to use it to mate with 1...Nc1#. The bishop protects it and keeps the white king safe.",
-            "boards": [
-              {
-                "fen": "3B4/2p5/1pP3p1/1P1P3p/p2b4/P2n3P/K1k3PN/8 w - - 0 1",
-                "moves": [
-                  "Bg5"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "threat-targeting",
-          "front": "The piece that must defend the critical square is too far away. Which technique gets it there in time?",
-          "back": {
-            "text": "Targeting: the piece uses an attack on the enemy king to reach its square with tempo.\n\nHere Black must protect the g7-square against 2.Qg7#, and brings the bishop to f8 with a check on the way. The bishop controls g7 and chases the attacking queen away.",
-            "boards": [
-              {
-                "fen": "6k1/1p1p1p1p/5BpQ/p1KP4/4p2P/4P3/4P1q1/2b5 b - - 0 1",
-                "moves": [
-                  "Ba3+",
-                  "Kb6",
-                  "Bf8"
-                ],
-                "orientation": "b"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-788",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend the critical square.",
-            "boards": [
-              {
-                "fen": "8/8/P2k4/1p1p2p1/1p1K1pP1/1P1P3P/4NP1n/8 w - - 0 1",
-                "moves": [
-                  "Ng1"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The knight prevents mate by controlling the critical f3-square. [1.Nxf4 gxf4] does not solve the problem."
-          }
-        },
-        {
-          "id": "ex-802",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend.",
-            "boards": [
-              {
-                "fen": "7k/p6p/1b4pP/2pB1p2/2P5/8/3B2PK/1b6 b - - 0 1",
-                "moves": [
-                  "Bc7+",
-                  "Kg1",
-                  "Be5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black uses the targeting technique to direct the bishop to the a1-h8 diagonal with tempo. Black controls the critical dark squares and is totally fine. C: the threat was 2.Bc3#."
-          }
-        },
-        {
-          "id": "threat-escape",
-          "front": "Mate is threatened, but you are not in check. Describe the defence \"creating an escape square\".",
-          "back": {
-            "text": "If we cannot neutralize the attackers or control the important squares, we can try to defend ourselves by creating an escape square for our king.\n\nHere 1...g5 frees the g6-square for the black king. The alternatives allow a direct mate or lose a piece: [1...Bd8 2.Bf8#]; [1...Kh7 2.Bd6], and the bishop is pinned; [1...Re8 2.Rxc7].",
-            "boards": [
-              {
-                "fen": "2r5/1Rb1B3/6pk/7p/4K2P/2p5/2P5/8 b - - 0 1",
-                "moves": [
-                  "g5"
-                ],
-                "orientation": "b"
-              }
-            ]
-          }
-        },
-        {
-          "id": "threat-escape-how",
-          "front": "How is an escape square for the king usually created?",
-          "back": {
-            "text": "C: the pawn or piece that stands on the square the king needs moves off it. Mostly it is a pawn stepping forward, as when 1...g5 frees g6, even if that costs the pawn."
-          }
-        },
-        {
-          "id": "ex-782",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend by creating an escape square.",
-            "boards": [
-              {
-                "fen": "k7/1p6/8/1N2R1p1/1p3n2/1K2p3/P1P2r1P/8 b - - 0 1",
-                "moves": [
-                  "b6"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black creates an escape square for the king! [1...Rxh2 2.Re8#] was the game."
-          }
-        },
-        {
-          "id": "ex-799",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend.",
-            "boards": [
-              {
-                "fen": "8/B2kpp2/3p4/1P1PbKPp/4P3/1B6/2P3bP/8 w - - 0 1",
-                "moves": [
-                  "g6"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "1.g6 creates an escape route for the king and is the only way to prevent a direct mate: [1.b6 Bh3#]."
-          }
-        },
-        {
-          "id": "ex-814",
-          "type": "tactic",
-          "front": {
-            "text": "Mate is threatened. Defend.",
-            "boards": [
-              {
-                "fen": "8/8/7r/B3R3/2pk1Pp1/pb1p3p/3P3P/K7 b - - 0 1",
-                "moves": [
-                  "c3",
-                  "Bxc3+",
-                  "Kc4"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black sacrifices a pawn to create an escape square for the king: [1...g3 2.Bc3#]."
-          }
-        },
-        {
-          "id": "threat-step",
-          "front": "Mate is threatened, but you are not in check. Describe the defence \"stepping away with the king\".",
-          "back": {
-            "text": "C: the king leaves the mating net before the check comes, while it still has a safe square to go to. (The book files this under picking the right square.)\n\nHere the threat is 2.Ne2#, and the king must reach a safe square to avoid direct mate. [1...Ne3 2.Ne2#] was the game.",
-            "boards": [
-              {
-                "fen": "8/8/7p/p7/1p3NnP/1Pk3P1/2P5/2K5 b - - 0 1",
-                "moves": [
-                  "Kd4"
-                ],
-                "orientation": "b"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Piece in danger",
-      "intro": [
-        "# Keeping your pieces safe\n\nAs a defender, you cannot spend all your energy on protecting your king. You also need to keep your pieces safe to avoid a position in which you have a decisive material disadvantage.\n\nPicking the right square, trading or pinning the attacker, and defending a critical square are not only tools for defending the king. They also work when a piece has to be safeguarded. In addition there are two fresh techniques: protecting your piece and the counterattack.\n\n# Picking the right square\n\nMoving an attacked piece to a safe square is the most frequent defensive duty we must fulfil in a game. The key is to determine your options, calculate them carefully and try to foresee your opponent's tactical resources.",
-        {
-          "boards": [
-            {
-              "fen": "3r1k2/2N2p2/p2b2p1/8/3p4/P2P3P/2P3P1/4R1K1 w - - 0 1",
-              "moves": [
-                "Nxa6",
-                "Ra8",
-                "Nb4"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "The knight is under attack and cannot be defended by another piece. It must choose between capturing the a6-pawn and retreating to d5.\n\n1.Nxa6! The knight looks vulnerable on the rim, but picking up the pawn is the right thing to do: [1.Nd5 Bg3 2.Rb1 Rxd5] runs into a discovered attack. After 1...Ra8 2.Nb4 the knight has safely returned.\n\n# Trading the attacker\n\nIdentifying the most annoying attacker and trading it for one of your own pieces is a very powerful tool for neutralizing a threat against one of your pieces.",
-        {
-          "boards": [
-            {
-              "fen": "k7/1p4p1/4Pb2/7R/3p4/3P1PP1/r2B2KP/8 w - - 0 1",
-              "moves": [
-                "Ra5+",
-                "Rxa5",
-                "Bxa5"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "The bishop is pinned, and there is no possibility of defending it. The black rook is responsible for the annoying pin and has to be eliminated as quickly as possible: 1.Ra5+! Rxa5 2.Bxa5.\n\n# Pinning the attacker\n\nAnother way to neutralize the attacker is to pin it.",
-        {
-          "boards": [
-            {
-              "fen": "8/pkp5/1p3p1r/4R1RP/8/P5P1/KP2P1r1/8 w - - 0 1",
-              "moves": [
-                "Re6",
-                "fxg5",
-                "Rxh6"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "White seems to be in trouble, since both rooks are under attack. 1.Re6! White identifies the f6-pawn as the key attacker and neutralizes it with a pin. After 1...fxg5 2.Rxh6 the rook ending is approximately equal.\n\n# Defending a critical square\n\nIdentifying a critical square in your camp and protecting it with one of your pieces is another technique from the king's defence that keeps your pieces safe.",
-        {
-          "boards": [
-            {
-              "fen": "8/2p2p2/1pB1nP1k/6p1/P1P3P1/1R1P1K1P/8/2r5 w - - 0 1",
-              "moves": [
-                "Ke3"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "If the black knight moves to d4, it will attack three of our pieces in one go. We can only evacuate one piece at a time, so we must protect the critical d4-square instead: 1.Ke3! The line we had to avoid is [1.Rb2 Nd4+ 2.Ke3 Nxc6].\n\nNote that 1.Ke4 also protects d4 but runs into another double attack: [1.Ke4 | 1...Nc5+ 2.Ke3 Nxb3].\n\n# Protecting your piece\n\nWhen one of our pieces is under attack and unable to move, we can safeguard it by protecting it with another piece. This was not possible for the king, because protecting an attacked king is simply against the rules.",
-        {
-          "boards": [
-            {
-              "fen": "1n4b1/6pk/3p4/1p1N3p/pP6/P4P1B/K2P3P/8 w - - 0 1",
-              "moves": [
-                "Bf5+",
-                "Kh6",
-                "Be4"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "The white knight is in serious danger, as it is pinned and quite remote from its colleagues. 1.Bf5+! Targeting: the bishop is heading for e4 with tempo. After 1...Kh6 2.Be4 the knight is safely protected by the bishop.\n\nC: protecting does not help when the attacker is worth less than the piece, since the exchange still loses material.\n\n# The counterattack\n\nThe counterattack is one of the most powerful techniques to defend your pieces, because it often contains an element of surprise. Instead of removing or protecting our jeopardized piece, we attack one of our opponent's pieces instead.",
-        {
-          "boards": [
-            {
-              "fen": "3k4/p5p1/2p2pnp/3N4/1P3P2/2P1R1P1/P6r/1K6 w - - 0 1",
-              "moves": [
-                "f5",
-                "Ne5",
-                "Nf4"
-              ],
-              "orientation": "w"
-            }
-          ]
-        },
-        "Our knight is trapped in the centre and cannot be defended, because the attacker is a tiny little pawn. 1.f5! The attack is the best defence: this move attacks an enemy piece and clears the f4-square for our knight in one go. After 1...Ne5 2.Nf4 the knight is safe; [1...cxd5 2.fxg6] is just a piece trade.\n\n# Blocking the line\n\nC: a piece or pawn steps between the attacker and its target, which often breaks a pin. (The book lists blocking only as a defence of the king.)",
-        {
-          "boards": [
-            {
-              "fen": "7k/p4p1p/5n2/1n3P2/1p5P/6N1/P7/B6K b - - 0 1",
-              "moves": [
-                "Nc3"
-              ],
-              "orientation": "b"
-            }
-          ]
-        },
-        "Here the knight must block the long diagonal to save its pinned colleague. 1...Kg7 protects the knight, but loses a piece: [1...Kg7 2.Nh5+ Kh6 3.Nxf6]."
-      ],
-      "cards": [
-        {
-          "id": "piece-square",
-          "front": "One of your pieces is in danger. Describe the defence \"picking the right square\".",
-          "back": {
-            "text": "Moving an attacked piece to a safe square is the most frequent defensive duty in a game. The key is to determine your options, calculate them carefully and try to foresee your opponent's tactical resources.\n\nHere the knight looks vulnerable on the rim, but picking up the pawn is right: [1.Nd5 Bg3 2.Rb1 Rxd5] runs into a discovered attack.",
-            "boards": [
-              {
-                "fen": "3r1k2/2N2p2/p2b2p1/8/3p4/P2P3P/2P3P1/4R1K1 w - - 0 1",
-                "moves": [
-                  "Nxa6",
-                  "Ra8",
-                  "Nb4"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-879",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend by picking the right square for it.",
-            "boards": [
-              {
-                "fen": "1bk5/r7/2p1p3/1p2p1p1/7N/P6P/1P2RPPK/8 w - - 0 1",
-                "moves": [
-                  "Ng6"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "1.Nf3 runs into a discovered attack: [1.Nf3 e4+ 2.g3 exf3]."
-          }
-        },
-        {
-          "id": "ex-884",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "5k2/1p1r4/5pp1/p1pn1p2/3P3P/2P1RP2/PP2NK1P/8 w - - 0 1",
-                "moves": [
-                  "Rd3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This is the right square for the rook. In the game, the rook got trapped after [1.Re6 Kf7 2.Re3 Nxe3], and Black won."
-          }
-        },
-        {
-          "id": "ex-893",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "1N2k3/prp2bp1/8/P6p/7P/1P2P3/4K3/1R6 w - - 0 1",
-                "moves": [
-                  "Nc6"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This is the right square. The white b-pawn is pinned, which means that 1.Na6 runs into an annoying double attack: [1.Na6 Bc4+ 2.bxc4 Rxb1]."
-          }
-        },
-        {
-          "id": "ex-899",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "3r1k2/pp3ppp/8/8/3p1P2/PP4P1/2PK3n/2N4R b - - 0 1",
-                "moves": [
-                  "Ng4"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "1...Ng4 is the right square for the knight. In the game, the knight got trapped and Black lost: [1...Nf3+ 2.Ke2 d3+ 3.Kxf3]."
-          }
-        },
-        {
-          "id": "ex-911",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "1Nb1k3/5p2/6p1/1r6/8/R5P1/1P3PK1/8 w - - 0 1",
-                "moves": [
-                  "Na6"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This is the right square for the knight and the only move that prevents annoying tactics along the long diagonal. [1.Ra8 Bb7+] is a double attack; 1.Nc6 Bb7 is a nasty pin, and Black wins the knight by attacking the pinned piece: [1.Nc6 Bb7 2.Rc3 Kd7]."
-          }
-        },
-        {
-          "id": "ex-912",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "8/ppk2p2/5p2/3p1N2/2rP1Rn1/2P5/PP6/7K b - - 0 1",
-                "moves": [
-                  "Ne5",
-                  "b3",
-                  "Nd3",
-                  "Rf3",
-                  "Rxc3"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This was the only safe square for the knight. Thanks to the pin! 2.b3 looks promising, but Black has a nice counterattack available and wins a pawn."
-          }
-        },
-        {
-          "id": "piece-trade",
-          "front": "One of your pieces is in danger. Describe the defence \"trading the attacker\".",
-          "back": {
-            "text": "Identifying the most annoying attacker and trading it for one of your own pieces is a very powerful tool.\n\nHere the bishop is pinned, and there is no possibility of defending it. White trades the annoying black rook and saves the bishop.",
-            "boards": [
-              {
-                "fen": "k7/1p4p1/4Pb2/7R/3p4/3P1PP1/r2B2KP/8 w - - 0 1",
-                "moves": [
-                  "Ra5+",
-                  "Rxa5",
-                  "Bxa5"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-886",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend by trading the attacker.",
-            "boards": [
-              {
-                "fen": "1k1r4/p6p/6p1/2p5/B1P3P1/1n5P/1R4K1/8 b - - 0 1",
-                "moves": [
-                  "Rd2+",
-                  "Rxd2",
-                  "Nxd2"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Trading the attacker! Black has a large advantage."
-          }
-        },
-        {
-          "id": "ex-910",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "8/bp1p4/p2B2p1/4q2p/5k1P/KP6/P5P1/3Q4 b - - 0 1",
-                "moves": [
-                  "Bc5+",
-                  "Bxc5",
-                  "Qxc5+"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black had to trade the attacker to rescue the pinned queen. Black has a winning advantage."
-          }
-        },
-        {
-          "id": "piece-pin",
-          "front": "One of your pieces is in danger. Describe the defence \"pinning the attacker\".",
-          "back": {
-            "text": "Another way to neutralize the attacker is to pin it.\n\nHere both rooks are under attack. White identifies the f6-pawn as the key attacker and pins it. Black can still capture a rook, but the rook ending that results is approximately equal.",
-            "boards": [
-              {
-                "fen": "8/pkp5/1p3p1r/4R1RP/8/P5P1/KP2P1r1/8 w - - 0 1",
-                "moves": [
-                  "Re6",
-                  "fxg5",
-                  "Rxh6"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-882",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend by pinning the attacker.",
-            "boards": [
-              {
-                "fen": "7q/8/pkp5/8/3b4/2Q5/P3P3/K1B5 w - - 0 1",
-                "moves": [
-                  "Be3",
-                  "c5",
-                  "Bxd4"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This pin saves the day and leads to an equal ending: [2...Qxd4 3.Qxd4]. Black can also give a check first: [1...Qh1+ 2.Kb2 Bxe3 3.Qxe3+]."
-          }
-        },
-        {
-          "id": "ex-896",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "6k1/pB6/4b3/5N1p/1P1p4/P6K/2Pn1P2/8 w - - 0 1",
-                "moves": [
-                  "Bd5",
-                  "Bxd5",
-                  "Ne7+",
-                  "Kf7",
-                  "Nxd5"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This pin trades the attacker and gives White a pleasant edge."
-          }
-        },
-        {
-          "id": "ex-905",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "8/kr4p1/p2p4/8/4p2r/P2R1R1P/K1P1P3/8 w - - 0 1",
-                "moves": [
-                  "Rd4",
-                  "exf3",
-                  "Rxh4"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "1.Rd4! pins the e-pawn and saves the rook."
-          }
-        },
-        {
-          "id": "piece-guard",
-          "front": "One of your pieces is in danger. Describe the defence \"defending the critical square\".",
-          "back": {
-            "text": "If we cannot neutralize a dangerous attacker, we can defend the critical square it is aiming at instead.\n\nHere a knight on d4 would attack three pieces in one go, and we can only evacuate one piece at a time: [1.Rb2 Nd4+ 2.Ke3 Nxc6]. The king keeps the d4-square under control. 1.Ke4 also protects d4 but runs into another double attack: [1.Ke4 Nc5+ 2.Ke3 Nxb3].",
-            "boards": [
-              {
-                "fen": "8/2p2p2/1pB1nP1k/6p1/P1P3P1/1R1P1K1P/8/2r5 w - - 0 1",
-                "moves": [
-                  "Ke3"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-888",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend the critical square.",
-            "boards": [
-              {
-                "fen": "1k6/1Pp1p3/p1P1p1p1/3pP3/3P3K/4PB1P/PRP5/b5r1 w - - 0 1",
-                "moves": [
-                  "Rb3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The rook must keep the c3-square protected. 1.Rb4 gives Black the opportunity to execute a double attack on the rook and the mating square e1: [1.Rb4 Bc3 2.Bg4 Bxb4]; [1.Rb4 Bc3 | 2.Ra4 Be1#]."
-          }
-        },
-        {
-          "id": "piece-protect",
-          "front": "One of your pieces is in danger. Describe the defence \"protecting the piece\".",
-          "back": {
-            "text": "When one of our pieces is under attack and unable to move, we can keep it safe by protecting it with another piece.\n\nHere the knight is pinned. The bishop uses the targeting technique: it moves to e4 with tempo and protects the knight.",
-            "boards": [
-              {
-                "fen": "1n4b1/6pk/3p4/1p1N3p/pP6/P4P1B/K2P3P/8 w - - 0 1",
-                "moves": [
-                  "Bf5+",
-                  "Kh6",
-                  "Be4"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "piece-protect-not-enough",
-          "front": "One of your pieces is attacked. When does protecting it not save it?",
-          "back": {
-            "text": "C: when the attacker is worth less than the piece, since the exchange still loses material. In the book's words, a knight \"cannot be defended because the attacker is a tiny little pawn\"."
-          }
-        },
-        {
-          "id": "ex-880",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend by protecting it.",
-            "boards": [
-              {
-                "fen": "8/p6k/1p1p3p/5r2/BP5P/P1p2Pp1/4R1P1/3n2K1 b - - 0 1",
-                "moves": [
-                  "Rd5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black has to defend the knight. 1...Nb2 2.Bc2 is an annoying pin, and White wins: [1...Nb2 2.Bc2 Kg6 3.Re6+ Kf7 4.Bxf5 c2 5.Re1]."
-          }
-        },
-        {
-          "id": "ex-881",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "5k2/2p1rpp1/8/1n4P1/8/2PB4/5PK1/7R b - - 0 1",
-                "moves": [
-                  "Re5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The rook protects the knight and simultaneously creates an escape square for the black king: [1...Nd6 2.Rh8#]; [1...c6 2.Rh8#]; [1...g6 2.Bxb5]."
-          }
-        },
-        {
-          "id": "ex-891",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "k7/6p1/p4p1p/1rpn4/4B3/6P1/3K1PR1/8 b - - 0 1",
-                "moves": [
-                  "c4"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "1...c4! opens up the fifth rank and enables the rook to protect the knight."
-          }
-        },
-        {
-          "id": "ex-898",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "6rk/1R6/p6p/3b1p2/5P2/P1P1P3/6BP/6K1 w - - 0 1",
-                "moves": [
-                  "Rb2"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The rook protects the bishop and gives White a winning advantage."
-          }
-        },
-        {
-          "id": "ex-908",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "8/2R1pk1p/4p1p1/p3n3/3B4/1P5K/4P3/r7 b - - 0 1",
-                "moves": [
-                  "Rh1+",
-                  "Kg2",
-                  "Rh5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black uses the targeting technique to move the rook to h5 with tempo. The aim is to protect the knight."
-          }
-        },
-        {
-          "id": "piece-counter",
-          "front": "One of your pieces is in danger. Describe the defence \"the counterattack\".",
-          "back": {
-            "text": "The attack is the best defence! Instead of removing or protecting our jeopardized piece, we attack one of our opponent's pieces, to gain a tempo.\n\nHere the knight is trapped and attacked by a pawn. 1.f5! counterattacks the black knight and simultaneously clears the f4-square for our own knight. Black must spend a move on keeping his piece safe; [1...cxd5 2.fxg6] is just a piece trade.",
-            "boards": [
-              {
-                "fen": "3k4/p5p1/2p2pnp/3N4/1P3P2/2P1R1P1/P6r/1K6 w - - 0 1",
-                "moves": [
-                  "f5",
-                  "Ne5",
-                  "Nf4"
-                ],
-                "orientation": "w"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-878",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend with a counterattack.",
-            "boards": [
-              {
-                "fen": "5N2/pp2p3/1k5p/2n1n1p1/3P4/P7/1P2N2P/4K3 b - - 0 1",
-                "moves": [
-                  "Ncd7",
-                  "dxe5",
-                  "Nxf8"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This counterattack neutralizes the double attack and leads to a winning ending for Black. [1...Ned7 2.dxc5+] loses the knight with check and spoils the defence."
-          }
-        },
-        {
-          "id": "ex-894",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "1r6/k4p1p/4p3/2p1Pp2/7B/7P/K1P5/R6n b - - 0 1",
-                "moves": [
-                  "Rb4",
-                  "c4",
-                  "Ra4+",
-                  "Kb2",
-                  "Rxa1",
-                  "Kxa1",
-                  "f4"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The counterattack! The black f-pawn is on its way to promotion, and Black no longer has to worry about evacuating his knight."
-          }
-        },
-        {
-          "id": "ex-901",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "8/2p3p1/1pP4p/p2rkp2/P4P2/2KR4/2R4r/8 b - - 0 1",
-                "moves": [
-                  "Ke4",
-                  "Rxh2",
-                  "Rxd3+"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "The counterattack! The king steps out of check onto a square that attacks the rook. Not [1...Kxf4 2.Rxh2]. [2.Rxd5 Rxc2+] wins as well."
-          }
-        },
-        {
-          "id": "ex-906",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend.",
-            "boards": [
-              {
-                "fen": "1k3r2/2p2B2/8/1b6/8/p3P3/P2P4/R3K3 w - - 0 1",
-                "moves": [
-                  "Rb1",
-                  "c6",
-                  "Bc4"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "This counterattack gives White a winning advantage. Not [1.Bh5 Rf1#]."
-          }
-        },
-        {
-          "id": "piece-block",
-          "front": "One of your pieces is in danger. Describe the defence \"blocking the line\".",
-          "back": {
-            "text": "C: a piece or pawn steps between the attacker and its target, which often breaks a pin. (The book lists blocking only as a defence of the king.)\n\nHere the knight must block the long diagonal to save its pinned colleague. 1...Kg7 protects the knight, but loses a piece: [1...Kg7 2.Nh5+ Kh6 3.Nxf6].",
-            "boards": [
-              {
-                "fen": "7k/p4p1p/5n2/1n3P2/1p5P/6N1/P7/B6K b - - 0 1",
-                "moves": [
-                  "Nc3"
-                ],
-                "orientation": "b"
-              }
-            ]
-          }
-        },
-        {
-          "id": "ex-885",
-          "type": "tactic",
-          "front": {
-            "text": "One of your pieces is in danger. Defend by blocking the line.",
-            "boards": [
-              {
-                "fen": "8/1p6/2p2p2/k4q1R/2K5/2P1p2P/1P2B1P1/8 b - - 0 1",
-                "moves": [
-                  "b5+"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Black removes the pin and is ready to relocate his queen on the next move."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Defend and name the technique",
-      "intro": [
-        "C: in a game nobody tells you which defence to look for. The puzzles in this subdeck only say: defend, and name the technique.\n\n1. Work out which of the three situations you are in: is your king in check, is mate threatened, or is one of your pieces in danger?\n2. Go through that situation's defences and choose your move.\n3. Name the technique before you play the move. The back of the card says which one it was."
-      ],
-      "cards": [
-        {
-          "id": "ex-865",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/8/pQPp3k/1p2p3/1K2q3/PPP5/8/8 w - - 0 1",
-                "moves": [
-                  "Ka5"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nThe king is perfectly safe on the rim. It was important not to block the fourth rank: [1.c4 Qe1#]."
-          }
-        },
-        {
-          "id": "ex-866",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "1k6/p3p2q/Bbp1Q3/3p2p1/1P4P1/2P1K3/4P3/8 w - - 0 1",
-                "moves": [
-                  "Kd2"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\n1.Kd2 is the only safe square for the king: [1.Kf3 Qh3#]."
-          }
-        },
-        {
-          "id": "ex-867",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/2k5/2npPp2/1p1Kp1p1/1P2P1Np/4P2P/6P1/8 w - - 0 1",
-                "moves": [
-                  "e7",
-                  "Nxe7+",
-                  "Ke6"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: create an escape square.\n\nWhite creates an escape square for the king. [1.Nxf6 Nxb4#] was the game."
-          }
-        },
-        {
-          "id": "ex-868",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "7R/8/5Npk/4Kn2/7p/5P2/r7/8 b - - 0 1",
-                "moves": [
-                  "Kg7",
-                  "Rh7+",
-                  "Kf8"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nThis is the right square, and it is a draw. [1...Kg5 2.Ne4#] was the game."
-          }
-        },
-        {
-          "id": "ex-869",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "2r4k/p4RR1/7P/1p1p4/1P2p3/r7/P4P2/6K1 b - - 0 1",
-                "moves": [
-                  "Rg8"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: pin the attacker.\n\nPinning the g7-rook is the only way to level the game. C: the threat was 2.Rh7+ Kg8 3.Rfg7+ Kf8 4.Rh8#."
-          }
-        },
-        {
-          "id": "ex-870",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/pp6/2nB1nk1/6p1/2P1K2p/P3N3/5PP1/8 w - - 0 1",
-                "moves": [
-                  "Kd3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\n1.Kd3 would have been the right square. [1.Kf3 Nd4#] was the game."
-          }
-        },
-        {
-          "id": "ex-871",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "4Q3/pp3p2/2kp4/2P5/PP5p/5P2/2pK4/1q6 b - - 0 1",
-                "moves": [
-                  "Kc7",
-                  "Qe7+",
-                  "Kc8"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nThe right square, and it is a draw. Not [1...Kd5 2.Qe4#]."
-          }
-        },
-        {
-          "id": "ex-872",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/3pkp1p/1R3R2/6P1/3P4/rP3P2/2P4r/4K3 w - - 0 1",
-                "moves": [
-                  "Ra6",
-                  "Rxa6",
-                  "Rxa6"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: trade the attacker.\n\nTrading the attacker! White had to focus on the a-rook, because [1.Rh6 Ra1#] is mate."
-          }
-        },
-        {
-          "id": "ex-873",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/8/1B6/R4p2/p2pbkp1/4P2P/4KP2/r7 b - - 0 1",
-                "moves": [
-                  "Kg5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nThis was the right decision! Taking the pawn looks tempting, but ends badly because White is not obliged to recapture: [1...dxe3 2.Bxe3#]."
-          }
-        },
-        {
-          "id": "ex-874",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/2R3p1/4pkr1/4p2p/4Pn1P/5PN1/6PK/8 b - - 0 1",
-                "moves": [
-                  "Rh6"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: create an escape square.\n\n1...Rh6! is the only move that leads to an equal position. The king needs breathing space. [1...Nd3 2.Nxh5#] was the game."
-          }
-        },
-        {
-          "id": "ex-875",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "7k/2p2Q2/6p1/p6p/4PKPP/1P3P2/3q4/8 w - - 0 1",
-                "moves": [
-                  "Kg3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nWhite had to avoid the centre: [1.Ke5 Qd6#]."
-          }
-        },
-        {
-          "id": "ex-876",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "7k/P4p2/4nP2/1p2p2p/4P2N/6PK/P2Q3P/5q2 w - - 0 1",
-                "moves": [
-                  "Ng2"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: block the check.\n\nThis accurate move wins for White. 1.Qg2 also blocks the diagonal, but leads to mate: [1.Qg2 Ng5#]."
-          }
-        },
-        {
-          "id": "ex-961",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "5n2/4k3/4p3/3p2P1/3P1KN1/8/2B1n3/8 w - - 0 1",
-                "moves": [
-                  "Ke3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\n1.Ke3 is the only move that keeps the game level. 1.Kf3 loses a piece to a double attack: [1.Kf3 Nxd4+ 2.Kf2 Nxc2]. [1.Ke5 Nd7#] was the game."
-          }
-        },
-        {
-          "id": "ex-962",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/Q7/3p4/4pp1p/1pP3pP/1q4K1/1P3P2/6k1 w - - 0 1",
-                "moves": [
-                  "f3+",
-                  "Kf1",
-                  "Qf2#"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: block the check.\n\nWhite blocks the third rank with tempo and takes over the attack. Not [1.Qe3 f4#]. The other king move is mated too: [1...Kh1 2.Qa1+ Qd1 3.Qxd1#]."
-          }
-        },
-        {
-          "id": "ex-963",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/3p4/1p6/k2Q1K2/2PP4/q5pp/2P5/8 b - - 0 1",
-                "moves": [
-                  "Kb4",
-                  "Qd6+",
-                  "Ka4",
-                  "Qxd7+",
-                  "Kb4",
-                  "Qd6+",
-                  "Ka4"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\n1...Kb4 is the only move that keeps the game level: [1...Ka6 2.Qa8#]; [1...Ka4 2.Qb5#]; [1...b5 2.Qxb5#]. 2.Qd6+ is a harmless skewer, because the black king is close enough to defend the queen. After 3.Qxd7+ not [3...Ka5 4.Qb5#]."
-          }
-        },
-        {
-          "id": "ex-964",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "4r3/kpp1B3/p7/b7/P6P/3P2P1/2P5/R2K4 w - - 0 1",
-                "moves": [
-                  "Bc5+",
-                  "b6",
-                  "Bf2"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Piece in danger: defend the critical square.\n\nTargeting! The bishop is on its way to f2 to protect the e1-square: [1.Bg5 Re1#]."
-          }
-        },
-        {
-          "id": "ex-965",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "5k2/5p2/8/3BpQK1/1p2P3/1P2b1P1/8/7q w - - 0 1",
-                "moves": [
-                  "Kg4"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nThis is the right square for the king. [1.Kf6 Qh8#] was the game."
-          }
-        },
-        {
-          "id": "ex-966",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/8/1k1p1n1N/2n4p/1pPKPp1P/1P1P4/PN4P1/8 w - - 0 1",
-                "moves": [
-                  "Na4+",
-                  "Kc6",
-                  "Nxc5",
-                  "dxc5+",
-                  "Ke5"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: trade the attacker.\n\nTrading the attacker! This is the only move that prevents 1...Ne6#. White has a winning advantage."
-          }
-        },
-        {
-          "id": "ex-967",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "3k4/5B2/1b6/5p2/1P3P2/2P1K1P1/r7/1R6 w - - 0 1",
-                "moves": [
-                  "Kd3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nThis is the right square: [1.Kf3 Rf2#]."
-          }
-        },
-        {
-          "id": "ex-968",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "3r4/R4p2/6kp/2N1K3/1pP1P1P1/1P6/P4b2/8 w - - 0 1",
-                "moves": [
-                  "Rd7"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: block the line.\n\nWhite blocks the d-file and removes the rook with tempo. After 1.Ra6+ Kg5! Black is still winning, because the knight is under attack and moving it allows mate: [1.Ra6+ Kg5 2.Nd3 Bd4#]."
-          }
-        },
-        {
-          "id": "ex-969",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/4q3/4Ppp1/1Q2k2p/2Pp4/3P2P1/p5K1/8 b - - 0 1",
-                "moves": [
-                  "Kd6"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nThe pawn was poisoned: [1...Kxe6 2.Qd5#]."
-          }
-        },
-        {
-          "id": "ex-970",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "1k1b4/1p5p/p2r2p1/4B3/2p1P3/8/2P3P1/1RK5 b - - 0 1",
-                "moves": [
-                  "Bg5+",
-                  "Kb2",
-                  "Bf6"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Piece in danger: pin the attacker.\n\nThe white bishop is pinned and no longer threatens our rook."
-          }
-        },
-        {
-          "id": "ex-971",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/1p4b1/2p4p/7R/2kPp3/P3Pp2/1PKB4/6r1 b - - 0 1",
-                "moves": [
-                  "Rg5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: block the line.\n\nBlack blocks the fifth rank and keeps a winning advantage: [1...Bf8 2.b3#]; [1...f2 2.Rc5#]."
-          }
-        },
-        {
-          "id": "ex-972",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "2k5/p5p1/1p2r2p/2p1Pp2/B6P/P7/3n2P1/3R3K b - - 0 1",
-                "moves": [
-                  "Ne4",
-                  "Bd7+",
-                  "Kc7",
-                  "Bxe6",
-                  "Nf2+",
-                  "Kh2",
-                  "Nxd1"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Piece in danger: counterattack.\n\nThe knight is on its way to f2 for the counterattack. The double attack wins back the material and gives Black a clear advantage."
-          }
-        },
-        {
-          "id": "ex-973",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "5Q2/pp1k3p/4P3/5Pq1/PP6/7p/5p1P/7K b - - 0 1",
-                "moves": [
-                  "Kc7"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nThe king must avoid the sixth rank: [1...Kc6 2.Qc5#]."
-          }
-        },
-        {
-          "id": "ex-974",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/R7/5Nk1/6p1/2P3Kp/3n1P1P/6P1/7r w - - 0 1",
-                "moves": [
-                  "f4"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: create an escape square.\n\n1.f4 creates an escape route for the king and keeps the game level. [1.Ne4 Ne5#] was the game."
-          }
-        },
-        {
-          "id": "ex-975",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/8/1p2p1p1/2pk3p/Q3P2q/3P4/4K3/8 b - - 0 1",
-                "moves": [
-                  "Ke5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nThe king had to be careful not to run into a discovered attack: [1...Kd6 2.e5+ Kxe5 3.Qxh4]."
-          }
-        },
-        {
-          "id": "ex-976",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/P1p3pk/3p1p1p/3PqP1K/Q1P3PP/8/8/8 w - - 0 1",
-                "moves": [
-                  "Qd7"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: pin the attacker.\n\nThe g7 pawn is now pinned as well! Therefore, Black is unable to mate the white king with 1...g6."
-          }
-        },
-        {
-          "id": "ex-977",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "1Q6/7q/2pk2Np/6nP/1Pp5/p1P5/P7/K7 b - - 0 1",
-                "moves": [
-                  "Qc7"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: block the check.\n\n1...Qc7! is the only move that keeps the game balanced. 1...Kd5 leads to mate: [1...Kd5 2.Qe5#], whereas the other king moves run into a knight fork: [1...Ke6 2.Nf8+ Kf5 3.Nxh7]; [1...Kd7 2.Nf8+ Ke7 3.Nxh7]."
-          }
-        },
-        {
-          "id": "ex-978",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/1p2p1p1/1k6/pr1r4/2P4p/R7/5RPK/8 b - - 0 1",
-                "moves": [
-                  "Rf5",
-                  "Rxf5",
-                  "Rxf5"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Piece in danger: counterattack.\n\nThis counterattack on the white rook gives Black a major advantage."
-          }
-        },
-        {
-          "id": "ex-979",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/8/7p/1p1N1p1k/7P/n5K1/8/8 b - - 0 1",
-                "moves": [
-                  "Kg6"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: step away with the king.\n\nThe king must be evacuated as quickly as possible. [1...Nc4 2.Nf4#] was the game."
-          }
-        },
-        {
-          "id": "ex-980",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "7Q/1kq2p2/p1P1p3/1p1P2pp/1P6/6P1/2P5/2K5 b - - 0 1",
-                "moves": [
-                  "Ka7"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\n1...Ka7 is the only move that keeps the game level: [1...Kb6 2.Qd4#]."
-          }
-        },
-        {
-          "id": "ex-981",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "k7/p6R/3B4/1p2Pp2/1P5p/P3r1bP/2P3P1/6K1 w - - 0 1",
-                "moves": [
-                  "Rxa7+",
-                  "Kxa7",
-                  "Bc5+",
-                  "Kb7",
-                  "Bxe3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: trade the attacker.\n\nWhite uses a combination to trade the attacker. With the black rook gone, White can relax again and enjoy the three extra pawns. Checking does not help: after [1.Rh8+ Kb7 2.Rh7+ Kc6 3.Rc7+ Kd5 4.Rc5+ Ke6] White will be mated on the next move."
-          }
-        },
-        {
-          "id": "ex-982",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/6Q1/2pq4/3bk3/4p3/1p2P3/4BPK1/8 b - - 0 1",
-                "moves": [
-                  "Qf6"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: block the check.\n\n1...Qf6 gives Black a clear advantage. It was essential to keep the king on a dark square: [1...Ke6 2.Bg4#]; [1...Kf5 2.Bg4#]."
-          }
-        },
-        {
-          "id": "ex-983",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "4k3/p7/3QK1p1/1p2P3/5P2/6Pp/8/6q1 b - - 0 1",
-                "moves": [
-                  "Qb6"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: pin the attacker.\n\nPinning, and trading, the attacker! C: the threat was 2.Qb8# or 2.Qe7#."
-          }
-        },
-        {
-          "id": "ex-984",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "8/7p/3Bp1pP/1n2P3/rpk4R/8/2PP4/2K5 b - - 0 1",
-                "moves": [
-                  "Nd4"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: block the check.\n\n1...Nd4 avoids a well-hidden double attack. After 1...Kd5 2.c4+! Black cannot take the pawn en passant, because that would open up the fourth rank and cost a rook: [1...Kd5 2.c4+ bxc3 3.Rxa4]; [1...Kd5 2.c4+ | 2...Kc6 3.cxb5+]."
-          }
-        },
-        {
-          "id": "ex-985",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "7r/p7/1p1p4/3R2p1/3P1k1p/3KNn2/PP3P1P/8 b - - 0 1",
-                "moves": [
-                  "Rf8"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: defend the critical square.\n\nBlack must protect the f5-square to keep the king safe. C: the threat was 2.Rf5#."
-          }
-        },
-        {
-          "id": "ex-986",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "Q7/2k4p/5p2/P6p/2P2K2/3P4/7q/8 w - - 0 1",
-                "moves": [
-                  "Ke3"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "King in check: pick the right square.\n\nThe king has to avoid the long diagonal and keep a safe distance from the black pawns: [1.Kf3 Qh1+ 2.Kf4 Qxa8]; [1.Ke4 Qh1+ 2.Kf4 Qxa8]; [1.Kf5 Qe5#]."
-          }
-        },
-        {
-          "id": "ex-987",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "R4b2/7k/6p1/7p/3B3P/p3K1P1/2r2P2/8 b - - 0 1",
-                "moves": [
-                  "Kg8"
-                ],
-                "orientation": "b",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Piece in danger: protect the piece.\n\n1...Kg8! is the only move that keeps the game level: the king protects the bishop. [1...Bc5 2.Rh8#] was the game; [1...Bg7 2.Ra7] wins the bishop with a pin."
-          }
-        },
-        {
-          "id": "ex-988",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "5q2/2P2p1k/5Qp1/p3B1Kp/P5bP/6P1/8/8 w - - 0 1",
-                "moves": [
-                  "Kf4"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Mate threatened: step away with the king.\n\nThe king must be evacuated as quickly as possible. [1.Bd6 Qh6#] was the game. 1.Qd8 looks tempting but loses a piece to the double check: [1.Qd8 f6+ 2.Kf4 fxe5+]; [1.Qd8 f6+ | 2.Qxf6 Qh6#]."
-          }
-        },
-        {
-          "id": "ex-989",
-          "type": "tactic",
-          "front": {
-            "text": "Defend, and name the technique.",
-            "boards": [
-              {
-                "fen": "5q2/7p/4p3/5r1k/5Q2/P7/2PP3P/1R3K2 w - - 0 1",
-                "moves": [
-                  "Rb5"
-                ],
-                "orientation": "w",
-                "solutionFrom": 0,
-                "puzzle": true
-              }
-            ]
-          },
-          "back": {
-            "text": "Piece in danger: pin the attacker.\n\nThis cross-pin is the only defence and gives White a major advantage. Every other move loses the queen."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Synthesis",
-      "cards": [
-        {
-          "id": "syn-check",
-          "front": "Your king is in check. Which three defences are there?",
-          "back": {
-            "text": "C: the three answers a check allows:\n\n1. Pick the right square for the king\n2. Block the check\n3. Capture the checking piece"
-          }
-        },
-        {
-          "id": "syn-threat",
-          "front": "Mate is threatened, but you are not in check. Which six defences are there?",
-          "back": {
-            "text": "The book's five, in the order it tries them:\n\n1. Trade the attacker\n2. Pin the attacker\n3. Block the line\n4. Defend the critical square\n5. Create an escape square\n\nC: and a sixth: step away with the king."
-          }
-        },
-        {
-          "id": "syn-piece",
-          "front": "One of your pieces is in danger. Which seven defences are there?",
-          "back": {
-            "text": "The book's six:\n\n1. Pick the right square\n2. Trade the attacker\n3. Pin the attacker\n4. Defend the critical square\n5. Protect the piece\n6. Counterattack\n\nC: and a seventh: block the line."
-          }
-        },
-        {
-          "id": "syn-order",
-          "front": "Mate is threatened. Why are the defences tried in the order trade, pin, block, defend the square, escape square?",
-          "back": {
-            "text": "C: each one settles for less than the one before. Trading removes the attacker and pinning freezes it; blocking only shuts its line; defending the square only covers where it lands; an escape square leaves the attack standing and gives the king room."
-          }
-        },
-        {
-          "id": "syn-shared",
-          "front": "Which defences work both for the king and for a piece?",
-          "back": {
-            "text": "Picking the right square, trading the attacker, pinning the attacker and defending a critical square. C: blocking the line works for both as well."
-          }
-        },
-        {
-          "id": "syn-piece-only",
-          "front": "Which two defences of a piece cannot save a king, and why?",
-          "back": {
-            "text": "Protecting the piece and the counterattack. Protecting an attacked king is simply against the rules. C: and a counterattack leaves a mate threat standing, unless it comes with check."
-          }
-        },
-        {
-          "id": "syn-more-options",
-          "front": "Why are there more defences against a mate threat than against a check?",
-          "back": {
-            "text": "C: a check has to be answered at once, by moving, blocking or capturing. A threat leaves you a free move: in the book's words, a king that is not under attack \"provides us with more opportunities to parry the threat\"."
-          }
-        }
-      ]
-    }
-  ]
+	"deck": "Defending 101",
+	"intro": [
+		"# Why defending is hard\n\nSeeing your opponent's tactic is harder than seeing your own. You first have to picture your own move, then look at the board from the other side, and pick out the most dangerous of several threats. Most tactics training is also done from the attacking side.",
+		{
+			"boards": [
+				{
+					"fen": "3Q4/5p2/3kp3/8/2Pq1p1P/P4P2/3p2PK/8 b - - 0 1",
+					"moves": [
+						"Kc5",
+						"Qc7#"
+					],
+					"orientation": "b"
+				}
+			]
+		},
+		"Even grandmasters miss it. In Rogers-Kortchnoi, Biel 1986, Black is in check, and two king moves keep the queen protected. [1...Ke5] was safe, since White can only repeat checks with [1...Ke5 2.Qg5+ Kd6]. Kortchnoi played 1...Kc5?? and was mated by 2.Qc7#.\n\nThis deck teaches six ways to defend your king and six ways to defend your other pieces. Each comes with a short page, a card that asks you to describe it, and two puzzles."
+	],
+	"chapters": [
+		{
+			"name": "Defend your king",
+			"chapters": [
+				{
+					"name": "Picking the right square",
+					"intro": [
+						"# Picking the right square\n\nWhen your king is in check and has more than one square, don't take the first one that looks safe. Go through every king move, find the opponent's strongest reply to each, and pick the square where no mate follows.",
+						{
+							"boards": [
+								{
+									"fen": "5Q2/8/p4kp1/2p4p/1pP1P3/1P2KP2/8/7q b - - 0 1",
+									"moves": [
+										"Ke6",
+										"Qe8+",
+										"Kf6",
+										"Qf8+",
+										"Ke6"
+									],
+									"orientation": "b"
+								}
+							]
+						},
+						"Black is in check and has three squares. Two of them walk into mate: [1...Kg5 2.Qf4#] and [1...Ke5 2.Qe7#]. On e6 the king always keeps a free square, so White can only keep checking, and the game ends in a repetition."
+					],
+					"cards": [
+						{
+							"id": "check-square",
+							"front": "Your king is in danger. Describe the defence \"picking the right square\".",
+							"back": {
+								"text": "Your king is in check: try every square it can go to, look for the opponent's best reply to each, and choose the one that does not lead to mate.\n\nHere [1...Kg5 2.Qf4#] and [1...Ke5 2.Qe7#] lose; on e6 White has only checks.",
+								"boards": [
+									{
+										"fen": "5Q2/8/p4kp1/2p4p/1pP1P3/1P2KP2/8/7q b - - 0 1",
+										"moves": [
+											"Ke6",
+											"Qe8+",
+											"Kf6",
+											"Qf8+",
+											"Ke6"
+										],
+										"orientation": "b"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-781",
+							"type": "tactic",
+							"front": {
+								"text": "You are in check. Defend by picking the right square for the king.",
+								"boards": [
+									{
+										"fen": "8/4q2k/3p4/2pP2Kp/2P4P/1P3P2/6Q1/8 w - - 0 1",
+										"moves": [
+											"Kxh5"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "Only the h5-square is safe. The other two lose to the same queen move: [1.Kf4 Qe5#]; [1.Kf5 Qe5#]."
+							}
+						},
+						{
+							"id": "ex-784",
+							"type": "tactic",
+							"front": {
+								"text": "You are in check. Defend.",
+								"boards": [
+									{
+										"fen": "4Q3/7p/8/2p2p1k/p4P2/6P1/7K/2q5 b - - 0 1",
+										"moves": [
+											"Kh6"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "1...Kh6, after which White has no more than checks. g4 looks just as good but is mate: [1...Kg4 2.Qe2#]."
+							}
+						}
+					]
+				},
+				{
+					"name": "Trading the attacker",
+					"intro": [
+						"# Trading the attacker\n\nWhen mate is threatened but you are not in check, you have one free move to stop it. The cleanest way is to trade off the piece that makes the threat: once it is gone, so is the threat.",
+						{
+							"boards": [
+								{
+									"fen": "8/5p1k/5QpP/1p4P1/1P6/pq3P2/3PK3/8 b - - 0 1",
+									"moves": [
+										"Qe6+",
+										"Qxe6",
+										"fxe6"
+									],
+									"orientation": "b"
+								}
+							]
+						},
+						"White threatens 2.Qg7#. Black offers the queen trade with check, and after 1...Qe6+ 2.Qxe6 fxe6 the mate is gone and Black's a-pawn decides the game."
+					],
+					"cards": [
+						{
+							"id": "threat-trade",
+							"front": "Your king is in danger. Describe the defence \"trading the attacker\".",
+							"back": {
+								"text": "Mate is threatened: trade off the piece that threatens it.\n\nHere White threatens 2.Qg7#, and 1...Qe6+ forces the queens off.",
+								"boards": [
+									{
+										"fen": "8/5p1k/5QpP/1p4P1/1P6/pq3P2/3PK3/8 b - - 0 1",
+										"moves": [
+											"Qe6+",
+											"Qxe6",
+											"fxe6"
+										],
+										"orientation": "b"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-786",
+							"type": "tactic",
+							"front": {
+								"text": "Mate is threatened. Defend by trading the attacker.",
+								"boards": [
+									{
+										"fen": "7k/1bp4B/1p2p2K/p3N2p/P4P2/8/5nP1/8 b - - 0 1",
+										"moves": [
+											"Ng4+"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "1...Ng4+ trades off the e5-knight, which threatened 2.Ng6#. Covering g6 is not enough: [1...Be4 2.Nf7#]."
+							}
+						},
+						{
+							"id": "ex-793",
+							"type": "tactic",
+							"front": {
+								"text": "Mate is threatened. Defend.",
+								"boards": [
+									{
+										"fen": "7k/1q6/p2p1NQ1/2pP4/5p2/5P1p/3n3P/7K b - - 0 1",
+										"moves": [
+											"Qb1+"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "1...Qb1+ forces the queens off, and Black wins the knight ending. Guarding g8 with the queen still loses: [1...Qg7 2.Qe8+ Qg8 3.Qxg8#]."
+							}
+						}
+					]
+				},
+				{
+					"name": "Pinning the attacker",
+					"intro": [
+						"# Pinning the attacker\n\nA pinned piece can't make its threat. So if the attacker can't be traded, look for a way to pin it to the king or to a bigger piece.",
+						{
+							"boards": [
+								{
+									"fen": "8/8/8/6pk/3P4/2r3PK/r7/1R5R w - - 0 1",
+									"moves": [
+										"Rb5"
+									],
+									"orientation": "w"
+								}
+							]
+						},
+						"Black threatens 1...g4#. 1.Rb5 pins the g5-pawn to the black king on h5, so it can't move, and White is out of danger."
+					],
+					"cards": [
+						{
+							"id": "threat-pin",
+							"front": "Your king is in danger. Describe the defence \"pinning the attacker\".",
+							"back": {
+								"text": "Mate is threatened: pin the piece that threatens it, so it can't make the mating move.\n\nHere Black threatens 1...g4#, and 1.Rb5 pins the pawn to the black king.",
+								"boards": [
+									{
+										"fen": "8/8/8/6pk/3P4/2r3PK/r7/1R5R w - - 0 1",
+										"moves": [
+											"Rb5"
+										],
+										"orientation": "w"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-798",
+							"type": "tactic",
+							"front": {
+								"text": "Mate is threatened. Defend by pinning the attacker.",
+								"boards": [
+									{
+										"fen": "8/1p3p1k/pqn2Q2/2p4p/4pP1K/1P6/PB2P3/8 b - - 0 1",
+										"moves": [
+											"Qd8"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "White threatens 2.Qg7#. 1...Qd8 pins the white queen to the king on h4; the best White has is 2.Qxd8 Nxd8, with a level ending."
+							}
+						},
+						{
+							"id": "ex-806",
+							"type": "tactic",
+							"front": {
+								"text": "Mate is threatened. Defend.",
+								"boards": [
+									{
+										"fen": "8/8/2p2P1p/P1kp3P/1r6/1PK1p3/3rP2R/5R2 w - - 0 1",
+										"moves": [
+											"Rf5"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "1.Rf5 pins the d5-pawn to the black king, which stops [1.f7 d4#]. Then the f-pawn wins the game for White."
+							}
+						}
+					]
+				},
+				{
+					"name": "Blocking a line",
+					"intro": [
+						"# Blocking a line\n\nA long-range piece helps with the mate along a file, rank or diagonal. Put one of your pieces on that line, and it no longer reaches the square that matters.",
+						{
+							"boards": [
+								{
+									"fen": "7B/b2pp3/P7/1R1P4/5Ppk/2P3p1/1P4K1/r7 w - - 0 1",
+									"moves": [
+										"Bd4"
+									],
+									"orientation": "w"
+								}
+							]
+						},
+						"Black threatens 1...Rg1#: the rook would be backed up by the bishop on a7. 1.Bd4 stands on the a7-g1 diagonal, so the rook on g1 would no longer be protected."
+					],
+					"cards": [
+						{
+							"id": "threat-block",
+							"front": "Your king is in danger. Describe the defence \"blocking a line\".",
+							"back": {
+								"text": "Mate is threatened: put a piece on the file, rank or diagonal that one of the attackers works along, so it no longer helps with the mate.\n\nHere 1.Bd4 cuts the a7-bishop off from g1, where Black threatened to mate with the rook.",
+								"boards": [
+									{
+										"fen": "7B/b2pp3/P7/1R1P4/5Ppk/2P3p1/1P4K1/r7 w - - 0 1",
+										"moves": [
+											"Bd4"
+										],
+										"orientation": "w"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-971",
+							"type": "tactic",
+							"front": {
+								"text": "Mate is threatened. Defend by blocking a line.",
+								"boards": [
+									{
+										"fen": "8/1p4b1/2p4p/7R/2kPp3/P3Pp2/1PKB4/6r1 b - - 0 1",
+										"moves": [
+											"Rg5"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "1...Rg5 cuts the h5-rook off from the fifth rank and gives the king its squares back. Otherwise [1...Bf8 2.b3#], or [1...f2 2.Rc5#]."
+							}
+						},
+						{
+							"id": "ex-968",
+							"type": "tactic",
+							"front": {
+								"text": "Mate is threatened. Defend.",
+								"boards": [
+									{
+										"fen": "3r4/R4p2/6kp/2N1K3/1pP1P1P1/1P6/P4b2/8 w - - 0 1",
+										"moves": [
+											"Rd7"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "Black threatens 1...Bg3#, with the d8-rook keeping the king off the d-file. 1.Rd7 blocks the file and attacks that rook at the same time."
+							}
+						}
+					]
+				},
+				{
+					"name": "Defending the critical square",
+					"intro": [
+						"# Defending the critical square\n\nFind the square the mate would be given on, and cover it with one of your pieces. If the opponent can't land there, there is no mate.",
+						{
+							"boards": [
+								{
+									"fen": "3B4/2p5/1pP3p1/1P1P3p/p2b4/P2n3P/K1k3PN/8 w - - 0 1",
+									"moves": [
+										"Bg5"
+									],
+									"orientation": "w"
+								}
+							]
+						},
+						"Black threatens 1...Nc1#. 1.Bg5 covers c1 from a distance, and the knight can't go there."
+					],
+					"cards": [
+						{
+							"id": "threat-guard",
+							"front": "Your king is in danger. Describe the defence \"defending the critical square\".",
+							"back": {
+								"text": "Mate is threatened: find the square the mate would be given on, and cover it.\n\nHere Black threatens 1...Nc1#, and 1.Bg5 covers c1.",
+								"boards": [
+									{
+										"fen": "3B4/2p5/1pP3p1/1P1P3p/p2b4/P2n3P/K1k3PN/8 w - - 0 1",
+										"moves": [
+											"Bg5"
+										],
+										"orientation": "w"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-788",
+							"type": "tactic",
+							"front": {
+								"text": "Mate is threatened. Defend the critical square.",
+								"boards": [
+									{
+										"fen": "8/8/P2k4/1p1p2p1/1p1K1pP1/1P1P3P/4NP1n/8 w - - 0 1",
+										"moves": [
+											"Ng1"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "Black threatens 1...Nf3#. 1.Ng1 covers f3. Taking the f4-pawn doesn't help, since the mate is still there: [1.Nxf4 gxf4 2.a7 Nf3#]."
+							}
+						},
+						{
+							"id": "ex-985",
+							"type": "tactic",
+							"front": {
+								"text": "Mate is threatened. Defend.",
+								"boards": [
+									{
+										"fen": "7r/p7/1p1p4/3R2p1/3P1k1p/3KNn2/PP3P1P/8 b - - 0 1",
+										"moves": [
+											"Rf8"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "White threatens 2.Rf5#. 1...Rf8 covers f5, and the game is level."
+							}
+						}
+					]
+				},
+				{
+					"name": "Creating an escape square",
+					"intro": [
+						"# Creating an escape square\n\nA check is only mate when the king has nowhere to go. Move a pawn or piece off a square next to your king, and the mating check becomes an ordinary one.",
+						{
+							"boards": [
+								{
+									"fen": "8/R7/5Nk1/6p1/2P3Kp/3n1P1P/6P1/7r w - - 0 1",
+									"moves": [
+										"f4"
+									],
+									"orientation": "w"
+								}
+							]
+						},
+						"Black threatens 1...Ne5#: every square around the white king is covered or taken. 1.f4 clears f3, so after a knight check the king can step there."
+					],
+					"cards": [
+						{
+							"id": "threat-escape",
+							"front": "Your king is in danger. Describe the defence \"creating an escape square\".",
+							"back": {
+								"text": "Mate is threatened: move a pawn or piece off a square next to your king, so the king has somewhere to go when the check comes.\n\nHere Black threatens 1...Ne5#, and 1.f4 frees f3 for the king.",
+								"boards": [
+									{
+										"fen": "8/R7/5Nk1/6p1/2P3Kp/3n1P1P/6P1/7r w - - 0 1",
+										"moves": [
+											"f4"
+										],
+										"orientation": "w"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-782",
+							"type": "tactic",
+							"front": {
+								"text": "Mate is threatened. Defend by creating an escape square.",
+								"boards": [
+									{
+										"fen": "k7/1p6/8/1N2R1p1/1p3n2/1K2p3/P1P2r1P/8 b - - 0 1",
+										"moves": [
+											"b6"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "White threatens 2.Re8#. 1...b6 frees b7 for the king. In the game Black took a pawn and was mated: [1...Rxh2 2.Re8#]."
+							}
+						},
+						{
+							"id": "ex-799",
+							"type": "tactic",
+							"front": {
+								"text": "Mate is threatened. Defend.",
+								"boards": [
+									{
+										"fen": "8/B2kpp2/3p4/1P1PbKPp/4P3/1B6/2P3bP/8 w - - 0 1",
+										"moves": [
+											"g6"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "Black threatens 1...Bh3#. 1.g6 frees g5 for the king, and the bishop check is no longer mate. Anything else allows it: [1.b6 Bh3#]."
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Defend your pieces",
+			"chapters": [
+				{
+					"name": "Picking the right square",
+					"intro": [
+						"# Picking the right square\n\nThe usual way to save an attacked piece is to move it. But before you do, check each square it could go to for a tactic the opponent has against it there.",
+						{
+							"boards": [
+								{
+									"fen": "3r1k2/2N2p2/p2b2p1/8/3p4/P2P3P/2P3P1/4R1K1 w - - 0 1",
+									"moves": [
+										"Nxa6",
+										"Ra8",
+										"Nb4"
+									],
+									"orientation": "w"
+								}
+							]
+						},
+						"The bishop attacks the c7-knight, and nothing can protect it. The two squares worth a look are a6, where it takes a pawn on the edge of the board, and d5 in the centre. d5 loses the knight to a discovered attack: [1.Nd5 Bg3 2.Rb1 Rxd5]. After 1.Nxa6 Ra8 2.Nb4 the knight is safe."
+					],
+					"cards": [
+						{
+							"id": "piece-square",
+							"front": "One of your pieces is in danger. Describe the defence \"picking the right square\".",
+							"back": {
+								"text": "Move the attacked piece, but first check every square it can go to for a tactic against it.\n\nHere the knight goes to a6 and back to b4; on d5 it would be lost to a discovered attack.",
+								"boards": [
+									{
+										"fen": "3r1k2/2N2p2/p2b2p1/8/3p4/P2P3P/2P3P1/4R1K1 w - - 0 1",
+										"moves": [
+											"Nxa6",
+											"Ra8",
+											"Nb4"
+										],
+										"orientation": "w"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-879",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend by picking the right square for it.",
+								"boards": [
+									{
+										"fen": "1bk5/r7/2p1p3/1p2p1p1/7N/P6P/1P2RPPK/8 w - - 0 1",
+										"moves": [
+											"Ng6"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "1.Ng6 is safe. On f3 the knight runs into a discovered check from the b8-bishop: [1.Nf3 e4+ 2.g3 exf3]."
+							}
+						},
+						{
+							"id": "ex-884",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend.",
+								"boards": [
+									{
+										"fen": "5k2/1p1r4/5pp1/p1pn1p2/3P3P/2P1RP2/PP2NK1P/8 w - - 0 1",
+										"moves": [
+											"Rd3"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "1.Rd3. On e6 the rook runs out of squares, and in the game it was lost: [1.Re6 Kf7 2.Re3 Nxe3]."
+							}
+						}
+					]
+				},
+				{
+					"name": "Trading the attacker",
+					"intro": [
+						"# Trading the attacker\n\nWhen a piece is attacked and can't be saved by moving it, find the piece that does the most damage and trade it off.",
+						{
+							"boards": [
+								{
+									"fen": "k7/1p4p1/4Pb2/7R/3p4/3P1PP1/r2B2KP/8 w - - 0 1",
+									"moves": [
+										"Ra5+",
+										"Rxa5",
+										"Bxa5"
+									],
+									"orientation": "w"
+								}
+							]
+						},
+						"The a2-rook pins the d2-bishop to the white king, and nothing can protect the bishop. 1.Ra5+ forces the rooks off: after 1...Rxa5 2.Bxa5 the bishop is free and White is two pawns up."
+					],
+					"cards": [
+						{
+							"id": "piece-trade",
+							"front": "One of your pieces is in danger. Describe the defence \"trading the attacker\".",
+							"back": {
+								"text": "Trade off the piece that attacks yours.\n\nHere the a2-rook pins the d2-bishop, and 1.Ra5+ forces it to be traded.",
+								"boards": [
+									{
+										"fen": "k7/1p4p1/4Pb2/7R/3p4/3P1PP1/r2B2KP/8 w - - 0 1",
+										"moves": [
+											"Ra5+",
+											"Rxa5",
+											"Bxa5"
+										],
+										"orientation": "w"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-886",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend by trading the attacker.",
+								"boards": [
+									{
+										"fen": "1k1r4/p6p/6p1/2p5/B1P3P1/1n5P/1R4K1/8 b - - 0 1",
+										"moves": [
+											"Rd2+",
+											"Rxd2",
+											"Nxd2"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "The b2-rook pins the knight to the king and attacks it. 1...Rd2+ forces 2.Rxd2 Nxd2, and the knight is free."
+							}
+						},
+						{
+							"id": "ex-910",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend.",
+								"boards": [
+									{
+										"fen": "8/bp1p4/p2B2p1/4q2p/5k1P/KP6/P5P1/3Q4 b - - 0 1",
+										"moves": [
+											"Bc5+",
+											"Bxc5",
+											"Qxc5+"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "The d6-bishop pins the queen to the king. 1...Bc5+ gives check and forces that bishop to be traded: 2.Bxc5 Qxc5+."
+							}
+						}
+					]
+				},
+				{
+					"name": "Pinning the attacker",
+					"intro": [
+						"# Pinning the attacker\n\nPin the piece that attacks yours, so that carrying out its threat costs the opponent something.",
+						{
+							"boards": [
+								{
+									"fen": "8/pkp5/1p3p1r/4R1RP/8/P5P1/KP2P1r1/8 w - - 0 1",
+									"moves": [
+										"Re6",
+										"fxg5",
+										"Rxh6"
+									],
+									"orientation": "w"
+								}
+							]
+						},
+						"The f6-pawn attacks both white rooks. 1.Re6 attacks the pawn with the h6-rook behind it: if it takes on g5, White takes the h6-rook, and after 1...fxg5 2.Rxh6 material is level."
+					],
+					"cards": [
+						{
+							"id": "piece-pin",
+							"front": "One of your pieces is in danger. Describe the defence \"pinning the attacker\".",
+							"back": {
+								"text": "Pin the piece that attacks yours, so that it can't take without losing something itself.\n\nHere 1.Re6 pins the f6-pawn to the h6-rook.",
+								"boards": [
+									{
+										"fen": "8/pkp5/1p3p1r/4R1RP/8/P5P1/KP2P1r1/8 w - - 0 1",
+										"moves": [
+											"Re6",
+											"fxg5",
+											"Rxh6"
+										],
+										"orientation": "w"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-989",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend by pinning the attacker.",
+								"boards": [
+									{
+										"fen": "5q2/7p/4p3/5r1k/5Q2/P7/2PP3P/1R3K2 w - - 0 1",
+										"moves": [
+											"Rb5"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "1.Rb5 pins the f5-rook to the black king, so it can't take the queen. Every other move loses the queen."
+							}
+						},
+						{
+							"id": "ex-905",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend.",
+								"boards": [
+									{
+										"fen": "8/kr4p1/p2p4/8/4p2r/P2R1R1P/K1P1P3/8 w - - 0 1",
+										"moves": [
+											"Rd4",
+											"exf3",
+											"Rxh4"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "The e4-pawn forks both rooks. 1.Rd4 pins it to the h4-rook: after 1...exf3 2.Rxh4 material is level."
+							}
+						}
+					]
+				},
+				{
+					"name": "Defending the critical square",
+					"intro": [
+						"# Defending the critical square\n\nSometimes the danger is a square, not a piece: one jump or move there would attack several of your pieces at once. Cover that square before the opponent gets there.",
+						{
+							"boards": [
+								{
+									"fen": "8/2p2p2/1pB1nP1k/6p1/P1P3P1/1R1P1K1P/8/2r5 w - - 0 1",
+									"moves": [
+										"Ke3"
+									],
+									"orientation": "w"
+								}
+							]
+						},
+						"From d4 the knight would attack the king, the b3-rook and the c6-bishop at once. Moving one of them leaves another to be taken: [1.Rb2 Nd4+ 2.Ke3 Nxc6]. 1.Ke3 covers d4. 1.Ke4 covers it as well, but runs into a different fork: [1.Ke4 Nc5+ 2.Ke3 Nxb3]."
+					],
+					"cards": [
+						{
+							"id": "piece-guard",
+							"front": "One of your pieces is in danger. Describe the defence \"defending the critical square\".",
+							"back": {
+								"text": "Find the square from which the opponent would win material, often with a fork, and cover it.\n\nHere 1.Ke3 covers d4, where the knight would fork king, rook and bishop.",
+								"boards": [
+									{
+										"fen": "8/2p2p2/1pB1nP1k/6p1/P1P3P1/1R1P1K1P/8/2r5 w - - 0 1",
+										"moves": [
+											"Ke3"
+										],
+										"orientation": "w"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-888",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend the critical square.",
+								"boards": [
+									{
+										"fen": "1k6/1Pp1p3/p1P1p1p1/3pP3/3P3K/4PB1P/PRP5/b5r1 w - - 0 1",
+										"moves": [
+											"Rb3"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "The b2-rook has to keep covering c3, where the bishop would attack it and threaten ...Be1# at the same time. 1.Rb3 does that; on b4 it doesn't: [1.Rb4 Bc3 2.Bg4 Bxb4]."
+							}
+						},
+						{
+							"id": "ex-964",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend.",
+								"boards": [
+									{
+										"fen": "4r3/kpp1B3/p7/b7/P6P/3P2P1/2P5/R2K4 w - - 0 1",
+										"moves": [
+											"Bc5+",
+											"b6",
+											"Bf2"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "Once the bishop leaves the e-file, ...Re1# is threatened, so it has to reach f2 to cover e1. 1.Bc5+ b6 2.Bf2 gets it there with a check on the way. [1.Bg5 Re1#]."
+							}
+						}
+					]
+				},
+				{
+					"name": "Protecting the piece",
+					"intro": [
+						"# Protecting the piece\n\nA king can't be protected, but any other piece can. If the attacked piece can't move, bring another piece to defend it, with a check on the way if it needs time to get there.",
+						{
+							"boards": [
+								{
+									"fen": "1n4b1/6pk/3p4/1p1N3p/pP6/P4P1B/K2P3P/8 w - - 0 1",
+									"moves": [
+										"Bf5+",
+										"Kh6",
+										"Be4"
+									],
+									"orientation": "w"
+								}
+							]
+						},
+						"The g8-bishop pins the d5-knight to the king on a2. 1.Bf5+ gains a move with check, and after 1...Kh6 2.Be4 the knight is protected."
+					],
+					"cards": [
+						{
+							"id": "piece-protect",
+							"front": "One of your pieces is in danger. Describe the defence \"protecting the piece\".",
+							"back": {
+								"text": "When the attacked piece can't move away, defend it with another piece.\n\nHere 1.Bf5+ Kh6 2.Be4 brings the bishop to the pinned knight with a check on the way.",
+								"boards": [
+									{
+										"fen": "1n4b1/6pk/3p4/1p1N3p/pP6/P4P1B/K2P3P/8 w - - 0 1",
+										"moves": [
+											"Bf5+",
+											"Kh6",
+											"Be4"
+										],
+										"orientation": "w"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-881",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend by protecting it.",
+								"boards": [
+									{
+										"fen": "5k2/2p1rpp1/8/1n4P1/8/2PB4/5PK1/7R b - - 0 1",
+										"moves": [
+											"Re5"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "1...Re5 protects the knight and frees e7 for the king, which also stops [1...Nd6 2.Rh8#]."
+							}
+						},
+						{
+							"id": "ex-898",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend.",
+								"boards": [
+									{
+										"fen": "6rk/1R6/p6p/3b1p2/5P2/P1P1P3/6BP/6K1 w - - 0 1",
+										"moves": [
+											"Rb2"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "The g8-rook attacks the pinned g2-bishop, and the d5-bishop attacks the b7-rook. 1.Rb2 saves the rook and protects the bishop along the second rank."
+							}
+						}
+					]
+				},
+				{
+					"name": "The counterattack",
+					"intro": [
+						"# The counterattack\n\nInstead of moving or protecting the attacked piece, attack something of the opponent's. If they have to answer your threat, you get the move you need to save your own piece.",
+						{
+							"boards": [
+								{
+									"fen": "3k4/p5p1/2p2pnp/3N4/1P3P2/2P1R1P1/P6r/1K6 w - - 0 1",
+									"moves": [
+										"f5",
+										"Ne5",
+										"Nf4"
+									],
+									"orientation": "w"
+								}
+							]
+						},
+						"The c6-pawn attacks the d5-knight, and the knight has no safe square. 1.f5 attacks the g6-knight and frees f4 at the same time. After 1...Ne5 2.Nf4 the knight is safe; [1...cxd5 2.fxg6] only trades knights."
+					],
+					"cards": [
+						{
+							"id": "piece-counter",
+							"front": "One of your pieces is in danger. Describe the defence \"the counterattack\".",
+							"back": {
+								"text": "Attack one of the opponent's pieces instead, to win the move you need to save your own.\n\nHere 1.f5 attacks the g6-knight and frees f4 for the d5-knight.",
+								"boards": [
+									{
+										"fen": "3k4/p5p1/2p2pnp/3N4/1P3P2/2P1R1P1/P6r/1K6 w - - 0 1",
+										"moves": [
+											"f5",
+											"Ne5",
+											"Nf4"
+										],
+										"orientation": "w"
+									}
+								]
+							}
+						},
+						{
+							"id": "ex-906",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend with a counterattack.",
+								"boards": [
+									{
+										"fen": "1k3r2/2p2B2/8/1b6/8/p3P3/P2P4/R3K3 w - - 0 1",
+										"moves": [
+											"Rb1",
+											"c6",
+											"Bc4"
+										],
+										"orientation": "w",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "1.Rb1 attacks the b5-bishop, which is pinned to the king. After 1...c6 White has time for 2.Bc4. Running away at once allows mate: [1.Bh5 Rf1#]."
+							}
+						},
+						{
+							"id": "ex-978",
+							"type": "tactic",
+							"front": {
+								"text": "One of your pieces is in danger. Defend.",
+								"boards": [
+									{
+										"fen": "8/1p2p1p1/1k6/pr1r4/2P4p/R7/5RPK/8 b - - 0 1",
+										"moves": [
+											"Rf5",
+											"Rxf5",
+											"Rxf5"
+										],
+										"orientation": "b",
+										"solutionFrom": 0,
+										"puzzle": true
+									}
+								]
+							},
+							"back": {
+								"text": "The c4-pawn forks both rooks. 1...Rf5 attacks the f2-rook, and after 2.Rxf5 Rxf5 the fork is gone."
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Synthesis",
+			"cards": [
+				{
+					"id": "syn-king",
+					"front": "Which six ways to defend your king are in this deck?",
+					"back": "1. Picking the right square\n2. Trading the attacker\n3. Pinning the attacker\n4. Blocking a line\n5. Defending the critical square\n6. Creating an escape square"
+				},
+				{
+					"id": "syn-piece",
+					"front": "Which six ways to defend one of your pieces are in this deck?",
+					"back": "1. Picking the right square\n2. Trading the attacker\n3. Pinning the attacker\n4. Defending the critical square\n5. Protecting the piece\n6. The counterattack"
+				},
+				{
+					"id": "syn-shared",
+					"front": "Which four defences work both for your king and for your pieces?",
+					"back": "1. Picking the right square\n2. Trading the attacker\n3. Pinning the attacker\n4. Defending the critical square"
+				},
+				{
+					"id": "syn-king-only",
+					"front": "Which two defences are only taught for the king?",
+					"back": "Blocking a line and creating an escape square.\n\nC: an escape square only matters against mate. Blocking a line works for pieces too; the book just doesn't list it there."
+				},
+				{
+					"id": "syn-piece-only",
+					"front": "Which two defences are only taught for pieces, and why don't they save a king?",
+					"back": "Protecting the piece and the counterattack.\n\nA king can't be protected: when it is attacked it must get out of check. C: a counterattack is too slow against mate unless it is a check; the book gives no reason."
+				}
+			]
+		}
+	]
 }

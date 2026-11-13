@@ -18,6 +18,7 @@
 		? `${ladder[0]} day${ladder[0] === 1 ? "" : "s"}`
 		: `${ladder.slice(0, -1).join(", ")} and ${ladder.at(-1)} days`;
 
+	let ladderSaves = $state(0);
 	let deleteForm = $state();
 	let resetForm = $state();
 
@@ -184,13 +185,17 @@
 				{#if holdsDecks}The decks inside take it unless they have their own.{/if}
 			</p>
 			<FormErrors form={form?.ladderErrors ? { errors: form.ladderErrors } : null} />
-			<form method="POST" action="?/tacticLadder" class="rename-form" use:enhance={() => ({ update }) => update({ reset: false })}>
-				<input
-					name="ladder"
-					value={form?.ladder ?? data.deck.tacticLadder?.join(", ") ?? ""}
-					placeholder={data.deck.parentLadder.join(", ")}
-					autocomplete="off"
-				/>
+			<form method="POST" action="?/tacticLadder" class="rename-form" use:enhance={() => async ({ update, result }) => {
+				await update({ reset: false });
+				if (result.type === "success") ladderSaves++;
+			}}>
+				{#key ladderSaves}
+					<input
+						name="ladder"
+						value={form?.ladder ?? (data.deck.tacticLadder ?? data.deck.parentLadder).join(", ")}
+						autocomplete="off"
+					/>
+				{/key}
 				<button class="std-btn">Save</button>
 			</form>
 		{/if}

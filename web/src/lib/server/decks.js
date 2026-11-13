@@ -348,8 +348,10 @@ const setReviewsInOrder = async (userId, id, inOrder) => {
 // The tactic ladder of a deck of the user's own: whole days, or null to take
 // the one above's. A marketplace deck's is its author's.
 const setTacticLadder = async (userId, id, ladder) => {
+	const byId = new Map((await getLibrary(userId)).map(entry => [entry.id, entry]));
+	const own = ladder && ladder.join() !== tacticLadder(byId, byId.get(id)?.parent_id).join() ? ladder : null;
 	const { rowCount } = await pool.query(
-		"update decks set tactic_ladder = $3 where id = $2 and user_id = $1", [userId, id, ladder]);
+		"update decks set tactic_ladder = $3 where id = $2 and user_id = $1", [userId, id, own]);
 	return rowCount === 1;
 }
 

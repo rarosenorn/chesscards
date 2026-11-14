@@ -138,8 +138,9 @@ const BOUGHT_CARD = `json_build_object(
 
 // A deck of the library as its pages take it: the deck, everything inside it
 // (decks: it first, then the rest in reading order), the cards of all of them
-// in reading order, and the decks it sits inside (ancestors, outermost
-// first). Undefined when the id is none of the user's.
+// in reading order, the decks it sits inside (ancestors, outermost first),
+// and the whole tree from the deck at the top (tree, in reading order, each
+// with its level). Undefined when the id is none of the user's.
 const getDeck = async (userId, id) => {
 	const library = await getLibrary(userId);
 	const deck = library.find(entry => entry.id === id);
@@ -151,6 +152,11 @@ const getDeck = async (userId, id) => {
 	const byId = new Map(library.map(entry => [entry.id, entry]));
 	const ancestors = [];
 	for (let at = byId.get(deck.parent_id); at; at = byId.get(at.parent_id)) ancestors.unshift(at);
+	const top = ancestors[0] ?? deck;
+	const family = deckSubtree(library, top.id);
+	const tree = deckOutline(library.filter(entry => family.has(entry.id)).map(entry =>
+		entry.id === top.id ? { ...entry, parent_id: null } : entry))
+		.map(({ deck: entry, level }) => ({ id: entry.id, name: entry.name, bought: entry.bought, level }));
 
 	const own = decks.filter(entry => !entry.bought).map(entry => entry.id);
 	const instances = [...new Set(decks.filter(entry => entry.bought).map(entry => entry.instance_id))];
@@ -176,6 +182,7 @@ const getDeck = async (userId, id) => {
 		isMarketplace: deck.bought,
 		instanceId: deck.instance_id,
 		ancestors: ancestors.map(entry => ({ id: entry.id, name: entry.name, bought: entry.bought })),
+		tree,
 		// each with the tactic ladder its cards climb, found through the decks
 		// around it too
 		decks: decks.map(entry => ({ ...entry, ladder: tacticLadder(byId, entry.id) })),

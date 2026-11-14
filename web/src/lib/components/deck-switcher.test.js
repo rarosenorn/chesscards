@@ -21,6 +21,13 @@ const { confirmModal } = await import("$lib/modals.svelte.js");
 const deck = {
 	id: "inner", name: "Inner", isMarketplace: false,
 	ancestors: [{ id: "top", name: "Top", bought: false }],
+	tree: [
+		{ id: "top", name: "Top", bought: false, level: 0 },
+		{ id: "inner", name: "Inner", bought: false, level: 1 },
+		{ id: "own", name: "Own", bought: false, level: 2 },
+		{ id: "taken", name: "Taken", bought: true, level: 2 },
+		{ id: "beside", name: "Beside", bought: false, level: 1 }
+	],
 	decks: [
 		{ id: "inner", name: "Inner", position: 1, parent_id: null, in_order: true, bought: false },
 		{ id: "own", name: "Own", position: 1, parent_id: "inner", in_order: true, bought: false },
@@ -61,6 +68,8 @@ describe("the arrow beside the deck's name", () => {
 			expect(view.label()).toBe(tab === "study" ? "Choose what to study" : "Choose a deck");
 			expect(view.options().Top).toBe(`/my-flashcards/top/${tab}`);
 			expect(view.options().Own).toBe(`/my-flashcards/own/${tab}`);
+			// and the decks beside it, under the same top deck
+			expect(view.options().Beside).toBe(`/my-flashcards/beside/${tab}`);
 			// so do the names before the deck's
 			expect(view.crumb("Top")).toBe(`/my-flashcards/top/${tab}`);
 			view.close();
@@ -149,7 +158,10 @@ describe("the names before the deck's", () => {
 		const app = mount(Layout, {
 			target,
 			props: {
-				data: { deck: { id: "deep", name: "Deep", isMarketplace: false, ancestors: ancestors.map(a => ({ ...a, bought: false })), decks, cards: [] } },
+				data: { deck: {
+					id: "deep", name: "Deep", isMarketplace: false, ancestors: ancestors.map(a => ({ ...a, bought: false })), decks, cards: [],
+					tree: [...ancestors, { id: "deep", name: "Deep" }].map((a, level) => ({ ...a, bought: false, level }))
+				} },
 				children: createRawSnippet(() => ({ render: () => "<p></p>" }))
 			}
 		});

@@ -13,7 +13,6 @@
 	import DeckNavBar from "$lib/components/DeckNavBar.svelte"
 	import { sideHasContent, syncTextBlocks } from "$lib/card-utils.js"
 	import { confirmModal } from "$lib/modals.svelte.js"
-	import { deckOutline } from "$lib/deck-tree.js"
 
 	let { data, children } = $props();
 
@@ -140,25 +139,17 @@
 	const tabOf = (id, bought) =>
 		`/my-flashcards/${id}/${(bought ? MARKETPLACE_PATHS : PATHS).includes(tab) ? tab : "study"}`;
 
-	// What the page can be turned to: the decks around this one, up to the
-	// top of the list, and the decks inside it, as one outline, each on the
-	// tab the page is on. A deck inside that its progression still holds
-	// shut can be studied all the same.
+	// What the page can be turned to: every deck of the tree this one is
+	// in, from the deck at the top, as one outline, each on the tab the page
+	// is on. A deck that its progression still holds shut can be studied all
+	// the same.
 	let switcher = $derived.by(() => {
-		if (deck.ancestors.length === 0 && deck.decks.length === 1) return null;
+		if (deck.tree.length === 1) return null;
 		return {
 			label: tab === "study" ? "Choose what to study" : "Choose a deck",
-			options: [
-				...deck.ancestors.map((around, index) => ({
-					name: around.name, href: tabOf(around.id, around.bought), depth: index, current: false
-				})),
-				...deckOutline(deck.decks).map(({ deck: inside, level }) => ({
-					name: inside.name,
-					href: tabOf(inside.id, inside.bought),
-					depth: deck.ancestors.length + level,
-					current: inside.id === deck.id
-				}))
-			]
+			options: deck.tree.map(entry => ({
+				name: entry.name, href: tabOf(entry.id, entry.bought), depth: entry.level, current: entry.id === deck.id
+			}))
 		};
 	});
 

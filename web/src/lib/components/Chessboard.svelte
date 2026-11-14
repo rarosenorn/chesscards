@@ -156,15 +156,15 @@
 			: { from: displayIndex, moves: "", at: 0 });
 	});
 
-	// Whose move it is in the board's START position — the puzzle's premise,
-	// which the position alone cannot show and a card's text may not say.
-	// Deliberately not the position on screen: it is a property of the
+	// Whose move it is in the position the board OPENS on — the puzzle's
+	// premise, which the position alone cannot show and a card's text may not
+	// say. Deliberately not the position on screen: it is a property of the
 	// diagram, and a marker flipping as you step would pull the eye. The
 	// moves are on show while stepping anyway.
-	let blackToMove = $derived(positions[0]?.split(" ")[1] === "b");
+	let blackToMove = $derived(positions[openAt]?.split(" ")[1] === "b");
 	// nobody is to move in a finished position: the strip keeps its height so
 	// the board does not shift, it just has nothing to say
-	let finished = $derived(isPositionFinished(positions[0]));
+	let finished = $derived(isPositionFinished(positions[openAt]));
 
 	// One-line move list, grouped so the line only wraps between pairs: each
 	// pair is a number ("…" appended when black starts it, e.g. black moving

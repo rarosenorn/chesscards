@@ -1456,16 +1456,10 @@
 		flex-wrap: nowrap;
 		width: max-content;
 	}
-	/* a puzzle's moves as the player found them, a check mark before each:
-	   green found at once, orange after a miss. On the move the board stands
-	   on the colour is kept as it is: the pill itself is the green or the
-	   orange, in place of the blue, and the move reads white on it. */
-	.move-btn.found::before,
-	.move-btn.found-late::before {
-		content: "✓";
-		margin-right: 2px;
-		font-size: 0.8em;
-	}
+	/* a puzzle's moves as the player found them, by colour: green found at
+	   once, orange after a miss. On the move the board stands on the colour
+	   is kept as it is: the pill itself is the green or the orange, in place
+	   of the blue, and the move reads white on it. */
 	.move-btn.found {
 		color: #1b7a3d;
 	}

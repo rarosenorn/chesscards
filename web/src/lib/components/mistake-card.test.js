@@ -260,10 +260,10 @@ describe("a mistake's card on the board", () => {
 		const card = longCard(0);
 		Object.assign(card.front[0].content[0], { moves: ["f3", "e5", "g4", "Qh4#"], openAt: 4 });
 		const { target, app } = await show(card);
-		expect(target.querySelector(".mate-badge")?.textContent).toBe("#");
+		expect(target.querySelector(".end-badge.mate")?.textContent).toBe("#");
 		target.querySelector('.move-line .step-btn[aria-label="Previous move"]').click();
 		await tick();
-		expect(target.querySelector(".mate-badge")).toBe(null);
+		expect(target.querySelector(".end-badge.mate")).toBe(null);
 		unmount(app);
 	});
 });

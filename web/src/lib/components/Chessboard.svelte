@@ -530,14 +530,18 @@
 	}
 	const clearHoverCursor = () => { hoverPiece = false; }
 
-	// where the "#" sits: the top right corner of the mated king's square,
-	// measured off the drawn board (and again whenever the board resizes)
-	let mateBadge = $state(null);
-	const placeMateBadge = () => {
-		const square = matedKing && chessboardElement?.querySelector(`[data-square="${matedKing}"]`);
-		if (!square || !wrapperElement) { mateBadge = null; return; }
-		const box = square.getBoundingClientRect(), frame = wrapperElement.getBoundingClientRect();
-		mateBadge = { left: box.right - frame.left, top: box.top - frame.top, size: box.width };
+	// where the end-of-game marks sit: the top right corner of each marked
+	// king's square, measured off the drawn board (and again whenever the
+	// board resizes)
+	let endBadges = $state([]);
+	const placeEndBadges = () => {
+		const frame = wrapperElement?.getBoundingClientRect();
+		endBadges = !frame || !gameEnd ? [] : gameEnd.squares.flatMap(sq => {
+			const square = chessboardElement?.querySelector(`[data-square="${sq}"]`);
+			if (!square) return [];
+			const box = square.getBoundingClientRect();
+			return [{ kind: gameEnd.kind, left: box.right - frame.left, top: box.top - frame.top, size: box.width }];
+		});
 	}
 
 	let chessboardElement = $state();
@@ -557,16 +561,32 @@
 	// profile's choice ("Highlight last move"). A line's first position has
 	// no move behind it, and no tint.
 	const LAST_MOVE = { class: "marker-last-move", slice: "markerSquare" };
-	// The king that is mated in the position on screen, by its square: it
-	// wears a red "#" disc in the corner of that square. null for any other position,
-	// and for one chess.js cannot judge (a free-form setup).
-	let matedKing = $derived.by(() => {
+	// the line's positions up to the one on screen, an aside's included
+	let shownHistory = $derived(
+		asidePly != null && asideReplay
+			? [...replay.fens.slice(0, following.from), ...asideReplay.fens.slice(0, asidePly + 1)]
+			: positions.slice(0, displayIndex + 1)
+	);
+	const repetitionKey = fen => {
+		try { return new Chess(fen).fen().split(" ").slice(0, 4).join(" "); } catch { return null; }
+	}
+	// How the game ended in the position on screen, as Lichess marks it: a
+	// red "#" on the mated king; on a stalemate a padlock, and on any other
+	// draw an "=", on both kings. null for any other position, and for one
+	// chess.js cannot judge (a free-form setup).
+	let gameEnd = $derived.by(() => {
 		try {
 			const chess = new Chess(displayFen);
-			if (!chess.isCheckmate()) return null;
+			const kings = {};
 			for (const rank of chess.board())
 				for (const piece of rank)
-					if (piece?.type === "k" && piece.color === chess.turn()) return piece.square;
+					if (piece?.type === "k") kings[piece.color] = piece.square;
+			const both = [kings.w, kings.b];
+			if (chess.isCheckmate()) return { kind: "mate", squares: [kings[chess.turn()]] };
+			if (chess.isStalemate()) return { kind: "stalemate", squares: both };
+			if (chess.isInsufficientMaterial() || chess.isDrawByFiftyMoves()) return { kind: "draw", squares: both };
+			const key = repetitionKey(displayFen);
+			if (shownHistory.filter(fen => repetitionKey(fen) === key).length >= 3) return { kind: "draw", squares: both };
 		} catch { /* not a position chess.js holds */ }
 		return null;
 	});
@@ -638,7 +658,7 @@
 		const fen = displayFen;
 		const front = frontAnnotation;
 		const back = backAnnotation;
-		void lastMove; void matedKing; void rightSquare;
+		void lastMove; void gameEnd; void rightSquare;
 		if (!cmBoard) return;
 		// Only a step animates, and only within the board it stepped on: study
 		// and browse reuse this component across cards, and tweening one
@@ -661,7 +681,7 @@
 		stepping = false;
 		renderedBoard = normalized;
 		showAnnotations(cmBoard, front, back, backDots);
-		placeMateBadge();
+		placeEndBadges();
 		cmBoard.removeMarkers(FRAME_RIGHT);
 		if (rightSquare) cmBoard.addMarker(FRAME_RIGHT, rightSquare);
 		cmBoard.removeMarkers(LAST_MOVE);
@@ -693,7 +713,7 @@
 			wrapperElement.style.setProperty(
 				"--board-px", chessboardElement.firstElementChild.offsetWidth + "px"
 			);
-			placeMateBadge();
+			placeEndBadges();
 		};
 		syncWidth();
 		const resizeObserver = new ResizeObserver(syncWidth);
@@ -1102,13 +1122,14 @@
 		bind:this={chessboardElement}
 		onclick={hasMoves ? takeFocus : undefined}
 	></div>
-	{#if mateBadge}
+	{#each endBadges as badge}
 		<span
-			class="mate-badge"
-			aria-label="Checkmate"
-			style="left: {mateBadge.left}px; top: {mateBadge.top}px; --size: {mateBadge.size * 0.4}px"
-		>#</span>
-	{/if}
+			class="end-badge {badge.kind}"
+			role="img"
+			aria-label={badge.kind === "mate" ? "Checkmate" : badge.kind === "stalemate" ? "Stalemate" : "Draw"}
+			style="left: {badge.left}px; top: {badge.top}px; --size: {badge.size * 0.4}px"
+		>{#if badge.kind === "mate"}#{:else if badge.kind === "stalemate"}<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6.6 9.5V7a3.4 3.4 0 0 1 6.8 0v2.5" fill="none" stroke="white" stroke-width="2" /><rect x="4.5" y="9" width="11" height="8.5" rx="1.4" fill="white" /><circle cx="10" cy="12.6" r="1.25" class="keyhole" /><rect x="9.35" y="12.8" width="1.3" height="2.6" rx="0.5" class="keyhole" /></svg>{:else}<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4.5" y="6.4" width="11" height="2.6" rx="0.6" fill="white" /><rect x="4.5" y="11" width="11" height="2.6" rx="0.6" fill="white" /></svg>{/if}</span>
+	{/each}
 	{@render children?.()}
 	<!-- an aside is not listed here: the text it was written in is where it
 	     reads, and the highlight moves with the board over there. The line
@@ -1280,9 +1301,10 @@
 	.puzzle-tag.missed {
 		--tag-colour: #c0392b;
 	}
-	/* the mated king's mark, as Lichess has it: a red disc with a white "#",
-	   in the top right corner of its square */
-	.mate-badge {
+	/* the end-of-game marks, as Lichess has them: a disc in the top right
+	   corner of the king's square, red for the mated king, blue on a draw */
+	.end-badge {
+		--badge-colour: #b71c1c;
 		position: absolute;
 		z-index: 1;
 		width: var(--size);
@@ -1293,7 +1315,7 @@
 		align-items: center;
 		justify-content: center;
 		border-radius: 50%;
-		background-color: #b71c1c;
+		background-color: var(--badge-colour);
 		box-shadow: rgba(0, 0, 0, 0.3) 0 1px 3px;
 		color: white;
 		font-size: calc(var(--size) * 0.72);
@@ -1301,6 +1323,17 @@
 		line-height: 1;
 		pointer-events: none;
 		user-select: none;
+	}
+	.end-badge.stalemate,
+	.end-badge.draw {
+		--badge-colour: #82c2ef;
+	}
+	.end-badge svg {
+		width: 80%;
+		height: 80%;
+	}
+	.end-badge .keyhole {
+		fill: var(--badge-colour);
 	}
 	.analysis-link {
 		margin-left: auto;

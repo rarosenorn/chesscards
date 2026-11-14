@@ -1313,7 +1313,7 @@
 		transition: transform 80ms ease-out;
 	}
 	.analysis-link + .analysis-link {
-		margin-left: 0;
+		margin-left: -7px;
 	}
 	.analysis-link:hover {
 		background-color: #ebebeb;

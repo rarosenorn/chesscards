@@ -48,6 +48,24 @@
 		sync();
 		return () => observer.disconnect();
 	}
+
+	// The choice is a menu over the page, not part of it: it stops at the
+	// window's bottom edge and scrolls itself, and opens on the deck shown.
+	const fitToWindow = node => {
+		const fit = () => {
+			node.style.maxHeight = Math.max(120, window.innerHeight - node.getBoundingClientRect().top - 8) + "px";
+		}
+		fit();
+		const current = node.querySelector("[aria-current]");
+		if (current && current.offsetTop + current.offsetHeight > node.clientHeight)
+			node.scrollTop = current.offsetTop - (node.clientHeight - current.offsetHeight) / 2;
+		window.addEventListener("resize", fit);
+		window.addEventListener("scroll", fit, { passive: true });
+		return () => {
+			window.removeEventListener("resize", fit);
+			window.removeEventListener("scroll", fit);
+		}
+	}
 </script>
 
 <svelte:window
@@ -79,7 +97,7 @@
 					onclick={() => switcherOpen = !switcherOpen}
 				></button>
 				{#if switcherOpen}
-					<div class="switcher-menu" role="menu">
+					<div class="switcher-menu" role="menu" {@attach fitToWindow}>
 						{#each switcher.options as option (option.href)}
 							<a
 								role="menuitem"
@@ -249,6 +267,9 @@
 		z-index: 30;
 		min-width: 180px;
 		max-width: 420px;
+		overflow-x: hidden;
+		overflow-y: auto;
+		overscroll-behavior: contain;
 		background-color: white;
 		border: 1px solid #ccc;
 		border-radius: 4px;

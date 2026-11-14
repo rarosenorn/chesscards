@@ -159,17 +159,19 @@ describe("the names before the deck's", () => {
 		target.querySelector(".switcher-toggle").click();
 		await tick();
 		const options = [...target.querySelectorAll(".switcher-menu a")].map(a => a.textContent.trim());
+		const maxHeight = target.querySelector(".switcher-menu").style.maxHeight;
 		unmount(app);
 		target.remove();
-		return { text, links, options };
+		return { text, links, options, maxHeight };
 	}
 
-	it("are the deck it sits in, with any further out folded into an ellipsis the arrow still reaches", async () => {
+	it("are the deck it sits in, with any further out folded into an ellipsis the arrow still reaches, in a menu that stops at the window's edge", async () => {
 		expect((await crumbsOf([{ id: "top", name: "Top" }])).text).toBe("Myflashcards->Top›Deep");
 		const deep = await crumbsOf([{ id: "top", name: "Top" }, { id: "middle", name: "Middle" }]);
 		expect(deep.text).toBe("Myflashcards->…›Middle›Deep");
 		expect(deep.links).toContain("Middle");
 		expect(deep.links).not.toContain("Top");
 		expect(deep.options).toEqual(expect.arrayContaining(["Top", "Middle", "Deep"]));
+		expect(deep.maxHeight).toBe(`${window.innerHeight - 8}px`);
 	})
 })

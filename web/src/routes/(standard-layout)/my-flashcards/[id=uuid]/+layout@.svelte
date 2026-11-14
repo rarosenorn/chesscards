@@ -181,11 +181,15 @@
 	const shortcutFor = path => Object.keys(TAB_KEYS).find(key => TAB_KEYS[key] === path);
 </script>
 
-<!-- The deck is named after the decks it sits inside, each the way to its
-     own pages. -->
+<!-- The deck is named after the deck it sits inside, the way to that deck's
+     own pages; any decks further out fold into "…", reached through the
+     switcher. -->
 <DeckNavBar
 	crumbs={[
-		...deck.ancestors.map((around, index) => ({ name: around.name, href: tabOf(around.id, around.bought), separator: index ? "›" : "->" })),
+		...(deck.ancestors.length > 1 ? [{ name: "…", separator: "->" }] : []),
+		...deck.ancestors.slice(-1).map(around => ({
+			name: around.name, href: tabOf(around.id, around.bought), separator: deck.ancestors.length > 1 ? "›" : "->"
+		})),
 		{ name: deck.name, separator: deck.ancestors.length ? "›" : "->" }
 	]}
 	tabs={paths.map((path, index) => ({

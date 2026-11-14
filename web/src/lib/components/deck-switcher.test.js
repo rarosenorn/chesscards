@@ -139,3 +139,37 @@ describe("the arrow beside the deck's name", () => {
 		view.close();
 	})
 })
+
+describe("the names before the deck's", () => {
+	const crumbsOf = async ancestors => {
+		state.page = { url: new URL("http://localhost/my-flashcards/deep/study"), params: { id: "deep" } };
+		const target = document.createElement("div");
+		document.body.append(target);
+		const decks = [{ id: "deep", name: "Deep", position: 1, parent_id: null, in_order: true, bought: false }];
+		const app = mount(Layout, {
+			target,
+			props: {
+				data: { deck: { id: "deep", name: "Deep", isMarketplace: false, ancestors: ancestors.map(a => ({ ...a, bought: false })), decks, cards: [] } },
+				children: createRawSnippet(() => ({ render: () => "<p></p>" }))
+			}
+		});
+		await tick();
+		const text = target.querySelector(".breadcrumbs").textContent.replace(/\s+/g, "");
+		const links = [...target.querySelectorAll(".breadcrumbs a.crumb")].map(a => a.textContent.trim());
+		target.querySelector(".switcher-toggle").click();
+		await tick();
+		const options = [...target.querySelectorAll(".switcher-menu a")].map(a => a.textContent.trim());
+		unmount(app);
+		target.remove();
+		return { text, links, options };
+	}
+
+	it("are the deck it sits in, with any further out folded into an ellipsis the arrow still reaches", async () => {
+		expect((await crumbsOf([{ id: "top", name: "Top" }])).text).toBe("Myflashcards->Top›Deep");
+		const deep = await crumbsOf([{ id: "top", name: "Top" }, { id: "middle", name: "Middle" }]);
+		expect(deep.text).toBe("Myflashcards->…›Middle›Deep");
+		expect(deep.links).toContain("Middle");
+		expect(deep.links).not.toContain("Top");
+		expect(deep.options).toEqual(expect.arrayContaining(["Top", "Middle", "Deep"]));
+	})
+})

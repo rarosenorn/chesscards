@@ -46,7 +46,7 @@ describe("the end-of-game marks", () => {
 	});
 
 	it("mark both kings on a stalemate", async () => {
-		expect(await marks({ fen: "8/8/8/8/8/2k5/2p5/2K5 w - - 2 5" })).toEqual(["Stalemate", "Stalemate"]);
+		expect(await marks({ fen: "8/8/8/8/8/2k5/2p5/2K5 w - - 2 5" })).toEqual(["Draw", "Draw"]);
 	});
 
 	it("mark both kings when too little is left to mate", async () => {

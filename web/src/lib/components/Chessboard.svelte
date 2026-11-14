@@ -571,9 +571,9 @@
 		try { return new Chess(fen).fen().split(" ").slice(0, 4).join(" "); } catch { return null; }
 	}
 	// How the game ended in the position on screen, as Lichess marks it: a
-	// red "#" on the mated king; on a stalemate a padlock, and on any other
-	// draw an "=", on both kings. null for any other position, and for one
-	// chess.js cannot judge (a free-form setup).
+	// red "#" on the mated king, and a blue "=" on both kings on a draw.
+	// null for any other position, and for one chess.js cannot judge (a
+	// free-form setup).
 	let gameEnd = $derived.by(() => {
 		try {
 			const chess = new Chess(displayFen);
@@ -583,8 +583,7 @@
 					if (piece?.type === "k") kings[piece.color] = piece.square;
 			const both = [kings.w, kings.b];
 			if (chess.isCheckmate()) return { kind: "mate", squares: [kings[chess.turn()]] };
-			if (chess.isStalemate()) return { kind: "stalemate", squares: both };
-			if (chess.isInsufficientMaterial() || chess.isDrawByFiftyMoves()) return { kind: "draw", squares: both };
+			if (chess.isStalemate() || chess.isInsufficientMaterial() || chess.isDrawByFiftyMoves()) return { kind: "draw", squares: both };
 			const key = repetitionKey(displayFen);
 			if (shownHistory.filter(fen => repetitionKey(fen) === key).length >= 3) return { kind: "draw", squares: both };
 		} catch { /* not a position chess.js holds */ }
@@ -1126,9 +1125,9 @@
 		<span
 			class="end-badge {badge.kind}"
 			role="img"
-			aria-label={badge.kind === "mate" ? "Checkmate" : badge.kind === "stalemate" ? "Stalemate" : "Draw"}
+			aria-label={badge.kind === "mate" ? "Checkmate" : "Draw"}
 			style="left: {badge.left}px; top: {badge.top}px; --size: {badge.size * 0.4}px"
-		>{#if badge.kind === "mate"}#{:else if badge.kind === "stalemate"}<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6.6 9.5V7a3.4 3.4 0 0 1 6.8 0v2.5" fill="none" stroke="white" stroke-width="2" /><rect x="4.5" y="9" width="11" height="8.5" rx="1.4" fill="white" /><circle cx="10" cy="12.6" r="1.25" class="keyhole" /><rect x="9.35" y="12.8" width="1.3" height="2.6" rx="0.5" class="keyhole" /></svg>{:else}<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4.5" y="6.4" width="11" height="2.6" rx="0.6" fill="white" /><rect x="4.5" y="11" width="11" height="2.6" rx="0.6" fill="white" /></svg>{/if}</span>
+		>{#if badge.kind === "mate"}#{:else}<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4.5" y="6.4" width="11" height="2.6" rx="0.6" fill="white" /><rect x="4.5" y="11" width="11" height="2.6" rx="0.6" fill="white" /></svg>{/if}</span>
 	{/each}
 	{@render children?.()}
 	<!-- an aside is not listed here: the text it was written in is where it
@@ -1324,16 +1323,12 @@
 		pointer-events: none;
 		user-select: none;
 	}
-	.end-badge.stalemate,
 	.end-badge.draw {
 		--badge-colour: #82c2ef;
 	}
 	.end-badge svg {
 		width: 80%;
 		height: 80%;
-	}
-	.end-badge .keyhole {
-		fill: var(--badge-colour);
 	}
 	.analysis-link {
 		margin-left: auto;

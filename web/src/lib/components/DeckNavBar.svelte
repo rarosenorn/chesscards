@@ -53,7 +53,7 @@
 	// window's bottom edge and scrolls itself, and opens on the deck shown.
 	const fitToWindow = node => {
 		const fit = () => {
-			node.style.maxHeight = Math.max(120, window.innerHeight - node.getBoundingClientRect().top - 8) + "px";
+			node.style.maxHeight = Math.max(120, window.innerHeight - node.getBoundingClientRect().top - 16) + "px";
 		}
 		fit();
 		const current = node.querySelector("[aria-current]");

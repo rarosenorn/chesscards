@@ -184,6 +184,6 @@ describe("the names before the deck's", () => {
 		expect(deep.links).toContain("Middle");
 		expect(deep.links).not.toContain("Top");
 		expect(deep.options).toEqual(expect.arrayContaining(["Top", "Middle", "Deep"]));
-		expect(deep.maxHeight).toBe(`${window.innerHeight - 8}px`);
+		expect(deep.maxHeight).toBe(`${window.innerHeight - 16}px`);
 	})
 })

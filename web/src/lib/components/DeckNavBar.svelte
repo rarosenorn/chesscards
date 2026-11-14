@@ -6,8 +6,9 @@
 
 	// The bar under the site's, on the pages of a deck: the way back to My
 	// flashcards and where you are, then the page's tabs.
-	// crumbs: what follows "My flashcards", each { name, href?, separator? }
-	// (the separator stands before it; "->" unless it says otherwise).
+	// crumbs: what follows "My flashcards", each { name, href?, separator?,
+	// fold? } (the separator stands before it; "->" unless it says
+	// otherwise; fold: decks left out, never cut short).
 	// tabs: each { name, href, current, shortcut? }.
 	// switcher: when the page shown can be turned to something else of the
 	// same kind (a deck's Study, to a deck around it or inside it), an arrow after the
@@ -80,7 +81,9 @@
 		<a href="/my-flashcards">My flashcards</a>
 		{#each crumbs as crumb}
 			<span>{crumb.separator ?? "->"}</span>
-			{#if crumb.href}
+			{#if crumb.fold}
+				<span>{crumb.name}</span>
+			{:else if crumb.href}
 				<a class="crumb" href={crumb.href} {@attach fullNameWhenCut(crumb.name)}>{crumb.name}</a>
 			{:else}
 				<span class="crumb" {@attach fullNameWhenCut(crumb.name)}>{crumb.name}</span>

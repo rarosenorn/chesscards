@@ -177,12 +177,12 @@ describe("the names before the deck's", () => {
 		return { text, links, options, maxHeight };
 	}
 
-	it("are the deck it sits in, with any further out folded into an ellipsis the arrow still reaches, in a menu that stops at the window's edge", async () => {
+	it("are the deck at the top, with any between folded into an ellipsis the arrow still reaches, in a menu that stops at the window's edge", async () => {
 		expect((await crumbsOf([{ id: "top", name: "Top" }])).text).toBe("Myflashcards->Top›Deep");
 		const deep = await crumbsOf([{ id: "top", name: "Top" }, { id: "middle", name: "Middle" }]);
-		expect(deep.text).toBe("Myflashcards->…›Middle›Deep");
-		expect(deep.links).toContain("Middle");
-		expect(deep.links).not.toContain("Top");
+		expect(deep.text).toBe("Myflashcards->Top›…›Deep");
+		expect(deep.links).toContain("Top");
+		expect(deep.links).not.toContain("Middle");
 		expect(deep.options).toEqual(expect.arrayContaining(["Top", "Middle", "Deep"]));
 		expect(deep.maxHeight).toBe(`${window.innerHeight - 16}px`);
 	})

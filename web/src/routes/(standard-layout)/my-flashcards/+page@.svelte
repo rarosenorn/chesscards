@@ -5,7 +5,7 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import { invalidateAll } from "$app/navigation"
 	import { deckSubtree } from "$lib/deck-tree.js"
-	import { createDeck, renameDeck, moveDeck, deleteDeck, flattenDeck, setInOrder } from "./decks.remote.js"
+	import { createDeck, renameDeck, moveDeck, flattenDeck, setInOrder } from "./decks.remote.js"
 	let { data } = $props();
 
 	// Every deck of the user's as one tree, in reading order (decks.getListing):
@@ -103,39 +103,11 @@
 	// --- what goes, and what stays ---
 	const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 	// the marketplace decks taken that sit under a deck, which are not its
-	// to delete or flatten away
+	// to flatten away
 	const takenUnder = row => rows.filter(other => isTaken(other) && other.id !== row.id && deckSubtree(rows, row.id).has(other.id));
 	// the cards under a deck that are the user's own
 	const ownCardsUnder = row => row.total - takenUnder(row).reduce((sum, taken) => sum + taken.total, 0);
 	const ownDecksInside = row => rows.filter(other => !other.bought && other.id !== row.id && deckSubtree(rows, row.id).has(other.id)).length;
-
-	// A deck goes with every deck and card inside it, which is asked about
-	// first only when there are cards to lose. A marketplace deck taken leaves
-	// with the user's progress on it, so that is always asked.
-	const remove = async row => {
-		if (isTaken(row)) {
-			const confirmed = await confirmModal({
-				title: "Remove deck",
-				message: `This removes "${row.name}" from your decks, and your progress on it. You can take it again from the marketplace.`,
-				confirmLabel: "Remove",
-				danger: true
-			});
-			if (!confirmed) return;
-		} else if (ownCardsUnder(row) > 0) {
-			const inside = ownDecksInside(row);
-			const taken = takenUnder(row).length;
-			const confirmed = await confirmModal({
-				title: "Delete deck",
-				message: `This permanently deletes "${row.name}"${inside ? `, the ${plural(inside, "deck")} inside it` : ""} and the ${plural(ownCardsUnder(row), "card")} in ${inside ? "them" : "it"}, with their progress.`
-					+ (taken ? ` The marketplace ${taken === 1 ? "deck" : "decks"} inside it move${taken === 1 ? "s" : ""} to the top of your list.` : ""),
-				confirmLabel: "Delete",
-				danger: true
-			});
-			if (!confirmed) return;
-		}
-		await deleteDeck({ id: row.id });
-		await invalidateAll();
-	}
 
 	// Flattening: the decks inside a deck are taken away and every card in
 	// them becomes the deck's own, in order. The grouping cannot be put back,
@@ -193,9 +165,9 @@
 	let menu = $state(null);
 	const menuItems = row => {
 		if (isInsideTaken(row)) return row.holdsDecks ? ["order"] : [];
-		if (isTaken(row)) return ["move", ...(row.holdsDecks ? ["order"] : []), "remove"];
+		if (isTaken(row)) return ["move", ...(row.holdsDecks ? ["order"] : [])];
 		// flattening takes away the user's own decks inside; marketplace decks stay
-		return ["create", "rename", ...(row.holdsDecks ? ["order"] : []), ...(ownDecksInside(row) ? ["flatten"] : []), "move", "delete"];
+		return ["create", "rename", ...(row.holdsDecks ? ["order"] : []), ...(ownDecksInside(row) ? ["flatten"] : []), "move"];
 	}
 	const openMenu = (row, x, y) => {
 		if (menuItems(row).length === 0) return;
@@ -384,10 +356,6 @@
 				<button onclick={() => fromMenu(flatten)}>Flatten</button>
 			{:else if item === "move"}
 				<button onclick={() => fromMenu(moveTo)}>Move to…</button>
-			{:else if item === "delete"}
-				<button class="danger" onclick={() => fromMenu(remove)}>Delete</button>
-			{:else if item === "remove"}
-				<button class="danger" onclick={() => fromMenu(remove)}>Remove</button>
 			{/if}
 		{/each}
 	</div>
@@ -791,9 +759,6 @@
 	}
 	.context-menu button:hover {
 		background-color: #f0f0f0;
-	}
-	.context-menu button.danger {
-		color: #c62828;
 	}
 	/* the choices under the words that say what for, the one in force ticked */
 	.context-menu button.menu-item {

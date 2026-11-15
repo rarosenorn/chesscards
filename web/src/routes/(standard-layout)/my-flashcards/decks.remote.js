@@ -51,17 +51,6 @@ export const moveDeck =
 		catch (err) { refused(err); }
 	})
 
-// a deck of the user's own with everything inside it, or a marketplace deck
-// they have taken with their progress on it
-export const deleteDeck =
-	command("unchecked", async ({ id }) => {
-		const { locals } = getRequestEvent();
-		checkIds(id);
-		if (!await decks.remove(locals.userId, id) && !await decks.removeTaken(locals.userId, id)) {
-			error(403, "Unauthorized");
-		}
-	})
-
 // the decks inside it are taken away, their cards kept in it
 export const flattenDeck =
 	command("unchecked", async ({ id }) => {

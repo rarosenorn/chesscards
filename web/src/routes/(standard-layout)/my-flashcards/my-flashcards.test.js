@@ -8,7 +8,6 @@ const remote = vi.hoisted(() => ({
 	createDeck: vi.fn(async () => ({})),
 	renameDeck: vi.fn(async () => {}),
 	moveDeck: vi.fn(async () => {}),
-	deleteDeck: vi.fn(async () => {}),
 	flattenDeck: vi.fn(async () => {}),
 	setInOrder: vi.fn(async () => {})
 }));
@@ -82,11 +81,11 @@ describe("My flashcards", () => {
 	it("offers each kind of deck what is its to do", async () => {
 		const page = await open();
 		await page.wheel("Course");
-		expect(page.menuItems()).toEqual(["New deck inside", "Rename", "In order", "Mixed", "Flatten", "Move to…", "Delete"]);
+		expect(page.menuItems()).toEqual(["New deck inside", "Rename", "In order", "Mixed", "Flatten", "Move to…"]);
 		await page.wheel("Empty");
-		expect(page.menuItems()).toEqual(["New deck inside", "Rename", "Move to…", "Delete"]);
+		expect(page.menuItems()).toEqual(["New deck inside", "Rename", "Move to…"]);
 		await page.wheel("Taken");
-		expect(page.menuItems()).toEqual(["Move to…", "In order", "Mixed", "Remove"]);
+		expect(page.menuItems()).toEqual(["Move to…", "In order", "Mixed"]);
 		page.rowEl("Taken").querySelector(".expander").click();
 		await tick();
 		// a deck inside a marketplace deck with nothing inside it has nothing to offer
@@ -100,7 +99,7 @@ describe("My flashcards", () => {
 			row("Taken", 1, "Mine", { bought: true, instance_id: "Taken", total: 4 })
 		]);
 		await page.wheel("Mine");
-		expect(page.menuItems()).toEqual(["New deck inside", "Rename", "In order", "Mixed", "Move to…", "Delete"]);
+		expect(page.menuItems()).toEqual(["New deck inside", "Rename", "In order", "Mixed", "Move to…"]);
 		page.close();
 	})
 
@@ -131,30 +130,6 @@ describe("My flashcards", () => {
 		expect(page.dialog().querySelector("input").value).toBe("Course");
 		await page.press("Cancel", page.dialog());
 		expect(remote.renameDeck).toHaveBeenCalledTimes(1);
-		page.close();
-	})
-
-	it("deletes a deck with no cards at once, and asks first for one with cards", async () => {
-		const page = await open();
-		await page.wheel("Empty");
-		await page.press("Delete");
-		expect(remote.deleteDeck).toHaveBeenCalledWith({ id: "Empty" });
-
-		await page.wheel("Course");
-		await page.press("Delete");
-		expect(page.dialog().textContent).toContain('This permanently deletes "Course", the 2 decks inside it and the 5 cards in them');
-		await page.press("Delete", page.dialog());
-		expect(remote.deleteDeck).toHaveBeenLastCalledWith({ id: "Course" });
-		page.close();
-	})
-
-	it("asks before removing a marketplace deck", async () => {
-		const page = await open();
-		await page.wheel("Taken");
-		await page.press("Remove");
-		expect(page.dialog().textContent).toContain("You can take it again from the marketplace");
-		await page.press("Cancel", page.dialog());
-		expect(remote.deleteDeck).not.toHaveBeenCalled();
 		page.close();
 	})
 

@@ -250,13 +250,12 @@
 	<section>
 		<h3>Spaced repetition parameter optimization</h3>
 		<p class="section-note">
-			When cards come back is fitted to your own reviews, across all your
-			decks, and refitted automatically every {data.fsrs.refitDays} days.
-			Optimize parameters refits it at once.
+			Spaced repetition algorithm parameters are automatically optimized
+			{data.fsrs.refitDays} days after the previous optimization.
 		</p>
-		<form method="POST" action="?/optimize" class="optimize-row" use:enhance={optimizeSubmit}>
+		<p class="fit-status">{fitStatus(data.fsrs.last)}</p>
+		<form method="POST" action="?/optimize" use:enhance={optimizeSubmit}>
 			<button class="std-btn">{optimizing ? "Optimizing…" : "Optimize parameters"}</button>
-			<span class="fit-status">{fitStatus(data.fsrs.last)}</span>
 		</form>
 		{#if form?.failed === "optimize"}
 			<p class="error">{form.errors[0]}</p>
@@ -407,13 +406,8 @@
 		border: 2px solid #404040;
 		border-radius: 2px;
 	}
-	.optimize-row {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 10px;
-	}
 	.fit-status {
+		margin: 0;
 		font-size: 0.9rem;
 		color: rgba(0, 0, 0, 0.75);
 	}

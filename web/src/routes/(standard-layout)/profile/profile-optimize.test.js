@@ -26,7 +26,7 @@ describe("Settings' scheduling", () => {
 	it("says how the scheduling is fitted, and when it last was", async () => {
 		let view = open(null);
 		expect(view.section().textContent).toContain("Not optimized yet: study uses the default parameters.");
-		expect(view.section().querySelector(".section-note").textContent.replace(/\s+/g, " ")).toContain("refitted automatically every 14 days");
+		expect(view.section().querySelector(".section-note").textContent.replace(/\s+/g, " ")).toContain("automatically optimized 14 days after the previous optimization");
 		view.close();
 
 		view = open({ reviews: 1234, optimizedAt: "2026-11-16T10:00:00Z", defaults: false });

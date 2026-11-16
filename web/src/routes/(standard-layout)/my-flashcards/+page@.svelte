@@ -88,11 +88,11 @@
 	}
 
 	const createAtTop = () => askName({
-		title: "New deck", confirmLabel: "Create",
+		title: "Create deck", confirmLabel: "Create",
 		save: async name => { await createDeck({ name }); await invalidateAll(); }
 	});
 	const createInside = row => askName({
-		title: `New subdeck in ${row.name}`, confirmLabel: "Create",
+		title: "Create deck", confirmLabel: "Create",
 		save: async name => { await createDeck({ name, parentId: row.id }); expand(row.id); await invalidateAll(); }
 	});
 	const rename = row => askName({

@@ -107,7 +107,7 @@ describe("My flashcards", () => {
 		const page = await open();
 		await page.wheel("Course");
 		await page.press("Create subdeck");
-		expect(page.dialog().textContent).toContain("New subdeck in Course");
+		expect(page.dialog().textContent).toContain("Create deck");
 		const input = page.dialog().querySelector("input");
 		input.value = "Ch3";
 		input.dispatchEvent(new Event("input", { bubbles: true }));

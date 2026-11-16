@@ -10,13 +10,13 @@ vi.mock("$lib/auth-client.js", () => ({ authClient: {} }));
 vi.mock("cm-chessboard/src/Chessboard.js", () => ({ Chessboard: class { destroy() {} } }));
 const { default: Page } = await import("./+page.svelte");
 
-const open = last => {
+const open = (last, { form = null, timeZone = "UTC" } = {}) => {
 	forms.submits.length = 0;
 	const target = document.createElement("div");
 	document.body.append(target);
-	const app = mount(Page, { target, props: { form: null, data: {
+	const app = mount(Page, { target, props: { form, data: {
 		user: { displayName: "Me", email: "me@example.com" }, boardPrefs: DEFAULT_BOARD_PREFS, rolloverHour: 4,
-		fsrs: { last, refitDays: 14 }, hasPublished: false, payouts: null, twoFactor: { required: false }
+		fsrs: { last, refitDays: 14, timeZone }, hasPublished: false, payouts: null, twoFactor: { required: false }
 	} } });
 	const section = () => [...target.querySelectorAll("section")].find(f => f.querySelector("h3")?.textContent === "Spaced repetition parameter optimization");
 	return { target, section, close: () => { unmount(app); target.remove(); } };
@@ -35,6 +35,19 @@ describe("Settings' scheduling", () => {
 
 		view = open({ reviews: 40, optimizedAt: "2026-11-16T10:00:00Z", defaults: true });
 		expect(view.section().textContent).toContain("from 40 reviews, too few to fit yet: study uses the default parameters.");
+		view.close();
+	})
+
+	it("dates the last optimization in the user's own zone, wherever the page is drawn", async () => {
+		const view = open({ reviews: 900, optimizedAt: "2026-11-16T02:00:00Z", defaults: false }, { timeZone: "America/Los_Angeles" });
+		expect(view.section().textContent).toContain("Last optimized 15 Nov 2026");
+		view.close();
+	})
+
+	it("says a failed optimization in its own section only", async () => {
+		const view = open(null, { form: { failed: "optimize", errors: ["Optimizing failed. Try again."] } });
+		expect([...view.target.querySelectorAll(".error")].map(e => e.closest("section").querySelector("h3").textContent))
+			.toEqual(["Spaced repetition parameter optimization"]);
 		view.close();
 	})
 

@@ -16,12 +16,40 @@ const REFIT_DAYS = 14;
 // same one rather than starting another
 const fitting = new Map();
 
+const knownZone = zone => {
+	try { return Boolean(zone) && Boolean(new Intl.DateTimeFormat("en", { timeZone: zone })); }
+	catch { return false; }
+}
+
 // the user's study day, as a request tells it: their rollover hour, in the
-// zone their browser left in a cookie
-const dayOf = ({ locals, cookies }) => ({
-	rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR,
-	timeZone: cookies.get(TZ_COOKIE) || Intl.DateTimeFormat().resolvedOptions().timeZone
-});
+// zone their browser left in a cookie (the server's, for one no one knows)
+const dayOf = ({ locals, cookies }) => {
+	const zone = cookies.get(TZ_COOKIE);
+	return {
+		rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR,
+		timeZone: knownZone(zone) ? zone : Intl.DateTimeFormat().resolvedOptions().timeZone
+	};
+}
+
+// a zone's offset from UTC today, in minutes; 0 for one Intl does not know
+const offsetOf = zone => {
+	if (!knownZone(zone)) return 0;
+	const name = new Intl.DateTimeFormat("en", { timeZone: zone, timeZoneName: "longOffset" })
+		.formatToParts(new Date()).find(part => part.type === "timeZoneName").value;
+	const [, sign, hours, minutes] = name.match(/([+-])(\d+):?(\d*)/) ?? [];
+	return sign ? (sign === "-" ? -1 : 1) * (Number(hours) * 60 + Number(minutes || 0)) : 0;
+}
+
+// the reviews as fsrs-rs's items, its days cut in the user's zone; a zone its
+// own database lacks is read at today's offset rather than not at all
+const itemsOf = (rows, { rolloverHour, timeZone }) => {
+	const csv = asCsv(rows);
+	try { return convertCsvToFsrsItems(csv, rolloverHour, timeZone, MODEL); }
+	catch (err) {
+		if (!/Unsupported timezone/.test(err.message)) throw err;
+		return convertCsvToFsrsItems(csv, rolloverHour, offsetOf(timeZone), MODEL);
+	}
+}
 
 // the review logs FSRS scheduled: basic cards' (a tactic's has no state), with
 // a card to belong to (logs from before ids were kept have none), graded
@@ -44,7 +72,7 @@ const asCsv = rows => new TextEncoder().encode([
 
 const fit = async (userId, day) => {
 	const rows = await historyOf(userId);
-	const items = convertCsvToFsrsItems(asCsv(rows), day.rolloverHour, day.timeZone, MODEL);
+	const items = itemsOf(rows, day);
 	const parameters = await computeParameters(items, { enableShortTerm: true, numRelearningSteps: 1, modelVersion: MODEL, timeout: 50 });
 	await pool.query(`
 		insert into fsrs_parameters (user_id, parameters, reviews, optimized_at) values ($1, $2, $3, now())

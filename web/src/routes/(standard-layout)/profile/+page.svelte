@@ -24,9 +24,9 @@
 		optimizing = true;
 		return async ({ update }) => { await update({ reset: false }); optimizing = false; };
 	};
-	const fitStatus = last => {
+	const fitStatus = (last, timeZone) => {
 		if (!last) return "Not optimized yet: study uses the default parameters.";
-		const when = new Date(last.optimizedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+		const when = new Date(last.optimizedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone });
 		const from = `Last optimized ${when} from ${last.reviews.toLocaleString("en-US")} ${last.reviews === 1 ? "review" : "reviews"}`;
 		return last.defaults ? `${from}, too few to fit yet: study uses the default parameters.` : `${from}.`;
 	};
@@ -214,7 +214,7 @@
 							{/each}
 						</div>
 					</fieldset>
-					{#if form?.errors && form.failed !== "name"}
+					{#if form?.failed === "board"}
 						<p class="error">{form.errors[0]}</p>
 					{/if}
 				</div>
@@ -246,6 +246,9 @@
 				{/each}
 			</div>
 		</form>
+		{#if form?.failed === "rollover"}
+			<p class="error">{form.errors[0]}</p>
+		{/if}
 	</section>
 	<section>
 		<h3>Spaced repetition parameter optimization</h3>
@@ -253,7 +256,7 @@
 			Spaced repetition algorithm parameters are automatically optimized
 			{data.fsrs.refitDays} days after the previous optimization.
 		</p>
-		<p class="fit-status">{fitStatus(data.fsrs.last)}</p>
+		<p class="fit-status">{fitStatus(data.fsrs.last, data.fsrs.timeZone)}</p>
 		<form method="POST" action="?/optimize" use:enhance={optimizeSubmit}>
 			<button class="std-btn">{optimizing ? "Optimizing…" : "Optimize parameters"}</button>
 		</form>

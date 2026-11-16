@@ -6,10 +6,10 @@ import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS } from "$li
 import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 import { refit, lastFit, dayOf, REFIT_DAYS } from "$lib/server/fsrs-optimizer.js"
 
-export const load = async ({ locals }) => ({
+export const load = async ({ locals, cookies }) => ({
 	pageTitle: "Settings",
 	rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR,
-	fsrs: { last: locals.userId ? await lastFit(locals.userId) : null, refitDays: REFIT_DAYS },
+	fsrs: { last: locals.userId ? await lastFit(locals.userId) : null, refitDays: REFIT_DAYS, timeZone: dayOf({ locals, cookies }).timeZone },
 	hasPublished: locals.userId
 		? (await pool.query("select 1 from marketplace_decks where user_id = $1 limit 1", [locals.userId])).rowCount > 0
 		: false,
@@ -59,7 +59,7 @@ export const actions = {
 			|| !BORDER_TYPES.includes(borderType)
 			|| !ANIMATION_DURATIONS.includes(animationDuration)
 		) {
-			return fail(400, { errors: ["Invalid board settings"] });
+			return fail(400, { failed: "board", errors: ["Invalid board settings"] });
 		}
 
 		await pool.query(
@@ -77,7 +77,7 @@ export const actions = {
 		const data = await request.formData();
 		const rolloverHour = Number(data.get("rollover-hour"));
 		if (!ROLLOVER_HOURS.includes(rolloverHour)) {
-			return fail(400, { errors: ["Invalid start of day"] });
+			return fail(400, { failed: "rollover", errors: ["Invalid start of day"] });
 		}
 		await pool.query('update "user" set "rolloverHour" = $1 where id = $2', [rolloverHour, locals.userId]);
 		return { saved: "rollover" };

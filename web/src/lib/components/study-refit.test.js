@@ -52,4 +52,18 @@ describe("a refit landing during study", () => {
 		unmount(app);
 		target.remove();
 	})
+
+	it("goes on with the parameters it has when the refit never arrives", async () => {
+		const target = document.createElement("div");
+		document.body.append(target);
+		const app = mount(Study, {
+			target, props: { fsrsParameters: null, refitted: Promise.reject(new Error("stream closed")) },
+			context: new Map([["deck", reactiveProps(deck)], ["studyState", reactiveProps({ turnedCardId: null, cram: null, played: null })]])
+		});
+		await new Promise(resolve => setTimeout(resolve, 0));
+		await tick();
+		expect(target.querySelector(".flashcard")).toBeTruthy();
+		unmount(app);
+		target.remove();
+	})
 })

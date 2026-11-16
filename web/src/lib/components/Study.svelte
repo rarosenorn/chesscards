@@ -103,7 +103,7 @@
 	// svelte-ignore state_referenced_locally
 	let scheduler = $state.raw(schedulerWith(fsrsParameters));
 	// svelte-ignore state_referenced_locally
-	refitted?.then(w => { if (w) scheduler = schedulerWith(w) });
+	refitted?.then(w => { if (w) scheduler = schedulerWith(w) }, () => {});
 
 	// --- the queue ---
 	// Learning cards come first, as they fall due; then due reviews, shuffled

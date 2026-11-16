@@ -13,7 +13,7 @@ vi.mock("./pool.js", () => ({
 	}
 }));
 
-const { parametersFor, fit, refit, lastFit, asCsv } = await import("./fsrs-optimizer.js");
+const { parametersFor, fit, refit, lastFit, dayOf, asCsv } = await import("./fsrs-optimizer.js");
 const { default_w } = await import("ts-fsrs");
 
 const day = { rolloverHour: 4, timeZone: "Europe/Sofia" };
@@ -88,6 +88,18 @@ describe("the FSRS optimizer", () => {
 		expect(await second.refitted).toBe(fitted);
 		await settled();
 		expect(db.inserts).toHaveLength(1);
+	})
+
+	it("still fits when the user's zone is one its time zone database does not know", async () => {
+		db.history = historyOf(300);
+		await fit("u", { rolloverHour: 4, timeZone: "Not/AZone" });
+		expect(db.inserts).toHaveLength(1);
+	})
+
+	it("reads a zone cookie no one knows as the server's zone", () => {
+		const event = zone => ({ locals: { user: { rolloverHour: 5 } }, cookies: { get: () => zone } });
+		expect(dayOf(event("Europe/Sofia"))).toEqual({ rolloverHour: 5, timeZone: "Europe/Sofia" });
+		expect(dayOf(event("Not/AZone")).timeZone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
 	})
 
 	it("refits at once when asked, joining a fit already under way", async () => {

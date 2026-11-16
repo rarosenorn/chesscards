@@ -322,8 +322,31 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] Study: a card showing its answer, turn to another deck: its card comes front up; a cram session is left and resumes when you turn back the same day
 [ ] Settings: the rename field and the In order / Mixed choice show the deck turned to, not the one before
 
+## Spaced repetition parameter optimization
+### Settings
+[ ] Settings has a "Spaced repetition parameter optimization" section with "Spaced repetition algorithm parameters are automatically optimized 14 days after the previous optimization."
+[ ] a new account: "Not optimized yet: study uses the default parameters."
+[ ] with under ~100 reviews: "Optimize parameters" gives "Last optimized <today> from N reviews, too few to fit yet: study uses the default parameters."
+[ ] with a few hundred reviews: "Last optimized <today> from N reviews." (N counts basic cards' reviews, not tactics')
+[ ] the button reads "Optimizing…" while it runs, then "Optimize parameters" again; the date is today in your own time zone, also just after midnight
+[ ] double-click "Optimize parameters": one optimization, no error
+[ ] press "Optimize parameters" again within the hour: "Parameters can be optimized once an hour. Try again in N minutes."; after the hour it optimizes again
+[ ] first Study visit (which optimizes by itself), then "Optimize parameters" right away: the once-an-hour message
+[ ] reload Settings after optimizing: the same "Last optimized" line
+### Study
+[ ] first visit to Study with no optimization yet: the page opens straight away; reload Settings: "Last optimized" is today
+[ ] the interval under Good can change a moment after Study opens, when an optimization lands (only on a visit 14+ days after the last)
+[ ] optimize in Settings in one tab while Study is open in another: that Study keeps its intervals until you open Study again
+[ ] grading works as before with the default parameters (no optimization yet) and with your own
+### Edge cases
+[ ] reset a deck, study it again, optimize: no error; the reset cards count from their new start
+[ ] delete a deck you have studied, optimize: still works, and N still counts that deck's reviews
+[ ] study a marketplace deck you have taken, optimize: N includes its reviews
+
 # Needed before launch
 ## today
+[ ] fsrs optimizer that uses reviews
+[ ] slug for deck and study?subdeck better?
 
 ## payment stuff
 [ ] company: Danish sole proprietorship or Bulgarian company, decided with a DK–BG tax adviser before the live Stripe account
@@ -337,8 +360,7 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] a real live-mode purchase and refund with a small amount before launch
 
 ## general stuff
-[ ] fsrs optimizer that uses reviews
-[ ] slug for deck and study?subdeck better?
+[ ] change to fsrs 7
 [ ] in zen mode should be able to change subdeck
 [ ] fsrs learning from machine learning reviews
 [ ] Landing page

@@ -856,15 +856,15 @@
 					aria-label={blackToMove ? "Black to move" : "White to move"}
 				></span>
 			{/if}
-			<!-- the board's Puzzle mark, here with the switch that sets it: on,
+			<!-- the board's Interactive mark, here with the switch that sets it: on,
 			     the back moves are played in study rather than revealed -->
 			<label class="puzzle-switch">
-				Puzzle
+				Interactive
 				<button
 					class="switch"
 					role="switch"
 					aria-checked={puzzle}
-					aria-label="Puzzle"
+					aria-label="Interactive"
 					onclick={() => puzzle = !puzzle}
 				></button>
 			</label>

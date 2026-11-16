@@ -304,8 +304,8 @@ const docPuzzlesWithoutBackBlocks = (doc, offset) => {
 
 const puzzleWithoutBackMessage = numbers =>
 	numbers.length > 1
-		? `Boards ${numbers.join(", ")} are puzzles but have no back moves`
-		: `Board ${numbers[0]} is a puzzle but has no back moves`;
+		? `Boards ${numbers.join(", ")} are interactive but have no back moves`
+		: `Board ${numbers[0]} is interactive but has no back moves`;
 
 const invalidFenMessage = numbers =>
 	numbers.length > 1

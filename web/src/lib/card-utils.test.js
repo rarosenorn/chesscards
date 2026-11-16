@@ -46,8 +46,8 @@ describe("docPuzzlesWithoutBackBlocks", () => {
 			board({ puzzle: true, solutionFrom: 2 })
 		), 2);
 		expect(numbers).toEqual([4, 6]);
-		expect(puzzleWithoutBackMessage(numbers)).toBe("Boards 4, 6 are puzzles but have no back moves");
-		expect(puzzleWithoutBackMessage([1])).toBe("Board 1 is a puzzle but has no back moves");
+		expect(puzzleWithoutBackMessage(numbers)).toBe("Boards 4, 6 are interactive but have no back moves");
+		expect(puzzleWithoutBackMessage([1])).toBe("Board 1 is interactive but has no back moves");
 	});
 
 	it("keeps the puzzle mark on a board saved without back moves", () => {

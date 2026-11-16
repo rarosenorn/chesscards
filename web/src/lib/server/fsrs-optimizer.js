@@ -1,5 +1,7 @@
 import { computeParameters, convertCsvToFsrsItems } from "@open-spaced-repetition/binding"
+import { default_w } from "ts-fsrs"
 import { pool } from "./pool.js"
+import { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE } from "$lib/rollover.js"
 
 // The FSRS model fitted to a user's own reviews, as Anki's Optimize button
 // does it, one set of parameters for all their decks. fsrs-rs (the optimizer
@@ -10,9 +12,16 @@ import { pool } from "./pool.js"
 const MODEL = "FSRS-6";
 const REFIT_DAYS = 14;
 
-// the fits under way in this process, by user, so a second visit waits on
-// the same one rather than starting another
+// the fits under way in this process, by user, so a second ask waits on the
+// same one rather than starting another
 const fitting = new Map();
+
+// the user's study day, as a request tells it: their rollover hour, in the
+// zone their browser left in a cookie
+const dayOf = ({ locals, cookies }) => ({
+	rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR,
+	timeZone: cookies.get(TZ_COOKIE) || Intl.DateTimeFormat().resolvedOptions().timeZone
+});
 
 // the review logs FSRS scheduled: basic cards' (a tactic's has no state), with
 // a card to belong to (logs from before ids were kept have none), graded
@@ -33,15 +42,25 @@ const asCsv = rows => new TextEncoder().encode([
 	...rows.map(row => `${row.card},${new Date(row.review).getTime()},${row.rating},${row.state},0`)
 ].join("\n"));
 
-const fit = async (userId, { rolloverHour, timeZone }) => {
+const fit = async (userId, day) => {
 	const rows = await historyOf(userId);
-	const items = convertCsvToFsrsItems(asCsv(rows), rolloverHour, timeZone, MODEL);
-	const parameters = await computeParameters(items, { enableShortTerm: true, numRelearningSteps: 1, modelVersion: MODEL });
+	const items = convertCsvToFsrsItems(asCsv(rows), day.rolloverHour, day.timeZone, MODEL);
+	const parameters = await computeParameters(items, { enableShortTerm: true, numRelearningSteps: 1, modelVersion: MODEL, timeout: 50 });
 	await pool.query(`
 		insert into fsrs_parameters (user_id, parameters, reviews, optimized_at) values ($1, $2, $3, now())
 		on conflict (user_id) do update set parameters = excluded.parameters, reviews = excluded.reviews, optimized_at = excluded.optimized_at`,
 		[userId, parameters, rows.length]);
-	return parameters;
+	return { parameters, reviews: rows.length };
+}
+
+// a fit for the user, or the one under way: what it found, or null if it failed
+const refit = (userId, day) => {
+	if (!fitting.has(userId)) {
+		fitting.set(userId, fit(userId, day)
+			.catch(err => { console.error("FSRS optimizer failed", err); return null; })
+			.finally(() => fitting.delete(userId)));
+	}
+	return fitting.get(userId);
 }
 
 // The parameters study schedules this user's cards with: their own, or null
@@ -52,12 +71,20 @@ const parametersFor = async (userId, day) => {
 	const { rows: [row] } = await pool.query(`
 		select parameters, optimized_at < now() - make_interval(days => $2) as stale
 		from fsrs_parameters where user_id = $1`, [userId, REFIT_DAYS]);
-	if ((!row || row.stale) && !fitting.has(userId)) {
-		fitting.set(userId, fit(userId, day)
-			.catch(err => { console.error("FSRS optimizer failed", err); return null; })
-			.finally(() => fitting.delete(userId)));
-	}
-	return { parameters: row?.parameters ?? null, refitted: fitting.get(userId) ?? null };
+	const under = !row || row.stale ? refit(userId, day) : fitting.get(userId);
+	return { parameters: row?.parameters ?? null, refitted: under?.then(found => found?.parameters ?? null) ?? null };
 }
 
-export { parametersFor, fit, asCsv, REFIT_DAYS }
+// the defaults, as fsrs-rs gives them back with too few reviews to fit
+const isDefault = parameters =>
+	parameters.length === default_w.length && parameters.every((w, i) => Math.abs(w - default_w[i]) < 1e-4);
+
+// the last fit, for Settings: when, from how many reviews, and whether they
+// were too few to move off the defaults; null before the first
+const lastFit = async userId => {
+	const { rows: [row] } = await pool.query(
+		"select parameters, reviews, optimized_at from fsrs_parameters where user_id = $1", [userId]);
+	return row ? { reviews: row.reviews, optimizedAt: row.optimized_at, defaults: isDefault(row.parameters) } : null;
+}
+
+export { parametersFor, refit, fit, lastFit, dayOf, asCsv, REFIT_DAYS }

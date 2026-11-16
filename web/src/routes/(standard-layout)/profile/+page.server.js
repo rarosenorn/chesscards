@@ -4,10 +4,12 @@ import * as payouts from "$lib/server/payouts.js"
 import { cleanName } from "$lib/display-name.js"
 import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS } from "$lib/board-prefs.js"
 import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
+import { refit, lastFit, dayOf, REFIT_DAYS } from "$lib/server/fsrs-optimizer.js"
 
 export const load = async ({ locals }) => ({
 	pageTitle: "Settings",
 	rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR,
+	fsrs: { last: locals.userId ? await lastFit(locals.userId) : null, refitDays: REFIT_DAYS },
 	hasPublished: locals.userId
 		? (await pool.query("select 1 from marketplace_decks where user_id = $1 limit 1", [locals.userId])).rowCount > 0
 		: false,
@@ -79,5 +81,13 @@ export const actions = {
 		}
 		await pool.query('update "user" set "rolloverHour" = $1 where id = $2', [rolloverHour, locals.userId]);
 		return { saved: "rollover" };
+	},
+	// the scheduling refitted to the user's reviews now, rather than when
+	// it is next due
+	optimize: async event => {
+		if (!await refit(event.locals.userId, dayOf(event))) {
+			return fail(500, { failed: "optimize", errors: ["Optimizing failed. Try again."] });
+		}
+		return { saved: "optimize" };
 	}
 }

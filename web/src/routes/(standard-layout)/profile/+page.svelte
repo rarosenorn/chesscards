@@ -18,6 +18,19 @@
 	// 4 -> "4am", for the pills below
 	const hourLabel = hour => `${hour}am`;
 
+	// the last fit of the scheduling to the user's reviews, in words
+	let optimizing = $state(false);
+	const optimizeSubmit = () => {
+		optimizing = true;
+		return async ({ update }) => { await update({ reset: false }); optimizing = false; };
+	};
+	const fitStatus = last => {
+		if (!last) return "Not optimized yet: study uses the default parameters.";
+		const when = new Date(last.optimizedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+		const from = `Last optimized ${when} from ${last.reviews.toLocaleString("en-US")} ${last.reviews === 1 ? "review" : "reviews"}`;
+		return last.defaults ? `${from}, too few to fit yet: study uses the default parameters.` : `${from}.`;
+	};
+
 	const themeLabels = {
 		"default": "Default",
 		"default-contrast": "Default contrast",
@@ -230,6 +243,23 @@
 			</p>
 		</fieldset>
 	</form>
+	<form method="POST" action="?/optimize" use:enhance={optimizeSubmit}>
+		<fieldset>
+			<legend>Scheduling</legend>
+			<div class="optimize-row">
+				<button class="std-btn">{optimizing ? "Optimizing…" : "Optimize now"}</button>
+				<span class="fit-status">{fitStatus(data.fsrs.last)}</span>
+			</div>
+			{#if form?.failed === "optimize"}
+				<p class="error">{form.errors[0]}</p>
+			{/if}
+			<p class="hint">
+				When cards come back is fitted to your own reviews, across all your
+				decks, and refitted automatically every {data.fsrs.refitDays} days.
+				Optimize now refits it at once.
+			</p>
+		</fieldset>
+	</form>
 	{#if data.payouts}
 		<PayoutSettings payouts={data.payouts} accountEmail={data.user.email} {form} />
 	{/if}
@@ -343,6 +373,16 @@
 	.preview-board.black-border {
 		border: 2px solid #404040;
 		border-radius: 2px;
+	}
+	.optimize-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px;
+	}
+	.fit-status {
+		font-size: 0.9rem;
+		color: rgba(0, 0, 0, 0.75);
 	}
 	.saved {
 		color: var(--accent);

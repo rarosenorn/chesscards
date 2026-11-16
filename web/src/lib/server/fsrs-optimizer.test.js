@@ -13,7 +13,8 @@ vi.mock("./pool.js", () => ({
 	}
 }));
 
-const { parametersFor, fit, asCsv } = await import("./fsrs-optimizer.js");
+const { parametersFor, fit, refit, lastFit, asCsv } = await import("./fsrs-optimizer.js");
+const { default_w } = await import("ts-fsrs");
 
 const day = { rolloverHour: 4, timeZone: "Europe/Sofia" };
 const DAY = 864e5;
@@ -83,9 +84,26 @@ describe("the FSRS optimizer", () => {
 		const first = await parametersFor("u", day);
 		const second = await parametersFor("u", day);
 		expect(first.parameters).toEqual([1, 2, 3]);
-		expect(second.refitted).toBe(first.refitted);
-		await first.refitted;
+		const fitted = await first.refitted;
+		expect(await second.refitted).toBe(fitted);
 		await settled();
 		expect(db.inserts).toHaveLength(1);
+	})
+
+	it("refits at once when asked, joining a fit already under way", async () => {
+		db.history = historyOf(300);
+		const [a, b] = [refit("u", day), refit("u", day)];
+		expect(a).toBe(b);
+		expect((await a).reviews).toBe(db.history.length);
+		expect(db.inserts).toHaveLength(1);
+	})
+
+	it("tells Settings when the last fit was, from how many reviews, and whether it kept the defaults", async () => {
+		expect(await lastFit("u")).toBe(null);
+		const at = new Date();
+		db.stored = { parameters: [...default_w], reviews: 40, optimized_at: at };
+		expect(await lastFit("u")).toEqual({ reviews: 40, optimizedAt: at, defaults: true });
+		db.stored = { parameters: default_w.map((w, i) => i === 0 ? w + 0.5 : w), reviews: 900, optimized_at: at };
+		expect((await lastFit("u")).defaults).toBe(false);
 	})
 })

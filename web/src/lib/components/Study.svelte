@@ -22,6 +22,9 @@
 	// all their cards: studying a deck studies everything under it. A card
 	// says which deck it sits in by its deck_id.
 	let deck = getContext("deck");
+	// the FSRS model fitted to the user's own reviews, or null for the
+	// defaults (lib/server/fsrs-optimizer.js)
+	let { fsrsParameters = null } = $props();
 	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
 
 	// a marketplace deck's cards can only be viewed, not edited: said of the
@@ -94,7 +97,8 @@
 	// date the card does not get.
 	// 95% retention, not the default 90%: a half-remembered opening line is
 	// a lost game, so recall is worth the extra reviews (about 1.5-2x).
-	const scheduler = fsrs({ enable_fuzz: true, request_retention: 0.95 })
+	// svelte-ignore state_referenced_locally -- a new fit is for the next visit
+	const scheduler = fsrs({ ...(fsrsParameters ? { w: fsrsParameters } : {}), enable_fuzz: true, request_retention: 0.95 })
 		.useStrategy(StrategyMode.SEED, GenSeedStrategyWithCardId("id"));
 
 	// --- the queue ---

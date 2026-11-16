@@ -357,6 +357,17 @@ create table review_logs (
 	check (card_id is null or marketplace_card_instance_id is null)
 );
 
+-- The FSRS model fitted to the user's own review logs, for all their decks
+-- (lib/server/fsrs-optimizer.js): refitted in the background once it is 14
+-- days old; without a row, study uses the defaults. reviews is how many logs
+-- the fit read.
+create table fsrs_parameters (
+	user_id uuid primary key references "user" ("id") on delete cascade,
+	parameters double precision[] not null,
+	reviews integer not null,
+	optimized_at timestamptz not null
+);
+
 -- Upload requests carry the marketplace listing details (name, description,
 -- price, thumbnail) and the ordered card ids chosen as the public preview;
 -- approval copies everything into the marketplace tables.

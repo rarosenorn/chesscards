@@ -24,6 +24,7 @@
 		"vitest": "^4.1.10"
 	},
 	"dependencies": {
+		"@open-spaced-repetition/binding": "0.6.1",
 		"@tiptap/core": "^3.24.0",
 		"@tiptap/extension-bold": "^3.24.0",
 		"@tiptap/extension-bubble-menu": "^3.24.0",

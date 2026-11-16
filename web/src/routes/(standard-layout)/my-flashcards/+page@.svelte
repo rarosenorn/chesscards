@@ -5,7 +5,7 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import { invalidateAll } from "$app/navigation"
 	import { deckSubtree } from "$lib/deck-tree.js"
-	import { createDeck, renameDeck, moveDeck, flattenDeck, setInOrder } from "./decks.remote.js"
+	import { createDeck, renameDeck, moveDeck, flattenDeck } from "./decks.remote.js"
 	let { data } = $props();
 
 	// Every deck of the user's as one tree, in reading order (decks.getListing):
@@ -130,12 +130,6 @@
 		await invalidateAll();
 	}
 
-	const chooseInOrder = async (row, inOrder) => {
-		if (row.in_order === inOrder) return;
-		await setInOrder({ id: row.id, inOrder });
-		await invalidateAll();
-	}
-
 	// Move to: the same move as a drag, picked from the tree — for a long
 	// list, and for a phone, where dragging is awkward. Anywhere of the
 	// user's own but inside the deck itself.
@@ -160,14 +154,14 @@
 	// --- the deck's menu ---
 	// The wheel at the end of a row opens it, and so does a right-click on
 	// the row. What a row offers depends on whose it is: a deck of the user's
-	// own all of it, a marketplace deck taken what is theirs to do with it,
-	// and a deck inside one only how its own decks are taken.
+	// own all of it, a marketplace deck taken only where it sits, and a deck
+	// inside one nothing.
 	let menu = $state(null);
 	const menuItems = row => {
-		if (isInsideTaken(row)) return row.holdsDecks ? ["order"] : [];
-		if (isTaken(row)) return ["move", ...(row.holdsDecks ? ["order"] : [])];
+		if (isInsideTaken(row)) return [];
+		if (isTaken(row)) return ["move"];
 		// flattening takes away the user's own decks inside; marketplace decks stay
-		return ["rename", "move", ...(ownDecksInside(row) ? ["flatten"] : []), "create", ...(row.holdsDecks ? ["order"] : [])];
+		return ["rename", "move", ...(ownDecksInside(row) ? ["flatten"] : []), "create"];
 	}
 	const openMenu = (row, x, y) => {
 		if (menuItems(row).length === 0) return;
@@ -344,14 +338,6 @@
 				<button onclick={() => fromMenu(createInside)}>Create subdeck</button>
 			{:else if item === "rename"}
 				<button onclick={() => fromMenu(rename)}>Rename</button>
-			{:else if item === "order"}
-				<!-- how the decks inside are taken, the one in force ticked -->
-				<span class="menu-heading">Decks inside</span>
-				{#each [[true, "In order"], [false, "Mixed"]] as [inOrder, label]}
-					<button class="menu-item" class:chosen={menu.row.in_order === inOrder} onclick={() => fromMenu(row => chooseInOrder(row, inOrder))}>
-						{label}
-					</button>
-				{/each}
 			{:else if item === "flatten"}
 				<button onclick={() => fromMenu(flatten)}>Flatten</button>
 			{:else if item === "move"}
@@ -760,17 +746,6 @@
 	.context-menu button:hover {
 		background-color: #f0f0f0;
 	}
-	/* the choices under the words that say what for, the one in force ticked */
-	.context-menu button.menu-item {
-		position: relative;
-		padding-left: 26px;
-		color: #404040;
-	}
-	.context-menu button.menu-item.chosen::before {
-		content: "✓";
-		position: absolute;
-		left: 10px;
-	}
 	/* Move to's choices: the tree as it reads, the one chosen lit */
 	.destinations {
 		display: flex;
@@ -791,14 +766,6 @@
 	}
 	.destination.chosen {
 		background-color: var(--accent-subtle-strong);
-	}
-	.menu-heading {
-		display: block;
-		padding: 4px 12px 2px;
-		font-size: 0.75rem;
-		font-weight: 600;
-		color: rgba(0, 0, 0, 0.5);
-		cursor: default;
 	}
 </style>
 

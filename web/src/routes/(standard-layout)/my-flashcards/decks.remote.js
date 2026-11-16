@@ -59,11 +59,3 @@ export const flattenDeck =
 		try { await decks.flatten(locals.userId, id); }
 		catch (err) { refused(err); }
 	})
-
-export const setInOrder =
-	command("unchecked", async ({ id, inOrder }) => {
-		const { locals } = getRequestEvent();
-		checkIds(id);
-		if (typeof inOrder !== "boolean") error(400, "Bad request");
-		if (!await decks.setInOrder(locals.userId, id, inOrder)) error(403, "Unauthorized");
-	})

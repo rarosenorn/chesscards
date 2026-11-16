@@ -8,8 +8,7 @@ const remote = vi.hoisted(() => ({
 	createDeck: vi.fn(async () => ({})),
 	renameDeck: vi.fn(async () => {}),
 	moveDeck: vi.fn(async () => {}),
-	flattenDeck: vi.fn(async () => {}),
-	setInOrder: vi.fn(async () => {})
+	flattenDeck: vi.fn(async () => {})
 }));
 vi.mock("./decks.remote.js", () => remote);
 vi.mock("$app/state", () => ({ page: { data: { pageTitle: "My flashcards" } } }));
@@ -81,14 +80,14 @@ describe("My flashcards", () => {
 	it("offers each kind of deck what is its to do", async () => {
 		const page = await open();
 		await page.wheel("Course");
-		expect(page.menuItems()).toEqual(["Rename", "Move to", "Flatten", "Create subdeck", "In order", "Mixed"]);
+		expect(page.menuItems()).toEqual(["Rename", "Move to", "Flatten", "Create subdeck"]);
 		await page.wheel("Empty");
 		expect(page.menuItems()).toEqual(["Rename", "Move to", "Create subdeck"]);
 		await page.wheel("Taken");
-		expect(page.menuItems()).toEqual(["Move to", "In order", "Mixed"]);
+		expect(page.menuItems()).toEqual(["Move to"]);
 		page.rowEl("Taken").querySelector(".expander").click();
 		await tick();
-		// a deck inside a marketplace deck with nothing inside it has nothing to offer
+		// a deck inside a marketplace deck has nothing to offer
 		expect(page.rowEl("Inside").querySelector(".wheel")).toBeFalsy();
 		page.close();
 	})
@@ -99,7 +98,7 @@ describe("My flashcards", () => {
 			row("Taken", 1, "Mine", { bought: true, instance_id: "Taken", total: 4 })
 		]);
 		await page.wheel("Mine");
-		expect(page.menuItems()).toEqual(["Rename", "Move to", "Create subdeck", "In order", "Mixed"]);
+		expect(page.menuItems()).toEqual(["Rename", "Move to", "Create subdeck"]);
 		page.close();
 	})
 
@@ -130,15 +129,6 @@ describe("My flashcards", () => {
 		expect(page.dialog().querySelector("input").value).toBe("Course");
 		await page.press("Cancel", page.dialog());
 		expect(remote.renameDeck).toHaveBeenCalledTimes(1);
-		page.close();
-	})
-
-	it("sets in order or mixed, the one in force ticked", async () => {
-		const page = await open();
-		await page.wheel("Course");
-		expect(page.button("In order", page.menu()).classList.contains("chosen")).toBe(true);
-		await page.press("Mixed", page.menu());
-		expect(remote.setInOrder).toHaveBeenCalledWith({ id: "Course", inOrder: false });
 		page.close();
 	})
 

@@ -18,6 +18,11 @@ const MANUAL_GAP_MINUTES = 60;
 // Anki's training (rslib's fsrs/params.rs): 8 epochs where fsrs-rs's FSRS-6
 // default is 5, the rest fsrs-rs's own defaults
 const TRAINING = { numEpochs: 8, batchSize: 512, seed: 2023, learningRate: 4e-2, maxSeqLen: 256, gamma: 1 };
+// fits running at once, each a thread with fsrs-rs loaded: more wait their turn
+const PARALLEL_FITS = 2;
+// far past what a fit of the longest history takes; a worker silent for this
+// long is not coming back
+const FIT_TIMEOUT = 120_000;
 
 // the fits under way in this process, by user, so a second ask waits on the
 // same one rather than starting another
@@ -91,13 +96,41 @@ const WORKER_SOURCE = `(async () => {
 		err => parentPort.postMessage({ error: String(err?.stack ?? err) }));
 })();`;
 
-// a fit in its own worker thread, the review CSV handed over rather than copied
-const inWorker = data => new Promise((resolve, reject) => {
-	const worker = new Worker(WORKER_SOURCE, { eval: true, workerData: { ...data, bindingUrl: BINDING_URL }, transferList: [data.csv.buffer] });
-	worker.once("message", ({ parameters, error }) => error ? reject(new Error(error)) : resolve(parameters));
-	worker.once("error", reject);
-	worker.once("exit", code => reject(new Error(`FSRS worker exited (${code}) without a result`)));
+// a fit in its own worker thread, the review CSV handed over rather than
+// copied; settled once the thread is gone, and stopped if it does not finish
+// in time
+const inWorker = (data, { source = WORKER_SOURCE, timeout = FIT_TIMEOUT } = {}) => new Promise((resolve, reject) => {
+	const worker = new Worker(source, { eval: true, workerData: { ...data, bindingUrl: BINDING_URL }, transferList: [data.csv.buffer] });
+	let result = null, failure = null;
+	const timer = setTimeout(() => {
+		failure = new Error(`FSRS worker did not finish in ${timeout} ms`);
+		worker.terminate();
+	}, timeout);
+	worker.once("message", message => {
+		result = message;
+		worker.terminate();
+	});
+	worker.once("error", err => { failure = err; });
+	worker.once("exit", code => {
+		clearTimeout(timer);
+		if (result?.error) reject(new Error(result.error));
+		else if (result) resolve(result.parameters);
+		else reject(failure ?? new Error(`FSRS worker exited (${code}) without a result`));
+	});
 });
+
+// the fits waiting for a worker, in the order they asked
+let running = 0;
+const waiting = [];
+const inTurn = async job => {
+	if (running >= PARALLEL_FITS) await new Promise(resolve => waiting.push(resolve));
+	running++;
+	try { return await job(); }
+	finally {
+		running--;
+		waiting.shift()?.();
+	}
+}
 
 // The review logs FSRS scheduled, as the CSV of the FSRS benchmark's revlog
 // that fsrs-rs reads, built by Postgres so this thread never holds them row by
@@ -120,10 +153,12 @@ const fit = async (userId, day) => {
 		historyOf(userId),
 		pool.query("select parameters from fsrs_parameters where user_id = $1", [userId])
 	]);
-	const parameters = await inWorker({
+	const inUse = [...(stored?.parameters ?? default_w)];
+	// nothing to fit: what is in use stays, as the fit would say
+	const parameters = reviews === 0 ? inUse : await inTurn(() => inWorker({
 		csv: new TextEncoder().encode(csv), rolloverHour: day.rolloverHour, timeZone: day.timeZone, offset: offsetOf(day.timeZone),
-		inUse: [...(stored?.parameters ?? default_w)], model: MODEL, training: TRAINING
-	});
+		inUse, model: MODEL, training: TRAINING
+	}));
 	await pool.query(`
 		insert into fsrs_parameters (user_id, parameters, reviews, optimized_at) values ($1, $2, $3, now())
 		on conflict (user_id) do update set parameters = excluded.parameters, reviews = excluded.reviews, optimized_at = excluded.optimized_at`,
@@ -176,4 +211,4 @@ const lastFit = async userId => {
 	return row ? { reviews: row.reviews, optimizedAt: row.optimized_at, defaults: isDefault(row.parameters) } : null;
 }
 
-export { parametersFor, refit, optimizeNow, fit, fitReviews, lastFit, dayOf, REFIT_DAYS }
+export { parametersFor, refit, optimizeNow, fit, fitReviews, inWorker, lastFit, dayOf, REFIT_DAYS }

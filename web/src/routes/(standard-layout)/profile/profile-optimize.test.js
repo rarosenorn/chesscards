@@ -18,7 +18,7 @@ const open = last => {
 		user: { displayName: "Me", email: "me@example.com" }, boardPrefs: DEFAULT_BOARD_PREFS, rolloverHour: 4,
 		fsrs: { last, refitDays: 14 }, hasPublished: false, payouts: null, twoFactor: { required: false }
 	} } });
-	const section = () => [...target.querySelectorAll("section")].find(f => f.querySelector("h3")?.textContent === "Scheduling");
+	const section = () => [...target.querySelectorAll("section")].find(f => f.querySelector("h3")?.textContent === "Spaced repetition parameter optimization");
 	return { target, section, close: () => { unmount(app); target.remove(); } };
 }
 
@@ -58,7 +58,7 @@ describe("Settings' sections", () => {
 	it("are headed as the deck's are, from the name down to the danger zone", async () => {
 		const view = open(null);
 		expect([...view.target.querySelectorAll(".container > section > h3")].map(h => h.textContent.trim()))
-			.toEqual(["Display name", "Board", "A new day starts at", "Scheduling", "Account", "Danger zone"]);
+			.toEqual(["Display name", "Board", "A new day starts at", "Spaced repetition parameter optimization", "Account", "Danger zone"]);
 		expect(view.target.querySelector("#display-name").labels[0].textContent).toBe("Display name");
 		view.close();
 	})

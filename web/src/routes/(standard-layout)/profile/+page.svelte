@@ -248,7 +248,7 @@
 		</form>
 	</section>
 	<section>
-		<h3>Scheduling</h3>
+		<h3>Spaced repetition parameter optimization</h3>
 		<p class="section-note">
 			When cards come back is fitted to your own reviews, across all your
 			decks, and refitted automatically every {data.fsrs.refitDays} days.

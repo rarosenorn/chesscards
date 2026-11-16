@@ -225,10 +225,11 @@
 	<section>
 		<h3 id="new-day">A new day starts at</h3>
 		<p class="section-note">
-			A card scheduled a day or more ahead waits for this hour rather
-			than for the time of day you last saw it — so studying past
-			midnight is still the same day's session instead of two days'
-			cards at once. The short learning steps are unaffected. Pick an
+			A card scheduled a day or more ahead, or a learning step that
+			would end past this hour, waits for this hour rather than for the
+			time of day you last saw it — so studying past midnight is still
+			the same day's session instead of two days' cards at once.
+			Learning steps that end before it keep their exact times. Pick an
 			hour you are reliably asleep at.
 		</p>
 		<form

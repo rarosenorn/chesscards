@@ -39,7 +39,6 @@ const historyOf = cards => {
 }
 
 const settled = () => new Promise(resolve => setTimeout(resolve, 0));
-const until = async check => { for (let i = 0; i < 400 && !check(); i++) await new Promise(r => setTimeout(r, 10)); }
 
 beforeEach(() => { db.history = []; db.stored = null; db.inserts = []; });
 
@@ -64,24 +63,28 @@ describe("the FSRS optimizer", () => {
 		expect(fitted).not.toEqual(defaults);
 	})
 
-	it("starts a fit in the background when there is none yet, studying on the defaults meanwhile", async () => {
+	it("starts a fit when there is none yet, studying on the defaults until it lands", async () => {
 		db.history = historyOf(300);
-		expect(await parametersFor("first", day)).toBe(null);
-		await until(() => db.inserts.length === 1);
-		expect(db.inserts[0][0]).toBe("first");
+		const { parameters, refitted } = await parametersFor("first", day);
+		expect(parameters).toBe(null);
+		const fitted = await refitted;
+		expect(fitted).toHaveLength(21);
+		expect(db.inserts[0]).toEqual(["first", fitted, db.history.length]);
 	})
 
 	it("uses a fit under 14 days old as it is, and refits an older one once however often study opens", async () => {
 		db.stored = { parameters: [1, 2, 3], stale: false };
-		expect(await parametersFor("u", day)).toEqual([1, 2, 3]);
+		expect(await parametersFor("u", day)).toEqual({ parameters: [1, 2, 3], refitted: null });
 		await settled();
 		expect(db.inserts).toHaveLength(0);
 
 		db.stored = { parameters: [1, 2, 3], stale: true };
 		db.history = historyOf(300);
-		expect(await parametersFor("u", day)).toEqual([1, 2, 3]);
-		expect(await parametersFor("u", day)).toEqual([1, 2, 3]);
-		await until(() => db.inserts.length > 0);
+		const first = await parametersFor("u", day);
+		const second = await parametersFor("u", day);
+		expect(first.parameters).toEqual([1, 2, 3]);
+		expect(second.refitted).toBe(first.refitted);
+		await first.refitted;
 		await settled();
 		expect(db.inserts).toHaveLength(1);
 	})

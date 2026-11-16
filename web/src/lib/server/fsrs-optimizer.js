@@ -10,8 +10,9 @@ import { pool } from "./pool.js"
 const MODEL = "FSRS-6";
 const REFIT_DAYS = 14;
 
-// users being fitted in this process, so a second visit doesn't start another
-const fitting = new Set();
+// the fits under way in this process, by user, so a second visit waits on
+// the same one rather than starting another
+const fitting = new Map();
 
 // the review logs FSRS scheduled: basic cards' (a tactic's has no state), with
 // a card to belong to (logs from before ids were kept have none), graded
@@ -40,22 +41,23 @@ const fit = async (userId, { rolloverHour, timeZone }) => {
 		insert into fsrs_parameters (user_id, parameters, reviews, optimized_at) values ($1, $2, $3, now())
 		on conflict (user_id) do update set parameters = excluded.parameters, reviews = excluded.reviews, optimized_at = excluded.optimized_at`,
 		[userId, parameters, rows.length]);
+	return parameters;
 }
 
 // The parameters study schedules this user's cards with: their own, or null
 // for the defaults until the first fit. When they are missing or 14 days old
-// a new fit starts in the background, for the next visit to use.
+// a refit starts, and `refitted` is it: the new parameters once it is done
+// (null if it failed), for study to switch to without waiting for it.
 const parametersFor = async (userId, day) => {
 	const { rows: [row] } = await pool.query(`
 		select parameters, optimized_at < now() - make_interval(days => $2) as stale
 		from fsrs_parameters where user_id = $1`, [userId, REFIT_DAYS]);
 	if ((!row || row.stale) && !fitting.has(userId)) {
-		fitting.add(userId);
-		fit(userId, day)
-			.catch(err => console.error("FSRS optimizer failed", err))
-			.finally(() => fitting.delete(userId));
+		fitting.set(userId, fit(userId, day)
+			.catch(err => { console.error("FSRS optimizer failed", err); return null; })
+			.finally(() => fitting.delete(userId)));
 	}
-	return row?.parameters ?? null;
+	return { parameters: row?.parameters ?? null, refitted: fitting.get(userId) ?? null };
 }
 
 export { parametersFor, fit, asCsv, REFIT_DAYS }

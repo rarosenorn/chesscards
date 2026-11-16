@@ -5,4 +5,4 @@
 	let { data } = $props();
 </script>
 
-<Study fsrsParameters={data.fsrsParameters} />
+<Study fsrsParameters={data.fsrsParameters} refitted={data.refitted} />

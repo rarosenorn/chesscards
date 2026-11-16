@@ -158,7 +158,8 @@
 	let now = $state(Date.now());
 	// still owed, whenever it falls due
 	const isWaiting = card => !card.finished_at && !gated(card);
-	// An interval of a day or more is read against the day boundary, not the
+	// A day-scale card — an interval of a day or more, or a step that runs
+	// past the next rollover — is read against the day boundary, not the
 	// clock time it was graded at (see rollover.js) — so a card graded at 10pm
 	// is waiting at 4am, the way Anki has it.
 	const isDue = card => isWaiting(card) && isDueAt(card, now, rolloverHour());

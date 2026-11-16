@@ -326,13 +326,14 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 ### Settings
 [ ] Settings has a "Spaced repetition parameter optimization" section with "Spaced repetition algorithm parameters are automatically optimized 14 days after the previous optimization."
 [ ] a new account: "Not optimized yet: study uses the default parameters."
-[ ] with under ~100 reviews: "Optimize parameters" gives "Last optimized <today> from N reviews, too few to fit yet: study uses the default parameters."
+[ ] with under ~100 reviews: "Optimize parameters" gives "Last optimized <today> from N reviews; the default parameters are still in use."
 [ ] with a few hundred reviews: "Last optimized <today> from N reviews." (N counts basic cards' reviews, not tactics')
 [ ] the button reads "Optimizing…" while it runs, then "Optimize parameters" again; the date is today in your own time zone, also just after midnight
 [ ] double-click "Optimize parameters": one optimization, no error
 [ ] press "Optimize parameters" again within the hour: "Parameters can be optimized once an hour. Try again in N minutes."; after the hour it optimizes again
 [ ] first Study visit (which optimizes by itself), then "Optimize parameters" right away: the once-an-hour message
 [ ] reload Settings after optimizing: the same "Last optimized" line
+[ ] optimize twice in a row (an hour apart) with no new reviews: the second keeps the same parameters, so study's intervals don't change
 ### Study
 [ ] first visit to Study with no optimization yet: the page opens straight away; reload Settings: "Last optimized" is today
 [ ] the interval under Good can change a moment after Study opens, when an optimization lands (only on a visit 14+ days after the last)
@@ -343,9 +344,25 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] delete a deck you have studied, optimize: still works, and N still counts that deck's reviews
 [ ] study a marketplace deck you have taken, optimize: N includes its reviews
 
+## Learning steps past the new day
+### The buttons
+[ ] a new card shown a few minutes before "A new day starts at" (4am by default): under Hard and Good a step that would end after 4am reads "1d", not minutes; Again (1m) still reads 1m if it ends before 4am
+[ ] the same card in the afternoon: 1m / 6m / 10m as before
+[ ] a card whose Hard would come back just under a day later never reads "24h": it reads "1d"
+### When the card comes back
+[ ] grade a card in the evening so a step ends after 4am: "Next review: tomorrow" when nothing else is left, not "in N hours"
+[ ] after 4am the card is in Study's learning count and shows, not only at the hour the step ended
+[ ] before 4am it does not show, also not in the last 20 minutes before 4am when nothing else is left (learn-ahead does not reach into tomorrow)
+[ ] My flashcards: the deck's Learn number matches Study's, before and after 4am
+[ ] Cards tab: the card's due date is the next day's date
+[ ] a step that ends before 4am (graded in the afternoon) still comes back at its exact time
+### Settings
+[ ] Profile, "A new day starts at": the text says learning steps past the hour wait for it too
+[ ] change the hour (e.g. to 6am): a step graded at 8pm ending at 5am now comes back at 5am exactly; at 4am it would have waited for 4am
+
 # Needed before launch
 ## today
-[ ] fsrs optimizer that uses reviews
+[y] fsrs optimizer that uses reviews
 [ ] slug for deck and study?subdeck better?
 
 ## payment stuff
@@ -367,6 +384,7 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] why flashcards page
 [ ] Wiki page better
 [ ] db migrations
+[ ] fix the card height in different modes differences
 [ ] reporting reviews / decks
 [ ] claude: Legal pages: terms of service, a privacy policy (GDPR), and a copyright and takedown policy. The last one matters because decks can be built from books and paid courses.
 [ ] author stats page to see stats of their marketplace decks, sales, refunds etc.

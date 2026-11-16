@@ -92,7 +92,7 @@
 		save: async name => { await createDeck({ name }); await invalidateAll(); }
 	});
 	const createInside = row => askName({
-		title: `New deck in ${row.name}`, confirmLabel: "Create",
+		title: `New subdeck in ${row.name}`, confirmLabel: "Create",
 		save: async name => { await createDeck({ name, parentId: row.id }); expand(row.id); await invalidateAll(); }
 	});
 	const rename = row => askName({
@@ -136,7 +136,7 @@
 		await invalidateAll();
 	}
 
-	// Move to…: the same move as a drag, picked from the tree — for a long
+	// Move to: the same move as a drag, picked from the tree — for a long
 	// list, and for a phone, where dragging is awkward. Anywhere of the
 	// user's own but inside the deck itself.
 	let moving = $state({ row: null, to: null });
@@ -167,7 +167,7 @@
 		if (isInsideTaken(row)) return row.holdsDecks ? ["order"] : [];
 		if (isTaken(row)) return ["move", ...(row.holdsDecks ? ["order"] : [])];
 		// flattening takes away the user's own decks inside; marketplace decks stay
-		return ["create", "rename", ...(row.holdsDecks ? ["order"] : []), ...(ownDecksInside(row) ? ["flatten"] : []), "move"];
+		return ["rename", "move", ...(ownDecksInside(row) ? ["flatten"] : []), "create", ...(row.holdsDecks ? ["order"] : [])];
 	}
 	const openMenu = (row, x, y) => {
 		if (menuItems(row).length === 0) return;
@@ -341,7 +341,7 @@
 	>
 		{#each menuItems(menu.row) as item}
 			{#if item === "create"}
-				<button onclick={() => fromMenu(createInside)}>New deck inside</button>
+				<button onclick={() => fromMenu(createInside)}>Create subdeck</button>
 			{:else if item === "rename"}
 				<button onclick={() => fromMenu(rename)}>Rename</button>
 			{:else if item === "order"}
@@ -355,7 +355,7 @@
 			{:else if item === "flatten"}
 				<button onclick={() => fromMenu(flatten)}>Flatten</button>
 			{:else if item === "move"}
-				<button onclick={() => fromMenu(moveTo)}>Move to…</button>
+				<button onclick={() => fromMenu(moveTo)}>Move to</button>
 			{/if}
 		{/each}
 	</div>
@@ -384,7 +384,7 @@
 	</div>
 {/snippet}
 
-<!-- where Move to… can put the deck: the top of the list, or inside any deck
+<!-- where Move to can put the deck: the top of the list, or inside any deck
      of the user's own but itself and what is inside it, as the tree reads -->
 {#snippet destinationField()}
 	<div class="destinations" role="radiogroup">
@@ -771,7 +771,7 @@
 		position: absolute;
 		left: 10px;
 	}
-	/* Move to…'s choices: the tree as it reads, the one chosen lit */
+	/* Move to's choices: the tree as it reads, the one chosen lit */
 	.destinations {
 		display: flex;
 		flex-direction: column;

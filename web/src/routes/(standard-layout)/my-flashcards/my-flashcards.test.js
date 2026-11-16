@@ -81,11 +81,11 @@ describe("My flashcards", () => {
 	it("offers each kind of deck what is its to do", async () => {
 		const page = await open();
 		await page.wheel("Course");
-		expect(page.menuItems()).toEqual(["New deck inside", "Rename", "In order", "Mixed", "Flatten", "Move to…"]);
+		expect(page.menuItems()).toEqual(["Rename", "Move to", "Flatten", "Create subdeck", "In order", "Mixed"]);
 		await page.wheel("Empty");
-		expect(page.menuItems()).toEqual(["New deck inside", "Rename", "Move to…"]);
+		expect(page.menuItems()).toEqual(["Rename", "Move to", "Create subdeck"]);
 		await page.wheel("Taken");
-		expect(page.menuItems()).toEqual(["Move to…", "In order", "Mixed"]);
+		expect(page.menuItems()).toEqual(["Move to", "In order", "Mixed"]);
 		page.rowEl("Taken").querySelector(".expander").click();
 		await tick();
 		// a deck inside a marketplace deck with nothing inside it has nothing to offer
@@ -99,15 +99,15 @@ describe("My flashcards", () => {
 			row("Taken", 1, "Mine", { bought: true, instance_id: "Taken", total: 4 })
 		]);
 		await page.wheel("Mine");
-		expect(page.menuItems()).toEqual(["New deck inside", "Rename", "In order", "Mixed", "Move to…"]);
+		expect(page.menuItems()).toEqual(["Rename", "Move to", "Create subdeck", "In order", "Mixed"]);
 		page.close();
 	})
 
 	it("makes a deck inside another, asking its name", async () => {
 		const page = await open();
 		await page.wheel("Course");
-		await page.press("New deck inside");
-		expect(page.dialog().textContent).toContain("New deck in Course");
+		await page.press("Create subdeck");
+		expect(page.dialog().textContent).toContain("New subdeck in Course");
 		const input = page.dialog().querySelector("input");
 		input.value = "Ch3";
 		input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -142,10 +142,10 @@ describe("My flashcards", () => {
 		page.close();
 	})
 
-	it("moves a deck through Move to…, anywhere but inside itself", async () => {
+	it("moves a deck through Move to, anywhere but inside itself", async () => {
 		const page = await open();
 		await page.wheel("Course");
-		await page.press("Move to…");
+		await page.press("Move to");
 		const choices = [...page.dialog().querySelectorAll(".destination")].map(el => el.textContent.trim());
 		expect(choices).toEqual(["Top of the list", "Empty"]);
 		await page.press("Empty", page.dialog());

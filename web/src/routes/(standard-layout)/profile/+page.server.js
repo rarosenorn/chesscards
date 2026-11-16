@@ -4,7 +4,7 @@ import * as payouts from "$lib/server/payouts.js"
 import { cleanName } from "$lib/display-name.js"
 import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS } from "$lib/board-prefs.js"
 import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
-import { refit, lastFit, dayOf, REFIT_DAYS } from "$lib/server/fsrs-optimizer.js"
+import { optimizeNow, lastFit, dayOf, REFIT_DAYS } from "$lib/server/fsrs-optimizer.js"
 
 export const load = async ({ locals, cookies }) => ({
 	pageTitle: "Settings",
@@ -83,11 +83,13 @@ export const actions = {
 		return { saved: "rollover" };
 	},
 	// the scheduling refitted to the user's reviews now, rather than when
-	// it is next due
+	// it is next due; at most once an hour
 	optimize: async event => {
-		if (!await refit(event.locals.userId, dayOf(event))) {
-			return fail(500, { failed: "optimize", errors: ["Optimizing failed. Try again."] });
+		const { wait, fitted } = await optimizeNow(event.locals.userId, dayOf(event));
+		if (wait) {
+			return fail(429, { failed: "optimize", errors: [`Parameters can be optimized once an hour. Try again in ${wait} ${wait === 1 ? "minute" : "minutes"}.`] });
 		}
+		if (!fitted) return fail(500, { failed: "optimize", errors: ["Optimizing failed. Try again."] });
 		return { saved: "optimize" };
 	}
 }

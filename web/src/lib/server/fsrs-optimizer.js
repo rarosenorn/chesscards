@@ -11,6 +11,8 @@ import { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE } from "$lib/rollover.js"
 // gives back the defaults. FSRS-6, the model ts-fsrs 5 schedules with.
 const MODEL = "FSRS-6";
 const REFIT_DAYS = 14;
+// Settings' button refits at most this often, counted from the last fit
+const MANUAL_GAP_MINUTES = 60;
 
 // the fits under way in this process, by user, so a second ask waits on the
 // same one rather than starting another
@@ -91,6 +93,16 @@ const refit = (userId, day) => {
 	return fitting.get(userId);
 }
 
+// Settings' Optimize parameters: a refit now, unless the last one was under
+// an hour ago; then the minutes left to wait
+const optimizeNow = async (userId, day) => {
+	const { rows: [row] } = await pool.query(`
+		select ceil(extract(epoch from optimized_at + make_interval(mins => $2) - now()) / 60)::int as wait
+		from fsrs_parameters where user_id = $1`, [userId, MANUAL_GAP_MINUTES]);
+	if (row?.wait > 0) return { wait: row.wait };
+	return { fitted: await refit(userId, day) };
+}
+
 // The parameters study schedules this user's cards with: their own, or null
 // for the defaults until the first fit. When they are missing or 14 days old
 // a refit starts, and `refitted` is it: the new parameters once it is done
@@ -115,4 +127,4 @@ const lastFit = async userId => {
 	return row ? { reviews: row.reviews, optimizedAt: row.optimized_at, defaults: isDefault(row.parameters) } : null;
 }
 
-export { parametersFor, refit, fit, lastFit, dayOf, asCsv, REFIT_DAYS }
+export { parametersFor, refit, optimizeNow, fit, lastFit, dayOf, asCsv, REFIT_DAYS }

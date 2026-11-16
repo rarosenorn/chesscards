@@ -256,7 +256,7 @@
 			Spaced repetition algorithm parameters are automatically optimized
 			{data.fsrs.refitDays} days after the previous optimization.
 		</p>
-		<p class="fit-status">{fitStatus(data.fsrs.last, data.fsrs.timeZone)}</p>
+		<p class="fit-status" aria-live="polite">{fitStatus(data.fsrs.last, data.fsrs.timeZone)}</p>
 		<form method="POST" action="?/optimize" use:enhance={optimizeSubmit}>
 			<button class="std-btn">{optimizing ? "Optimizing…" : "Optimize parameters"}</button>
 		</form>

@@ -1,19 +1,20 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
-const db = vi.hoisted(() => ({ history: [], stored: null, inserts: [] }));
+const db = vi.hoisted(() => ({ history: [], stored: null, inserts: [], wait: null }));
 vi.mock("./pool.js", () => ({
 	pool: {
 		query: vi.fn(async (sql, params) => {
 			if (sql.includes("from review_logs")) return { rows: db.history };
 			if (sql.includes("insert into fsrs_parameters")) { db.inserts.push(params); return { rows: [] }; }
+			if (sql.includes("as wait")) return { rows: db.wait == null ? [] : [{ wait: db.wait }] };
 			if (sql.includes("from fsrs_parameters")) return { rows: db.stored ? [db.stored] : [] };
 			throw new Error(`unexpected query: ${sql}`);
 		})
 	}
 }));
 
-const { parametersFor, fit, refit, lastFit, dayOf, asCsv } = await import("./fsrs-optimizer.js");
+const { parametersFor, fit, refit, optimizeNow, lastFit, dayOf, asCsv } = await import("./fsrs-optimizer.js");
 const { default_w } = await import("ts-fsrs");
 
 const day = { rolloverHour: 4, timeZone: "Europe/Sofia" };
@@ -41,7 +42,7 @@ const historyOf = cards => {
 
 const settled = () => new Promise(resolve => setTimeout(resolve, 0));
 
-beforeEach(() => { db.history = []; db.stored = null; db.inserts = []; });
+beforeEach(() => { db.history = []; db.stored = null; db.inserts = []; db.wait = null; });
 
 describe("the FSRS optimizer", () => {
 	it("writes the review logs in the revlog columns fsrs-rs reads", () => {
@@ -108,6 +109,18 @@ describe("the FSRS optimizer", () => {
 		expect(a).toBe(b);
 		expect((await a).reviews).toBe(db.history.length);
 		expect(db.inserts).toHaveLength(1);
+	})
+
+	it("optimizes from Settings at most once an hour, saying how long is left", async () => {
+		db.history = historyOf(300);
+		db.wait = 23;
+		expect(await optimizeNow("u", day)).toEqual({ wait: 23 });
+		expect(db.inserts).toHaveLength(0);
+		db.wait = -5;
+		expect((await optimizeNow("u", day)).fitted.reviews).toBe(db.history.length);
+		db.wait = null;
+		expect((await optimizeNow("first", day)).fitted).toBeTruthy();
+		expect(db.inserts).toHaveLength(2);
 	})
 
 	it("tells Settings when the last fit was, from how many reviews, and whether it kept the defaults", async () => {

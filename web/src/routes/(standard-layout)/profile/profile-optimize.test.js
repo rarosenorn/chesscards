@@ -18,7 +18,7 @@ const open = last => {
 		user: { displayName: "Me", email: "me@example.com" }, boardPrefs: DEFAULT_BOARD_PREFS, rolloverHour: 4,
 		fsrs: { last, refitDays: 14 }, hasPublished: false, payouts: null, twoFactor: { required: false }
 	} } });
-	const section = () => [...target.querySelectorAll("fieldset")].find(f => f.querySelector("legend")?.textContent === "Scheduling");
+	const section = () => [...target.querySelectorAll("section")].find(f => f.querySelector("h3")?.textContent === "Scheduling");
 	return { target, section, close: () => { unmount(app); target.remove(); } };
 }
 
@@ -26,7 +26,7 @@ describe("Settings' scheduling", () => {
 	it("says how the scheduling is fitted, and when it last was", async () => {
 		let view = open(null);
 		expect(view.section().textContent).toContain("Not optimized yet: study uses the default parameters.");
-		expect(view.section().querySelector(".hint").textContent.replace(/\s+/g, " ")).toContain("refitted automatically every 14 days");
+		expect(view.section().querySelector(".section-note").textContent.replace(/\s+/g, " ")).toContain("refitted automatically every 14 days");
 		view.close();
 
 		view = open({ reviews: 1234, optimizedAt: "2026-11-16T10:00:00Z", defaults: false });
@@ -50,6 +50,16 @@ describe("Settings' scheduling", () => {
 		await done({ update: async () => {} });
 		await tick();
 		expect(button.textContent).toBe("Optimize now");
+		view.close();
+	})
+})
+
+describe("Settings' sections", () => {
+	it("are headed as the deck's are, from the name down to the danger zone", async () => {
+		const view = open(null);
+		expect([...view.target.querySelectorAll(".container > section > h3")].map(h => h.textContent.trim()))
+			.toEqual(["Display name", "Board", "A new day starts at", "Scheduling", "Account", "Danger zone"]);
+		expect(view.target.querySelector("#display-name").labels[0].textContent).toBe("Display name");
 		view.close();
 	})
 })

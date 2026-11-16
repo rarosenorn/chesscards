@@ -66,7 +66,7 @@
 </script>
 
 <section id="two-factor" class="two-factor">
-	<h2>Two-factor login</h2>
+	<h3>Two-factor login</h3>
 	{#if enabled && step === "idle"}
 		{#if verified}
 			<p>On. Logging in with your email and password also asks for a code from your authenticator app.</p>
@@ -135,21 +135,12 @@
 
 <style>
 	.two-factor {
-		margin-top: 26px;
-		padding-top: 16px;
-		border-top: 1px solid rgba(0, 0, 0, 0.1);
 		display: flex;
 		flex-direction: column;
 		align-items: start;
 		gap: 10px;
 		font-size: 0.95rem;
 		color: rgba(0, 0, 0, 0.75);
-	}
-	h2 {
-		margin: 0;
-		font-size: 1rem;
-		font-weight: 600;
-		color: rgba(0, 0, 0, 0.85);
 	}
 	p {
 		margin: 0;

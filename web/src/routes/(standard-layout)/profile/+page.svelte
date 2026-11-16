@@ -117,9 +117,9 @@
 </script>
 
 <div class="container card-surface">
-	<form method="POST" action="?/name" class="name-form" use:enhance={keepState}>
-		<label for="display-name">Display name</label>
-		<div class="name-row">
+	<section>
+		<h3><label for="display-name">Display name</label></h3>
+		<form method="POST" action="?/name" class="name-row" use:enhance={keepState}>
 			<input id="display-name" name="display-name" bind:value={displayName} maxlength="100" />
 			<button class="std-btn">Change</button>
 			{#if form?.saved === "name"}
@@ -127,106 +127,117 @@
 			{:else if form?.failed === "name"}
 				<span class="error">{form.errors[0]}</span>
 			{/if}
-		</div>
-	</form>
-	<form
-		method="POST"
-		action="?/board"
-		use:enhance={keepState}
-		onchange={e => e.currentTarget.requestSubmit()}
-	>
-		<div class="columns">
-			<div class="fields">
-				<fieldset>
-					<legend>Pieces</legend>
-					<div class="pills">
-						{#each PIECE_SETS as set}
-							<label class="pill" class:selected={prefs.pieceSet === set}>
-								<input type="radio" name="piece-set" value={set} bind:group={prefs.pieceSet} />
-								{pieceLabels[set]}
-							</label>
-						{/each}
-					</div>
-				</fieldset>
-				<fieldset>
-					<legend>Board colors</legend>
-					<div class="pills">
-						{#each BOARD_THEMES as theme}
-							<label class="pill" class:selected={prefs.boardTheme === theme}>
-								<input type="radio" name="board-theme" value={theme} bind:group={prefs.boardTheme} />
-								{themeLabels[theme]}
-							</label>
-						{/each}
-					</div>
-				</fieldset>
-				<fieldset>
-					<legend>Border</legend>
-					<div class="pills">
-						{#each BORDER_TYPES as border}
-							<label class="pill" class:selected={prefs.borderType === border}>
-								<input type="radio" name="border-type" value={border} bind:group={prefs.borderType} />
-								{borderLabels[border]}
-							</label>
-						{/each}
-					</div>
-				</fieldset>
-				<fieldset>
-					<legend>Coordinates</legend>
-					<div class="pills">
-						{#each [true, false] as show}
-							<label class="pill" class:selected={prefs.showCoordinates === show}>
-								<input type="radio" name="show-coordinates" value={show} bind:group={prefs.showCoordinates} />
-								{show ? "Show" : "Hide"}
-							</label>
-						{/each}
-					</div>
-					<p class="hint">With the frame border, coordinates sit in the border instead of on the squares.</p>
-				</fieldset>
-				<fieldset>
-					<legend>Highlight last move</legend>
-					<div class="pills">
-						{#each [false, true] as every}
-							<label class="pill" class:selected={prefs.highlightEveryMove === every}>
-								<input type="radio" name="highlight-every-move" value={every} bind:group={prefs.highlightEveryMove} />
-								{every ? "On every move" : "Where the board opens"}
-							</label>
-						{/each}
-					</div>
-				</fieldset>
-				<fieldset>
-					<legend>Piece animation</legend>
-					<div class="pills">
-						{#each ANIMATION_DURATIONS as duration}
-							<!-- onfocus: keyboard navigation (tab / arrow keys) demos too -->
-							<label class="pill" class:selected={prefs.animationDuration === duration} onclick={() => demoRequest++}>
-								<input
-									type="radio"
-									name="animation-duration"
-									value={duration}
-									bind:group={prefs.animationDuration}
-									onfocus={() => demoRequest++}
-								/>
-								{animationLabels[duration]}
-							</label>
-						{/each}
-					</div>
-				</fieldset>
-				{#if form?.errors && form.failed !== "name"}
-					<p class="error">{form.errors[0]}</p>
-				{/if}
+		</form>
+	</section>
+	<section>
+		<h3>Board</h3>
+		<form
+			class="board-form"
+			method="POST"
+			action="?/board"
+			use:enhance={keepState}
+			onchange={e => e.currentTarget.requestSubmit()}
+		>
+			<div class="columns">
+				<div class="fields">
+					<fieldset>
+						<legend>Pieces</legend>
+						<div class="pills">
+							{#each PIECE_SETS as set}
+								<label class="pill" class:selected={prefs.pieceSet === set}>
+									<input type="radio" name="piece-set" value={set} bind:group={prefs.pieceSet} />
+									{pieceLabels[set]}
+								</label>
+							{/each}
+						</div>
+					</fieldset>
+					<fieldset>
+						<legend>Board colors</legend>
+						<div class="pills">
+							{#each BOARD_THEMES as theme}
+								<label class="pill" class:selected={prefs.boardTheme === theme}>
+									<input type="radio" name="board-theme" value={theme} bind:group={prefs.boardTheme} />
+									{themeLabels[theme]}
+								</label>
+							{/each}
+						</div>
+					</fieldset>
+					<fieldset>
+						<legend>Border</legend>
+						<div class="pills">
+							{#each BORDER_TYPES as border}
+								<label class="pill" class:selected={prefs.borderType === border}>
+									<input type="radio" name="border-type" value={border} bind:group={prefs.borderType} />
+									{borderLabels[border]}
+								</label>
+							{/each}
+						</div>
+					</fieldset>
+					<fieldset>
+						<legend>Coordinates</legend>
+						<div class="pills">
+							{#each [true, false] as show}
+								<label class="pill" class:selected={prefs.showCoordinates === show}>
+									<input type="radio" name="show-coordinates" value={show} bind:group={prefs.showCoordinates} />
+									{show ? "Show" : "Hide"}
+								</label>
+							{/each}
+						</div>
+						<p class="hint">With the frame border, coordinates sit in the border instead of on the squares.</p>
+					</fieldset>
+					<fieldset>
+						<legend>Highlight last move</legend>
+						<div class="pills">
+							{#each [false, true] as every}
+								<label class="pill" class:selected={prefs.highlightEveryMove === every}>
+									<input type="radio" name="highlight-every-move" value={every} bind:group={prefs.highlightEveryMove} />
+									{every ? "On every move" : "Where the board opens"}
+								</label>
+							{/each}
+						</div>
+					</fieldset>
+					<fieldset>
+						<legend>Piece animation</legend>
+						<div class="pills">
+							{#each ANIMATION_DURATIONS as duration}
+								<!-- onfocus: keyboard navigation (tab / arrow keys) demos too -->
+								<label class="pill" class:selected={prefs.animationDuration === duration} onclick={() => demoRequest++}>
+									<input
+										type="radio"
+										name="animation-duration"
+										value={duration}
+										bind:group={prefs.animationDuration}
+										onfocus={() => demoRequest++}
+									/>
+									{animationLabels[duration]}
+								</label>
+							{/each}
+						</div>
+					</fieldset>
+					{#if form?.errors && form.failed !== "name"}
+						<p class="error">{form.errors[0]}</p>
+					{/if}
+				</div>
+				<div class="preview-board" class:black-border={hasBlackBorder(prefs)} bind:this={previewElement}></div>
 			</div>
-			<div class="preview-board" class:black-border={hasBlackBorder(prefs)} bind:this={previewElement}></div>
-		</div>
-	</form>
-	<form
-		method="POST"
-		action="?/rollover"
-		use:enhance={keepState}
-		onchange={e => e.currentTarget.requestSubmit()}
-	>
-		<fieldset>
-			<legend>A new day starts at</legend>
-			<div class="pills">
+		</form>
+	</section>
+	<section>
+		<h3 id="new-day">A new day starts at</h3>
+		<p class="section-note">
+			A card scheduled a day or more ahead waits for this hour rather
+			than for the time of day you last saw it — so studying past
+			midnight is still the same day's session instead of two days'
+			cards at once. The short learning steps are unaffected. Pick an
+			hour you are reliably asleep at.
+		</p>
+		<form
+			method="POST"
+			action="?/rollover"
+			use:enhance={keepState}
+			onchange={e => e.currentTarget.requestSubmit()}
+		>
+			<div class="pills" role="radiogroup" aria-labelledby="new-day">
 				{#each ROLLOVER_HOURS as hour}
 					<label class="pill" class:selected={rolloverHour === hour}>
 						<input type="radio" name="rollover-hour" value={hour} bind:group={rolloverHour} />
@@ -234,46 +245,41 @@
 					</label>
 				{/each}
 			</div>
-			<p class="hint">
-				A card scheduled a day or more ahead waits for this hour rather
-				than for the time of day you last saw it — so studying past
-				midnight is still the same day's session instead of two days'
-				cards at once. The short learning steps are unaffected. Pick an
-				hour you are reliably asleep at.
-			</p>
-		</fieldset>
-	</form>
-	<form method="POST" action="?/optimize" use:enhance={optimizeSubmit}>
-		<fieldset>
-			<legend>Scheduling</legend>
-			<div class="optimize-row">
-				<button class="std-btn">{optimizing ? "Optimizing…" : "Optimize now"}</button>
-				<span class="fit-status">{fitStatus(data.fsrs.last)}</span>
-			</div>
-			{#if form?.failed === "optimize"}
-				<p class="error">{form.errors[0]}</p>
-			{/if}
-			<p class="hint">
-				When cards come back is fitted to your own reviews, across all your
-				decks, and refitted automatically every {data.fsrs.refitDays} days.
-				Optimize now refits it at once.
-			</p>
-		</fieldset>
-	</form>
+		</form>
+	</section>
+	<section>
+		<h3>Scheduling</h3>
+		<p class="section-note">
+			When cards come back is fitted to your own reviews, across all your
+			decks, and refitted automatically every {data.fsrs.refitDays} days.
+			Optimize now refits it at once.
+		</p>
+		<form method="POST" action="?/optimize" class="optimize-row" use:enhance={optimizeSubmit}>
+			<button class="std-btn">{optimizing ? "Optimizing…" : "Optimize now"}</button>
+			<span class="fit-status">{fitStatus(data.fsrs.last)}</span>
+		</form>
+		{#if form?.failed === "optimize"}
+			<p class="error">{form.errors[0]}</p>
+		{/if}
+	</section>
 	{#if data.payouts}
 		<PayoutSettings payouts={data.payouts} accountEmail={data.user.email} {form} />
 	{/if}
 	{#if data.twoFactor.required}
 		<TwoFactorSettings enabled={data.twoFactor.enabled} verified={data.twoFactor.verified} />
 	{/if}
-	<div class="account-actions">
+	<section>
+		<h3>Account</h3>
 		<button class="quiet-btn" onclick={logout}>Log out</button>
+	</section>
+	<section class="danger-zone">
+		<h3>Danger zone</h3>
 		{#if deleteRequested}
 			<p class="delete-note">Check your email for a link to confirm the deletion.</p>
 		{:else}
 			<button class="danger-btn" onclick={requestDelete}>Delete account</button>
 		{/if}
-	</div>
+	</section>
 </div>
 
 <style>
@@ -281,14 +287,41 @@
 		margin-top: 34px;
 		margin-bottom: 80px;
 		padding: 24px 28px;
-		gap: 22px;
 	}
-	.name-form {
+	/* as the deck's Settings: a heading per topic, a line between; the
+	   payouts and two-factor sections are their components' */
+	.container > :global(section) {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
-		font-size: 0.95rem;
-		color: rgba(0, 0, 0, 0.75);
+		align-items: start;
+		gap: 8px;
+		padding: 18px 0;
+	}
+	.container > :global(section + section) {
+		border-top: 1px solid rgba(0, 0, 0, 0.1);
+	}
+	.container > :global(section:first-child) {
+		padding-top: 0;
+	}
+	.container > :global(section:last-child) {
+		padding-bottom: 0;
+	}
+	.container :global(section > h3) {
+		margin: 0;
+		font-size: 1.05rem;
+		color: black;
+	}
+	h3 label {
+		cursor: inherit;
+	}
+	.section-note {
+		margin: 0;
+		max-width: 75ch;
+		font-size: 0.9rem;
+		color: rgba(0, 0, 0, 0.6);
+	}
+	.board-form {
+		align-self: stretch;
 	}
 	.name-row {
 		display: flex;
@@ -392,14 +425,6 @@
 		color: #c00;
 		font-size: 0.9rem;
 		margin: 0;
-	}
-	.account-actions {
-		margin-top: 26px;
-		padding-top: 16px;
-		border-top: 1px solid rgba(0, 0, 0, 0.1);
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
 	}
 	.danger-btn {
 		padding: 7px 16px;

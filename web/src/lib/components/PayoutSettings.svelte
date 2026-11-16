@@ -7,7 +7,7 @@
 </script>
 
 <section class="payouts" id="payouts">
-	<h2>Payouts</h2>
+	<h3>Payouts</h3>
 	<p>
 		On the 1st of each month we pay your share of the previous month's sales by Wise, to an
 		email: Wise writes to it and you collect the money into your bank account. Under $10 waits
@@ -61,21 +61,12 @@
 
 <style>
 	.payouts {
-		margin-top: 26px;
-		padding-top: 16px;
-		border-top: 1px solid rgba(0, 0, 0, 0.1);
 		display: flex;
 		flex-direction: column;
 		align-items: start;
 		gap: 10px;
 		font-size: 0.95rem;
 		color: rgba(0, 0, 0, 0.75);
-	}
-	h2 {
-		margin: 0;
-		font-size: 1rem;
-		font-weight: 600;
-		color: rgba(0, 0, 0, 0.85);
 	}
 	p {
 		margin: 0;

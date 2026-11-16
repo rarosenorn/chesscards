@@ -16,32 +16,40 @@ import { LEARN_AHEAD_MS } from "../rollover.js"
 // so is the bought deck's reviews in order. Their tactic ladder is the
 // author's.
 
+// The end of the rollover day holding the instant `at`, from the user's hour
+// ($3) and the zone the browser left in a cookie ($2) — the server renders
+// these counts and has no one to ask. Subtracting the hour before truncating
+// is what puts the small hours in the previous day: at 1am the day started at
+// 4am YESTERDAY. The SQL twin of dayEnd (lib/rollover.js).
+const dayEnd = at => `((
+	date_trunc('day', (${at} at time zone $2) - make_interval(hours => $3))
+		+ make_interval(hours => $3) + interval '1 day'
+) at time zone $2)`;
+
+// A day-scale card (alias c) — the SQL twin of crossesDay (lib/rollover.js):
+// scheduled a day or more after its review, or past the end of the day that
+// review fell in.
+const crossesDay = c => `(${c}.last_review is not null
+	and (${c}.due - ${c}.last_review >= interval '1 day' or ${c}.due >= ${dayEnd(`${c}.last_review`)}))`;
+
 // Due and still in play — the shared condition behind every count below, and
-// the SQL twin of isDueAt (lib/rollover.js). An interval of a day or more is
-// read against the day boundary rather than the clock time it was graded at,
-// so a card graded at 10pm is waiting at 4am; the short learning steps keep
+// the SQL twin of isDueAt (lib/rollover.js). A day-scale card is read against
+// the day boundary rather than the clock time it was graded at, so a card
+// graded at 10pm is waiting at 4am; learning steps within their day keep
 // their exact times. bounds.day_end is the end of the rollover day we are in.
 const due = c => `${c}.finished_at is null and (
 	${c}.due <= now()
-	or (${c}.last_review is not null
-		and ${c}.due - ${c}.last_review >= interval '1 day'
-		and ${c}.due < bounds.day_end)
+	or (${crossesDay(c)} and ${c}.due < bounds.day_end)
 )`;
 
-// The end of the current rollover day, from the user's hour ($3) and the zone
-// the browser left in a cookie ($2) — the server renders these counts and has
-// no one to ask. Subtracting the hour before truncating is what puts the small
-// hours in the previous day: at 1am the day started at 4am YESTERDAY.
-const BOUNDS = `select ((
-	date_trunc('day', (now() at time zone $2) - make_interval(hours => $3))
-		+ make_interval(hours => $3) + interval '1 day'
-) at time zone $2) day_end`;
+// The end of the current rollover day.
+const BOUNDS = `select ${dayEnd("now()")} day_end`;
 
 // Within reach of learn-ahead — the SQL twin of isDueSoonAt (lib/rollover.js),
 // for the learning count: a short step counts as waiting from that long
 // before it falls due, as it does in study.
 const dueSoon = c => `(${c}.finished_at is null
-	and (${c}.last_review is null or ${c}.due - ${c}.last_review < interval '1 day')
+	and not ${crossesDay(c)}
 	and ${c}.due <= now() + make_interval(secs => ${LEARN_AHEAD_MS / 1000}))`;
 
 // What is seen of a card (alias c) — the SQL twin of isSeen (lib/deck-tree.js).

@@ -7,7 +7,7 @@
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { DEFAULT_TACTIC_LADDER, isSeen, readingOrder, byReadingOrder, cardsUnder, unlockedDeckIds, firstLockedDeck, newCardRanks, deckProgress, deckTrail } from "$lib/deck-tree.js"
-	import { isDueAt, isDueSoonAt, availableAt, dayStart, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
+	import { isDueAt, isDueSoonAt, availableAt, dayStart, dayEnd, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import ArticleView from "$lib/components/ArticleView.svelte"
 	import CardTypeSegments from "$lib/components/CardTypeSegments.svelte"
@@ -167,7 +167,7 @@
 	// "finished for now" for a card that could be answered right now. Only the
 	// short steps are ever within reach — everything on a real schedule is days
 	// away — so this needs no test for which queue a card is in.
-	const isDueSoon = card => isWaiting(card) && isDueSoonAt(card, now);
+	const isDueSoon = card => isWaiting(card) && isDueSoonAt(card, now, rolloverHour());
 
 	// Anki's three counts, on the same split the deck list uses (decks.js):
 	// a card is new while it has never been graded, learning while it is
@@ -553,6 +553,9 @@
 	// promise it keeps.
 	const formatTimeUntil = (dueDate, from = Date.now()) => {
 		const minutes = (Date.parse(dueDate) - from) / 1000 / 60;
+		// a step past the next rollover waits for that day's start (rollover.js)
+		if (minutes / 60 < 24 && Date.parse(dueDate) >= dayEnd(from, rolloverHour()))
+			return "1d";
 		if (minutes < 60)
 			return Math.round(minutes * 10) / 10 + "m";
 		if (minutes / 60 < 24)

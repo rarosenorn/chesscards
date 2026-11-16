@@ -72,3 +72,22 @@ describe("a fit", () => {
 		expect(db.inserts[2][1]).toEqual(own);
 	})
 })
+
+describe("a fit with too few reviews to score", () => {
+	it("keeps the parameters in use, quietly", async () => {
+		const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+		db.history = historyOf(2);
+		await fit("u", day);
+		expect(db.inserts[0][1]).toEqual(default_w);
+		expect(logged).not.toHaveBeenCalled();
+		logged.mockRestore();
+	})
+})
+
+describe("a fit with no reviews at all", () => {
+	it("stores the defaults, as a new user's first visit to Study does", async () => {
+		db.history = [];
+		await fit("new", day);
+		expect(db.inserts[0]).toEqual(["new", default_w, 0]);
+	})
+})

@@ -59,15 +59,16 @@ const itemsOf = (rows, { rolloverHour, timeZone }) => {
 
 // As Anki: a fit replaces the parameters in use (the FSRS-6 defaults before
 // the first) only if it predicts the user's reviews better, by log loss;
-// training is a search that can stop short of where it started. A model is
-// told by its parameter count, so the defaults are given, not left out.
+// training is a search that can stop short of where it started. Too few
+// reviews to score by, and nothing changes. A model is told by its parameter
+// count, so the defaults are given, not left out.
 const better = async (userId, items, fitted) => {
 	const { rows: [row] } = await pool.query("select parameters from fsrs_parameters where user_id = $1", [userId]);
 	const inUse = row?.parameters ?? default_w;
-	if (items.length === 0) return fitted;
 	const logLoss = parameters => new FSRSBinding(parameters).evaluate(items).logLoss;
 	try { return logLoss(inUse) <= logLoss(fitted) ? inUse : fitted; }
 	catch (err) {
+		if (items.length === 0 || /NotEnoughData/.test(err.message)) return inUse;
 		console.error("FSRS parameters in use could not be scored; taking the new fit", err);
 		return fitted;
 	}
@@ -138,12 +139,13 @@ const parametersFor = async (userId, day) => {
 	return { parameters: row?.parameters ?? null, refitted: under?.then(found => found?.parameters ?? null) ?? null };
 }
 
-// the defaults, as fsrs-rs gives them back with too few reviews to fit
+// the defaults: what fsrs-rs gives back with too few reviews to fit, and what
+// stays when no fit has predicted the reviews better
 const isDefault = parameters =>
 	parameters.length === default_w.length && parameters.every((w, i) => Math.abs(w - default_w[i]) < 1e-4);
 
-// the last fit, for Settings: when, from how many reviews, and whether they
-// were too few to move off the defaults; null before the first
+// the last fit, for Settings: when, from how many reviews, and whether the
+// defaults are still in use; null before the first
 const lastFit = async userId => {
 	const { rows: [row] } = await pool.query(
 		"select parameters, reviews, optimized_at from fsrs_parameters where user_id = $1", [userId]);

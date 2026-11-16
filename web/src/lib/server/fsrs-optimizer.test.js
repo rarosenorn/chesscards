@@ -1,11 +1,11 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
-const db = vi.hoisted(() => ({ history: [], stored: null, inserts: [], wait: null }));
+const db = vi.hoisted(() => ({ history: [], csv: null, stored: null, inserts: [], wait: null }));
 vi.mock("./pool.js", () => ({
 	pool: {
 		query: vi.fn(async (sql, params) => {
-			if (sql.includes("from review_logs")) return { rows: db.history };
+			if (sql.includes("from review_logs")) return { rows: [{ reviews: db.history.length, csv: db.csv ?? db.history.map(row => `${row.card},${row.review.getTime()},${row.rating},${row.state},0`).join("\n") }] };
 			if (sql.includes("insert into fsrs_parameters")) { db.inserts.push(params); return { rows: [] }; }
 			if (sql.includes("as wait")) return { rows: db.wait == null ? [] : [{ wait: db.wait }] };
 			if (sql.includes("from fsrs_parameters")) return { rows: db.stored ? [db.stored] : [] };
@@ -14,7 +14,7 @@ vi.mock("./pool.js", () => ({
 	}
 }));
 
-const { parametersFor, fit, refit, optimizeNow, lastFit, dayOf, asCsv } = await import("./fsrs-optimizer.js");
+const { parametersFor, fit, refit, optimizeNow, lastFit, dayOf } = await import("./fsrs-optimizer.js");
 const { default_w } = await import("ts-fsrs");
 
 const day = { rolloverHour: 4, timeZone: "Europe/Sofia" };
@@ -42,14 +42,9 @@ const historyOf = cards => {
 
 const settled = () => new Promise(resolve => setTimeout(resolve, 0));
 
-beforeEach(() => { db.history = []; db.stored = null; db.inserts = []; db.wait = null; });
+beforeEach(() => { db.history = []; db.csv = null; db.stored = null; db.inserts = []; db.wait = null; });
 
 describe("the FSRS optimizer", () => {
-	it("writes the review logs in the revlog columns fsrs-rs reads", () => {
-		const csv = new TextDecoder().decode(asCsv([{ card: "a", review: new Date(Date.UTC(2026, 0, 1)), rating: 3, state: 0 }]));
-		expect(csv).toBe(`card_id,review_time,review_rating,review_state,review_duration\na,${Date.UTC(2026, 0, 1)},3,0,0`);
-	})
-
 	it("fits the user's own parameters from their reviews, and keeps the defaults with too few", async () => {
 		db.history = historyOf(300);
 		await fit("u", day);
@@ -101,6 +96,17 @@ describe("the FSRS optimizer", () => {
 		const event = zone => ({ locals: { user: { rolloverHour: 5 } }, cookies: { get: () => zone } });
 		expect(dayOf(event("Europe/Sofia"))).toEqual({ rolloverHour: 5, timeZone: "Europe/Sofia" });
 		expect(dayOf(event("Not/AZone")).timeZone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
+	})
+
+	it("leaves the server free for other requests while it fits many reviews", async () => {
+		db.history = historyOf(8000);
+		db.csv = db.history.map(row => `${row.card},${row.review.getTime()},${row.rating},${row.state},0`).join("\n");
+		let last = performance.now(), longest = 0;
+		const beat = setInterval(() => { const at = performance.now(); longest = Math.max(longest, at - last); last = at; }, 5);
+		const { reviews } = await fit("u", day);
+		clearInterval(beat);
+		expect(reviews).toBe(64000);
+		expect(longest).toBeLessThan(50);
 	})
 
 	it("refits at once when asked, joining a fit already under way", async () => {

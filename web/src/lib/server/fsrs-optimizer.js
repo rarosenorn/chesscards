@@ -1,4 +1,6 @@
-import { computeParameters, convertCsvToFsrsItemsWithCardIds, FSRSBinding } from "@open-spaced-repetition/binding"
+import { Worker } from "node:worker_threads"
+import { createRequire } from "node:module"
+import { pathToFileURL } from "node:url"
 import { default_w } from "ts-fsrs"
 import { pool } from "./pool.js"
 import { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE } from "$lib/rollover.js"
@@ -45,66 +47,88 @@ const offsetOf = zone => {
 	return sign ? (sign === "-" ? -1 : 1) * (Number(hours) * 60 + Number(minutes || 0)) : 0;
 }
 
-// the reviews as fsrs-rs's items, each with its card (training takes a card's
-// reviews together, as Anki's does), its days cut in the user's zone; a zone
-// its own database lacks is read at today's offset rather than not at all
-const itemsOf = (rows, { rolloverHour, timeZone }) => {
-	const csv = asCsv(rows);
-	try { return convertCsvToFsrsItemsWithCardIds(csv, rolloverHour, timeZone, MODEL); }
+// The fit itself, which takes CPU in proportion to the reviews, so it runs
+// in a worker thread rather than holding up every other request. It is sent
+// there as source, so it stands alone: fsrs-rs comes in as `binding`.
+// - the reviews become fsrs-rs's items, each with its card (training takes a
+//   card's reviews together, as Anki's does), days cut in the user's zone, or
+//   at today's offset for a zone fsrs-rs's own database lacks
+// - trained as Anki trains them
+// - as Anki, the fit replaces the parameters in use (the FSRS-6 defaults
+//   before the first) only if it predicts the reviews better, by log loss:
+//   training is a search that can stop short of where it started. Too few
+//   reviews to score by, and nothing changes. A model is told by its
+//   parameter count, so the defaults are given, not left out.
+function fitReviews(binding, { csv, rolloverHour, timeZone, offset, inUse, model, training }) {
+	const convert = zone => binding.convertCsvToFsrsItemsWithCardIds(csv, rolloverHour, zone, model);
+	let converted;
+	try { converted = convert(timeZone); }
 	catch (err) {
 		if (!/Unsupported timezone/.test(err.message)) throw err;
-		return convertCsvToFsrsItemsWithCardIds(csv, rolloverHour, offsetOf(timeZone), MODEL);
+		converted = convert(offset);
 	}
+	const { items, cardIds } = converted;
+	return binding.computeParameters(items, {
+		enableShortTerm: true, numRelearningSteps: 1, modelVersion: model, cardIds, trainingConfig: training, timeout: 50
+	}).then(fitted => {
+		const logLoss = parameters => new binding.FSRSBinding(parameters).evaluate(items).logLoss;
+		try { return logLoss(inUse) <= logLoss(fitted) ? inUse : fitted; }
+		catch (err) {
+			if (items.length === 0 || /NotEnoughData/.test(err.message)) return inUse;
+			console.error("FSRS parameters in use could not be scored; taking the new fit", err);
+			return fitted;
+		}
+	});
 }
 
-// As Anki: a fit replaces the parameters in use (the FSRS-6 defaults before
-// the first) only if it predicts the user's reviews better, by log loss;
-// training is a search that can stop short of where it started. Too few
-// reviews to score by, and nothing changes. A model is told by its parameter
-// count, so the defaults are given, not left out.
-const better = async (userId, items, fitted) => {
-	const { rows: [row] } = await pool.query("select parameters from fsrs_parameters where user_id = $1", [userId]);
-	const inUse = row?.parameters ?? default_w;
-	const logLoss = parameters => new FSRSBinding(parameters).evaluate(items).logLoss;
-	try { return logLoss(inUse) <= logLoss(fitted) ? inUse : fitted; }
-	catch (err) {
-		if (items.length === 0 || /NotEnoughData/.test(err.message)) return inUse;
-		console.error("FSRS parameters in use could not be scored; taking the new fit", err);
-		return fitted;
-	}
-}
+const BINDING_URL = pathToFileURL(createRequire(import.meta.url).resolve("@open-spaced-repetition/binding")).href;
+const WORKER_SOURCE = `(async () => {
+	const { parentPort, workerData } = await import("node:worker_threads");
+	const loaded = await import(workerData.bindingUrl);
+	const fitReviews = ${fitReviews.toString()};
+	fitReviews(loaded.default ?? loaded, workerData).then(
+		parameters => parentPort.postMessage({ parameters }),
+		err => parentPort.postMessage({ error: String(err?.stack ?? err) }));
+})();`;
 
-// the review logs FSRS scheduled: basic cards' (a tactic's has no state), with
-// a card to belong to (logs from before ids were kept have none), graded
-// Again..Easy; a deleted card's history counts too, as in Anki
+// a fit in its own worker thread, the review CSV handed over rather than copied
+const inWorker = data => new Promise((resolve, reject) => {
+	const worker = new Worker(WORKER_SOURCE, { eval: true, workerData: { ...data, bindingUrl: BINDING_URL }, transferList: [data.csv.buffer] });
+	worker.once("message", ({ parameters, error }) => error ? reject(new Error(error)) : resolve(parameters));
+	worker.once("error", reject);
+	worker.once("exit", code => reject(new Error(`FSRS worker exited (${code}) without a result`)));
+});
+
+// The review logs FSRS scheduled, as the CSV of the FSRS benchmark's revlog
+// that fsrs-rs reads, built by Postgres so this thread never holds them row by
+// row: basic cards' (a tactic's has no state), with a card to belong to (logs
+// from before ids were kept have none), graded Again..Easy; a deleted card's
+// history counts too, as in Anki.
 const historyOf = async userId => {
-	const { rows } = await pool.query(`
-		select coalesce(card_id, marketplace_card_instance_id) as card, review, rating, state
+	const { rows: [row] } = await pool.query(`
+		select count(*)::int as reviews, coalesce(string_agg(
+			concat_ws(',', coalesce(card_id, marketplace_card_instance_id), (extract(epoch from review) * 1000)::bigint, rating, state, 0),
+			E'\\n' order by coalesce(card_id, marketplace_card_instance_id), review), '') as csv
 		from review_logs
 		where user_id = $1 and state is not null and rating between 1 and 4
-			and coalesce(card_id, marketplace_card_instance_id) is not null
-		order by card, review`, [userId]);
-	return rows;
+			and coalesce(card_id, marketplace_card_instance_id) is not null`, [userId]);
+	return { reviews: row.reviews, csv: `card_id,review_time,review_rating,review_state,review_duration\n${row.csv}` };
 }
 
-// in the columns of the FSRS benchmark's revlog, which fsrs-rs reads
-const asCsv = rows => new TextEncoder().encode([
-	"card_id,review_time,review_rating,review_state,review_duration",
-	...rows.map(row => `${row.card},${new Date(row.review).getTime()},${row.rating},${row.state},0`)
-].join("\n"));
-
 const fit = async (userId, day) => {
-	const rows = await historyOf(userId);
-	const { items, cardIds } = itemsOf(rows, day);
-	const fitted = await computeParameters(items, {
-		enableShortTerm: true, numRelearningSteps: 1, modelVersion: MODEL, cardIds, trainingConfig: TRAINING, timeout: 50
+	const [{ reviews, csv }, { rows: [stored] }] = await Promise.all([
+		historyOf(userId),
+		pool.query("select parameters from fsrs_parameters where user_id = $1", [userId])
+	]);
+	const parameters = await inWorker({
+		csv: new TextEncoder().encode(csv), rolloverHour: day.rolloverHour, timeZone: day.timeZone, offset: offsetOf(day.timeZone),
+		inUse: [...(stored?.parameters ?? default_w)], model: MODEL, training: TRAINING
 	});
-	const parameters = await better(userId, items, fitted);
 	await pool.query(`
 		insert into fsrs_parameters (user_id, parameters, reviews, optimized_at) values ($1, $2, $3, now())
 		on conflict (user_id) do update set parameters = excluded.parameters, reviews = excluded.reviews, optimized_at = excluded.optimized_at`,
-		[userId, parameters, rows.length]);
-	return { parameters, reviews: rows.length };
+		[userId, parameters, reviews]);
+	return { parameters, reviews };
 }
 
 // a fit for the user, or the one under way: what it found, or null if it failed
@@ -152,4 +176,4 @@ const lastFit = async userId => {
 	return row ? { reviews: row.reviews, optimizedAt: row.optimized_at, defaults: isDefault(row.parameters) } : null;
 }
 
-export { parametersFor, refit, optimizeNow, fit, lastFit, dayOf, asCsv, REFIT_DAYS }
+export { parametersFor, refit, optimizeNow, fit, fitReviews, lastFit, dayOf, REFIT_DAYS }

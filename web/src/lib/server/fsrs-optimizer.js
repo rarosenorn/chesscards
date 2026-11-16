@@ -1,4 +1,4 @@
-import { computeParameters, convertCsvToFsrsItems } from "@open-spaced-repetition/binding"
+import { computeParameters, convertCsvToFsrsItemsWithCardIds, FSRSBinding } from "@open-spaced-repetition/binding"
 import { default_w } from "ts-fsrs"
 import { pool } from "./pool.js"
 import { DEFAULT_ROLLOVER_HOUR, TZ_COOKIE } from "$lib/rollover.js"
@@ -13,6 +13,9 @@ const MODEL = "FSRS-6";
 const REFIT_DAYS = 14;
 // Settings' button refits at most this often, counted from the last fit
 const MANUAL_GAP_MINUTES = 60;
+// Anki's training (rslib's fsrs/params.rs): 8 epochs where fsrs-rs's FSRS-6
+// default is 5, the rest fsrs-rs's own defaults
+const TRAINING = { numEpochs: 8, batchSize: 512, seed: 2023, learningRate: 4e-2, maxSeqLen: 256, gamma: 1 };
 
 // the fits under way in this process, by user, so a second ask waits on the
 // same one rather than starting another
@@ -42,14 +45,31 @@ const offsetOf = zone => {
 	return sign ? (sign === "-" ? -1 : 1) * (Number(hours) * 60 + Number(minutes || 0)) : 0;
 }
 
-// the reviews as fsrs-rs's items, its days cut in the user's zone; a zone its
-// own database lacks is read at today's offset rather than not at all
+// the reviews as fsrs-rs's items, each with its card (training takes a card's
+// reviews together, as Anki's does), its days cut in the user's zone; a zone
+// its own database lacks is read at today's offset rather than not at all
 const itemsOf = (rows, { rolloverHour, timeZone }) => {
 	const csv = asCsv(rows);
-	try { return convertCsvToFsrsItems(csv, rolloverHour, timeZone, MODEL); }
+	try { return convertCsvToFsrsItemsWithCardIds(csv, rolloverHour, timeZone, MODEL); }
 	catch (err) {
 		if (!/Unsupported timezone/.test(err.message)) throw err;
-		return convertCsvToFsrsItems(csv, rolloverHour, offsetOf(timeZone), MODEL);
+		return convertCsvToFsrsItemsWithCardIds(csv, rolloverHour, offsetOf(timeZone), MODEL);
+	}
+}
+
+// As Anki: a fit replaces the parameters in use (the FSRS-6 defaults before
+// the first) only if it predicts the user's reviews better, by log loss;
+// training is a search that can stop short of where it started. A model is
+// told by its parameter count, so the defaults are given, not left out.
+const better = async (userId, items, fitted) => {
+	const { rows: [row] } = await pool.query("select parameters from fsrs_parameters where user_id = $1", [userId]);
+	const inUse = row?.parameters ?? default_w;
+	if (items.length === 0) return fitted;
+	const logLoss = parameters => new FSRSBinding(parameters).evaluate(items).logLoss;
+	try { return logLoss(inUse) <= logLoss(fitted) ? inUse : fitted; }
+	catch (err) {
+		console.error("FSRS parameters in use could not be scored; taking the new fit", err);
+		return fitted;
 	}
 }
 
@@ -74,8 +94,11 @@ const asCsv = rows => new TextEncoder().encode([
 
 const fit = async (userId, day) => {
 	const rows = await historyOf(userId);
-	const items = itemsOf(rows, day);
-	const parameters = await computeParameters(items, { enableShortTerm: true, numRelearningSteps: 1, modelVersion: MODEL, timeout: 50 });
+	const { items, cardIds } = itemsOf(rows, day);
+	const fitted = await computeParameters(items, {
+		enableShortTerm: true, numRelearningSteps: 1, modelVersion: MODEL, cardIds, trainingConfig: TRAINING, timeout: 50
+	});
+	const parameters = await better(userId, items, fitted);
 	await pool.query(`
 		insert into fsrs_parameters (user_id, parameters, reviews, optimized_at) values ($1, $2, $3, now())
 		on conflict (user_id) do update set parameters = excluded.parameters, reviews = excluded.reviews, optimized_at = excluded.optimized_at`,

@@ -28,7 +28,7 @@
 		if (!last) return "Not optimized yet: study uses the default parameters.";
 		const when = new Date(last.optimizedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone });
 		const from = `Last optimized ${when} from ${last.reviews.toLocaleString("en-US")} ${last.reviews === 1 ? "review" : "reviews"}`;
-		return last.defaults ? `${from}, too few to fit yet: study uses the default parameters.` : `${from}.`;
+		return last.defaults ? `${from}; the default parameters are still in use.` : `${from}.`;
 	};
 
 	const themeLabels = {

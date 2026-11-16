@@ -34,7 +34,7 @@ describe("Settings' scheduling", () => {
 		view.close();
 
 		view = open({ reviews: 40, optimizedAt: "2026-11-16T10:00:00Z", defaults: true });
-		expect(view.section().textContent).toContain("from 40 reviews, too few to fit yet: study uses the default parameters.");
+		expect(view.section().textContent).toContain("from 40 reviews; the default parameters are still in use.");
 		view.close();
 	})
 

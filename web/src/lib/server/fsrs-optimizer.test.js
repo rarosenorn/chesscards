@@ -75,16 +75,16 @@ describe("the FSRS optimizer", () => {
 	})
 
 	it("uses a fit under 14 days old as it is, and refits an older one once however often study opens", async () => {
-		db.stored = { parameters: [1, 2, 3], stale: false };
-		expect(await parametersFor("u", day)).toEqual({ parameters: [1, 2, 3], refitted: null });
+		db.stored = { parameters: [...default_w], stale: false };
+		expect(await parametersFor("u", day)).toEqual({ parameters: [...default_w], refitted: null });
 		await settled();
 		expect(db.inserts).toHaveLength(0);
 
-		db.stored = { parameters: [1, 2, 3], stale: true };
+		db.stored = { parameters: [...default_w], stale: true };
 		db.history = historyOf(300);
 		const first = await parametersFor("u", day);
 		const second = await parametersFor("u", day);
-		expect(first.parameters).toEqual([1, 2, 3]);
+		expect(first.parameters).toEqual([...default_w]);
 		const fitted = await first.refitted;
 		expect(await second.refitted).toBe(fitted);
 		await settled();

@@ -324,13 +324,6 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 
 # Needed before launch
 ## today
-[y] refunds by EU law
-[y] how to handle refunds
-[y] payment processing for buying decks
-[y] payment system for importing decks
-[y] paying authors of decks, what split etc.
-[y] Delete marketplace deck (its removed from your my flashcards and progress is deleted, but you still "have" the deck and can go to marketplace and get it again, for free if it was paid
-[ ] maybe call intro for first exposure articles instead? And maybe do "First exposure articles" a card type that can be put anywhere and is then only shown once do introduce what subsequent cards are about?
 
 ## payment stuff
 [ ] company: Danish sole proprietorship or Bulgarian company, decided with a DK–BG tax adviser before the live Stripe account
@@ -356,10 +349,9 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] claude: Legal pages: terms of service, a privacy policy (GDPR), and a copyright and takedown policy. The last one matters because decks can be built from books and paid courses.
 [ ] author stats page to see stats of their marketplace decks, sales, refunds etc.
 [ ] better request upload to marketplace UI
-[~] cram mode
 [ ] how to handle updating marketplace deck with what people alrdy have, if it all? (versioning)
-[ ] lichess, chess.com and google login / signup
-[ ] claude api insteado f my own for importing bad moves from games
+[ ] lichess, chess.com and google login / signup (chess.com needs an OAuth application form: apply close to launch, not before)
+[ ] claude api insteado f my own for importing bad moves from games (the explanations are terrible, probably just do with showing the blunder and showing the best move)
 [y] heatmap
 [ ] responsive
 [ ] phone app

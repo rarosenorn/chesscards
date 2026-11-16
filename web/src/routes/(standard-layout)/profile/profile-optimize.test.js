@@ -42,14 +42,14 @@ describe("Settings' scheduling", () => {
 		const view = open(null);
 		await tick();
 		const button = view.section().querySelector("button");
-		expect(button.textContent).toBe("Optimize now");
+		expect(button.textContent).toBe("Optimize parameters");
 		const { submit } = forms.submits.find(s => s.form.getAttribute("action") === "?/optimize");
 		const done = submit();
 		await tick();
 		expect(button.textContent).toBe("Optimizing…");
 		await done({ update: async () => {} });
 		await tick();
-		expect(button.textContent).toBe("Optimize now");
+		expect(button.textContent).toBe("Optimize parameters");
 		view.close();
 	})
 })

@@ -252,10 +252,10 @@
 		<p class="section-note">
 			When cards come back is fitted to your own reviews, across all your
 			decks, and refitted automatically every {data.fsrs.refitDays} days.
-			Optimize now refits it at once.
+			Optimize parameters refits it at once.
 		</p>
 		<form method="POST" action="?/optimize" class="optimize-row" use:enhance={optimizeSubmit}>
-			<button class="std-btn">{optimizing ? "Optimizing…" : "Optimize now"}</button>
+			<button class="std-btn">{optimizing ? "Optimizing…" : "Optimize parameters"}</button>
 			<span class="fit-status">{fitStatus(data.fsrs.last)}</span>
 		</form>
 		{#if form?.failed === "optimize"}

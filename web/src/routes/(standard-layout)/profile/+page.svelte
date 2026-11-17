@@ -7,6 +7,7 @@
 	import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS, boardStyleProps, hasBlackBorder } from "$lib/board-prefs.js"
 	import { typedConfirmModal } from "$lib/modals.svelte.js"
 	import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
+	import { RETENTIONS, DEFAULT_RETENTION } from "$lib/retention.js"
 	import TwoFactorSettings from "$lib/components/TwoFactorSettings.svelte"
 	import PayoutSettings from "$lib/components/PayoutSettings.svelte"
 
@@ -15,6 +16,7 @@
 	let displayName = $state(data.user.displayName ?? "");
 	let prefs = $state({ ...data.boardPrefs });
 	let rolloverHour = $state(data.rolloverHour ?? DEFAULT_ROLLOVER_HOUR);
+	let desiredRetention = $state(data.desiredRetention ?? DEFAULT_RETENTION);
 	// 4 -> "4am", for the pills below
 	const hourLabel = hour => `${hour}am`;
 
@@ -248,6 +250,31 @@
 			</div>
 		</form>
 		{#if form?.failed === "rollover"}
+			<p class="error">{form.errors[0]}</p>
+		{/if}
+	</section>
+	<section>
+		<h3 id="desired-retention">Desired retention</h3>
+		<p class="section-note">
+			How likely you are to remember a card when it comes back. Higher means
+			more reviews: 95% takes about 1.5–2× the reviews of 90%.
+		</p>
+		<form
+			method="POST"
+			action="?/retention"
+			use:enhance={keepState}
+			onchange={e => e.currentTarget.requestSubmit()}
+		>
+			<div class="pills" role="radiogroup" aria-labelledby="desired-retention">
+				{#each RETENTIONS as retention}
+					<label class="pill" class:selected={desiredRetention === retention}>
+						<input type="radio" name="desired-retention" value={retention} bind:group={desiredRetention} />
+						{Math.round(retention * 100)}%
+					</label>
+				{/each}
+			</div>
+		</form>
+		{#if form?.failed === "retention"}
 			<p class="error">{form.errors[0]}</p>
 		{/if}
 	</section>

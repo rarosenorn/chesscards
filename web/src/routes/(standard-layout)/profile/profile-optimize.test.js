@@ -15,7 +15,7 @@ const open = (last, { form = null, timeZone = "UTC" } = {}) => {
 	const target = document.createElement("div");
 	document.body.append(target);
 	const app = mount(Page, { target, props: { form, data: {
-		user: { displayName: "Me", email: "me@example.com" }, boardPrefs: DEFAULT_BOARD_PREFS, rolloverHour: 4,
+		user: { displayName: "Me", email: "me@example.com" }, boardPrefs: DEFAULT_BOARD_PREFS, rolloverHour: 4, desiredRetention: 0.9,
 		fsrs: { last, refitDays: 14, timeZone }, hasPublished: false, payouts: null, twoFactor: { required: false }
 	} } });
 	const section = () => [...target.querySelectorAll("section")].find(f => f.querySelector("h3")?.textContent === "Spaced repetition parameter optimization");
@@ -71,8 +71,25 @@ describe("Settings' sections", () => {
 	it("are headed as the deck's are, from the name down to the danger zone", async () => {
 		const view = open(null);
 		expect([...view.target.querySelectorAll(".container > section > h3")].map(h => h.textContent.trim()))
-			.toEqual(["Display name", "Board", "A new day starts at", "Spaced repetition parameter optimization", "Account", "Danger zone"]);
+			.toEqual(["Display name", "Board", "A new day starts at", "Desired retention", "Spaced repetition parameter optimization", "Account", "Danger zone"]);
 		expect(view.target.querySelector("#display-name").labels[0].textContent).toBe("Display name");
+		view.close();
+	})
+})
+
+describe("Settings' desired retention", () => {
+	it("offers 80% to 97%, the user's own choice marked, and saves a new one at once", async () => {
+		const view = open(null);
+		await tick();
+		const section = [...view.target.querySelectorAll("section")].find(f => f.querySelector("h3")?.textContent === "Desired retention");
+		expect([...section.querySelectorAll(".pill")].map(p => p.textContent.trim())).toEqual(["80%", "85%", "90%", "95%", "97%"]);
+		expect(section.querySelector(".pill.selected").textContent.trim()).toBe("90%");
+		const form = section.querySelector("form");
+		form.requestSubmit = vi.fn();
+		section.querySelectorAll("input")[3].click();
+		await tick();
+		expect(form.requestSubmit).toHaveBeenCalled();
+		expect(section.querySelector(".pill.selected").textContent.trim()).toBe("95%");
 		view.close();
 	})
 })

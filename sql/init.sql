@@ -31,6 +31,8 @@ create table "user" (
 	-- for the clock time it was graded at, so studying past midnight is still
 	-- the same day's session. The zone it is read in comes from the browser.
 	"rolloverHour" smallint default 4 not null check ("rolloverHour" between 0 and 23),
+	-- the recall FSRS schedules for (lib/retention.js)
+	"desiredRetention" double precision default 0.95 not null check ("desiredRetention" between 0.7 and 0.99),
 	-- whose games "Import from a game" lists; asked for once, on that page
 	"chesscomUsername" text,
 	"lichessUsername" text,

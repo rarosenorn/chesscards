@@ -8,6 +8,7 @@
 	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
 	import { DEFAULT_TACTIC_LADDER, isSeen, readingOrder, byReadingOrder, cardsUnder, unlockedDeckIds, firstLockedDeck, newCardRanks, deckProgress, deckTrail } from "$lib/deck-tree.js"
 	import { isDueAt, isDueSoonAt, availableAt, dayStart, dayEnd, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
+	import { DEFAULT_RETENTION } from "$lib/retention.js"
 	import Chessboard from "$lib/components/Chessboard.svelte"
 	import ArticleView from "$lib/components/ArticleView.svelte"
 	import CardTypeSegments from "$lib/components/CardTypeSegments.svelte"
@@ -24,8 +25,9 @@
 	let deck = getContext("deck");
 	// the FSRS model fitted to the user's own reviews, or null for the
 	// defaults, and a refit under way, which takes over when it lands
-	// (lib/server/fsrs-optimizer.js)
-	let { fsrsParameters = null, refitted = null } = $props();
+	// (lib/server/fsrs-optimizer.js); the recall it schedules for, the user's
+	// choice in Settings (lib/retention.js)
+	let { fsrsParameters = null, refitted = null, desiredRetention = DEFAULT_RETENTION } = $props();
 	const rolloverHour = getContext("rolloverHour") ?? (() => DEFAULT_ROLLOVER_HOUR);
 
 	// a marketplace deck's cards can only be viewed, not edited: said of the
@@ -96,9 +98,7 @@
 	// review instant, which would fuzz the preview under the button and the
 	// grade that follows it differently, and the button would be promising a
 	// date the card does not get.
-	// 95% retention, not the default 90%: a half-remembered opening line is
-	// a lost game, so recall is worth the extra reviews (about 1.5-2x).
-	const schedulerWith = w => fsrs({ ...(w ? { w } : {}), enable_fuzz: true, request_retention: 0.95 })
+	const schedulerWith = w => fsrs({ ...(w ? { w } : {}), enable_fuzz: true, request_retention: desiredRetention })
 		.useStrategy(StrategyMode.SEED, GenSeedStrategyWithCardId("id"));
 	// svelte-ignore state_referenced_locally
 	let scheduler = $state.raw(schedulerWith(fsrsParameters));

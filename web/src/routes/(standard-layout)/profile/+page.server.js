@@ -4,11 +4,13 @@ import * as payouts from "$lib/server/payouts.js"
 import { cleanName } from "$lib/display-name.js"
 import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS } from "$lib/board-prefs.js"
 import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
+import { RETENTIONS, DEFAULT_RETENTION } from "$lib/retention.js"
 import { optimizeNow, lastFit, dayOf, REFIT_DAYS } from "$lib/server/fsrs-optimizer.js"
 
 export const load = async ({ locals, cookies }) => ({
 	pageTitle: "Settings",
 	rolloverHour: locals.user?.rolloverHour ?? DEFAULT_ROLLOVER_HOUR,
+	desiredRetention: locals.user?.desiredRetention ?? DEFAULT_RETENTION,
 	fsrs: { last: locals.userId ? await lastFit(locals.userId) : null, refitDays: REFIT_DAYS, timeZone: dayOf({ locals, cookies }).timeZone },
 	hasPublished: locals.userId
 		? (await pool.query("select 1 from marketplace_decks where user_id = $1 limit 1", [locals.userId])).rowCount > 0
@@ -81,6 +83,15 @@ export const actions = {
 		}
 		await pool.query('update "user" set "rolloverHour" = $1 where id = $2', [rolloverHour, locals.userId]);
 		return { saved: "rollover" };
+	},
+	// the recall FSRS schedules for; saves on change like the start of day
+	retention: async ({ request, locals }) => {
+		const retention = Number((await request.formData()).get("desired-retention"));
+		if (!RETENTIONS.includes(retention)) {
+			return fail(400, { failed: "retention", errors: ["Invalid desired retention"] });
+		}
+		await pool.query('update "user" set "desiredRetention" = $1 where id = $2', [retention, locals.userId]);
+		return { saved: "retention" };
 	},
 	// the scheduling refitted to the user's reviews now, rather than when
 	// it is next due; at most once an hour

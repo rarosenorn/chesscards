@@ -145,6 +145,7 @@ export const auth = betterAuth({
 			highlightEveryMove: { type: "boolean", defaultValue: false, input: false },
 			animationDuration: { type: "number", defaultValue: 150, input: false },
 			rolloverHour: { type: "number", defaultValue: 4, input: false },
+			desiredRetention: { type: "number", defaultValue: 0.95, input: false },
 			chesscomUsername: { type: "string", required: false, input: false },
 			lichessUsername: { type: "string", required: false, input: false }
 		},

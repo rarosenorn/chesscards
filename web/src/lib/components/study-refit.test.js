@@ -66,4 +66,24 @@ describe("a refit landing during study", () => {
 		unmount(app);
 		target.remove();
 	})
+
+	it("schedules for the recall the user chose: a lower target, longer intervals", async () => {
+		const goodAt = async desiredRetention => {
+			const target = document.createElement("div");
+			document.body.append(target);
+			const app = mount(Study, {
+				target, props: { fsrsParameters: null, desiredRetention },
+				context: new Map([["deck", reactiveProps(structuredClone(deck))], ["studyState", reactiveProps({ turnedCardId: null, cram: null, played: null })]])
+			});
+			await tick();
+			document.body.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+			await tick();
+			const good = [...target.querySelectorAll(".eval-btn p")][2].textContent.trim();
+			unmount(app);
+			target.remove();
+			return parseInt(good);
+		}
+		expect(await goodAt(0.8)).toBeGreaterThan(await goodAt(0.97));
+	})
 })
+

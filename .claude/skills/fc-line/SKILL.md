@@ -110,9 +110,9 @@ line plays, never in a front that would give the answer away.
 
 A course chapter (asked for by name, e.g. "the Scandinavian chapter") becomes:
 
-- **Quickstart cards** — one per trainer line of the chapter, appended to the
-  deck's first chapter "Quickstart" in course order, before the detail is
-  learned. Front "Play the <opening> line with 4...X and 5...Y from the first
+- **Quickstart cards** — one per trainer line of the chapter, in the deck's
+  first chapter "Quickstart" after the previous course chapter's, most common
+  line first (as the subdecks), so the skeleton is learned before the detail. Front "Play the <opening> line with 4...X and 5...Y from the first
   move." (course marks kept: "4...Bxf2+?!"); board from the start position,
   the whole trainer line, `solutionFrom: 0`, `puzzle: true`; back = one "- "
   bullet per ply in the course's words ("claude:" where it gives none), no side

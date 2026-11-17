@@ -3,7 +3,7 @@
 // one "warning" arrow per other move the opponent plays at that position in
 // any Quickstart line. The opponent's 1st and 2nd moves never get them, nor do
 // our own moves. A Quickstart line card is a card of the deck's first chapter
-// whose board plays from the first move (solutionFrom 0).
+// whose board plays from our first move (solutionFrom 0, or 1 in a Black deck).
 //
 //   node scripts/quickstart-arrows.mjs ../specs/sielecki-manual.json           # lists cards that differ
 //   node scripts/quickstart-arrows.mjs ../specs/sielecki-manual.json --write   # writes them
@@ -12,7 +12,10 @@ import { Chess } from "chess.js"
 
 const [, , specPath, mode] = process.argv;
 const spec = JSON.parse(readFileSync(specPath, "utf8"));
-const lines = spec.chapters[0].cards.filter(card => card.id && card.front?.boards?.[0]?.solutionFrom === 0);
+const lines = spec.chapters[0].cards.filter(card => {
+	const board = card.front?.boards?.[0];
+	return card.id && board && board.solutionFrom === (board.orientation === "b" ? 1 : 0);
+});
 
 const positionOf = chess => chess.fen().split(" ").slice(0, 4).join(" ");
 // each move of a line with the position it is played in

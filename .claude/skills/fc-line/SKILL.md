@@ -106,7 +106,30 @@ the bracket when they belong to its last move; inside a bracket they are
 dropped. Never brackets on moves the board's own
 line plays, never in a front that would give the answer away.
 
-## 5. Spec and import
+## 5. A whole course chapter: Quickstart first
+
+A course chapter (asked for by name, e.g. "the Scandinavian chapter") becomes:
+
+- **Quickstart cards** — one per trainer line of the chapter, appended to the
+  deck's first chapter "Quickstart" in course order, before the detail is
+  learned. Front "Play the <opening> line with 4...X and 5...Y from the first
+  move." (course marks kept: "4...Bxf2+?!"); board from the start position,
+  the whole trainer line, `solutionFrom: 0`, `puzzle: true`; back = one "- "
+  bullet per ply in the course's words ("claude:" where it gives none), no side
+  lines. Ids `<prefix>-ov-<line>` with a prefix new to the deck (`fr-ov-dxc4`).
+- **Orange arrows** (a trial since 2026-11-05, kept on every chapter since): on
+  each Quickstart line card, at the ply right after each Black move from move 3
+  on, one `["warning", from, to]` arrow per other Black move at that position
+  in any Quickstart line. Never for Black's 1st or 2nd move; never for our moves.
+- **Quickstart move text** — then run `python3 scratch/sielecki-movetext.py`:
+  it ends every Quickstart line card's back with its line as move text, the
+  chapter's other lines in parens. It groups cards by id prefix: add the new
+  prefix to `group_of` if it should share a group.
+- **A subdeck per variation** with the tree in §3, named after the variation
+  ("4...Nf6 5...Bb4"), inside a chapter named after the course chapter; what the
+  variations share is carded once, at the start of the first.
+
+## 6. Spec and import
 
 Append a chapter (named after the course variation group, e.g. "Three Knights
 3...Bc5") or extend the existing one for the same course chapter. Every card a
@@ -123,5 +146,6 @@ cd web && node scripts/import-deck.mjs ../specs/sielecki-manual.json          # 
 cd web && node scripts/import-deck.mjs ../specs/sielecki-manual.json --apply
 ```
 
-Then commit the spec and its `.lock.json`. Report in two lines: chapter,
+Look at the dry run before `--apply`: updates you did not make are the user's edits in
+the app; stop and ask. Then commit the spec and its `.lock.json`. Report in two lines: chapter,
 card count, and any reason you supplied that the course did not.

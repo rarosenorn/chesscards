@@ -127,7 +127,7 @@ A course chapter (asked for by name, e.g. "the Scandinavian chapter") becomes:
   `python3 web/scripts/sielecki-movetext.py`: it ends every Quickstart line
   card's back with "# Alt lines" and a numbered list of the same chapter's
   other lines, in deck order, each named as its card names it and playable
-  from where it leaves the card's line (course marks kept). It groups cards by id prefix: add the new prefix
+  from where it leaves the card's line, as one unbroken run of that trainer line's moves (no marks, no splits). It groups cards by id prefix: add the new prefix
   to `group_of` if it should share a group. Both scripts are rerunnable.
 - **A subdeck per variation** with the tree in §3, named after the variation
   ("4...Nf6 5...Bb4"), inside a chapter named after the course chapter; what the

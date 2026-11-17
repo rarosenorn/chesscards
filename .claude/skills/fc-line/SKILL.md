@@ -117,14 +117,17 @@ A course chapter (asked for by name, e.g. "the Scandinavian chapter") becomes:
   the whole trainer line, `solutionFrom: 0`, `puzzle: true`; back = one "- "
   bullet per ply in the course's words ("claude:" where it gives none), no side
   lines. Ids `<prefix>-ov-<line>` with a prefix new to the deck (`fr-ov-dxc4`).
-- **Orange arrows** (a trial since 2026-11-05, kept on every chapter since): on
-  each Quickstart line card, at the ply right after each Black move from move 3
-  on, one `["warning", from, to]` arrow per other Black move at that position
-  in any Quickstart line. Never for Black's 1st or 2nd move; never for our moves.
-- **Quickstart move text** — then run `python3 scratch/sielecki-movetext.py`:
-  it ends every Quickstart line card's back with its line as move text, the
-  chapter's other lines in parens. It groups cards by id prefix: add the new
-  prefix to `group_of` if it should share a group.
+- **Orange arrows** — on each Quickstart line card, at the ply right after
+  each Black move from Black's 3rd move on, one `["warning", from, to]` arrow
+  per other Black move at that position in any Quickstart line. Never for
+  Black's 1st or 2nd move; never for our moves. Written by
+  `cd web && node scripts/quickstart-arrows.mjs ../specs/sielecki-manual.json --write`
+  (without `--write` it lists the cards whose arrows differ).
+- **Quickstart move text** — then, from the repo root,
+  `python3 web/scripts/sielecki-movetext.py`: it ends every Quickstart line
+  card's back with its line as move text, the same chapter's other lines in
+  parens (course marks kept). It groups cards by id prefix: add the new prefix
+  to `group_of` if it should share a group. Both scripts are rerunnable.
 - **A subdeck per variation** with the tree in §3, named after the variation
   ("4...Nf6 5...Bb4"), inside a chapter named after the course chapter; what the
   variations share is carded once, at the start of the first.

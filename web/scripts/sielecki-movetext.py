@@ -1,11 +1,13 @@
-"""Quickstart move text for the two Sielecki decks.
+"""Quickstart alt lines for the two Sielecki decks.
 
-Each Quickstart line card gets, as the last paragraph of its back, its own
-line as move text with the same chapter's other Quickstart lines in parens
-where they leave it (nested as in PGN). Side lines are [move refs], so they
-play on the card's board; the card's own moves are prose (the board's move
-line plays them). Course marks (! ? ?! ??) come from the cards' fronts and
-backs. Rerunnable: an earlier generated paragraph is replaced.
+Each Quickstart line card's back ends with the same chapter's other Quickstart
+lines, as a "# Alt lines" paragraph and a numbered list in deck order: each
+line named as its own card names it ("4...Bxf2+?! and 6...Ng6") and written
+from the move where it leaves this card's line, as [move refs] that play on
+the card's board. The card's own line is not repeated: the board plays it.
+Course marks (! ? ?! ??) come from the cards' fronts and backs. Rerunnable:
+what an earlier run wrote (this list, or the older move-text paragraph) is
+replaced.
 
     python3 web/scripts/sielecki-movetext.py        # from the repo root; writes the specs
 """
@@ -16,7 +18,19 @@ import sys
 SPECS = ["specs/sielecki-manual.json", "specs/sielecki-black-manual.json"]
 START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 MARKED = re.compile(r"(\d+)(\.\.\.|\.)([A-Za-z][A-Za-z0-9+#=-]*?)([!?]+)(?=[\s,.;:)]|$)")
-GENERATED = re.compile(r"^1\.\S")
+GENERATED = re.compile(r"^1\.\S")  # the older move-text paragraph
+HEADING = "# Alt lines"
+NAMED = re.compile(r"Play the (.+?) line(?: with (.+?))? from (?:White's )?(?:the )?first move")
+
+
+def own_paragraphs(back):
+    """The back without what an earlier run wrote."""
+    paragraphs = back.rstrip().split("\n\n")
+    if len(paragraphs) >= 2 and paragraphs[-2] == HEADING:
+        return paragraphs[:-2]
+    if paragraphs and (GENERATED.match(paragraphs[-1]) or paragraphs[-1] == HEADING):
+        return paragraphs[:-1]
+    return paragraphs
 
 
 def group_of(card_id):
@@ -32,10 +46,8 @@ def number(ply):
 
 def marks_of(card, line):
     back = card["back"] if isinstance(card["back"], str) else card["back"].get("text", "")
-    # not from an earlier run's own paragraph: its side lines carry other lines' marks
-    paragraphs = back.rstrip().split("\n\n")
-    if GENERATED.match(paragraphs[-1]):
-        back = "\n\n".join(paragraphs[:-1])
+    # not from what an earlier run wrote: its lines carry other lines' marks
+    back = "\n\n".join(own_paragraphs(back))
     found = {}
     for match in MARKED.finditer(card["front"]["text"] + "\n" + back):
         ply = (int(match.group(1)) - 1) * 2 + (1 if match.group(2) == "..." else 0)
@@ -44,68 +56,38 @@ def marks_of(card, line):
     return found
 
 
-def movetext(main, lines, marks):
-    """main: the card's line; lines: the chapter's lines in deck order."""
+def name_of(card):
+    match = NAMED.search(card["front"]["text"])
+    assert match, card["id"]
+    return match.group(2) or match.group(1)
 
-    def label(path, ply, first):
-        san = path[ply] + marks.get(tuple(path[: ply + 1]), "")
-        return f"{number(ply)}{san}" if first or ply % 2 == 0 else san
 
-    def continuations(prefix):
-        # the chapter's lines through prefix, each first move once, deck order
-        seen, out = set(), []
-        for line in lines:
-            if len(line) > len(prefix) and line[: len(prefix)] == prefix and line[len(prefix)] not in seen:
-                seen.add(line[len(prefix)])
-                out.append(line)
-        return out
+def alt_lines(main, others, marks):
+    """main: the card's line; others: [(name, line)] of the chapter's other
+    lines in deck order."""
 
-    def variation(line, branch, root=None):
-        # line leaves its parent at ply `branch` and the card's line at `root`;
-        # written as refs split at marks and at nested variations, each ref
-        # replaying (unwritten) the moves since the card's line
-        root = branch if root is None else root
-        parts, segment, start, ply = [], [], branch, branch
-        first = True
+    def label(line, ply, first):
+        return f"{number(ply)}{line[ply]}" if first or ply % 2 == 0 else line[ply]
 
-        def flush(end_ply):
-            nonlocal segment, start
-            if not segment:
-                return
-            lead = " ".join(label(line, p, p == root) for p in range(root, start))
-            written = " ".join(segment)
-            parts.append(f"[{lead} | {written}]" if lead else f"[{written}]")
-            segment, start = [], end_ply
-
-        while ply < len(line):
-            segment.append(plain(line, ply, first or ply == start))
+    def refs(line, leave):
+        # from ply `leave` on, split after each marked move (the mark goes
+        # after its ref), each later ref replaying the moves before it unwritten
+        parts, start = [], leave
+        for ply in range(leave, len(line)):
             mark = marks.get(tuple(line[: ply + 1]), "")
-            nested = [other for other in continuations(line[:ply]) if other[ply] != line[ply]] if ply > branch else []
-            if mark or nested:
-                flush(ply + 1)
-                if mark:
-                    parts[-1] += mark
-                for other in nested:
-                    parts.append("(" + variation(other, ply, root) + ")")
-            first = False
-            ply += 1
-            if (mark or nested) and ply < len(line):
-                first = True
-        flush(len(line))
+            if mark or ply == len(line) - 1:
+                lead = " ".join(label(line, p, p == leave) for p in range(leave, start))
+                written = " ".join(label(line, p, p == start) for p in range(start, ply + 1))
+                parts.append((f"[{lead} | {written}]" if lead else f"[{written}]") + mark)
+                start = ply + 1
         return " ".join(parts)
 
-    def plain(path, ply, first):
-        return f"{number(ply)}{path[ply]}" if first or ply % 2 == 0 else path[ply]
-
-    words, after_variation = [], False
-    for ply in range(len(main)):
-        words.append(label(main, ply, ply == 0 or after_variation))
-        after_variation = False
-        for other in continuations(main[:ply]):
-            if other[ply] != main[ply]:
-                words.append("(" + variation(other, ply) + ")")
-                after_variation = True
-    return " ".join(words)
+    items = []
+    for name, line in others:
+        leave = next((p for p in range(min(len(line), len(main))) if line[p] != main[p]), min(len(line), len(main)))
+        if leave < len(line):
+            items.append(f"{len(items) + 1}. {name}: {refs(line, leave)}")
+    return items
 
 
 def run(path):
@@ -119,16 +101,17 @@ def run(path):
     changed = 0
     for group in groups.values():
         lines = [c["front"]["boards"][0]["moves"] for c in group]
+        names = [name_of(c) for c in group]
         marks = {}
         for card, line in zip(group, lines):
             marks.update(marks_of(card, line))
-        for card, line in zip(group, lines):
+        for index, (card, line) in enumerate(zip(group, lines)):
             assert isinstance(card["back"], str), card["id"]
-            paragraphs = card["back"].rstrip().split("\n\n")
-            if GENERATED.match(paragraphs[-1]):
-                paragraphs.pop()
-            if len(group) > 1:
-                paragraphs.append(movetext(line, lines, marks))
+            paragraphs = own_paragraphs(card["back"])
+            others = [(names[i], lines[i]) for i in range(len(group)) if i != index]
+            items = alt_lines(line, others, marks)
+            if items:
+                paragraphs += [HEADING, "\n".join(items)]
             back = "\n\n".join(paragraphs)
             if back != card["back"]:
                 card["back"] = back

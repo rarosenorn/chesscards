@@ -123,10 +123,11 @@ A course chapter (asked for by name, e.g. "the Scandinavian chapter") becomes:
   Black's 1st or 2nd move; never for our moves. Written by
   `cd web && node scripts/quickstart-arrows.mjs ../specs/sielecki-manual.json --write`
   (without `--write` it lists the cards whose arrows differ).
-- **Quickstart move text** — then, from the repo root,
+- **Quickstart alt lines** — then, from the repo root,
   `python3 web/scripts/sielecki-movetext.py`: it ends every Quickstart line
-  card's back with its line as move text, the same chapter's other lines in
-  parens (course marks kept). It groups cards by id prefix: add the new prefix
+  card's back with "# Alt lines" and a numbered list of the same chapter's
+  other lines, in deck order, each named as its card names it and playable
+  from where it leaves the card's line (course marks kept). It groups cards by id prefix: add the new prefix
   to `group_of` if it should share a group. Both scripts are rerunnable.
 - **A subdeck per variation** with the tree in §3, named after the variation
   ("4...Nf6 5...Bb4"), inside a chapter named after the course chapter; what the

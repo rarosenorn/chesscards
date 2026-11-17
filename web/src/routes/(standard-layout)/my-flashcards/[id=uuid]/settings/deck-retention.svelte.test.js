@@ -14,11 +14,12 @@ const { default: Settings } = await import("./+page.svelte");
 const decks = await import("$lib/server/decks.js");
 const { desiredRetention } = await import("$lib/deck-tree.js");
 
-const deckData = ({ retention, parentRetention, ancestors = [], inside = 0 }) => ({
+const deckData = ({ retention, parentRetention, ancestors = [], inside = 0, taken = 0 }) => ({
 	deck: {
 		id: "d", name: "Deck", inOrder: true, reviewsInOrder: false, tacticLadder: null, parentLadder: [14, 60, 180],
 		retention, parentRetention, isMarketplace: false, instanceId: null, ancestors,
-		decks: [{ id: "d", ladder: [14, 60, 180] }, ...Array.from({ length: inside }, (_, i) => ({ id: `in${i}`, ladder: [14, 60, 180] }))]
+		decks: [{ id: "d", ladder: [14, 60, 180] }, ...Array.from({ length: inside }, (_, i) => ({ id: `in${i}`, ladder: [14, 60, 180] })),
+			...Array.from({ length: taken }, (_, i) => ({ id: `t${i}`, bought: true, instance_id: `t${i}`, ladder: [14, 60, 180] }))]
 	},
 	listing: null, uploadRequest: null, holdsTaken: false
 });
@@ -33,6 +34,8 @@ const open = data => {
 		pills: () => [...section.querySelectorAll(".pill")].map(p => p.textContent.trim().replace(/\s+/g, " ")),
 		chosen: () => section.querySelector(".pill.selected").textContent.trim().replace(/\s+/g, " "),
 		button: () => [...section.querySelectorAll("button")].find(b => b.textContent === "Use for all decks inside"),
+		ladderButton: () => [...[...target.querySelectorAll("section")].find(s => s.querySelector("h3")?.textContent === "Tactic cards").querySelectorAll("button")]
+			.find(b => b.textContent === "Use for all decks inside"),
 		close: () => { unmount(app); target.remove() }
 	};
 }
@@ -52,6 +55,16 @@ describe("a deck's desired retention", () => {
 		expect(view.chosen()).toBe("90%");
 		expect(view.button()).toBeFalsy();
 		view.close();
+	})
+
+	it("on a deck holding only marketplace decks, offers to make them follow its retention but not its tactic ladder, which is their author's", () => {
+		const held = open(deckData({ retention: null, parentRetention: 0.95, taken: 1 }));
+		expect(held.button()).toBeTruthy();
+		expect(held.ladderButton()).toBeFalsy();
+		held.close();
+		const mixed = open(deckData({ retention: null, parentRetention: 0.95, inside: 1, taken: 1 }));
+		expect(mixed.ladderButton()).toBeTruthy();
+		mixed.close();
 	})
 
 	it("is the deck's own, or else the nearest deck above's, or else the user's", () => {

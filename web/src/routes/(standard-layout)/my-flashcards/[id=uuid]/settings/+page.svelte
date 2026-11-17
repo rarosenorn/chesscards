@@ -9,6 +9,8 @@
 
 	// whether there are decks inside it to take in order or mixed
 	let holdsDecks = $derived(data.deck.decks.length > 1);
+	// decks of the user's own inside it, the ones that can take its tactic ladder
+	let holdsOwnDecks = $derived(data.deck.decks.some(entry => !entry.bought && entry.id !== data.deck.id));
 	// a marketplace deck taken, as against a deck inside one
 	let isTaken = $derived(data.deck.isMarketplace && data.deck.id === data.deck.instanceId);
 	// a marketplace deck taken somewhere inside it, which deleting it does not take
@@ -215,7 +217,7 @@
 				solved; a miss starts it over.
 				Left empty, it is the {data.deck.ancestors.length ? "deck above's" : "default"}:
 				{data.deck.parentLadder.join(", ")}.
-				{#if holdsDecks}The decks inside take it unless they have their own.{/if}
+				{#if holdsOwnDecks}The decks inside take it unless they have their own.{/if}
 			</p>
 			<FormErrors form={form?.ladderErrors ? { errors: form.ladderErrors } : null} />
 			<form method="POST" action="?/tacticLadder" class="rename-form" use:enhance={() => async ({ update, result }) => {
@@ -231,7 +233,7 @@
 				{/key}
 				<button class="std-btn">Save</button>
 			</form>
-			{#if holdsDecks}
+			{#if holdsOwnDecks}
 				<form method="POST" action="?/ladderInside" use:enhance class="follow-row">
 					<button class="std-btn">Use for all decks inside</button>
 					{#if form?.followed === "ladder"}<span class="saved">The decks inside follow this deck now.</span>{/if}

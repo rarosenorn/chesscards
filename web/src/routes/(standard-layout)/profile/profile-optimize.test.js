@@ -90,6 +90,7 @@ describe("Settings' desired retention", () => {
 		await tick();
 		expect(form.requestSubmit).toHaveBeenCalled();
 		expect(section.querySelector(".pill.selected").textContent.trim()).toBe("95%");
+		expect([...section.querySelectorAll("form")].find(f => f.getAttribute("action") === "?/retentionEverywhere").textContent.trim()).toBe("Use for all decks");
 		view.close();
 	})
 })

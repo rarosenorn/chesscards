@@ -125,6 +125,9 @@ create table decks (
 	-- the last retires it. Null: the nearest deck above's, or else the
 	-- default (lib/deck-tree.js).
 	tactic_ladder int[],
+	-- The recall FSRS schedules the deck's cards for (lib/retention.js).
+	-- Null: the nearest deck above's, or else the user's own (Settings).
+	desired_retention double precision check (desired_retention between 0.7 and 0.99),
 	-- the deck's own listing (its Deck tab): an upload request starts from
 	-- it, and editing it never reaches a listing already on the marketplace.
 	-- A description is blocks, like a card's side (text and boards), and the
@@ -287,6 +290,10 @@ create table marketplace_deck_instances (
 	-- for the deck itself (under this instance's id) and each deck inside it
 	-- (under its marketplace_subdecks id): { "<id>": true | false }.
 	in_order_overrides jsonb not null default '{}',
+	-- The studier's desired retention for the deck itself and the decks inside
+	-- it, keyed as in_order_overrides: { "<id>": 0.9 }; a deck without one
+	-- takes the deck above's, or else the user's own.
+	retention_overrides jsonb not null default '{}',
 	-- the studier's own shuffled / in order for its reviews; null: the author's
 	reviews_in_order boolean,
 	unique (user_id, marketplace_deck_id)

@@ -3,6 +3,7 @@ import { createEmptyCard } from "ts-fsrs"
 import * as decks from "$lib/server/decks.js"
 import * as marketplace from "$lib/server/marketplace.js"
 import * as zod from "$lib/zod-schemas.js"
+import { RETENTIONS } from "$lib/retention.js"
 
 export const load = async ({ locals, params, parent }) => {
 	// a marketplace deck taken, or a deck inside one, has nothing here but how
@@ -53,6 +54,25 @@ export const actions = {
 		const ladder = steps.length === 0 ? null : steps.map(Number);
 		if (!await decks.setTacticLadder(locals.userId, params.id, ladder)) return fail(403, { ladder: typed, ladderErrors: ["Not a deck of your own"] });
 		return { ladderSaved: true };
+	},
+	// every deck of the user's own inside this one takes its tactic ladder
+	ladderInside: async ({ params, locals }) => {
+		if (!await decks.followTacticLadder(locals.userId, params.id)) return fail(403, { ladderErrors: ["Not a deck of your own"] });
+		return { followed: "ladder" };
+	},
+	// the recall FSRS schedules the deck's cards for, or "inherit" to take the
+	// one above's (or the user's own); on a marketplace deck taken, the
+	// studier's own
+	retention: async ({ params, request, locals }) => {
+		const value = (await request.formData()).get("retention");
+		const retention = value === "inherit" ? null : Number(value);
+		if (retention !== null && !RETENTIONS.includes(retention)) return fail(400, { retentionErrors: ["Invalid desired retention"] });
+		if (!await decks.setRetention(locals.userId, params.id, retention)) return fail(403, { retentionErrors: ["Not a deck of yours"] });
+	},
+	// every deck inside this one gives up its own desired retention, to follow it
+	retentionInside: async ({ params, locals }) => {
+		if (!await decks.followRetention(locals.userId, params.id)) return fail(403, { retentionErrors: ["Not a deck of yours"] });
+		return { followed: "retention" };
 	},
 	// a deck of the user's own goes with everything inside it; a marketplace
 	// deck taken leaves their library

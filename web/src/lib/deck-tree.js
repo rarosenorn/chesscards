@@ -43,6 +43,15 @@ const tacticLadder = (byId, deckId) => {
 	return DEFAULT_TACTIC_LADDER;
 }
 
+// A deck's desired retention: its own, or else the nearest deck above's, or
+// else the user's own (fallback). byId: the library's decks by id.
+const desiredRetention = (byId, deckId, fallback) => {
+	for (let at = byId.get(deckId); at; at = byId.get(at.parent_id)) {
+		if (at.retention != null) return at.retention;
+	}
+	return fallback;
+}
+
 // what progression needs to know of a set of cards, and its verdict on them.
 // (The My flashcards list has only such counts, per deck, to go on.)
 const cardStats = cards => ({
@@ -257,4 +266,4 @@ const deckProgress = cards => ({
 	total: cards.length
 });
 
-export { GRADUATED_SHARE, DEFAULT_TACTIC_LADDER, tacticLadder, isSeen, isGraduated, cardStats, statsPass, childrenByParent, deckOutline, readingOrder, byReadingOrder, deckTrail, deckPath, deckSubtree, cardsUnder, deckChoices, unlockedDeckIds, firstLockedDeck, newCardRanks, deckListing, deckProgress }
+export { GRADUATED_SHARE, DEFAULT_TACTIC_LADDER, tacticLadder, desiredRetention, isSeen, isGraduated, cardStats, statsPass, childrenByParent, deckOutline, readingOrder, byReadingOrder, deckTrail, deckPath, deckSubtree, cardsUnder, deckChoices, unlockedDeckIds, firstLockedDeck, newCardRanks, deckListing, deckProgress }

@@ -3,6 +3,7 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import FormErrors from "$lib/components/FormErrors.svelte"
 	import { typedConfirmModal } from "$lib/modals.svelte.js"
+	import { RETENTIONS } from "$lib/retention.js"
 
 	let { data, form } = $props();
 
@@ -17,6 +18,8 @@
 	const days = ladder => ladder.length === 1
 		? `${ladder[0]} day${ladder[0] === 1 ? "" : "s"}`
 		: `${ladder.slice(0, -1).join(", ")} and ${ladder.at(-1)} days`;
+
+	const percent = retention => `${Math.round(retention * 100)}%`;
 
 	let ladderSaves = $state(0);
 	let deleteForm = $state();
@@ -165,6 +168,36 @@
 	</section>
 	{/if}
 
+	<!-- the studier's own, on a marketplace deck too -->
+	<section>
+		<h3 id="deck-retention">Desired retention</h3>
+		<p class="section-note">
+			How likely you are to remember this deck's cards when they come back.
+			{data.deck.ancestors.length ? "Same as above takes the deck above's" : "As in Settings takes the one in your Settings"}{#if holdsDecks}, and the decks inside take this deck's unless they have their own{/if}.
+		</p>
+		<FormErrors form={form?.retentionErrors ? { errors: form.retentionErrors } : null} />
+		<form method="POST" action="?/retention" use:enhance onchange={e => e.currentTarget.requestSubmit()}>
+			<div class="pills" role="radiogroup" aria-labelledby="deck-retention">
+				<label class="pill" class:selected={data.deck.retention == null}>
+					<input type="radio" name="retention" value="inherit" checked={data.deck.retention == null} />
+					{data.deck.ancestors.length ? "Same as above" : "As in Settings"} ({percent(data.deck.parentRetention)})
+				</label>
+				{#each RETENTIONS as retention}
+					<label class="pill" class:selected={data.deck.retention === retention}>
+						<input type="radio" name="retention" value={retention} checked={data.deck.retention === retention} />
+						{percent(retention)}
+					</label>
+				{/each}
+			</div>
+		</form>
+		{#if holdsDecks}
+			<form method="POST" action="?/retentionInside" use:enhance class="follow-row">
+				<button class="std-btn">Use for all decks inside</button>
+				{#if form?.followed === "retention"}<span class="saved">The decks inside follow this deck now.</span>{/if}
+			</form>
+		{/if}
+	</section>
+
 	<!-- the author's on a marketplace deck, so there only said -->
 	<section>
 		<h3>Tactic cards</h3>
@@ -198,6 +231,12 @@
 				{/key}
 				<button class="std-btn">Save</button>
 			</form>
+			{#if holdsDecks}
+				<form method="POST" action="?/ladderInside" use:enhance class="follow-row">
+					<button class="std-btn">Use for all decks inside</button>
+					{#if form?.followed === "ladder"}<span class="saved">The decks inside follow this deck now.</span>{/if}
+				</form>
+			{/if}
 		{/if}
 	</section>
 
@@ -329,6 +368,15 @@
 	.pill:has(input:focus-visible) {
 		outline: 2px solid var(--accent);
 		outline-offset: 1px;
+	}
+	.follow-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+	.saved {
+		color: var(--accent);
+		font-size: 0.9rem;
 	}
 	.danger-actions {
 		display: flex;

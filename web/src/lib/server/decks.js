@@ -1,5 +1,6 @@
 import { pool } from "./pool.js"
-import { childrenByParent, deckSubtree, readingOrder, byReadingOrder, deckListing, deckOutline, tacticLadder } from "../deck-tree.js"
+import { childrenByParent, deckSubtree, readingOrder, byReadingOrder, deckListing, deckOutline, tacticLadder, desiredRetention } from "../deck-tree.js"
+import { DEFAULT_RETENTION } from "../retention.js"
 import { LEARN_AHEAD_MS } from "../rollover.js"
 
 // A user's decks nest, as Anki's do (see lib/deck-tree.js for the tree and
@@ -83,18 +84,21 @@ const BOUGHT_DECK = "coalesce(mc.subdeck_id, i.id)";
 // Every deck of the user's, of the three kinds, without cards.
 const getLibrary = async (userId, client = pool) => {
 	const { rows } = await client.query(`
-		select d.id, d.parent_id, d.name, d.position, d.in_order, d.reviews_in_order, d.tactic_ladder, false bought, null::uuid instance_id
+		select d.id, d.parent_id, d.name, d.position, d.in_order, d.reviews_in_order, d.tactic_ladder, false bought, null::uuid instance_id,
+			d.desired_retention retention
 		from decks d where d.user_id = $1
 		union all
 		select i.id, i.parent_id, md.name, i.position,
 			coalesce((i.in_order_overrides ->> i.id::text)::boolean, md.in_order),
-			coalesce(i.reviews_in_order, md.reviews_in_order), md.tactic_ladder, true, i.id
+			coalesce(i.reviews_in_order, md.reviews_in_order), md.tactic_ladder, true, i.id,
+			(i.retention_overrides ->> i.id::text)::double precision
 		from marketplace_deck_instances i
 		join marketplace_decks md on md.id = i.marketplace_deck_id
 		where i.user_id = $1
 		union all
 		select ms.id, coalesce(ms.parent_id, i.id), ms.name, ms.position,
-			coalesce((i.in_order_overrides ->> ms.id::text)::boolean, ms.in_order), false, ms.tactic_ladder, true, i.id
+			coalesce((i.in_order_overrides ->> ms.id::text)::boolean, ms.in_order), false, ms.tactic_ladder, true, i.id,
+			(i.retention_overrides ->> ms.id::text)::double precision
 		from marketplace_subdecks ms
 		join marketplace_deck_instances i on i.marketplace_deck_id = ms.marketplace_deck_id
 		where i.user_id = $1`, [userId]);
@@ -150,7 +154,11 @@ const BOUGHT_CARD = `json_build_object(
 // and the whole tree from the deck at the top (tree, in reading order, each
 // with its level). Undefined when the id is none of the user's.
 const getDeck = async (userId, id) => {
-	const library = await getLibrary(userId);
+	const [library, { rows: [user] }] = await Promise.all([
+		getLibrary(userId),
+		pool.query('select "desiredRetention" from "user" where id = $1', [userId])
+	]);
+	const usersRetention = user?.desiredRetention ?? DEFAULT_RETENTION;
 	const deck = library.find(entry => entry.id === id);
 	if (!deck) return undefined;
 
@@ -187,13 +195,17 @@ const getDeck = async (userId, id) => {
 		// the deck's own tactic ladder (null: it takes parentLadder)
 		tacticLadder: deck.tactic_ladder,
 		parentLadder: tacticLadder(byId, deck.parent_id),
+		// the deck's own desired retention (null: it takes parentRetention,
+		// the deck above's, or else the user's own)
+		retention: deck.retention,
+		parentRetention: desiredRetention(byId, deck.parent_id, usersRetention),
 		isMarketplace: deck.bought,
 		instanceId: deck.instance_id,
 		ancestors: ancestors.map(entry => ({ id: entry.id, name: entry.name, bought: entry.bought })),
 		tree,
 		// each with the tactic ladder its cards climb, found through the decks
 		// around it too
-		decks: decks.map(entry => ({ ...entry, ladder: tacticLadder(byId, entry.id) })),
+		decks: decks.map(entry => ({ ...entry, ladder: tacticLadder(byId, entry.id), desiredRetention: desiredRetention(byId, entry.id, usersRetention) })),
 		cards
 	};
 }
@@ -358,6 +370,49 @@ const setReviewsInOrder = async (userId, id, inOrder) => {
 	const { rowCount: taken } = await pool.query(
 		"update marketplace_deck_instances set reviews_in_order = $3 where id = $2 and user_id = $1 and parent_id is null", [userId, id, inOrder]);
 	return taken === 1;
+}
+
+// A deck's desired retention, or null to take the one above's. A deck of the
+// user's own keeps it on the deck; a marketplace deck taken, or one inside
+// it, keeps it as the studier's own on their copy, as in order / mixed.
+const setRetention = async (userId, id, retention) => {
+	const { rowCount } = await pool.query(
+		"update decks set desired_retention = $3 where id = $2 and user_id = $1", [userId, id, retention]);
+	if (rowCount === 1) return true;
+	const deck = (await getLibrary(userId)).find(entry => entry.id === id && entry.bought);
+	if (!deck) return false;
+	await pool.query(retention == null
+		? "update marketplace_deck_instances set retention_overrides = retention_overrides - $3::text where id = $2 and user_id = $1"
+		: "update marketplace_deck_instances set retention_overrides = retention_overrides || jsonb_build_object($3::text, $4::double precision) where id = $2 and user_id = $1",
+		retention == null ? [userId, deck.instance_id, id] : [userId, deck.instance_id, id, retention]);
+	return true;
+}
+
+// Every deck inside this one gives up its own desired retention, so all of
+// them follow it; without an id, every deck of the user's follows Settings.
+const followRetention = async (userId, id = null) => inTransaction(async client => {
+	let inside = null;
+	if (id) {
+		const library = await getLibrary(userId, client);
+		if (!library.some(entry => entry.id === id)) return false;
+		inside = [...deckSubtree(library, id)].filter(entry => entry !== id);
+	}
+	await client.query("update decks set desired_retention = null where user_id = $1 and ($2::uuid[] is null or id = any($2::uuid[]))", [userId, inside]);
+	await client.query(`update marketplace_deck_instances
+		set retention_overrides = case when $2::text[] is null then '{}'::jsonb else retention_overrides - $2::text[] end
+		where user_id = $1`, [userId, inside]);
+	return true;
+});
+
+// Every deck of the user's own inside this one gives up its own tactic ladder,
+// so all of them follow it (a marketplace deck's is its author's).
+const followTacticLadder = async (userId, id) => {
+	const library = await getLibrary(userId);
+	if (!library.some(entry => entry.id === id && !entry.bought)) return false;
+	const under = deckSubtree(library, id);
+	const inside = library.filter(entry => under.has(entry.id) && entry.id !== id && !entry.bought).map(entry => entry.id);
+	await pool.query("update decks set tactic_ladder = null where user_id = $1 and id = any($2::uuid[])", [userId, inside]);
+	return true;
 }
 
 // The tactic ladder of a deck of the user's own: whole days, or null to take
@@ -656,4 +711,4 @@ const createReviewLog = async (userId, cardId, log) => {
 	`, [userId, cardId, log.rating, log.state, log.due, log.stability, log.difficulty, log.elapsed_days, log.last_elapsed_days, log.scheduled_days, log.learning_steps, log.review])
 }
 
-export { BOUNDS, due, listCounts, BOUGHT_DECK, getLibrary, getListing, getDeck, create, rename, move, remove, removeTaken, flatten, setInOrder, setReviewsInOrder, setTacticLadder, reset, userIdOwnsDeckId, getOwnListing, getImage, updateListing, updatePreviewCards, addCard, addCards, updateCardType, updateCardContent, deleteCards, moveCards, copyCards, updateCardStudyState, markArticleRead, createReviewLog }
+export { BOUNDS, due, listCounts, BOUGHT_DECK, getLibrary, getListing, getDeck, create, rename, move, remove, removeTaken, flatten, setInOrder, setReviewsInOrder, setTacticLadder, followTacticLadder, setRetention, followRetention, reset, userIdOwnsDeckId, getOwnListing, getImage, updateListing, updatePreviewCards, addCard, addCards, updateCardType, updateCardContent, deleteCards, moveCards, copyCards, updateCardStudyState, markArticleRead, createReviewLog }

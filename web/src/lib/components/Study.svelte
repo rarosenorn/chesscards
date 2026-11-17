@@ -98,12 +98,25 @@
 	// review instant, which would fuzz the preview under the button and the
 	// grade that follows it differently, and the button would be promising a
 	// date the card does not get.
-	const schedulerWith = w => fsrs({ ...(w ? { w } : {}), enable_fuzz: true, request_retention: desiredRetention })
-		.useStrategy(StrategyMode.SEED, GenSeedStrategyWithCardId("id"));
+	// One scheduler per desired retention, each card scheduled for its own
+	// deck's (lib/deck-tree.js desiredRetention, the deck above's or the
+	// user's when it has none); built afresh when a refit's weights land.
 	// svelte-ignore state_referenced_locally
-	let scheduler = $state.raw(schedulerWith(fsrsParameters));
+	let weights = $state.raw(fsrsParameters);
 	// svelte-ignore state_referenced_locally
-	refitted?.then(w => { if (w) scheduler = schedulerWith(w) }, () => {});
+	refitted?.then(w => { if (w) weights = w }, () => {});
+	let schedulers = $derived.by(() => {
+		const w = weights, built = new Map();
+		return retention => {
+			if (!built.has(retention)) {
+				built.set(retention, fsrs({ ...(w ? { w } : {}), enable_fuzz: true, request_retention: retention })
+					.useStrategy(StrategyMode.SEED, GenSeedStrategyWithCardId("id")));
+			}
+			return built.get(retention);
+		};
+	});
+	const schedulerFor = card =>
+		schedulers(deck.decks.find(entry => entry.id === card?.deck_id)?.desiredRetention ?? desiredRetention);
 
 	// --- the queue ---
 	// Learning cards come first, as they fall due; then due reviews, shuffled
@@ -432,7 +445,7 @@
 	let selfGrading = $derived(isTactic && frontPuzzles > 0);
 	let played = $derived(studyState.played?.cardId === currentCard?.id ? studyState.played : null);
 
-	let preview = $derived(isTactic ? null : scheduler.repeat(currentCard, new Date(previewAt)));
+	let preview = $derived(isTactic ? null : schedulerFor(currentCard).repeat(currentCard, new Date(previewAt)));
 
 	let frontBoardCount = $derived(currentCard ? countBoards(currentCard.front) : 0);
 	// where the arrows land: the card's first board that has moves to step
@@ -479,7 +492,7 @@
 		// which can already be the next card by the time it is written back
 		const card = currentCard;
 		const cardAndLog =
-			scheduler.next(card, new Date(), rating);
+			schedulerFor(card).next(card, new Date(), rating);
 		isCardTurned = false;
 		advanceQueueClock();
 		deck.cards[deck.cards.indexOf(card)] = cardAndLog.card;

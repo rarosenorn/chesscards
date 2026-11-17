@@ -257,7 +257,8 @@
 		<h3 id="desired-retention">Desired retention</h3>
 		<p class="section-note">
 			How likely you are to remember a card when it comes back. Higher means
-			more reviews: 95% takes about 1.5–2× the reviews of 90%.
+			more reviews: 95% takes about 1.5–2× the reviews of 90%. A deck can have
+			its own, in its Settings; the others use this one.
 		</p>
 		<form
 			method="POST"
@@ -277,6 +278,10 @@
 		{#if form?.failed === "retention"}
 			<p class="error">{form.errors[0]}</p>
 		{/if}
+		<form method="POST" action="?/retentionEverywhere" use:enhance={keepState} class="follow-row">
+			<button class="std-btn">Use for all decks</button>
+			{#if form?.saved === "retentionEverywhere"}<span class="saved">Every deck uses this one now.</span>{/if}
+		</form>
 	</section>
 	<section>
 		<h3>Spaced repetition parameter optimization</h3>
@@ -436,6 +441,11 @@
 	.preview-board.black-border {
 		border: 2px solid #404040;
 		border-radius: 2px;
+	}
+	.follow-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
 	}
 	.fit-status {
 		margin: 0;

@@ -1,6 +1,7 @@
 import { fail } from "@sveltejs/kit"
 import { pool } from "$lib/server/pool.js"
 import * as payouts from "$lib/server/payouts.js"
+import { followRetention } from "$lib/server/decks.js"
 import { cleanName } from "$lib/display-name.js"
 import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS } from "$lib/board-prefs.js"
 import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
@@ -92,6 +93,11 @@ export const actions = {
 		}
 		await pool.query('update "user" set "desiredRetention" = $1 where id = $2', [retention, locals.userId]);
 		return { saved: "retention" };
+	},
+	// every deck gives up its own desired retention, to follow this one
+	retentionEverywhere: async ({ locals }) => {
+		await followRetention(locals.userId);
+		return { saved: "retentionEverywhere" };
 	},
 	// the scheduling refitted to the user's reviews now, rather than when
 	// it is next due; at most once an hour

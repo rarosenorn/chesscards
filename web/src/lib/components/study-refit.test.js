@@ -85,5 +85,26 @@ describe("a refit landing during study", () => {
 		}
 		expect(await goodAt(0.8)).toBeGreaterThan(await goodAt(0.97));
 	})
+
+	it("schedules each card for its own deck's desired retention, not the user's", async () => {
+		const goodIn = async deckRetention => {
+			const target = document.createElement("div");
+			document.body.append(target);
+			const own = { ...structuredClone(deck), decks: [{ ...deck.decks[0], desiredRetention: deckRetention }] };
+			const app = mount(Study, {
+				target, props: { fsrsParameters: null, desiredRetention: 0.95 },
+				context: new Map([["deck", reactiveProps(own)], ["studyState", reactiveProps({ turnedCardId: null, cram: null, played: null })]])
+			});
+			await tick();
+			document.body.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+			await tick();
+			const good = parseInt([...target.querySelectorAll(".eval-btn p")][2].textContent);
+			unmount(app);
+			target.remove();
+			return good;
+		}
+		expect(await goodIn(0.8)).toBeGreaterThan(await goodIn(undefined));
+		expect(await goodIn(0.97)).toBeLessThan(await goodIn(undefined));
+	})
 })
 

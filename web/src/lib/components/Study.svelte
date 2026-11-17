@@ -469,7 +469,7 @@
 	// with nothing followed.
 	let asides = $state({});
 	let clicks = 0;
-	$effect(() => { void currentCard; asides = {} });
+	$effect(() => { void currentCard; if (!isCardTurned) asides = {} });
 	// ...and each board answers with where it now stands, so the move it is
 	// showing is marked in the text that named it — an aside is nowhere else
 	let boardAt = $state({});

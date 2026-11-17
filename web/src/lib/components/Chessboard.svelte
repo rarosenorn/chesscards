@@ -103,7 +103,8 @@
 	let stepping = false;
 	// a different board (e.g. next flashcard) starts back at its own question,
 	// with nothing followed off it
-	$effect(() => { void board; currentIndex = openAt; following = null; asidePly = null; openedBefore = false; openedAfter = false; resetPuzzle(); });
+	const toQuestion = () => { currentIndex = openAt; following = null; asidePly = null; openedBefore = false; openedAfter = false; resetPuzzle(); };
+	$effect(() => { void board; toQuestion(); });
 	let displayIndex = $derived(Math.min(currentIndex, positions.length - 1));
 
 	// An aside: moves the card's text writes off this board's line, at a ply of
@@ -349,15 +350,13 @@
 		missed = false;
 		puzzleDone = null;
 	}
-	// A card turned back over (study's Hide) is the question again, and its
-	// puzzle starts over from the first move.
+	// A card turned back over (study's Hide) is the question again, as it
+	// first came: every board back where it opened, off any line the text
+	// had it follow, and a puzzle started over from the first move.
 	let wasRevealed = false;
 	$effect(() => {
 		const now = revealed;
-		if (wasRevealed && !now && normalized.puzzle) {
-			resetPuzzle();
-			currentIndex = untrack(() => openAt);
-		}
+		if (wasRevealed && !now) untrack(toQuestion);
 		wasRevealed = now;
 	});
 	// How a move of the line shows: as the player found it. A move only shown

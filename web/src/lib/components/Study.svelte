@@ -653,9 +653,10 @@
 	// carries it to the layouts that own them; the counters and Edit stay).
 	// It is the study page that holds the mode — mounted here, dropped on the
 	// way out — and it is not remembered between visits: each arrival starts
-	// with the chrome up and z is what takes it away.
+	// with the chrome up and z is what takes it away, unless the deck was
+	// chosen from the switcher in zen.
 	onMount(() => {
-		resetZen();
+		resetZen(`/my-flashcards/${deck.id}/study`);
 		return () => { zen.studying = false; zen.peeking = false };
 	});
 	// On the "finished for now" screen the next card is often minutes away (the
@@ -677,7 +678,7 @@
 	});
 
 	// the bars peek back in at the top edge (zen-state.svelte.js)
-	const handleMouseMove = e => peekAt(e.clientY, e.target);
+	const handleMouseMove = e => peekAt(e.clientY);
 
 	const handleKeyDown = e => {
 		// while editing, the card editor owns the keyboard (Ctrl+Enter saves),
@@ -701,8 +702,9 @@
 			return;
 		}
 		// Escape always leaves, whatever put you here — unless a modal is up,
-		// where Escape is the modal's cancel and nothing else's
-		if (e.key === "Escape" && zen.on && !modalState.current) {
+		// where Escape is the modal's cancel and nothing else's, or the deck
+		// switcher's choice is open, which it closes (DeckNavBar)
+		if (e.key === "Escape" && zen.on && !modalState.current && !zen.choosing && !e.defaultPrevented) {
 			e.preventDefault();
 			setZen(false);
 			return;

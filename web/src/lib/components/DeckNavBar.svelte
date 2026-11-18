@@ -1,7 +1,7 @@
 <script>
 	import { page } from "$app/state"
 	import { goto } from "$app/navigation"
-	import { zenHidden } from "$lib/zen-state.svelte.js"
+	import { zen, zenHidden, carryZenTo } from "$lib/zen-state.svelte.js"
 	import { modalState } from "$lib/modals.svelte.js"
 
 	// The bar under the site's, on the pages of a deck: the way back to My
@@ -16,6 +16,18 @@
 	// { name, href, depth, current }.
 	let { crumbs, tabs, switcher = null } = $props();
 	let switcherOpen = $state(false);
+	// in zen mode the bars stay while the choice is open (zen-state.svelte.js)
+	const setOpen = open => {
+		switcherOpen = open;
+		zen.choosing = open;
+	}
+	$effect(() => () => { zen.choosing = false });
+	// A deck chosen in zen opens in zen. Not one opened in a tab of its own,
+	// nor the deck already shown, which opens nothing.
+	const choose = (e, option) => {
+		if (!option.current && !e.ctrlKey && !e.metaKey && !e.shiftKey) carryZenTo(option.href);
+		setOpen(false);
+	}
 
 	// A tab's shortcut is a bare letter that jumps to it. It stands down
 	// wherever the keyboard is already spoken for — a field that takes
@@ -26,7 +38,12 @@
 		target?.tagName === "TEXTAREA" || target?.isContentEditable
 		|| (target?.tagName === "INPUT" && target.type !== "checkbox" && target.type !== "radio");
 	const handleKeyDown = e => {
-		if (e.key === "Escape") switcherOpen = false;
+		// Escape closes an open choice and nothing else: zen mode stays
+		if (e.key === "Escape" && switcherOpen) {
+			setOpen(false);
+			e.preventDefault();
+			return;
+		}
 		// a modal owns the keyboard while it is up
 		if (modalState.current || e.ctrlKey || e.metaKey || e.altKey) return;
 		const tab = tabs.find(tab => tab.shortcut === e.key.toLowerCase());
@@ -71,7 +88,7 @@
 
 <svelte:window
 	onkeydown={handleKeyDown}
-	onmousedown={e => { if (!e.target.closest?.(".switcher")) switcherOpen = false }}
+	onmousedown={e => { if (switcherOpen && !e.target.closest?.(".switcher")) setOpen(false) }}
 />
 
 <div class="deck-nav-container" class:zen-hidden={zenHidden()}>
@@ -97,7 +114,7 @@
 					aria-label={switcher.label}
 					aria-haspopup="menu"
 					aria-expanded={switcherOpen}
-					onclick={() => switcherOpen = !switcherOpen}
+					onclick={() => setOpen(!switcherOpen)}
 				></button>
 				{#if switcherOpen}
 					<div class="switcher-menu" role="menu" {@attach fitToWindow}>
@@ -107,7 +124,7 @@
 								href={option.href}
 								aria-current={option.current ? "true" : undefined}
 								style:padding-left="{12 + option.depth * 14}px"
-								onclick={() => switcherOpen = false}
+								onclick={e => choose(e, option)}
 							>
 								<span class="option-name">{option.name}</span>
 							</a>

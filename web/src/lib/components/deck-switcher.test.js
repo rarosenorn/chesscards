@@ -187,3 +187,42 @@ describe("the names before the deck's", () => {
 		expect(deep.maxHeight).toBe(`${window.innerHeight - 16}px`);
 	})
 })
+
+describe("the arrow beside the deck's name in zen mode", () => {
+	const zenState = async () => await import("$lib/zen-state.svelte.js");
+
+	it("keeps the bars up while its choice is open; Escape closes the choice and stays in zen", async () => {
+		const { zen, zenHidden, resetZen } = await zenState();
+		resetZen(null);
+		Object.assign(zen, { on: true, studying: true });
+		const view = await open("study");
+		expect([zen.choosing, zenHidden()]).toEqual([true, false]);
+		const escape = new KeyboardEvent("keydown", { key: "Escape", cancelable: true });
+		window.dispatchEvent(escape);
+		await tick();
+		expect([zen.choosing, zenHidden(), zen.on, escape.defaultPrevented]).toEqual([false, true, true, true]);
+		expect(document.querySelector(".switcher-menu")).toBe(null);
+		view.close();
+	})
+
+	it("a deck chosen opens in zen; the deck shown, or one opened in a tab of its own, carries nothing", async () => {
+		const { zen, resetZen } = await zenState();
+		const choose = async (name, init = {}) => {
+			resetZen(null);
+			Object.assign(zen, { on: true, studying: true });
+			const view = await open("study");
+			const option = [...document.querySelectorAll(".switcher-menu a")].find(a => a.textContent.trim() === name);
+			option.addEventListener("click", e => e.preventDefault(), { once: true });
+			option.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ...init }));
+			await tick();
+			const href = option.getAttribute("href");
+			expect(zen.choosing).toBe(false);
+			view.close();
+			resetZen(href);
+			return zen.on;
+		};
+		expect(await choose("Own")).toBe(true);
+		expect(await choose("Inner")).toBe(false);
+		expect(await choose("Own", { ctrlKey: true })).toBe(false);
+	})
+})

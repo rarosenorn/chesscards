@@ -63,7 +63,7 @@ describe("Request changes", () => {
 		const view = await open(pending);
 		expect(view.name()).toBe("Alpha Two");
 		expect(view.thumbnail()).toBe(`/author/m1/changes/thumbnail?v=${Date.parse(pending.createdAt)}`);
-		expect(view.target.textContent).toContain("Asking again replaces the changes waiting for review.");
+		expect(view.target.textContent).toContain("Asking again replaces the changes waiting for review; sending the page as it is takes them back.");
 		await view.send();
 		expect([sent.fields.name, sent.fields.previewCardIds, sent.fields.keepPendingImage]).toEqual(["Alpha Two", '["c2"]', "true"]);
 		view.close();

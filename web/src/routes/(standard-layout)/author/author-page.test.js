@@ -22,11 +22,11 @@ const deck = fields => ({
 });
 const payout = { email: null, name: null, currency: null, pendingEmail: null, owedCents: 0, payouts: [] };
 
-const open = async ({ decks = [], requests = [], sales = [], payouts = null } = {}) => {
+const open = async ({ decks = [], requests = [], sales = [], payouts = null, form = null } = {}) => {
 	const target = document.createElement("div");
 	document.body.append(target);
 	const data = { decks, requests, sales, payouts, timeZone: "UTC", user: { email: "me@example.com" } };
-	const app = mount(AuthorPage, { target, props: { data, form: null } });
+	const app = mount(AuthorPage, { target, props: { data, form } });
 	await tick();
 	const rows = [...target.querySelectorAll(".deck")];
 	return {
@@ -57,6 +57,13 @@ describe("Your marketplace decks", () => {
 		expect(view.rows[0].actions).toEqual(["Take off sale", "Request changes", "Open in My flashcards"]);
 		expect(view.rows[0].links).toEqual([`/author/${DECK}/changes`, "/my-flashcards/own/settings"]);
 		expect(view.target.querySelector("#payouts")).toBeTruthy();
+		view.close();
+	});
+
+	it("a refused payout detail is said once, in the payouts", async () => {
+		const view = await open({ decks: [deck()], payouts: payout, form: { failed: "payout", errors: ["Choose your bank account's currency"] } });
+		expect(view.text.split("Choose your bank account's currency").length - 1).toBe(1);
+		expect(view.target.querySelector("#payouts").textContent).toContain("Choose your bank account's currency");
 		view.close();
 	});
 

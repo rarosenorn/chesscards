@@ -313,9 +313,9 @@ const changedParts = request => [
 // name, thumbnail (image and imageType), description or sample cards
 // (marketplace card ids of the deck, in order); keepPendingImage keeps the
 // thumbnail of the request waiting. Only what differs from the page is
-// kept, and it replaces a request waiting already. False when the
-// deck isn't theirs; throws when nothing would change or the name can't be
-// the deck's.
+// kept, and it replaces a request waiting already; nothing differing takes
+// that one back. False when the deck isn't theirs; throws when nothing
+// would change or the name can't be the deck's.
 const requestChanges = async (userId, marketplaceDeckId, { name, description, image, imageType, keepPendingImage = false, previewCardIds }) => {
 	const { rows: [deck] } = await pool.query(`
 		select md.name = $3 "sameName", md.description = $4::jsonb "sameDescription",
@@ -344,14 +344,28 @@ const requestChanges = async (userId, marketplaceDeckId, { name, description, im
 		));
 	}
 	const newImage = image ?? null;
+	// the page as it is: the changes waiting are taken back, and with them
+	// any rejection before them, which would otherwise show again
 	if (newName == null && newDescription == null && newPreview == null && newImage == null) {
-		throw new Error("Nothing is changed");
+		const { rows: [taken] } = await pool.query(`
+			with pending as (
+				select 1 from marketplace_change_requests where marketplace_deck_id = $1 and status = 'pending'
+			), gone as (
+				delete from marketplace_change_requests
+				where marketplace_deck_id = $1 and status <> 'approved' and exists (select 1 from pending)
+				returning 1
+			)
+			select count(*)::int n from gone`, [marketplaceDeckId]);
+		if (taken.n === 0) throw new Error("Nothing is changed");
+		return true;
 	}
+	// a replaced request takes a new id, so an admin who opened the one
+	// before can't approve what they haven't seen
 	await pool.query(`
 		insert into marketplace_change_requests(marketplace_deck_id, name, description, image, image_type, preview_card_ids)
 		values ($1, $2, $3, $4, $5, $6)
 		on conflict (marketplace_deck_id) where status = 'pending'
-		do update set name = excluded.name, description = excluded.description, image = excluded.image,
+		do update set id = gen_random_uuid(), name = excluded.name, description = excluded.description, image = excluded.image,
 			image_type = excluded.image_type, preview_card_ids = excluded.preview_card_ids, created_at = now()`,
 		[marketplaceDeckId, newName, newDescription, newImage, newImage ? imageType : null, newPreview]
 	);

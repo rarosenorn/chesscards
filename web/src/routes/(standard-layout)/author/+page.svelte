@@ -20,7 +20,8 @@
 	const status = deck => deck.takenDownReason ? "Taken down" : deck.onSale ? "On sale" : "Off sale";
 </script>
 
-<FormErrors {form} />
+<!-- the payouts say their own -->
+<FormErrors form={form?.failed ? null : form} />
 {#if data.decks.length === 0 && data.requests.length === 0}
 	<p class="empty">
 		You have no decks on the marketplace. To share one, open the deck's Settings in
@@ -133,7 +134,8 @@
 	.totals {
 		margin-bottom: 18px;
 	}
-	section + section, .decks + :global(section) {
+	/* the sales and the payouts (PayoutSettings' own section) under the decks */
+	.decks ~ :global(section) {
 		border-top: 1px solid rgba(0, 0, 0, 0.1);
 		margin-top: 24px;
 		padding-top: 18px;

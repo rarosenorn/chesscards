@@ -119,7 +119,7 @@
 	<h1>Request changes</h1>
 	<p class="intro">
 		Changes show on the deck's page once Chesscards has reviewed them.
-		{#if data.pending}Asking again replaces the changes waiting for review.{/if}
+		{#if data.pending}Asking again replaces the changes waiting for review; sending the page as it is takes them back.{/if}
 	</p>
 	<form id="change-details" onsubmit={e => { e.preventDefault(); goNext(); }}></form>
 	<div class="fields">

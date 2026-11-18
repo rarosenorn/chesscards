@@ -28,9 +28,22 @@ state between them, and the helpers they call. Check each of these:
   denial-of-service through unbounded work.
 
 Fix what is found. Add a test for each bug fixed, and confirm the test fails
-without the fix. Then review again, the changed code included. Stop when a
-full pass finds nothing. Run the whole test suite and `npx svelte-check
---threshold error` in `web/`, then commit.
+without the fix.
+
+Then start a new pass from the top: every file again, end to end, the
+changed code included. Repeat until a whole pass finds nothing. The rules:
+
+- **A full pass reads every file and helper, every time.** Re-reading only
+  the files you changed, or only the ones the last pass skipped, is not a
+  pass, however small the fixes were.
+- **A pass that finds anything is followed by another full pass.** Only a
+  pass that finds nothing ends the review, so the last pass always found
+  nothing.
+- **Count the passes.** The report says how many there were and that the
+  last one was clean. Never call a pass full if it wasn't.
+
+Then run the whole test suite and `npx svelte-check --threshold error` in
+`web/`, and commit.
 
 A fix that changes a product decision (a cap, a limit, a refusal) is asked
 about in one line, not made.
@@ -51,6 +64,7 @@ and leave the file uncommitted.
 
 ## Report
 
-One short bullet per problem fixed (what was wrong, in a sentence), the
-commit, where the checklist is, and any product question in one line. If
-nothing was found, say so in one line.
+One short bullet per problem fixed (what was wrong, in a sentence), how
+many full passes it took (the last one clean), the commit, where the
+checklist is, and any product question in one line. If nothing was found,
+say so in one line.

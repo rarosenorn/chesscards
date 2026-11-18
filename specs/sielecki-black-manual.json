@@ -2785,6 +2785,90 @@
         },
         {
           "name": "6.Bg5",
+          "intro": [
+            "# 6.Bg5\n\nWe will check this move because the best reply involves a possible pawn sacrifice that is not obvious. Furthermore, the alternatives can turn out to be tricky to play.",
+            {
+              "boards": [
+                {
+                  "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                  "moves": [
+                    "d4",
+                    "d5",
+                    "c4",
+                    "e6",
+                    "Nc3",
+                    "c5",
+                    "cxd5",
+                    "exd5",
+                    "Nf3",
+                    "Nc6",
+                    "Bg5",
+                    "Be7",
+                    "Bxe7",
+                    "Ngxe7"
+                  ],
+                  "orientation": "b",
+                  "openAt": 11
+                }
+              ]
+            },
+            "## 6...Be7\n\n6...Be7 looks best. We can't play [6...Nf6 7.Bxf6], when we either drop a pawn or need to spoil our structure by taking with the pawn.\n\nA good alternative is [6...f6]!?, but this move is tricky to handle, as our kingside is weakened and our development gets far more complicated.\n\nAfter 7.Bxe7 we take back with the knight: 7...Ngxe7. We can't take with the queen, as it would blunder d5: [7...Qxe7 8.Nxd5].\n\nNow, we need to study what happens if White captures c5. White can play a less greedy move, but these are easy to handle. After [8.e3 c4]!, gaining queenside space and preparing a later attack on this side of the board, White can easily drift into a passive position, while we have the easy plan ...b5-b4 to follow.",
+            {
+              "boards": [
+                {
+                  "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                  "moves": [
+                    "d4",
+                    "d5",
+                    "c4",
+                    "e6",
+                    "Nc3",
+                    "c5",
+                    "cxd5",
+                    "exd5",
+                    "Nf3",
+                    "Nc6",
+                    "Bg5",
+                    "Be7",
+                    "Bxe7",
+                    "Ngxe7",
+                    "dxc5",
+                    "d4",
+                    "Ne4",
+                    "O-O"
+                  ],
+                  "orientation": "b",
+                  "openAt": 15
+                }
+              ]
+            },
+            "## 8.dxc5 d4!\n\nWhite grabs the pawn. Now [8...Qa5] is a way to regain the material, but we have a much better move: 8...d4!. Here we go! Our usual reply to this pawn capture works well here.\n\n9.Ne4 is White's best reply. [9.Nb5]?? [9.Nb5 Qa5+] is a common tactic that we see frequently in this chapter.\n\nAfter 9...O-O, the important concept to understand is that there is no concrete tactic to regain the pawn. We want to develop with ...Bf5 and often ...Qd5, when White will have difficulty holding the pawn in the long run. They can't easily develop due to our strong d-pawn.\n\nTwo sample lines to illustrate matters are [10.g3 Qd5 11.Qb1 Bf5] or [10.e3 Bg4 11.Be2 Qd5], when we'll ultimately win the c5-pawn back with a good position.",
+            {
+              "boards": [
+                {
+                  "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                  "moves": [
+                    "d4",
+                    "d5",
+                    "c4",
+                    "e6",
+                    "Nc3",
+                    "c5",
+                    "cxd5",
+                    "exd5",
+                    "Nf3",
+                    "Nc6",
+                    "Bf4",
+                    "Nf6",
+                    "e3"
+                  ],
+                  "orientation": "b",
+                  "openAt": 11
+                }
+              ]
+            },
+            "## 6.Bf4\n\nA word about 6.Bf4, when 6...Nf6 7.e3 is the likely continuation. In this position, we can choose between simple development ([7...Be7]) or the more ambitious [7...c4]! to reach a different structure. Our idea is putting some pressure on c3, with ...Bb4, ...Qa5 and ...Ne4 ideas. This idea is logical, as White's bishop on f4 does not help to fight the pins along the e5-e1 diagonal."
+          ],
           "cards": [
             {
               "id": "trm-bg5-be7",

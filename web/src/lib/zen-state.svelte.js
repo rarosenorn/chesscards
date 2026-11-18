@@ -28,3 +28,17 @@ export const setZen = value => {
 	zen.on = value;
 	if (!value) zen.peeking = false;
 }
+
+// The bars come back while the pointer is at the top of the window, which
+// is what keeps a chromeless page from being a trap. Two thresholds, not
+// one: they slide in at the very edge but only leave once the pointer is
+// clear of where they now sit, or a bar would vanish from under a cursor
+// on its way to a tab. Over the bars they stay however far down: the deck
+// switcher's menu hangs from the deck's bar to the window's bottom.
+const PEEK_IN = 40;
+const PEEK_OUT = 150;
+export const peekAt = (y, target) => {
+	if (!zenActive()) return;
+	if (y <= PEEK_IN) zen.peeking = true;
+	else if (y > PEEK_OUT && !target?.closest?.("#topbar, .deck-nav-container")) zen.peeking = false;
+}

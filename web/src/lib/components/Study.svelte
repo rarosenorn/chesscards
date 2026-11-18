@@ -16,7 +16,7 @@
 	import PartyPopper from "$lib/icons/PartyPopper.svelte"
 	import { confirmModal, modalState, settleModal } from "$lib/modals.svelte.js"
 	import { PRACTICE_AGAIN_MS, startCram, answerCounts, backAt, takeNext, settle, forget, cardsLeft, resumeCram } from "$lib/cram.js"
-	import { zen, zenActive, resetZen, setZen } from "$lib/zen-state.svelte.js"
+	import { zen, zenActive, resetZen, setZen, peekAt } from "$lib/zen-state.svelte.js"
 	import { updateCardStudyStateAndAddLog, markArticleRead, logPractice, completeCramSession, updateCardContent, updateCardType, deleteCards } from "$lib/cards.remote.js"
 
 	// The deck studied, with every deck inside it (deck.decks, it first) and
@@ -676,18 +676,8 @@
 		if (!currentCard) zen.peeking = false;
 	});
 
-	// The bars come back while the pointer is at the top of the window, which
-	// is what keeps a chromeless page from being a trap. Two thresholds, not
-	// one: they slide in at the very edge but only leave once the pointer is
-	// clear of where they now sit, or a bar would vanish from under a cursor
-	// on its way to a tab.
-	const PEEK_IN = 40;
-	const PEEK_OUT = 150;
-	const handleMouseMove = e => {
-		if (!zenActive()) return;
-		if (e.clientY <= PEEK_IN) zen.peeking = true;
-		else if (e.clientY > PEEK_OUT) zen.peeking = false;
-	}
+	// the bars peek back in at the top edge (zen-state.svelte.js)
+	const handleMouseMove = e => peekAt(e.clientY, e.target);
 
 	const handleKeyDown = e => {
 		// while editing, the card editor owns the keyboard (Ctrl+Enter saves),

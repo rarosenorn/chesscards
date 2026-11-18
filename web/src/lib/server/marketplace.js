@@ -301,85 +301,289 @@ const rejectUploadRequest = async (requestId, reason) => {
 	return rowCount === 1;
 }
 
-// The author's new name for their deck, for an admin to approve; it
-// replaces one waiting already. False when the deck isn't theirs; throws
-// when the name can't be the deck's.
-const requestRename = async (userId, marketplaceDeckId, name) => {
-	const { rows: [deck] } = await pool.query(
-		"select name from marketplace_decks where id = $1 and user_id = $2",
-		[marketplaceDeckId, userId]
+// What a change request asks for, by the names the author and admin see
+const changedParts = request => [
+	request.name != null && "name",
+	request.has_image && "thumbnail",
+	request.description != null && "description",
+	request.preview_card_ids != null && "sample cards"
+].filter(Boolean);
+
+// The author's changes to their deck's page, for an admin to approve: a new
+// name, thumbnail (image and imageType), description or sample cards
+// (marketplace card ids of the deck, in order); keepPendingImage keeps the
+// thumbnail of the request waiting. Only what differs from the page is
+// kept, and it replaces a request waiting already. False when the
+// deck isn't theirs; throws when nothing would change or the name can't be
+// the deck's.
+const requestChanges = async (userId, marketplaceDeckId, { name, description, image, imageType, keepPendingImage = false, previewCardIds }) => {
+	const { rows: [deck] } = await pool.query(`
+		select md.name = $3 "sameName", md.description = $4::jsonb "sameDescription",
+			array(select id from marketplace_cards where marketplace_deck_id = md.id and preview_order is not null order by preview_order) "previewIds",
+			array(select id from marketplace_cards where marketplace_deck_id = md.id) "cardIds"
+		from marketplace_decks md where md.id = $1 and md.user_id = $2`,
+		// the description as JSON text, as pg would send its blocks array as a postgres array
+		[marketplaceDeckId, userId, name ?? null, description == null ? null : JSON.stringify(description)]
 	);
 	if (!deck) return false;
-	if (name === deck.name) throw new Error("That is the deck's name already");
-	const problem = await nameProblem(name, marketplaceDeckId);
-	if (problem) throw new Error(problem);
+	const newName = name != null && !deck.sameName ? name : null;
+	if (newName) {
+		const problem = await nameProblem(newName, marketplaceDeckId);
+		if (problem) throw new Error(problem);
+	}
+	const newDescription = description != null && !deck.sameDescription ? JSON.stringify(description) : null;
+	// only the deck's own cards, in the order given, each once
+	const cardIds = new Set(deck.cardIds);
+	const preview = previewCardIds && [...new Set(previewCardIds)].filter(id => cardIds.has(id));
+	const newPreview = preview && preview.join() !== deck.previewIds.join() ? preview : null;
+	// the thumbnail asked for before, unless another is chosen now
+	if (!image && keepPendingImage) {
+		({ rows: [{ image, imageType } = {}] } = await pool.query(
+			"select image, image_type \"imageType\" from marketplace_change_requests where marketplace_deck_id = $1 and status = 'pending' and image is not null",
+			[marketplaceDeckId]
+		));
+	}
+	const newImage = image ?? null;
+	if (newName == null && newDescription == null && newPreview == null && newImage == null) {
+		throw new Error("Nothing is changed");
+	}
 	await pool.query(`
-		insert into marketplace_rename_requests(marketplace_deck_id, name) values ($1, $2)
+		insert into marketplace_change_requests(marketplace_deck_id, name, description, image, image_type, preview_card_ids)
+		values ($1, $2, $3, $4, $5, $6)
 		on conflict (marketplace_deck_id) where status = 'pending'
-		do update set name = excluded.name, created_at = now()`,
-		[marketplaceDeckId, name]
+		do update set name = excluded.name, description = excluded.description, image = excluded.image,
+			image_type = excluded.image_type, preview_card_ids = excluded.preview_card_ids, created_at = now()`,
+		[marketplaceDeckId, newName, newDescription, newImage, newImage ? imageType : null, newPreview]
 	);
 	return true;
 }
 
-// The rename waiting for an admin, or the last one rejected; none once one
-// is approved
-const getRenameRequest = async marketplaceDeckId => {
+// The changes waiting for an admin, or the last ones rejected; none once
+// they are approved. With the proposed values, so asking again starts from
+// them.
+const getChangeRequest = async marketplaceDeckId => {
 	const { rows: [request] } = await pool.query(`
-		select name, status, rejection_reason "rejectionReason"
-		from marketplace_rename_requests
+		select id, name, description, image is not null has_image, preview_card_ids, status,
+			rejection_reason "rejectionReason", created_at "createdAt"
+		from marketplace_change_requests
 		where marketplace_deck_id = $1
 		order by created_at desc
 		limit 1`,
 		[marketplaceDeckId]
 	);
-	return request?.status === "approved" ? undefined : request;
+	if (!request || request.status === "approved") return undefined;
+	return {
+		id: request.id,
+		status: request.status,
+		rejectionReason: request.rejectionReason,
+		createdAt: request.createdAt,
+		parts: changedParts(request),
+		name: request.name,
+		description: request.description,
+		hasImage: request.has_image,
+		previewCardIds: request.preview_card_ids
+	};
 }
 
-const getPendingRenameRequests = async () => {
+const getPendingChangeRequests = async () => {
 	const { rows } = await pool.query(`
-		select r.id, r.name, md.name "currentName", md.slug, u.email, r.created_at "createdAt"
-		from marketplace_rename_requests r
+		select r.id, r.name, r.description, r.image is not null has_image, r.preview_card_ids,
+			md.name "currentName", md.slug, u.email, r.created_at "createdAt"
+		from marketplace_change_requests r
 		join marketplace_decks md on md.id = r.marketplace_deck_id
 		join "user" u on u.id = md.user_id
 		where r.status = 'pending'
 		order by r.created_at`
 	);
-	return rows;
+	return rows.map(row => ({
+		id: row.id, currentName: row.currentName, slug: row.slug, email: row.email, createdAt: row.createdAt,
+		name: row.name, parts: changedParts(row)
+	}));
 }
 
-// The deck takes the new name, and its slug until now goes on leading to it
-// until another deck takes it
-const approveRenameRequest = requestId => inTransaction(async client => {
+// A pending request with the deck as it is and its cards, for the admin to
+// set side by side
+const getChangeRequestForReview = async requestId => {
+	const { rows: [request] } = await pool.query(`
+		select r.id, r.marketplace_deck_id "deckId", r.name, r.description, r.image is not null has_image,
+			r.preview_card_ids, r.status, md.name "currentName", md.slug, md.description "currentDescription", u.email
+		from marketplace_change_requests r
+		join marketplace_decks md on md.id = r.marketplace_deck_id
+		left join "user" u on u.id = md.user_id
+		where r.id = $1`,
+		[requestId]
+	);
+	if (!request) return undefined;
+	const cards = await getDeckCards(request.deckId);
+	const byId = new Map(cards.map(card => [card.id, card]));
+	return {
+		id: request.id,
+		status: request.status,
+		email: request.email,
+		slug: request.slug,
+		parts: changedParts(request),
+		name: request.name,
+		currentName: request.currentName,
+		description: request.description,
+		currentDescription: request.currentDescription,
+		hasImage: request.has_image,
+		previewCards: request.preview_card_ids?.map(id => byId.get(id)).filter(Boolean) ?? null,
+		currentPreviewCards: await getDeckPreviewCards(request.deckId)
+	};
+}
+
+// A change request's new thumbnail
+const getChangeRequestImage = async requestId => {
+	const { rows: [image] } = await pool.query(`
+		select r.image, r.image_type "imageType", md.user_id "authorId"
+		from marketplace_change_requests r join marketplace_decks md on md.id = r.marketplace_deck_id
+		where r.id = $1 and r.image is not null`,
+		[requestId]
+	);
+	return image;
+}
+
+// The deck's page takes the changes asked for and nothing else. A new name
+// takes a new slug, and the slug until now goes on leading to the deck
+// until another deck takes it.
+const approveChangeRequest = requestId => inTransaction(async client => {
 	const { rows: [request] } = await client.query(`
-		select r.marketplace_deck_id "deckId", r.name, md.slug
-		from marketplace_rename_requests r
+		select r.marketplace_deck_id "deckId", r.name, r.description, r.image, r.image_type "imageType",
+			r.preview_card_ids "previewCardIds", md.slug
+		from marketplace_change_requests r
 		join marketplace_decks md on md.id = r.marketplace_deck_id
 		where r.id = $1 and r.status = 'pending' and md.user_id is not null
 		for update`,
 		[requestId]
 	);
 	if (!request) throw new Error("Request not found or not pending");
-	const slug = slugify(request.name);
-	if (!slug || RESERVED_SLUGS.includes(slug)) throw new Error("A marketplace deck can't have this name");
-	if (slug !== request.slug) {
-		await client.query("delete from marketplace_old_slugs where slug = $1", [slug]);
-		await client.query(`
-			insert into marketplace_old_slugs(slug, marketplace_deck_id) values ($1, $2)
-			on conflict (slug) do update set marketplace_deck_id = excluded.marketplace_deck_id`,
-			[request.slug, request.deckId]
-		);
+	if (request.name != null) {
+		const slug = slugify(request.name);
+		if (!slug || RESERVED_SLUGS.includes(slug)) throw new Error("A marketplace deck can't have this name");
+		if (slug !== request.slug) {
+			await client.query("delete from marketplace_old_slugs where slug = $1", [slug]);
+			await client.query(`
+				insert into marketplace_old_slugs(slug, marketplace_deck_id) values ($1, $2)
+				on conflict (slug) do update set marketplace_deck_id = excluded.marketplace_deck_id`,
+				[request.slug, request.deckId]
+			);
+		}
+		await client.query("update marketplace_decks set name = $2, slug = $3 where id = $1", [request.deckId, request.name, slug]);
 	}
-	await client.query("update marketplace_decks set name = $2, slug = $3 where id = $1", [request.deckId, request.name, slug]);
-	await client.query("update marketplace_rename_requests set status = 'approved' where id = $1", [requestId]);
+	if (request.description != null) {
+		await client.query("update marketplace_decks set description = $2 where id = $1",
+			[request.deckId, JSON.stringify(request.description)]);
+	}
+	if (request.image != null) {
+		await client.query("update marketplace_decks set image = $2, image_type = $3 where id = $1",
+			[request.deckId, request.image, request.imageType]);
+	}
+	if (request.previewCardIds != null) {
+		await client.query(
+			"update marketplace_cards set preview_order = array_position($2::uuid[], id) where marketplace_deck_id = $1",
+			[request.deckId, request.previewCardIds]);
+	}
+	await client.query("update marketplace_change_requests set status = 'approved' where id = $1", [requestId]);
 });
 
-const rejectRenameRequest = async (requestId, reason) => {
+const rejectChangeRequest = async (requestId, reason) => {
 	const { rowCount } = await pool.query(
-		"update marketplace_rename_requests set status = 'rejected', rejection_reason = $2 where id = $1 and status = 'pending'",
+		"update marketplace_change_requests set status = 'rejected', rejection_reason = $2 where id = $1 and status = 'pending'",
 		[requestId, reason]
 	);
 	return rowCount === 1;
+}
+
+// A marketplace deck's cards in its reading order — its own first, then each
+// deck inside it as its outline reads — for choosing sample cards from
+const getDeckCards = async marketplaceDeckId => {
+	const { rows: subdecks } = await pool.query(
+		"select id, parent_id, name, position from marketplace_subdecks where marketplace_deck_id = $1",
+		[marketplaceDeckId]
+	);
+	const order = new Map(deckOutline(subdecks).map(({ deck }, index) => [deck.id, index]));
+	const { rows: cards } = await pool.query(
+		"select id, subdeck_id, position, front, coalesce(back, '[]'::jsonb) back, card_type from marketplace_cards where marketplace_deck_id = $1",
+		[marketplaceDeckId]
+	);
+	const rank = card => card.subdeck_id == null ? -1 : order.get(card.subdeck_id) ?? Infinity;
+	cards.sort((a, b) => rank(a) - rank(b) || a.position - b.position);
+	return cards.map(({ id, front, back, card_type }) => ({ id, front, back, card_type }));
+}
+
+// The author's deck as its page shows it, for asking for changes to it
+const getDeckForChanges = async (userId, marketplaceDeckId) => {
+	const { rows: [deck] } = await pool.query(`
+		select md.id, md.slug, md.name, md.description,
+			array(select id from marketplace_cards where marketplace_deck_id = md.id and preview_order is not null order by preview_order) "previewCardIds"
+		from marketplace_decks md where md.id = $1 and md.user_id = $2`,
+		[marketplaceDeckId, userId]
+	);
+	return deck;
+}
+
+// someone who has the deck: not the author, who may take their own
+const HOLDERS = `p.user_id is not null and p.user_id is distinct from md.user_id`;
+
+// The author's marketplace decks with how each is doing, and their upload
+// requests still waiting or turned down
+const getAuthorDecks = async userId => {
+	const { rows: listed } = await pool.query(`
+		select md.id, md.slug, md.name, md.price, md.on_sale "onSale", md.taken_down_reason "takenDownReason",
+			md.deck_id "deckId",
+			(select count(*) from purchases p where p.marketplace_deck_id = md.id and ${HOLDERS} and p.refunded_at is null)::int holders,
+			(select count(*) from purchases p where p.marketplace_deck_id = md.id and p.price_cents > 0)::int sales,
+			(select count(*) from purchases p where p.marketplace_deck_id = md.id and p.price_cents > 0 and p.refunded_at is not null)::int refunds,
+			(select coalesce(sum(p.author_share_cents), 0) from purchases p
+				where p.marketplace_deck_id = md.id and p.refunded_at is null)::int "earnedCents",
+			${REVIEW_COUNTS}
+		from marketplace_decks md
+		where md.user_id = $1
+		order by md.name`,
+		[userId]
+	);
+	const decks = await Promise.all(listed.map(async deck => ({ ...deck, changes: await getChangeRequest(deck.id) })));
+	// a deck's latest request, unless it went through
+	const { rows: requests } = await pool.query(`
+		select * from (
+			select distinct on (r.deck_id) r.id, r.deck_id "deckId", r.name, r.price, r.status,
+				r.rejection_reason "rejectionReason", r.created_at "createdAt"
+			from marketplace_upload_requests r
+			where r.user_id = $1
+			order by r.deck_id, r.created_at desc
+		) latest
+		where status <> 'approved'
+		order by "createdAt" desc`,
+		[userId]
+	);
+	return { decks, requests };
+}
+
+// The author's latest sales, paid ones only: nothing about who bought
+const getAuthorSales = async (userId, limit = 50) => {
+	const { rows } = await pool.query(`
+		select p.id, p.created_at "createdAt", md.name "deckName", md.slug, p.price_cents "priceCents",
+			p.author_share_cents "shareCents", p.refunded_at is not null refunded
+		from purchases p join marketplace_decks md on md.id = p.marketplace_deck_id
+		where md.user_id = $1 and p.price_cents > 0
+		order by p.created_at desc
+		limit $2`,
+		[userId, limit]
+	);
+	return rows;
+}
+
+// whether the user has anything on the marketplace or asked to: the author
+// page is theirs
+const isAuthor = async userId => {
+	const { rowCount } = await pool.query(`
+		select 1 from marketplace_decks where user_id = $1
+		union all
+		select 1 from marketplace_upload_requests where user_id = $1
+		limit 1`,
+		[userId]
+	);
+	return rowCount > 0;
 }
 
 const FOR_SALE = "(md.on_sale and md.taken_down_reason is null)";
@@ -715,4 +919,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, findDeckBySlug, requestRename, getRenameRequest, getPendingRenameRequests, approveRenameRequest, rejectRenameRequest, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, FOR_SALE, OWNS, getOwnership, getListingForDeck, setOnSale, setTakenDown, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, markInstanceArticleRead, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, findDeckBySlug, requestChanges, getChangeRequest, getPendingChangeRequests, getChangeRequestForReview, getChangeRequestImage, approveChangeRequest, rejectChangeRequest, getDeckCards, getDeckForChanges, getAuthorDecks, getAuthorSales, isAuthor, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, FOR_SALE, OWNS, getOwnership, getListingForDeck, setOnSale, setTakenDown, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, markInstanceArticleRead, createInstanceReviewLog }

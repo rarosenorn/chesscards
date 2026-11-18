@@ -16,8 +16,10 @@ const handle = async ({ event, resolve }) => {
 		error(404, "Not Found");
 	}
 
-	const authenticatedRoutes = ["/my-flashcards", "/profile"];
-	if (authenticatedRoutes.some(r => event.url.pathname.startsWith(r) && !event.locals.userId)) {
+	// whole path segments: /author is the author's own, /author-terms is public
+	const authenticatedRoutes = ["/my-flashcards", "/profile", "/author"];
+	const under = route => event.url.pathname === route || event.url.pathname.startsWith(route + "/");
+	if (authenticatedRoutes.some(under) && !event.locals.userId) {
 		redirect(303, `/login?redirect_to=${event.url.pathname}`);
 	}
 

@@ -9,7 +9,6 @@
 	import { ROLLOVER_HOURS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import { RETENTIONS, DEFAULT_RETENTION } from "$lib/retention.js"
 	import TwoFactorSettings from "$lib/components/TwoFactorSettings.svelte"
-	import PayoutSettings from "$lib/components/PayoutSettings.svelte"
 
 	let { data, form } = $props();
 
@@ -297,9 +296,6 @@
 			<p class="error">{form.errors[0]}</p>
 		{/if}
 	</section>
-	{#if data.payouts}
-		<PayoutSettings payouts={data.payouts} accountEmail={data.user.email} {form} />
-	{/if}
 	{#if data.twoFactor.required}
 		<TwoFactorSettings enabled={data.twoFactor.enabled} verified={data.twoFactor.verified} />
 	{/if}
@@ -324,7 +320,7 @@
 		padding: 24px 28px;
 	}
 	/* as the deck's Settings: a heading per topic, a line between; the
-	   payouts and two-factor sections are their components' */
+	   two-factor section is its component's */
 	.container > :global(section) {
 		display: flex;
 		flex-direction: column;

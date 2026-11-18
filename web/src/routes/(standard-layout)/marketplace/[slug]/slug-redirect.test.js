@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
 const marketplace = vi.hoisted(() => ({
-	findDeckBySlug: vi.fn(), getOwnership: vi.fn(), getRenameRequest: vi.fn(),
+	findDeckBySlug: vi.fn(), getOwnership: vi.fn(),
 	getDeckContents: vi.fn(), getDeckPreviewCards: vi.fn(), getReviews: vi.fn(),
 	FOR_SALE: "true", REVIEW_COUNTS: "0"
 }));

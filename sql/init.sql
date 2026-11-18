@@ -408,18 +408,28 @@ create table marketplace_old_slugs (
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null
 );
 
--- An author's new name for their marketplace deck, which an admin approves
--- or rejects with a reason shown to the author. A deck has at most one
--- pending; asking again replaces it.
-create table marketplace_rename_requests (
+-- An author's changes to their marketplace deck's page — a new name,
+-- thumbnail, description or sample cards (marketplace card ids, in order) —
+-- which an admin approves or rejects with a reason shown to the author. Only
+-- what is to change is set. A deck has at most one pending; asking again
+-- replaces it.
+create table marketplace_change_requests (
 	id uuid primary key default gen_random_uuid(),
 	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
-	name text not null,
+	name text,
+	description jsonb,
+	image bytea,
+	image_type text,
+	preview_card_ids uuid[],
 	status text check(status in ('pending', 'approved', 'rejected')) not null default 'pending',
 	rejection_reason text,
-	created_at timestamptz not null default now()
+	created_at timestamptz not null default now(),
+	constraint marketplace_change_requests_something_check
+		check (name is not null or description is not null or image is not null or preview_card_ids is not null),
+	constraint marketplace_change_requests_image_check
+		check ((image is null) = (image_type is null))
 );
-create unique index marketplace_rename_requests_pending_key on marketplace_rename_requests (marketplace_deck_id) where status = 'pending';
+create unique index marketplace_change_requests_pending_key on marketplace_change_requests (marketplace_deck_id) where status = 'pending';
 
 -- A studier's verdict on a marketplace deck, as Steam's: recommended or not,
 -- always with the reason in words. One per user and deck. It can be rewritten

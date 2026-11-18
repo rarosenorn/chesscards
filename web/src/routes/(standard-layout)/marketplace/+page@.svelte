@@ -16,6 +16,11 @@
 	</nav>
 	<div class="page-column">
 		<StandardLayout>
+			{#snippet headerActions()}
+				{#if data.isAuthor}
+					<a class="your-decks" href="/author">Your marketplace decks</a>
+				{/if}
+			{/snippet}
 			<div class="marketplace-grid-container">
 				{#each data.mpDecks as mpDeck (mpDeck.id)}
 					<a href="/marketplace/{mpDeck.slug}" class="deck-card">
@@ -47,6 +52,13 @@
 </div>
 
 <style>
+	.your-decks {
+		color: rgba(0, 0, 0, 0.7);
+		font-size: 0.95rem;
+	}
+	.your-decks:hover {
+		color: black;
+	}
 	/* the deck column is centered in the viewport; the side columns absorb
 	   the rest, with the theme nav sitting at the right edge of the left one */
 	.marketplace-layout {

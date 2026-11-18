@@ -26,6 +26,7 @@ export const load = async ({ url, locals }) => {
 		mpDecks: result.rows,
 		themes: marketplace.themes,
 		activeTheme: theme,
+		isAuthor: locals.userId ? await marketplace.isAuthor(locals.userId) : false,
 		pageTitle: "Marketplace"
 	}
 }

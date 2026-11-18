@@ -11,7 +11,7 @@
 			<button class="std-btn">Confirm</button>
 		</form>
 	{:else}
-		<p>This link has expired or was already used. Ask for a new one in <a href="/profile#payouts">Settings</a>.</p>
+		<p>This link has expired or was already used. Ask for a new one in <a href="/author#payouts">Your marketplace decks</a>.</p>
 	{/if}
 </div>
 

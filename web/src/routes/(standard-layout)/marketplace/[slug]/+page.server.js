@@ -28,12 +28,13 @@ export const load = async ({ params, locals, url }) => {
 	if (!mpDeck.forSale && !ownership.owned && !locals.isAdmin) error(404);
 	// temporary, since another deck may take the old name
 	if (!found.current) redirect(302, `/marketplace/${encodeURIComponent(found.slug)}${url.search}`);
-	if (!mpDeck.isAuthor && !locals.isAdmin) mpDeck.takenDownReason = null;
+	// why it was taken down is the admin's to see here, the author's on their
+	// own page
+	if (!locals.isAdmin) mpDeck.takenDownReason = null;
 
 	return {
 		mpDeck,
 		ownership,
-		renameRequest: mpDeck.isAuthor ? await marketplace.getRenameRequest(found.id) : undefined,
 		contents: await marketplace.getDeckContents(found.id),
 		previewCards: await marketplace.getDeckPreviewCards(found.id),
 		reviews: await marketplace.getReviews(found.id, locals.userId),
@@ -95,31 +96,6 @@ export const actions = {
 
 		const checkoutUrl = await payments.createCheckout({ user: locals.user, deck });
 		redirect(303, checkoutUrl);
-	},
-
-	onSale: async ({ request, params, locals }) => {
-		const onSale = (await request.formData()).get("on-sale") === "true";
-		const deck = await deckOf(params);
-		if (!locals.userId || !await marketplace.setOnSale(locals.userId, deck.id, onSale)) error(404);
-		redirect(303, deckPage(deck));
-	},
-
-	// the new name waits for an admin's approval
-	rename: async ({ request, params, locals }) => {
-		const name = text((await request.formData()).get("name")) ?? "";
-		if (name.length < 4 || name.length > 100) {
-			return fail(400, { errors: ["Name must be between 4 and 100 characters"], rename: name });
-		}
-		const deck = await deckOf(params);
-		if (!locals.userId) error(404);
-		let requested;
-		try {
-			requested = await marketplace.requestRename(locals.userId, deck.id, name);
-		} catch (err) {
-			return fail(400, { errors: [err.message], rename: name });
-		}
-		if (!requested) error(404);
-		redirect(303, deckPage(deck));
 	},
 
 	takeDown: async ({ request, params, locals }) => {

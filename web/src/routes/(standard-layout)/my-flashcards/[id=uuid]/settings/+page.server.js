@@ -80,11 +80,6 @@ export const actions = {
 		if (!await decks.remove(locals.userId, params.id)) await decks.removeTaken(locals.userId, params.id);
 		redirect(303, "/my-flashcards");
 	},
-	onSale: async ({ params, request, locals }) => {
-		const onSale = (await request.formData()).get("on-sale") === "true";
-		const listing = await marketplace.getListingForDeck(locals.userId, params.id);
-		if (!listing || !await marketplace.setOnSale(locals.userId, listing.id, onSale)) return fail(404, { errors: ["This deck is not on the marketplace"] });
-	},
 	rename: async ({ params, request, locals }) => {
 		const data = await request.formData();
 		const result = zod.deck.safeParse(data.get("name"));

@@ -1,6 +1,5 @@
 import { fail } from "@sveltejs/kit"
 import { pool } from "$lib/server/pool.js"
-import * as payouts from "$lib/server/payouts.js"
 import { followRetention } from "$lib/server/decks.js"
 import { cleanName } from "$lib/display-name.js"
 import { PIECE_SETS, BOARD_THEMES, BORDER_TYPES, ANIMATION_DURATIONS } from "$lib/board-prefs.js"
@@ -15,24 +14,10 @@ export const load = async ({ locals, cookies }) => ({
 	fsrs: { last: locals.userId ? await lastFit(locals.userId) : null, refitDays: REFIT_DAYS, timeZone: dayOf({ locals, cookies }).timeZone },
 	hasPublished: locals.userId
 		? (await pool.query("select 1 from marketplace_decks where user_id = $1 limit 1", [locals.userId])).rowCount > 0
-		: false,
-	payouts: locals.userId && await payouts.sellsDecks(locals.userId)
-		? { ...await payouts.getPayoutDetails(locals.userId), ...await payouts.getEarnings(locals.userId) }
-		: null
+		: false
 });
 
 export const actions = {
-	payoutDetails: async ({ request, locals }) => {
-		if (!locals.userId || !await payouts.sellsDecks(locals.userId)) return fail(403, { failed: "payout", errors: ["Payouts are for authors of paid marketplace decks"] });
-		const data = await request.formData();
-		const result = await payouts.savePayoutDetails(locals.user, {
-			email: data.get("payout-email"),
-			name: data.get("payout-name"),
-			currency: data.get("payout-currency")
-		});
-		if (result !== "saved" && result !== "sent") return fail(400, { failed: "payout", errors: [result] });
-		return { saved: "payout" };
-	},
 	name: async ({ request, locals }) => {
 		const data = await request.formData();
 		const displayName = cleanName(data.get("display-name"));

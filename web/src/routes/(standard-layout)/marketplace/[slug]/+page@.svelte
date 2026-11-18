@@ -13,13 +13,11 @@
 	let { data, form } = $props();
 
 	// the author owns their deck, and has it while they keep the one they
-	// published it from
+	// published it from; the page is the same for them as for anyone who has
+	// it, as the deck is run from Your marketplace decks (/author)
 	const { owned, inLibrary } = $derived(data.ownership);
 	const buying = $derived(!owned && !isFree(data.mpDeck.price));
 	const priceLabel = $derived(isFree(data.mpDeck.price) ? "Get for free" : `Buy for ${formatPrice(data.mpDeck.price)}`);
-
-	// a rename refused reopens the field with what was typed
-	let renaming = $derived(form?.rename !== undefined);
 
 	let view = $state(page.url.searchParams.get("view") === "sample-cards" ? "sample-cards" : "overview");
 </script>
@@ -58,12 +56,6 @@
 							<button class="std-btn">Get</button>
 						</form>
 					{/if}
-					{#if data.mpDeck.isAuthor && !data.mpDeck.takenDownReason}
-						<form method="POST" action="/marketplace/{data.mpDeck.slug}?/onSale">
-							<input type="hidden" name="on-sale" value={!data.mpDeck.onSale}>
-							<button class="std-btn">{data.mpDeck.onSale ? "Take off sale" : "Put back on sale"}</button>
-						</form>
-					{/if}
 				{:else}
 					<form method="POST" action="/marketplace/{data.mpDeck.slug}?/getDeck">
 						<button class="std-btn">{priceLabel}</button>
@@ -72,27 +64,9 @@
 						<a class="guarantee" href="/terms">30-day money-back guarantee</a>
 					{/if}
 				{/if}
-				{#if data.mpDeck.isAuthor}
-					{#if renaming}
-						<form class="rename" method="POST" action="/marketplace/{data.mpDeck.slug}?/rename">
-							<input name="name" value={form?.rename ?? data.mpDeck.name} aria-label="New name">
-							<button class="std-btn">Send for approval</button>
-							<button type="button" class="std-btn" onclick={() => renaming = false}>Cancel</button>
-						</form>
-					{:else}
-						<button class="std-btn" onclick={() => renaming = true}>Rename</button>
-					{/if}
-					{#if data.renameRequest?.status === "pending"}
-						<p class="rename-note">Renaming to "{data.renameRequest.name}" is pending review.</p>
-					{:else if data.renameRequest?.status === "rejected"}
-						<p class="rename-note">Renaming to "{data.renameRequest.name}" was rejected: "{data.renameRequest.rejectionReason}".</p>
-					{/if}
-				{/if}
-				{#if data.mpDeck.takenDownReason}
-					<p class="taken-down">Taken down by Chesscards: {data.mpDeck.takenDownReason}</p>
-				{/if}
 				{#if data.user?.isAdmin}
 					{#if data.mpDeck.takenDownReason}
+						<p class="taken-down">Taken down by Chesscards: {data.mpDeck.takenDownReason}</p>
 						<form method="POST" action="/marketplace/{data.mpDeck.slug}?/restore">
 							<button class="std-btn">Restore</button>
 						</form>
@@ -190,17 +164,14 @@
 		align-items: center;
 		gap: 10px;
 	}
-	.taken-down, .rename-note {
+	.taken-down {
 		margin: 0;
 		max-width: 46ch;
 		font-size: 0.9rem;
 	}
-	.buy-row form.take-down, .buy-row form.rename {
+	.buy-row form.take-down {
 		flex-direction: row;
 		align-items: center;
-	}
-	.rename input {
-		width: 32ch;
 	}
 	.guarantee {
 		font-size: 0.85rem;

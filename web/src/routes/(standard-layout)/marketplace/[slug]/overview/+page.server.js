@@ -3,13 +3,13 @@ import * as marketplace from "$lib/server/marketplace.js"
 import * as payments from "$lib/server/payments.js"
 import { sendMail, supportEmail } from "$lib/server/mail.js"
 
-export const load = async ({ params, locals, parent }) => {
+export const load = async ({ locals, parent }) => {
 	// the layout decides who may see the deck; a page's data is sent even
 	// when its layout refuses, unless the page waits for it
-	await parent();
+	const { mpDeck } = await parent();
 	return {
-		contents: await marketplace.getDeckContents(params.id),
-		reviews: await marketplace.getReviews(params.id, locals.userId),
+		contents: await marketplace.getDeckContents(mpDeck.id),
+		reviews: await marketplace.getReviews(mpDeck.id, locals.userId),
 		isAdmin: locals.isAdmin
 	}
 }
@@ -18,6 +18,15 @@ export const load = async ({ params, locals, parent }) => {
 const text = value => value?.toString().replace(/\r\n/g, "\n").trim();
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// a page open since a rename posts to the deck's old name, which still finds it
+const deckOf = async params => {
+	const deck = await marketplace.findDeckBySlug(params.slug);
+	if (!deck) error(404);
+	return deck;
+}
+
+const overview = deck => `/marketplace/${encodeURIComponent(deck.slug)}/overview`;
 
 const tellAuthor = async (deck, message) => {
 	if (!deck.authorEmail) return;
@@ -39,15 +48,16 @@ export const actions = {
 		if (!locals.userId) {
 			redirect(303, `/login?redirect_to=${url.pathname}`);
 		}
-		const deck = await marketplace.getDeckForSale(params.id);
+		const { id } = await deckOf(params);
+		const deck = await marketplace.getDeckForSale(id);
 		if (!deck) error(404);
-		const { owned, inLibrary } = await marketplace.getOwnership(locals.userId, params.id);
+		const { owned, inLibrary } = await marketplace.getOwnership(locals.userId, id);
 		if (!deck.for_sale && !owned) error(404);
 		if (inLibrary) return fail(400, { errors: ["You already have this deck"] });
 
 		if (owned || deck.price_cents === 0) {
 			try {
-				await marketplace.createDeckInstance(locals.userId, params.id);
+				await marketplace.createDeckInstance(locals.userId, id);
 			} catch (err) {
 				return fail(400, { errors: [err.message] });
 			}
@@ -60,26 +70,47 @@ export const actions = {
 
 	onSale: async ({ request, params, locals }) => {
 		const onSale = (await request.formData()).get("on-sale") === "true";
-		if (!locals.userId || !await marketplace.setOnSale(locals.userId, params.id, onSale)) error(404);
-		redirect(303, `/marketplace/${params.id}/overview`);
+		const deck = await deckOf(params);
+		if (!locals.userId || !await marketplace.setOnSale(locals.userId, deck.id, onSale)) error(404);
+		redirect(303, overview(deck));
+	},
+
+	// the new name waits for an admin's approval
+	rename: async ({ request, params, locals }) => {
+		const name = text((await request.formData()).get("name")) ?? "";
+		if (name.length < 4 || name.length > 100) {
+			return fail(400, { errors: ["Name must be between 4 and 100 characters"], rename: name });
+		}
+		const deck = await deckOf(params);
+		if (!locals.userId) error(404);
+		let requested;
+		try {
+			requested = await marketplace.requestRename(locals.userId, deck.id, name);
+		} catch (err) {
+			return fail(400, { errors: [err.message], rename: name });
+		}
+		if (!requested) error(404);
+		redirect(303, overview(deck));
 	},
 
 	takeDown: async ({ request, params, locals }) => {
 		if (!locals.isAdmin) error(404);
 		const reason = text((await request.formData()).get("reason"));
 		if (!reason) return fail(400, { errors: ["Write why the deck is taken down; the author is sent it"] });
-		const deck = await marketplace.setTakenDown(params.id, reason);
+		const found = await deckOf(params);
+		const deck = await marketplace.setTakenDown(found.id, reason);
 		if (!deck) error(404);
 		await tellAuthor(deck, `We have taken "${deck.name}" off the Chesscards marketplace: ${reason}\n\nThose who have the deck keep it. If you think this is wrong, reply to this email.`);
-		redirect(303, `/marketplace/${params.id}/overview`);
+		redirect(303, overview(found));
 	},
 
 	restore: async ({ params, locals }) => {
 		if (!locals.isAdmin) error(404);
-		const deck = await marketplace.setTakenDown(params.id, null);
+		const found = await deckOf(params);
+		const deck = await marketplace.setTakenDown(found.id, null);
 		if (!deck) error(404);
 		await tellAuthor(deck, `"${deck.name}" is back on the Chesscards marketplace.`);
-		redirect(303, `/marketplace/${params.id}/overview`);
+		redirect(303, overview(found));
 	},
 
 	// a first review, or the rewrite of one posted a moment ago
@@ -102,7 +133,7 @@ export const actions = {
 			return fail(400, { errors: ["A review can be at most 5000 characters"] });
 		}
 
-		const saved = await marketplace.saveReview(locals.userId, params.id, {
+		const saved = await marketplace.saveReview(locals.userId, (await deckOf(params)).id, {
 			recommended: recommended === "true",
 			body
 		});
@@ -118,7 +149,7 @@ export const actions = {
 		if (!locals.userId) {
 			redirect(303, `/login?redirect_to=${url.pathname}`);
 		}
-		const deleted = await marketplace.deleteReview(locals.userId, params.id);
+		const deleted = await marketplace.deleteReview(locals.userId, (await deckOf(params)).id);
 		if (!deleted) {
 			return fail(404, { errors: ["You have no review of this deck"] });
 		}
@@ -129,14 +160,14 @@ export const actions = {
 	removeReview: async ({ request, params, locals }) => {
 		if (!locals.isAdmin) return fail(403, { errors: ["Only an admin can remove a review"] });
 		const reviewId = (await request.formData()).get("reviewId")?.toString() ?? "";
-		const removed = UUID.test(reviewId) && await marketplace.removeReview(params.id, reviewId);
+		const removed = UUID.test(reviewId) && await marketplace.removeReview((await deckOf(params)).id, reviewId);
 		if (!removed) return fail(404, { errors: ["No such review"] });
 	},
 
 	removeResponse: async ({ request, params, locals }) => {
 		if (!locals.isAdmin) return fail(403, { errors: ["Only an admin can remove a response"] });
 		const reviewId = (await request.formData()).get("reviewId")?.toString() ?? "";
-		const removed = UUID.test(reviewId) && await marketplace.removeReviewResponse(params.id, reviewId);
+		const removed = UUID.test(reviewId) && await marketplace.removeReviewResponse((await deckOf(params)).id, reviewId);
 		if (!removed) return fail(404, { errors: ["No such review"] });
 	},
 
@@ -152,7 +183,7 @@ export const actions = {
 		}
 		const reviewId = data.get("reviewId")?.toString() ?? "";
 		const voted = UUID.test(reviewId)
-			&& await marketplace.setReviewVote(locals.userId, params.id, reviewId, value);
+			&& await marketplace.setReviewVote(locals.userId, (await deckOf(params)).id, reviewId, value);
 		if (!voted) {
 			return fail(400, { errors: ["You can't vote on this review"] });
 		}
@@ -171,7 +202,7 @@ export const actions = {
 		}
 		const reviewId = data.get("reviewId")?.toString() ?? "";
 		const saved = UUID.test(reviewId)
-			&& await marketplace.setReviewResponse(locals.userId, params.id, reviewId, response);
+			&& await marketplace.setReviewResponse(locals.userId, (await deckOf(params)).id, reviewId, response);
 		if (!saved) {
 			return fail(403, { errors: ["Only the deck's author can respond to its reviews"] });
 		}

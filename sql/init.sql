@@ -183,7 +183,9 @@ create table marketplace_decks (
 	on_sale boolean not null default true,
 	-- set when an admin takes the deck down, and sent to the author
 	taken_down_reason text,
-	name text not null unique,
+	name text not null,
+	-- the name in its URL (lib/slug.js); two decks can't share one
+	slug text not null unique,
 	description jsonb not null,
 	price numeric(5,2) check(price >= 0) not null,
 	theme deck_theme not null,
@@ -398,6 +400,27 @@ create table marketplace_upload_requests (
 	created_at timestamptz not null default now()
 );
 
+-- The slugs a marketplace deck had before it was renamed, so their links
+-- still lead to it. A slug is in one place at a time: a deck's own, or here;
+-- a deck taking one as its own takes it from here.
+create table marketplace_old_slugs (
+	slug text primary key,
+	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null
+);
+
+-- An author's new name for their marketplace deck, which an admin approves
+-- or rejects with a reason shown to the author. A deck has at most one
+-- pending; asking again replaces it.
+create table marketplace_rename_requests (
+	id uuid primary key default gen_random_uuid(),
+	marketplace_deck_id uuid references marketplace_decks(id) on delete cascade not null,
+	name text not null,
+	status text check(status in ('pending', 'approved', 'rejected')) not null default 'pending',
+	rejection_reason text,
+	created_at timestamptz not null default now()
+);
+create unique index marketplace_rename_requests_pending_key on marketplace_rename_requests (marketplace_deck_id) where status = 'pending';
+
 -- A studier's verdict on a marketplace deck, as Steam's: recommended or not,
 -- always with the reason in words. One per user and deck. It can be rewritten
 -- for a few minutes after it is posted and is then fixed (delete it to write
@@ -457,6 +480,7 @@ create table cram_sessions (
 create index cards_deck_id_idx on cards (deck_id);
 create index decks_parent_id_idx on decks (parent_id);
 create index marketplace_decks_user_id_idx on marketplace_decks (user_id);
+create index marketplace_old_slugs_marketplace_deck_id_idx on marketplace_old_slugs (marketplace_deck_id);
 create index marketplace_subdecks_marketplace_deck_id_idx on marketplace_subdecks (marketplace_deck_id);
 create index marketplace_subdecks_parent_id_idx on marketplace_subdecks (parent_id);
 create index marketplace_cards_marketplace_deck_id_idx on marketplace_cards (marketplace_deck_id);

@@ -1,10 +1,17 @@
-import { error } from "@sveltejs/kit"
+import { error, redirect } from "@sveltejs/kit"
 import { pool } from "$lib/server/pool.js"
 import * as marketplace from "$lib/server/marketplace.js"
 
-export const load = async ({ params, locals }) => {
+export const load = async ({ params, locals, url }) => {
+	const found = await marketplace.findDeckBySlug(params.slug);
+	if (!found) error(404);
+	// temporary, since another deck may take the old name
+	if (!found.current) {
+		const rest = url.pathname.split("/").slice(3).join("/");
+		redirect(302, `/marketplace/${encodeURIComponent(found.slug)}/${rest}${url.search}`);
+	}
 	const { rows } = await pool.query(`
-		select md.id, md.name, md.theme, md.description, md.price, coalesce(u.name, md.author_name) author, count(mc.id) "cardCount",
+		select md.id, md.slug, md.name, md.theme, md.description, md.price, coalesce(u.name, md.author_name) author, count(mc.id) "cardCount",
 			md.on_sale "onSale", md.taken_down_reason "takenDownReason",
 			${marketplace.FOR_SALE} "forSale",
 			coalesce(md.user_id = $2::uuid, false) "isAuthor",
@@ -14,11 +21,11 @@ export const load = async ({ params, locals }) => {
 		left join "user" u on u.id = md.user_id
 		where md.id = $1
 		group by md.id, u.name`,
-		[params.id, locals.userId ?? null]
+		[found.id, locals.userId ?? null]
 	);
 	if (!rows[0]) error(404);
 	const ownership = locals.userId
-		? await marketplace.getOwnership(locals.userId, params.id)
+		? await marketplace.getOwnership(locals.userId, found.id)
 		: { owned: false, inLibrary: false };
 	const mpDeck = rows[0];
 	if (!mpDeck.forSale && !ownership.owned && !locals.isAdmin) error(404);
@@ -27,6 +34,7 @@ export const load = async ({ params, locals }) => {
 	return {
 		mpDeck,
 		ownership,
+		renameRequest: mpDeck.isAuthor ? await marketplace.getRenameRequest(found.id) : undefined,
 		// the page is the deck's: its name is the title
 		pageTitle: mpDeck.name
 	}

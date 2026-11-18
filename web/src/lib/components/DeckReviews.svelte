@@ -13,7 +13,7 @@
 	// has the deck and did not write it. isAuthor: they wrote it, and answer
 	// its reviews instead. isAdmin: they moderate, and can take down what
 	// others wrote.
-	let { marketplaceDeckId, reviews, canReview = false, isAuthor = false, isAdmin = false } = $props();
+	let { slug, reviews, canReview = false, isAuthor = false, isAdmin = false } = $props();
 
 	// the viewer's own review leads the list, whatever the order of the rest
 	let myReview = $derived(reviews.find(review => review.mine));
@@ -92,7 +92,7 @@
 		const formData = new FormData();
 		for (const [key, value] of Object.entries(fields)) formData.set(key, value);
 		try {
-			const res = await fetch(`/marketplace/${marketplaceDeckId}/overview?/${action}`, {
+			const res = await fetch(`/marketplace/${slug}/overview?/${action}`, {
 				method: "POST",
 				headers: { "x-sveltekit-action": "true" },
 				body: formData

@@ -39,7 +39,7 @@ const createCheckout = async ({ user, deck }) => {
 		},
 		payment_intent_data: { metadata: { userId: user.id, marketplaceDeckId: deck.id } },
 		success_url: `${siteUrl()}/marketplace/checkout-complete?session_id={CHECKOUT_SESSION_ID}`,
-		cancel_url: `${siteUrl()}/marketplace/${deck.id}/overview`,
+		cancel_url: `${siteUrl()}/marketplace/${encodeURIComponent(deck.slug)}/overview`,
 		integration_identifier: "deck_purchase_kqwmzrtb"
 	});
 	return session.url;

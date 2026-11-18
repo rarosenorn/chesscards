@@ -2,7 +2,8 @@ import { error } from "@sveltejs/kit"
 import * as marketplace from "$lib/server/marketplace.js"
 
 export const GET = async ({ params }) => {
-	const image = await marketplace.getDeckImage(params.id);
+	const deck = await marketplace.findDeckBySlug(params.slug);
+	const image = deck && await marketplace.getDeckImage(deck.id);
 	if (!image) error(404);
 
 	return new Response(image.image, {

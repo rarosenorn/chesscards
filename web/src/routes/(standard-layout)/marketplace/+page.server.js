@@ -7,7 +7,7 @@ export const load = async ({ url, locals }) => {
 	if (theme && !marketplace.themes.includes(theme)) error(404);
 
 	const result = await pool.query(`
-		select md.id, md.name, md.theme, md.price, coalesce(u.name, md.author_name) author, count(mc.id) "cardCount",
+		select md.id, md.slug, md.name, md.theme, md.price, coalesce(u.name, md.author_name) author, count(mc.id) "cardCount",
 			${marketplace.OWNS("$2::uuid", "md.id")} or md.user_id = $2::uuid owned,
 			${marketplace.REVIEW_COUNTS}
 		from marketplace_decks md

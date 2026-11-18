@@ -9,7 +9,7 @@
 <DescriptionView blocks={data.mpDeck.description} />
 <DeckContents subdecks={data.contents} />
 <DeckReviews
-	marketplaceDeckId={data.mpDeck.id}
+	slug={data.mpDeck.slug}
 	reviews={data.reviews}
 	canReview={data.ownership.owned && !data.mpDeck.isAuthor}
 	isAuthor={data.mpDeck.isAuthor}

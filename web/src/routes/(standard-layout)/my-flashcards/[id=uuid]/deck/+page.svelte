@@ -19,7 +19,7 @@
 	let thumbnailSrc = $derived(
 		editable
 			? data.listing.imageVersion && `/my-flashcards/${data.listing.id}/thumbnail?v=${data.listing.imageVersion}`
-			: `/marketplace/${data.listing.marketplaceDeckId}/thumbnail`
+			: `/marketplace/${data.listing.slug}/thumbnail`
 	);
 
 	// the listing shows as the marketplace would; Edit swaps in the fields,
@@ -193,7 +193,7 @@
 			<DeckContents subdecks={data.contents} />
 			{#if data.reviews}
 				<DeckReviews
-					marketplaceDeckId={data.listing.marketplaceDeckId}
+					slug={data.listing.slug}
 					reviews={data.reviews}
 					canReview={!data.listing.isAuthor}
 					isAuthor={data.listing.isAuthor}

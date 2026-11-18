@@ -14,6 +14,9 @@
 	const buying = $derived(!owned && !isFree(data.mpDeck.price));
 	const priceLabel = $derived(isFree(data.mpDeck.price) ? "Get for free" : `Buy for ${formatPrice(data.mpDeck.price)}`);
 
+	// a rename refused reopens the field with what was typed
+	let renaming = $state(page.form?.rename !== undefined);
+
 	const tabs = [
 		{ path: "overview", name: "Overview" },
 		{ path: "cards", name: "Sample cards" }
@@ -32,7 +35,7 @@
 
 <StandardLayout>
 	<div class="deck-header">
-		<img class="thumbnail" src="/marketplace/{data.mpDeck.id}/thumbnail" alt={data.mpDeck.name} />
+		<img class="thumbnail" src="/marketplace/{data.mpDeck.slug}/thumbnail" alt={data.mpDeck.name} />
 		<div class="deck-side">
 			<div class="deck-info">
 				<p><span>Author:</span> {data.mpDeck.author}</p>
@@ -50,22 +53,38 @@
 						<OwnedBadge />
 					</div>
 					{#if !inLibrary}
-						<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
+						<form method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/getDeck">
 							<button class="std-btn">Get</button>
 						</form>
 					{/if}
 					{#if data.mpDeck.isAuthor && !data.mpDeck.takenDownReason}
-						<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/onSale">
+						<form method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/onSale">
 							<input type="hidden" name="on-sale" value={!data.mpDeck.onSale}>
 							<button class="std-btn">{data.mpDeck.onSale ? "Take off sale" : "Put back on sale"}</button>
 						</form>
 					{/if}
 				{:else}
-					<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/getDeck">
+					<form method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/getDeck">
 						<button class="std-btn">{priceLabel}</button>
 					</form>
 					{#if buying}
 						<a class="guarantee" href="/terms">30-day money-back guarantee</a>
+					{/if}
+				{/if}
+				{#if data.mpDeck.isAuthor}
+					{#if renaming}
+						<form class="rename" method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/rename">
+							<input name="name" value={page.form?.rename ?? data.mpDeck.name} aria-label="New name">
+							<button class="std-btn">Send for approval</button>
+							<button type="button" class="std-btn" onclick={() => renaming = false}>Cancel</button>
+						</form>
+					{:else}
+						<button class="std-btn" onclick={() => renaming = true}>Rename</button>
+					{/if}
+					{#if data.renameRequest?.status === "pending"}
+						<p class="rename-note">Renaming to "{data.renameRequest.name}" is pending review.</p>
+					{:else if data.renameRequest?.status === "rejected"}
+						<p class="rename-note">Renaming to "{data.renameRequest.name}" was rejected: "{data.renameRequest.rejectionReason}".</p>
 					{/if}
 				{/if}
 				{#if data.mpDeck.takenDownReason}
@@ -73,11 +92,11 @@
 				{/if}
 				{#if data.user?.isAdmin}
 					{#if data.mpDeck.takenDownReason}
-						<form method="POST" action="/marketplace/{data.mpDeck.id}/overview?/restore">
+						<form method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/restore">
 							<button class="std-btn">Restore</button>
 						</form>
 					{:else}
-						<form class="take-down" method="POST" action="/marketplace/{data.mpDeck.id}/overview?/takeDown">
+						<form class="take-down" method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/takeDown">
 							<input name="reason" required placeholder="Reason, sent to the author">
 							<button class="std-btn">Take down</button>
 						</form>
@@ -90,8 +109,8 @@
 	<div class="tabs">
 		{#each tabs as tab}
 			<a
-				href="/marketplace/{data.mpDeck.id}/{tab.path}"
-				aria-current={page.url.pathname === `/marketplace/${data.mpDeck.id}/${tab.path}`}
+				href="/marketplace/{data.mpDeck.slug}/{tab.path}"
+				aria-current={page.url.pathname.endsWith(`/${tab.path}`)}
 			>
 				{tab.name}
 			</a>
@@ -156,14 +175,17 @@
 		align-items: center;
 		gap: 10px;
 	}
-	.taken-down {
+	.taken-down, .rename-note {
 		margin: 0;
 		max-width: 46ch;
 		font-size: 0.9rem;
 	}
-	.buy-row form.take-down {
+	.buy-row form.take-down, .buy-row form.rename {
 		flex-direction: row;
 		align-items: center;
+	}
+	.rename input {
+		width: 32ch;
 	}
 	.guarantee {
 		font-size: 0.85rem;

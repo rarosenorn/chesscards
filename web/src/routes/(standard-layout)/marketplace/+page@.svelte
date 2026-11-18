@@ -18,8 +18,8 @@
 		<StandardLayout>
 			<div class="marketplace-grid-container">
 				{#each data.mpDecks as mpDeck (mpDeck.id)}
-					<a href={`/marketplace/${mpDeck.id}`} class="deck-card">
-						<img class="thumbnail" src="/marketplace/{mpDeck.id}/thumbnail" alt={mpDeck.name} />
+					<a href="/marketplace/{mpDeck.slug}" class="deck-card">
+						<img class="thumbnail" src="/marketplace/{mpDeck.slug}/thumbnail" alt={mpDeck.name} />
 						<div class="card-body">
 							<p class="deck-name">{mpDeck.name}</p>
 							<p class="deck-author">by {mpDeck.author}</p>

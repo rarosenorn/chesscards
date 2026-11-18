@@ -1,6 +1,7 @@
 import { pool } from "./pool.js"
 import { deckOutline } from "../deck-tree.js"
 import { createEmptyCard } from "ts-fsrs"
+import { slugify, RESERVED_SLUGS } from "../slug.js"
 
 const themes = ["openings", "endgames", "tactics", "strategy", "checkmates"];
 
@@ -45,6 +46,33 @@ const publishable = async (client, deckId) => {
 	return found;
 }
 
+// Why a name can't be a marketplace deck's, or null. Another deck's slug
+// from before a rename is free to take.
+const nameProblem = async (name, exceptDeckId = null) => {
+	const slug = slugify(name);
+	if (!slug) return "A name needs a letter or a digit";
+	if (RESERVED_SLUGS.includes(slug)) return "A marketplace deck can't have this name";
+	const { rows: [taken] } = await pool.query(
+		"select name from marketplace_decks where slug = $1 and id is distinct from $2::uuid",
+		[slug, exceptDeckId]
+	);
+	return taken ? `There is already a marketplace deck named "${taken.name}"` : null;
+}
+
+// The deck a slug leads to, its own or one it had before a rename; current
+// says which.
+const findDeckBySlug = async slug => {
+	const { rows: [deck] } = await pool.query(`
+		select md.id, md.slug, md.slug = $1 current
+		from marketplace_decks md
+		where md.slug = $1 or md.id = (select marketplace_deck_id from marketplace_old_slugs where slug = $1)
+		order by md.slug = $1 desc
+		limit 1`,
+		[slug]
+	);
+	return deck;
+}
+
 // Creates a pending upload request. A null image is the deck's own
 // thumbnail. Throws if the user doesn't own the deck, nothing is under it, a
 // marketplace deck taken sits inside it, or a pending/approved request
@@ -59,6 +87,8 @@ const createUploadRequest = async (userId, deckId, { name, description, theme, p
 	if (cardCount === 0) throw new Error("Deck has no cards");
 	if (holdsTaken) throw new Error("A deck with a marketplace deck inside it cannot be published");
 	if (!image && !rows[0].has_image) throw new Error("A thumbnail image is required");
+	const problem = await nameProblem(name);
+	if (problem) throw new Error(problem);
 
 	const existing = await getUploadRequestForDeck(userId, deckId);
 	if (existing?.status === "pending" || existing?.status === "approved") {
@@ -194,13 +224,16 @@ const approveUploadRequest = async requestId => {
 		if ((await publishable(client, request.deck_id)).holdsTaken) {
 			throw new Error("A deck with a marketplace deck inside it cannot be published");
 		}
+		const slug = slugify(request.name);
+		if (!slug || RESERVED_SLUGS.includes(slug)) throw new Error("A marketplace deck can't have this name");
+		await client.query("delete from marketplace_old_slugs where slug = $1", [slug]);
 
 		const { rows: [mpDeck] } = await client.query(
 			// reviews in order is read at the top of the list, so a deck published
 			// from inside another takes it from the deck at the top; its tactic
 			// ladder is the nearest one set, its own or a deck's above
-			`insert into marketplace_decks(user_id, name, description, price, theme, image, image_type, in_order, reviews_in_order, tactic_ladder, deck_id, author_terms_version)
-			 select $1, $2, $3, $4, $5, $6, $7, d.in_order, (
+			`insert into marketplace_decks(user_id, name, slug, description, price, theme, image, image_type, in_order, reviews_in_order, tactic_ladder, deck_id, author_terms_version)
+			 select $1, $2, $10, $3, $4, $5, $6, $7, d.in_order, (
 				with recursive up(id, parent_id, reviews_in_order) as (
 					select d.id, d.parent_id, d.reviews_in_order
 					union all
@@ -216,7 +249,7 @@ const approveUploadRequest = async requestId => {
 				select tactic_ladder from up where tactic_ladder is not null order by depth limit 1
 			 ), d.id, $9 from decks d where d.id = $8 returning id`,
 			// the description as JSON text, as pg would send its blocks array as a postgres array
-			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id, request.author_terms_version]
+			[request.user_id, request.name, JSON.stringify(request.description), request.price, request.theme, request.image, request.image_type, request.deck_id, request.author_terms_version, slug]
 		);
 		// The decks inside it travel with the cards, each with its in order /
 		// mixed and its tactic ladder. Every one gets its new id up front (copies),
@@ -268,6 +301,87 @@ const rejectUploadRequest = async (requestId, reason) => {
 	return rowCount === 1;
 }
 
+// The author's new name for their deck, for an admin to approve; it
+// replaces one waiting already. False when the deck isn't theirs; throws
+// when the name can't be the deck's.
+const requestRename = async (userId, marketplaceDeckId, name) => {
+	const { rows: [deck] } = await pool.query(
+		"select name from marketplace_decks where id = $1 and user_id = $2",
+		[marketplaceDeckId, userId]
+	);
+	if (!deck) return false;
+	if (name === deck.name) throw new Error("That is the deck's name already");
+	const problem = await nameProblem(name, marketplaceDeckId);
+	if (problem) throw new Error(problem);
+	await pool.query(`
+		insert into marketplace_rename_requests(marketplace_deck_id, name) values ($1, $2)
+		on conflict (marketplace_deck_id) where status = 'pending'
+		do update set name = excluded.name, created_at = now()`,
+		[marketplaceDeckId, name]
+	);
+	return true;
+}
+
+// The rename waiting for an admin, or the last one rejected; none once one
+// is approved
+const getRenameRequest = async marketplaceDeckId => {
+	const { rows: [request] } = await pool.query(`
+		select name, status, rejection_reason "rejectionReason"
+		from marketplace_rename_requests
+		where marketplace_deck_id = $1
+		order by created_at desc
+		limit 1`,
+		[marketplaceDeckId]
+	);
+	return request?.status === "approved" ? undefined : request;
+}
+
+const getPendingRenameRequests = async () => {
+	const { rows } = await pool.query(`
+		select r.id, r.name, md.name "currentName", md.slug, u.email, r.created_at "createdAt"
+		from marketplace_rename_requests r
+		join marketplace_decks md on md.id = r.marketplace_deck_id
+		join "user" u on u.id = md.user_id
+		where r.status = 'pending'
+		order by r.created_at`
+	);
+	return rows;
+}
+
+// The deck takes the new name, and its slug until now goes on leading to it
+// until another deck takes it
+const approveRenameRequest = requestId => inTransaction(async client => {
+	const { rows: [request] } = await client.query(`
+		select r.marketplace_deck_id "deckId", r.name, md.slug
+		from marketplace_rename_requests r
+		join marketplace_decks md on md.id = r.marketplace_deck_id
+		where r.id = $1 and r.status = 'pending' and md.user_id is not null
+		for update`,
+		[requestId]
+	);
+	if (!request) throw new Error("Request not found or not pending");
+	const slug = slugify(request.name);
+	if (!slug || RESERVED_SLUGS.includes(slug)) throw new Error("A marketplace deck can't have this name");
+	if (slug !== request.slug) {
+		await client.query("delete from marketplace_old_slugs where slug = $1", [slug]);
+		await client.query(`
+			insert into marketplace_old_slugs(slug, marketplace_deck_id) values ($1, $2)
+			on conflict (slug) do update set marketplace_deck_id = excluded.marketplace_deck_id`,
+			[request.slug, request.deckId]
+		);
+	}
+	await client.query("update marketplace_decks set name = $2, slug = $3 where id = $1", [request.deckId, request.name, slug]);
+	await client.query("update marketplace_rename_requests set status = 'approved' where id = $1", [requestId]);
+});
+
+const rejectRenameRequest = async (requestId, reason) => {
+	const { rowCount } = await pool.query(
+		"update marketplace_rename_requests set status = 'rejected', rejection_reason = $2 where id = $1 and status = 'pending'",
+		[requestId, reason]
+	);
+	return rowCount === 1;
+}
+
 const FOR_SALE = "(md.on_sale and md.taken_down_reason is null)";
 
 const OWNS = (user, deck) => `exists (select 1 from purchases p
@@ -313,7 +427,7 @@ const setTakenDown = async (marketplaceDeckId, reason) => {
 
 const getDeckForSale = async marketplaceDeckId => {
 	const { rows: [deck] } = await pool.query(
-		`select id, name, user_id, ${FOR_SALE} for_sale, round(price * 100)::int price_cents from marketplace_decks md where id = $1`,
+		`select id, name, slug, user_id, ${FOR_SALE} for_sale, round(price * 100)::int price_cents from marketplace_decks md where id = $1`,
 		[marketplaceDeckId]
 	);
 	return deck;
@@ -424,7 +538,7 @@ const recordPaidPurchase = (purchase) => inTransaction(async client => {
 // shows it, which is the author's and read-only here
 const getInstanceListing = async (userId, instanceId) => {
 	const { rows } = await pool.query(`
-		select i.id, md.id "marketplaceDeckId", md.name, md.description, md.theme, coalesce(u.name, md.author_name) author,
+		select i.id, md.id "marketplaceDeckId", md.slug, md.name, md.description, md.theme, coalesce(u.name, md.author_name) author,
 			(select count(*) from marketplace_cards mc where mc.marketplace_deck_id = md.id)::int "cardCount",
 			md.user_id is not distinct from i.user_id "isAuthor",
 			${REVIEW_COUNTS}
@@ -601,4 +715,4 @@ const setReviewResponse = async (userId, marketplaceDeckId, reviewId, response) 
 	return rowCount === 1;
 }
 
-export { themes, REVIEW_COUNTS, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, FOR_SALE, OWNS, getOwnership, getListingForDeck, setOnSale, setTakenDown, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, markInstanceArticleRead, createInstanceReviewLog }
+export { themes, REVIEW_COUNTS, findDeckBySlug, requestRename, getRenameRequest, getPendingRenameRequests, approveRenameRequest, rejectRenameRequest, getReviews, saveReview, deleteReview, removeReview, removeReviewResponse, setReviewVote, setReviewResponse, getUploadRequestForDeck, createUploadRequest, getPendingUploadRequests, getUploadRequestWithCards, getUploadRequestImage, getDeckPreviewCards, getDeckContents, getDeckImage, approveUploadRequest, rejectUploadRequest, FOR_SALE, OWNS, getOwnership, getListingForDeck, setOnSale, setTakenDown, getDeckForSale, createDeckInstance, recordPaidPurchase, getInstanceListing, updateInstanceCardStudyState, markInstanceArticleRead, createInstanceReviewLog }

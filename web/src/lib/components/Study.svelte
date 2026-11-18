@@ -1,6 +1,7 @@
 <script>
 	import { alignByWrap } from "$lib/text-block-wrap.js"
 	import { getContext, onMount, untrack } from "svelte"
+	import { page } from "$app/state"
 	import { enhance } from "$app/forms"
 	import { fsrs, Rating, StrategyMode, GenSeedStrategyWithCardId } from "ts-fsrs"
 	import { boardAlignment } from "$lib/side-alignment.js"
@@ -654,9 +655,10 @@
 	// It is the study page that holds the mode — mounted here, dropped on the
 	// way out — and it is not remembered between visits: each arrival starts
 	// with the chrome up and z is what takes it away, unless the deck was
-	// chosen from the switcher in zen.
+	// chosen from the switcher in zen. Known by its address: the layout puts
+	// the new deck in context only after this page has mounted.
 	onMount(() => {
-		resetZen(`/my-flashcards/${deck.id}/study`);
+		resetZen(`/my-flashcards/${page.params.id}/study`);
 		return () => { zen.studying = false; zen.peeking = false };
 	});
 	// On the "finished for now" screen the next card is often minutes away (the

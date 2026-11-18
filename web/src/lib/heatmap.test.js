@@ -113,6 +113,11 @@ describe("streaks", () => {
 		expect(streaks(counts, TODAY)).toMatchObject({ current: 2, longest: 4 });
 	})
 
+	it("total every review there has been", () => {
+		expect(streaks([day("2025-10-01", 50), day("2026-03-01", 7), day("2026-03-02", 0), day(TODAY, 3)], TODAY).total).toBe(60);
+		expect(streaks([], TODAY).total).toBe(0);
+	})
+
 	it("average the days that had any, all of them", () => {
 		expect(streaks([day("2025-10-01", 50), day("2026-03-01", 7), day("2026-03-02", 0), day(TODAY, 3)], TODAY).average).toBe(20);
 		expect(streaks([day("2026-10-07", 1), day(TODAY, 2)], TODAY).average).toBe(2);

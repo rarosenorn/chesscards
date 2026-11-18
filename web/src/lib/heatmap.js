@@ -90,7 +90,7 @@ const streaks = (counts, today) => {
 	for (let day = days.has(today) ? today : addDays(today, -1); days.has(day); day = addDays(day, -1)) current++;
 	const total = counts.reduce((sum, { count }) => sum + Math.max(count, 0), 0);
 	const average = active.length ? Math.round(total / active.length) : 0;
-	return { average, current, longest };
+	return { total, average, current, longest };
 }
 
 export { levelOf, usualDay, heatmapWeeks, monthLabels, sayDay, streaks }

@@ -52,8 +52,8 @@
 	</div>
 	<!-- each figure under its own name, the figure in the squares' green -->
 	<p class="summary">
-		<span>Total: <strong>{summary.total}</strong></span>
-		<span>Average on active days: <strong>{summary.average}</strong></span>
+		<span>Total: <strong>{plural(summary.total, "review")}</strong></span>
+		<span>Average on active days: <strong>{plural(summary.average, "review")}</strong></span>
 		<span>Current streak: <strong>{plural(summary.current, "day")}</strong></span>
 		<span>Longest streak: <strong>{plural(summary.longest, "day")}</strong></span>
 	</p>

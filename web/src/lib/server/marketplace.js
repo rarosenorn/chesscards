@@ -196,10 +196,10 @@ const getDeckContents = async marketplaceDeckId => {
 	return rows;
 }
 
-// A marketplace deck's thumbnail
+// A marketplace deck's thumbnail, and whether it is for anyone to see
 const getDeckImage = async marketplaceDeckId => {
 	const { rows } = await pool.query(
-		'select image, image_type "imageType" from marketplace_decks where id = $1',
+		`select image, image_type "imageType", ${FOR_SALE} "forSale" from marketplace_decks md where id = $1`,
 		[marketplaceDeckId]
 	);
 

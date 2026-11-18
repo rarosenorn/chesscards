@@ -126,7 +126,7 @@ const post = async (action, fields, locals = { userId: "u" }, params = {}) => {
 	try {
 		return await action({ request: new Request("http://localhost/author", { method: "POST", body }), locals, params });
 	} catch (thrown) {
-		return { status: thrown.status };
+		return { status: thrown.status, thrown: true };
 	}
 };
 
@@ -167,5 +167,11 @@ describe("the author page's actions", () => {
 		expect((await request(asked)).data.errors).toEqual(["Nothing is changed"]);
 		marketplace.requestChanges.mockResolvedValue(false);
 		expect((await request(asked)).status).toBe(404);
+	});
+
+	it("request changes says nothing of a database failure", async () => {
+		marketplace.requestChanges.mockRejectedValue(Object.assign(new Error('relation "marketplace_change_requests" does not exist'), { code: "42P01" }));
+		const result = await request(asked);
+		expect(result.data).toBe(undefined);
 	});
 });

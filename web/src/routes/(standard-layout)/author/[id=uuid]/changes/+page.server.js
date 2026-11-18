@@ -66,6 +66,8 @@ export const actions = {
 				previewCardIds
 			});
 		} catch (err) {
+			// a database error (it has a code) is not the author's to read
+			if (err.code) throw err;
 			return fail(400, { errors: [err.message] });
 		}
 		if (!requested) error(404);

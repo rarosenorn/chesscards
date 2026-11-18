@@ -94,7 +94,7 @@
 
 	{#if paid.length > 0}
 		<section class="sales">
-			<h3>Sales</h3>
+			<h3>Latest sales</h3>
 			{#if data.sales.length === 0}
 				<p class="note">No sales yet.</p>
 			{:else}

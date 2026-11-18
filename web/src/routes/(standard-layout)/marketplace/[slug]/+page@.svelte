@@ -4,9 +4,13 @@
 	import StandardLayout from "$lib/components/StandardLayout.svelte"
 	import ReviewCounts from "$lib/components/ReviewCounts.svelte"
 	import OwnedBadge from "$lib/components/OwnedBadge.svelte"
+	import DescriptionView from "$lib/components/DescriptionView.svelte"
+	import DeckContents from "$lib/components/DeckContents.svelte"
+	import DeckReviews from "$lib/components/DeckReviews.svelte"
+	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
 	import { isFree, formatPrice } from "$lib/money.js"
 
-	let { data, children } = $props();
+	let { data, form } = $props();
 
 	// the author owns their deck, and has it while they keep the one they
 	// published it from
@@ -15,12 +19,9 @@
 	const priceLabel = $derived(isFree(data.mpDeck.price) ? "Get for free" : `Buy for ${formatPrice(data.mpDeck.price)}`);
 
 	// a rename refused reopens the field with what was typed
-	let renaming = $state(page.form?.rename !== undefined);
+	let renaming = $derived(form?.rename !== undefined);
 
-	const tabs = [
-		{ path: "overview", name: "Overview" },
-		{ path: "cards", name: "Sample cards" }
-	];
+	let view = $state(page.url.searchParams.get("view") === "sample-cards" ? "sample-cards" : "overview");
 </script>
 
 <!-- the way back to the marketplace, in the bar My flashcards' deck pages
@@ -53,18 +54,18 @@
 						<OwnedBadge />
 					</div>
 					{#if !inLibrary}
-						<form method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/getDeck">
+						<form method="POST" action="/marketplace/{data.mpDeck.slug}?/getDeck">
 							<button class="std-btn">Get</button>
 						</form>
 					{/if}
 					{#if data.mpDeck.isAuthor && !data.mpDeck.takenDownReason}
-						<form method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/onSale">
+						<form method="POST" action="/marketplace/{data.mpDeck.slug}?/onSale">
 							<input type="hidden" name="on-sale" value={!data.mpDeck.onSale}>
 							<button class="std-btn">{data.mpDeck.onSale ? "Take off sale" : "Put back on sale"}</button>
 						</form>
 					{/if}
 				{:else}
-					<form method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/getDeck">
+					<form method="POST" action="/marketplace/{data.mpDeck.slug}?/getDeck">
 						<button class="std-btn">{priceLabel}</button>
 					</form>
 					{#if buying}
@@ -73,8 +74,8 @@
 				{/if}
 				{#if data.mpDeck.isAuthor}
 					{#if renaming}
-						<form class="rename" method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/rename">
-							<input name="name" value={page.form?.rename ?? data.mpDeck.name} aria-label="New name">
+						<form class="rename" method="POST" action="/marketplace/{data.mpDeck.slug}?/rename">
+							<input name="name" value={form?.rename ?? data.mpDeck.name} aria-label="New name">
 							<button class="std-btn">Send for approval</button>
 							<button type="button" class="std-btn" onclick={() => renaming = false}>Cancel</button>
 						</form>
@@ -92,11 +93,11 @@
 				{/if}
 				{#if data.user?.isAdmin}
 					{#if data.mpDeck.takenDownReason}
-						<form method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/restore">
+						<form method="POST" action="/marketplace/{data.mpDeck.slug}?/restore">
 							<button class="std-btn">Restore</button>
 						</form>
 					{:else}
-						<form class="take-down" method="POST" action="/marketplace/{data.mpDeck.slug}/overview?/takeDown">
+						<form class="take-down" method="POST" action="/marketplace/{data.mpDeck.slug}?/takeDown">
 							<input name="reason" required placeholder="Reason, sent to the author">
 							<button class="std-btn">Take down</button>
 						</form>
@@ -105,18 +106,32 @@
 			</div>
 		</div>
 	</div>
-	<FormErrors form={page.form} />
+	<FormErrors {form} />
 	<div class="tabs">
-		{#each tabs as tab}
-			<a
-				href="/marketplace/{data.mpDeck.slug}/{tab.path}"
-				aria-current={page.url.pathname.endsWith(`/${tab.path}`)}
-			>
-				{tab.name}
-			</a>
-		{/each}
+		<button class:active={view === "overview"} onclick={() => view = "overview"}>
+			Overview
+		</button>
+		<button class:active={view === "sample-cards"} onclick={() => view = "sample-cards"}>
+			Sample cards
+		</button>
 	</div>
-	{@render children()}
+	{#if view === "overview"}
+		<DescriptionView blocks={data.mpDeck.description} />
+		<DeckContents subdecks={data.contents} />
+		<DeckReviews
+			slug={data.mpDeck.slug}
+			reviews={data.reviews}
+			canReview={owned && !data.mpDeck.isAuthor}
+			isAuthor={data.mpDeck.isAuthor}
+			isAdmin={data.isAdmin}
+		/>
+	{:else}
+		{#each data.previewCards as card (card.id)}
+			<FlashcardBrowse {card} />
+		{:else}
+			<p class="no-preview">No preview cards</p>
+		{/each}
+	{/if}
 </StandardLayout>
 
 <style>
@@ -203,22 +218,28 @@
 		display: flex;
 		gap: 8px;
 	}
-	.tabs > a {
-		text-decoration: none;
+	.tabs > button {
+		border: none;
+		background: none;
+		cursor: pointer;
 		color: rgba(0, 0, 0, 0.6);
 		font-weight: 500;
 		padding: 8px 12px;
 		border-bottom: 2px solid transparent;
 		margin-bottom: -1px;
 	}
-	.tabs > a:hover {
+	.tabs > button:hover {
 		color: black;
 		background-color: rgba(0, 0, 0, 0.03);
 		border-radius: 4px 4px 0 0;
 	}
-	.tabs [aria-current]:not([aria-current="false"]) {
+	.tabs > button.active {
 		color: black;
 		font-weight: 600;
 		border-bottom-color: var(--accent);
+	}
+	.no-preview {
+		margin-top: 16px;
+		color: rgba(0, 0, 0, 0.6);
 	}
 </style>

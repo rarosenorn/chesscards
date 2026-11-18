@@ -92,7 +92,7 @@
 		const formData = new FormData();
 		for (const [key, value] of Object.entries(fields)) formData.set(key, value);
 		try {
-			const res = await fetch(`/marketplace/${slug}/overview?/${action}`, {
+			const res = await fetch(`/marketplace/${slug}?/${action}`, {
 				method: "POST",
 				headers: { "x-sveltekit-action": "true" },
 				body: formData

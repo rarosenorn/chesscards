@@ -1,19 +1,23 @@
 import { describe, it, expect, vi } from "vitest"
-import { mount, unmount, tick, createRawSnippet } from "svelte"
+import { mount, unmount, tick } from "svelte"
 
-const page = vi.hoisted(() => ({ url: new URL("http://localhost/marketplace/deck/overview"), form: null, data: {} }));
+const page = vi.hoisted(() => ({ url: new URL("http://localhost/marketplace/deck"), form: null, data: {} }));
 vi.mock("$app/state", () => ({ page }));
+vi.mock("$app/forms", () => ({ deserialize: JSON.parse }));
+vi.mock("$app/navigation", () => ({ invalidateAll: async () => {}, goto: async () => {} }));
 
-const { default: DeckLayout } = await import("./[slug]/+layout@.svelte");
+const { default: DeckPage } = await import("./[slug]/+page@.svelte");
 
-const mpDeck = (price, isAuthor = false, onSale = true, takenDownReason = null) => ({ id: "d", slug: "deck", name: "Deck", author: "A", theme: "openings", cardCount: 3, price, isAuthor, onSale, takenDownReason, reviewCount: 0, recommendCount: 0 });
+let form = null;
+
+const mpDeck = (price, isAuthor = false, onSale = true, takenDownReason = null) => ({ id: "d", slug: "deck", name: "Deck", description: [], author: "A", theme: "openings", cardCount: 3, price, isAuthor, onSale, takenDownReason, reviewCount: 0, recommendCount: 0 });
 
 const open = async (ownership, price = "10.00", isAuthor = false, onSale = true, { takenDownReason = null, isAdmin = false, renameRequest } = {}) => {
 	const target = document.createElement("div");
 	document.body.append(target);
-	const children = createRawSnippet(() => ({ render: () => "<div></div>" }));
 	const user = isAdmin ? { isAdmin: true } : undefined;
-	const app = mount(DeckLayout, { target, props: { data: { mpDeck: mpDeck(price, isAuthor, onSale, takenDownReason), ownership, user, renameRequest }, children } });
+	const data = { mpDeck: mpDeck(price, isAuthor, onSale, takenDownReason), ownership, user, renameRequest, contents: [], reviews: [], previewCards: [{ id: "c1", front: [], back: [], card_type: "basic" }], isAdmin };
+	const app = mount(DeckPage, { target, props: { data, form } });
 	await tick();
 	const buttons = [...target.querySelectorAll(".buy-row button")].filter(b => !b.closest(".rename") && b.textContent.trim() !== "Rename");
 	return {
@@ -101,9 +105,9 @@ describe("renaming a marketplace deck", () => {
 		const view = await author();
 		button(view.target, "Rename").click();
 		await tick();
-		const form = view.target.querySelector("form.rename");
-		expect(form.getAttribute("action")).toBe("/marketplace/deck/overview?/rename");
-		expect(form.querySelector("input[name=name]").value).toBe("Deck");
+		const renameForm = view.target.querySelector("form.rename");
+		expect(renameForm.getAttribute("action")).toBe("/marketplace/deck?/rename");
+		expect(renameForm.querySelector("input[name=name]").value).toBe("Deck");
 		expect(button(view.target, "Send for approval")).toBeTruthy();
 		button(view.target, "Cancel").click();
 		await tick();
@@ -112,11 +116,11 @@ describe("renaming a marketplace deck", () => {
 	});
 
 	it("a refused rename reopens the field with what was typed", async () => {
-		page.form = { errors: ["There is already a marketplace deck named \"Other\""], rename: "Other" };
+		form = { errors: ["There is already a marketplace deck named \"Other\""], rename: "Other" };
 		const view = await author();
 		expect(view.target.querySelector("form.rename input[name=name]").value).toBe("Other");
 		view.close();
-		page.form = null;
+		form = null;
 	});
 
 	it("the author sees a rename pending review, or rejected with the reason", async () => {
@@ -129,5 +133,38 @@ describe("renaming a marketplace deck", () => {
 		const none = await author();
 		expect(none.target.querySelector(".rename-note")).toBe(null);
 		none.close();
+	});
+});
+
+describe("the marketplace deck page's tabs", () => {
+	const tab = (target, text) => [...target.querySelectorAll(".tabs button")].find(b => b.textContent.trim() === text);
+
+	it("opens on Overview; Sample cards swaps in the sample cards on the same page", async () => {
+		const view = await open({ owned: false, inLibrary: false });
+		expect([tab(view.target, "Overview").classList.contains("active"), view.target.querySelectorAll(".tabs a").length]).toEqual([true, 0]);
+		expect(view.target.querySelector(".no-preview")).toBe(null);
+		tab(view.target, "Sample cards").click();
+		await tick();
+		expect(tab(view.target, "Sample cards").classList.contains("active")).toBe(true);
+		expect(view.target.querySelectorAll(".tabs button.active").length).toBe(1);
+		tab(view.target, "Overview").click();
+		await tick();
+		expect(tab(view.target, "Overview").classList.contains("active")).toBe(true);
+		view.close();
+	});
+
+	it("?view=sample-cards opens on Sample cards", async () => {
+		page.url = new URL("http://localhost/marketplace/deck?view=sample-cards");
+		const view = await open({ owned: false, inLibrary: false });
+		expect(tab(view.target, "Sample cards").classList.contains("active")).toBe(true);
+		view.close();
+		page.url = new URL("http://localhost/marketplace/deck");
+	});
+
+	it("the buy and admin forms post to the deck's page", async () => {
+		const view = await open({ owned: false, inLibrary: false }, "10.00", false, true, { isAdmin: true });
+		expect([...view.target.querySelectorAll(".buy-row form")].map(f => f.getAttribute("action")))
+			.toEqual(["/marketplace/deck?/getDeck", "/marketplace/deck?/takeDown"]);
+		view.close();
 	});
 });

@@ -163,15 +163,16 @@ describe("the author page's actions", () => {
 		expect((await request({ ...asked, description: "[]" })).data.errors).toEqual(["A description is required"]);
 		expect((await request({ ...asked, previewCardIds: '["x"]' })).data.errors).toEqual(["Invalid sample card selection"]);
 		expect(marketplace.requestChanges).not.toHaveBeenCalled();
-		marketplace.requestChanges.mockRejectedValue(new Error("Nothing is changed"));
+		marketplace.requestChanges.mockRejectedValue(Object.assign(new Error("Nothing is changed"), { refusal: true }));
 		expect((await request(asked)).data.errors).toEqual(["Nothing is changed"]);
 		marketplace.requestChanges.mockResolvedValue(false);
 		expect((await request(asked)).status).toBe(404);
 	});
 
-	it("request changes says nothing of a database failure", async () => {
+	it("request changes says nothing of a database failure or a bug", async () => {
 		marketplace.requestChanges.mockRejectedValue(Object.assign(new Error('relation "marketplace_change_requests" does not exist'), { code: "42P01" }));
-		const result = await request(asked);
-		expect(result.data).toBe(undefined);
+		expect((await request(asked)).data).toBe(undefined);
+		marketplace.requestChanges.mockRejectedValue(new TypeError("Cannot read properties of undefined (reading 'previewIds')"));
+		expect((await request(asked)).data).toBe(undefined);
 	});
 });

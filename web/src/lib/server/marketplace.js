@@ -301,6 +301,9 @@ const rejectUploadRequest = async (requestId, reason) => {
 	return rowCount === 1;
 }
 
+// a refusal the author is told of, as against a failure they are not
+const refusal = message => Object.assign(new Error(message), { refusal: true });
+
 // What a change request asks for, by the names the author and admin see
 const changedParts = request => [
 	request.name != null && "name",
@@ -314,8 +317,8 @@ const changedParts = request => [
 // (marketplace card ids of the deck, in order); keepPendingImage keeps the
 // thumbnail of the request waiting. Only what differs from the page is
 // kept, and it replaces a request waiting already; nothing differing takes
-// that one back. False when the deck isn't theirs; throws when nothing
-// would change or the name can't be the deck's.
+// that one back. False when the deck isn't theirs; throws a refusal when
+// nothing would change or the name can't be the deck's.
 const requestChanges = async (userId, marketplaceDeckId, { name, description, image, imageType, keepPendingImage = false, previewCardIds }) => {
 	const { rows: [deck] } = await pool.query(`
 		select md.name = $3 "sameName", md.description = $4::jsonb "sameDescription",
@@ -329,7 +332,7 @@ const requestChanges = async (userId, marketplaceDeckId, { name, description, im
 	const newName = name != null && !deck.sameName ? name : null;
 	if (newName) {
 		const problem = await nameProblem(newName, marketplaceDeckId);
-		if (problem) throw new Error(problem);
+		if (problem) throw refusal(problem);
 	}
 	const newDescription = description != null && !deck.sameDescription ? JSON.stringify(description) : null;
 	// only the deck's own cards, in the order given, each once
@@ -356,7 +359,7 @@ const requestChanges = async (userId, marketplaceDeckId, { name, description, im
 				returning 1
 			)
 			select count(*)::int n from gone`, [marketplaceDeckId]);
-		if (taken.n === 0) throw new Error("Nothing is changed");
+		if (taken.n === 0) throw refusal("Nothing is changed");
 		return true;
 	}
 	// a replaced request takes a new id, so an admin who opened the one

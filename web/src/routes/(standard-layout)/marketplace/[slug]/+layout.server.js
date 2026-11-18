@@ -5,11 +5,6 @@ import * as marketplace from "$lib/server/marketplace.js"
 export const load = async ({ params, locals, url }) => {
 	const found = await marketplace.findDeckBySlug(params.slug);
 	if (!found) error(404);
-	// temporary, since another deck may take the old name
-	if (!found.current) {
-		const rest = url.pathname.split("/").slice(3).join("/");
-		redirect(302, `/marketplace/${encodeURIComponent(found.slug)}/${rest}${url.search}`);
-	}
 	const { rows } = await pool.query(`
 		select md.id, md.slug, md.name, md.theme, md.description, md.price, coalesce(u.name, md.author_name) author, count(mc.id) "cardCount",
 			md.on_sale "onSale", md.taken_down_reason "takenDownReason",
@@ -29,6 +24,11 @@ export const load = async ({ params, locals, url }) => {
 		: { owned: false, inLibrary: false };
 	const mpDeck = rows[0];
 	if (!mpDeck.forSale && !ownership.owned && !locals.isAdmin) error(404);
+	// temporary, since another deck may take the old name
+	if (!found.current) {
+		const path = ["marketplace", encodeURIComponent(found.slug), ...url.pathname.split("/").slice(3)];
+		redirect(302, `/${path.join("/")}${url.search}`);
+	}
 	if (!mpDeck.isAuthor && !locals.isAdmin) mpDeck.takenDownReason = null;
 
 	return {

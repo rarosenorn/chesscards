@@ -1,4 +1,4 @@
-import { fail } from "@sveltejs/kit"
+import { fail, redirect } from "@sveltejs/kit"
 import * as marketplace from "$lib/server/marketplace.js"
 
 export const load = async () => ({
@@ -19,6 +19,7 @@ export const actions = {
 			}
 			return fail(400, { errors: [err.message] });
 		}
+		redirect(303, "/admin");
 	},
 	rejectRename: async ({ request }) => {
 		const data = await request.formData();
@@ -29,5 +30,6 @@ export const actions = {
 		if (!await marketplace.rejectRenameRequest(data.get("requestId")?.toString() ?? "", reason)) {
 			return fail(400, { errors: ["Request not found or not pending"] });
 		}
+		redirect(303, "/admin");
 	}
 }

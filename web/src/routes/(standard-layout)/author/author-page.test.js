@@ -49,13 +49,13 @@ describe("Your marketplace decks", () => {
 		view.close();
 	});
 
-	it("a paid deck on sale: its numbers, Take off sale, Request changes, the deck it came from", async () => {
+	it("a paid deck on sale: its numbers, Take off sale, Request changes", async () => {
 		const view = await open({ decks: [deck()], payouts: payout });
 		expect(view.text).toContain("4 sales, 1 refunded · $18.00 earned in all");
 		expect(view.rows[0].text).toContain("On sale · $10.00");
 		expect(view.rows[0].text).toContain("4 sales, 1 refunded · $18.00 earned · 3 people have it");
-		expect(view.rows[0].actions).toEqual(["Take off sale", "Request changes", "Open in My flashcards"]);
-		expect(view.rows[0].links).toEqual([`/author/${DECK}/changes`, "/my-flashcards/own/settings"]);
+		expect(view.rows[0].actions).toEqual(["Take off sale", "Request changes"]);
+		expect(view.rows[0].links).toEqual([`/author/${DECK}/changes`]);
 		expect(view.target.querySelector("#payouts")).toBeTruthy();
 		view.close();
 	});
@@ -80,7 +80,7 @@ describe("Your marketplace decks", () => {
 	it("taken down: why, and no way to put it back on sale", async () => {
 		const view = await open({ decks: [deck({ takenDownReason: "copied from a book" })] });
 		expect(view.rows[0].text).toContain("Taken down by Chesscards: copied from a book");
-		expect(view.rows[0].actions).toEqual(["Request changes", "Open in My flashcards"]);
+		expect(view.rows[0].actions).toEqual(["Request changes"]);
 		view.close();
 	});
 
@@ -93,16 +93,16 @@ describe("Your marketplace decks", () => {
 		rejected.close();
 	});
 
-	it("upload requests waiting or rejected, leading to the deck's Settings", async () => {
+	it("upload requests waiting or rejected", async () => {
 		const view = await open({ requests: [
 			{ id: "r1", deckId: "d1", name: "Waiting", price: "5.00", status: "pending" },
 			{ id: "r2", deckId: "d2", name: "Turned down", price: "0.00", status: "rejected", rejectionReason: "empty" }
 		] });
 		expect(view.rows.map(row => row.text)).toEqual([
-			"Waiting Upload waiting for review · $5.00 Open in My flashcards",
-			'Turned down Upload rejected · Free "empty" Open in My flashcards'
+			"Waiting Upload waiting for review · $5.00",
+			'Turned down Upload rejected · Free "empty"'
 		]);
-		expect(view.rows[1].links).toEqual(["/my-flashcards/d2/settings"]);
+		expect(view.rows[1].links).toEqual([]);
 		view.close();
 	});
 

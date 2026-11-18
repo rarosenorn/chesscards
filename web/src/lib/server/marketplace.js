@@ -544,7 +544,6 @@ const HOLDERS = `p.user_id is not null and p.user_id is distinct from md.user_id
 const getAuthorDecks = async userId => {
 	const { rows: listed } = await pool.query(`
 		select md.id, md.slug, md.name, md.price, md.on_sale "onSale", md.taken_down_reason "takenDownReason",
-			md.deck_id "deckId",
 			(select count(*) from purchases p where p.marketplace_deck_id = md.id and ${HOLDERS} and p.refunded_at is null)::int holders,
 			(select count(*) from purchases p where p.marketplace_deck_id = md.id and p.price_cents > 0)::int sales,
 			(select count(*) from purchases p where p.marketplace_deck_id = md.id and p.price_cents > 0 and p.refunded_at is not null)::int refunds,
@@ -560,7 +559,7 @@ const getAuthorDecks = async userId => {
 	// a deck's latest request, unless it went through
 	const { rows: requests } = await pool.query(`
 		select * from (
-			select distinct on (r.deck_id) r.id, r.deck_id "deckId", r.name, r.price, r.status,
+			select distinct on (r.deck_id) r.id, r.name, r.price, r.status,
 				r.rejection_reason "rejectionReason", r.created_at "createdAt"
 			from marketplace_upload_requests r
 			where r.user_id = $1

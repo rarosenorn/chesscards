@@ -72,9 +72,6 @@
 							</form>
 						{/if}
 						<a class="std-btn" href="/author/{deck.id}/changes">Request changes</a>
-						{#if deck.deckId}
-							<a class="std-btn" href="/my-flashcards/{deck.deckId}/settings">Open in My flashcards</a>
-						{/if}
 					</div>
 				</div>
 			</div>
@@ -90,9 +87,6 @@
 					{#if request.status === "rejected" && request.rejectionReason}
 						<p class="note">"{request.rejectionReason}"</p>
 					{/if}
-					<div class="actions">
-						<a class="std-btn" href="/my-flashcards/{request.deckId}/settings">Open in My flashcards</a>
-					</div>
 				</div>
 			</div>
 		{/each}

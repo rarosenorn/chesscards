@@ -14,6 +14,8 @@
 	import { SvelteSet } from "svelte/reactivity"
 	import { page } from "$app/state"
 	import FlashcardBrowse from "$lib/components/FlashcardBrowse.svelte"
+	import EyeIcon from "$lib/icons/Eye.svelte"
+	import EyeOffIcon from "$lib/icons/EyeOff.svelte"
 	import CardBlockEdit from "$lib/components/CardBlockEdit.svelte"
 	import CardTypeSegments from "$lib/components/CardTypeSegments.svelte"
 	import { ttGenerateText } from "$lib/tiptap-utility.js"
@@ -52,6 +54,9 @@
 	draft.sortDescending ??= false;
 	// the ids of the collapsed decks inside, kept across tab visits like the sort
 	draft.collapsed ??= {};
+	// the preview's back hidden, so a card can be tried as in study (nothing
+	// graded); kept across tab visits like the sort
+	draft.hideBack ??= false;
 
 	// returning to the tab reselects where it was left — the card being
 	// edited, or failing that the one being previewed. Captured non-reactively
@@ -65,6 +70,12 @@
 	$effect(() => { draft.selectedCardId = selectedCard?.id ?? null; });
 
 	let isEditingSelected = $derived(selectedCard && draft.editingCardId === selectedCard.id);
+
+	// With the back hidden each card comes up front only, until Show (or
+	// Space, or its puzzles played through) turns it. An article has no back.
+	let shown = $state(false);
+	$effect(() => { void selectedCard?.id; void draft.hideBack; shown = false; });
+	let hidingBack = $derived(draft.hideBack && !shown && selectedCard?.card_type !== "article");
 	let selectedBought = $derived(!selectedCard || isBought(selectedCard));
 
 	const startEditing = () => {
@@ -757,6 +768,17 @@
 		) {
 			navigateCards(e);
 		} else if (
+			e.key === " " && hidingBack && !e.ctrlKey && !e.metaKey && !e.altKey &&
+			selectedCard && !isEditingSelected && !inField(e.target)
+		) {
+			e.preventDefault();
+			shown = true;
+		} else if (
+			(e.key === "h" || e.key === "H") && draft.hideBack && shown && !e.ctrlKey && !e.metaKey && !e.altKey &&
+			!isEditingSelected && !inField(e.target)
+		) {
+			shown = false;
+		} else if (
 			e.key === "Delete" && !selectedBought && !isEditingSelected &&
 			!inField(e.target)
 		) {
@@ -1067,12 +1089,25 @@
 					/>
 				</div>
 			{:else}
-				<FlashcardBrowse card={selectedCard} />
-				{#if !selectedBought}
-					<div class="card-toolbar">
-						<button class="std-btn" onclick={startEditing}>Edit card</button>
+				<FlashcardBrowse card={selectedCard} hidden={hidingBack} onReveal={() => shown = true} />
+				<div class="card-toolbar">
+					{#if hidingBack}
+						<button class="std-btn show-btn" onclick={() => shown = true}>Show</button>
+					{/if}
+					<div class="toolbar-end">
+						<button
+							class="std-btn back-toggle"
+							aria-pressed={!draft.hideBack}
+							onclick={() => draft.hideBack = !draft.hideBack}
+						>
+							{#if draft.hideBack}<EyeOffIcon />{:else}<EyeIcon />{/if}
+							<span>Back</span>
+						</button>
+						{#if !selectedBought}
+							<button class="std-btn" onclick={startEditing}>Edit card</button>
+						{/if}
 					</div>
-				{/if}
+				</div>
 			{/if}
 		{/if}
 	</div>
@@ -1383,12 +1418,31 @@
 	}
 	/* sits bottom-right under the card it acts on, on the card's own width so
 	   the buttons stay flush with its right edge */
+	/* Show in the middle, under the card as in study; the rest at the end */
 	.card-toolbar {
-		display: flex;
-		justify-content: end;
-		gap: 8px;
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
 		max-width: var(--flashcard-width);
 		margin: 8px auto 40px auto;
+	}
+	.show-btn {
+		grid-column: 2;
+	}
+	.toolbar-end {
+		grid-column: 3;
+		justify-self: end;
+		display: flex;
+		gap: 8px;
+	}
+	/* the editor's eye, fixed width so it toggles without shifting the row */
+	.back-toggle {
+		width: 76px;
+		padding-left: 0;
+		padding-right: 0;
+		display: flex;
+		gap: 5px;
+		align-items: center;
+		justify-content: center;
 	}
 	.selected-card-container :global(.flashcard) {
 		margin-top: 16px;

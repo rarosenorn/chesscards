@@ -6,7 +6,7 @@
 	import { fsrs, Rating, StrategyMode, GenSeedStrategyWithCardId } from "ts-fsrs"
 	import { boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "$lib/tiptap-utility.js"
-	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "$lib/card-utils.js"
+	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent, countPuzzles } from "$lib/card-utils.js"
 	import { DEFAULT_TACTIC_LADDER, isSeen, readingOrder, byReadingOrder, cardsUnder, unlockedDeckIds, firstLockedDeck, newCardRanks, deckProgress, deckTrail } from "$lib/deck-tree.js"
 	import { isDueAt, isDueSoonAt, availableAt, dayStart, dayEnd, DAY_MS, DEFAULT_ROLLOVER_HOUR } from "$lib/rollover.js"
 	import { DEFAULT_RETENTION } from "$lib/retention.js"
@@ -424,10 +424,7 @@
 
 	// Boards marked as puzzles are played on the front; the card turns by
 	// itself once every one of them has been played through.
-	const isPuzzle = board => !!board?.puzzle && board.solutionFrom != null && board.solutionFrom < (board.moves?.length ?? 0);
-	let frontPuzzles = $derived(
-		(currentCard?.front ?? []).filter(block => block.type === "chessboards").flatMap(block => block.content).filter(isPuzzle).length
-	);
+	let frontPuzzles = $derived(countPuzzles(currentCard?.front));
 	let solvedBoards = new Set();
 	let cleanBoards = new Set();
 	// a new card, or this one turned back over, starts its puzzles afresh

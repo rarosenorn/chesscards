@@ -289,6 +289,13 @@ const invalidBoardNumbers = (side, offset, cardDnd) => {
 	return numbers;
 }
 
+// The boards on a side that are puzzles to play: marked so, with back moves
+// to play. The card turns by itself once every one has been played through.
+const countPuzzles = side =>
+	(side ?? []).filter(block => block.type === "chessboards").flatMap(block => block.content)
+		.filter(board => !!board?.puzzle && board.solutionFrom != null && board.solutionFrom < (board.moves?.length ?? 0))
+		.length;
+
 // Display numbers of the puzzle boards that have nothing to play — no back
 // moves — which a card cannot be saved with: the mistake would otherwise
 // only show in study. Counted as docInvalidBoardNumbersBlocks counts.
@@ -335,4 +342,4 @@ const firstBoardWithMoves = (front, back) => {
 	return null;
 }
 
-export { newBoard, normalizeBoard, boardForJson, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docBoardsBlocks, docHasBoardPairBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage, docPuzzlesWithoutBackBlocks, puzzleWithoutBackMessage }
+export { newBoard, normalizeBoard, boardForJson, getSideJson, docSideJson, docHasContent, docSideJsonInline, docHasContentInline, docSideJsonBlocks, docToSideBlocks, canonicalSideJson, sideToDoc, docHasContentBlocks, docCountBoardsBlocks, docBoardsBlocks, docHasBoardPairBlocks, docInvalidBoardNumbersBlocks, sideHasContent, syncTextBlocks, countBoards, boardsBefore, firstBoardWithMoves, invalidBoardNumbers, invalidFenMessage, docPuzzlesWithoutBackBlocks, puzzleWithoutBackMessage, countPuzzles }

@@ -2,12 +2,15 @@
 	import { alignByWrap } from "$lib/text-block-wrap.js"
 	import { boardAlignment } from "$lib/side-alignment.js"
 	import { ttGenerateHTML } from "../tiptap-utility.js"
-	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent } from "../card-utils.js"
+	import { countBoards, boardsBefore, firstBoardWithMoves, sideHasContent, countPuzzles } from "../card-utils.js"
 	import Chessboard from "./Chessboard.svelte"
 	import ArticleView from "./ArticleView.svelte"
 	import { parseMoveRef, markMoveRefs, moveRefLines } from "$lib/tiptap-move-ref.js"
 
-	let { card } = $props();
+	// hidden: the card shown as study shows it before the reveal — the front
+	// alone, its boards' back layers hidden and its puzzles to play; playing
+	// the last of them calls onReveal, as it turns the card in study
+	let { card, hidden = false, onReveal = null } = $props();
 
 	// A move written in the card's text drives the board it names (see
 	// tiptap-move-ref.js): the click is handed to that board by number, and
@@ -34,6 +37,14 @@
 	let frontBoardCount = $derived(countBoards(card.front));
 	// board numbers are only shown when the card has several boards to reference
 	let showBoardNumbers = $derived(frontBoardCount + countBoards(card.back) > 1);
+
+	let frontPuzzles = $derived(countPuzzles(card.front));
+	let solvedBoards = new Set();
+	$effect(() => { void card.id; if (hidden) solvedBoards = new Set(); });
+	const boardSolved = n => {
+		solvedBoards.add(n);
+		if (hidden && solvedBoards.size >= frontPuzzles) onReveal?.();
+	}
 </script>
 
 {#snippet side(side, boardNumberOffset, authorView, onBack = false)}
@@ -63,9 +74,11 @@
 					     their cells and crush the gap between them -->
 					<Chessboard
 						board={chessboard}
-						{authorView}
+						revealed={!hidden}
+						authorView={authorView && !hidden}
 						{onBack}
-						playable={!onBack}
+						playable={!onBack && !hidden}
+						onSolved={hidden ? () => boardSolved(n) : null}
 						analysis
 						minWidth="280px"
 						number={showBoardNumbers ? n : null}
@@ -93,10 +106,12 @@
 	{@render side(card.front, 0, true)}
 	<!-- the divider only when the back has VISIBLE content — a card whose
 	     answer lives on the front boards' back layers gets no delimiter -->
-	{#if sideHasContent(card.back)}
-		<div class="side-gap"></div>
+	{#if !hidden}
+		{#if sideHasContent(card.back)}
+			<div class="side-gap"></div>
+		{/if}
+		{@render side(card.back, frontBoardCount, false, true)}
 	{/if}
-	{@render side(card.back, frontBoardCount, false, true)}
 </div>
 {/if}
 

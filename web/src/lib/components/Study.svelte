@@ -123,7 +123,8 @@
 	// Learning cards come first, as they fall due; then due reviews, shuffled
 	// once per visit (the keys live for the component, so grading doesn't
 	// reshuffle what's left) — or, where the deck at the top says so, in the
-	// order new cards come; then new cards, in the order the decks they sit
+	// order new cards come, with learning cards left from an earlier day
+	// sorted in among them; then new cards, in the order the decks they sit
 	// in give them (in order or mixed: newCardRanks). A tactic
 	// has no FSRS state: unseen it queues as new, seen-but-unfinished it
 	// queues with the reviews.
@@ -214,9 +215,11 @@
 		// they fell due — Anki fetches them the same way. This is what brings a
 		// card graded Again back into the session a minute later instead of
 		// leaving it to the end.
-		const learning = due.filter(card => queueOf(card) === "learn");
+		const leftOver = card => reviewRanks != null && queueOf(card) === "learn"
+			&& Date.parse(card.last_review) < dayStart(now, rolloverHour());
+		const learning = due.filter(card => queueOf(card) === "learn" && !leftOver(card));
 		if (learning.length) return learning.reduce(byDueTime);
-		const reviews = due.filter(isReviewState);
+		const reviews = due.filter(card => isReviewState(card) || leftOver(card));
 		if (reviews.length) {
 			const key = reviewRanks ? card => reviewRanks.get(card.id) : card => shuffleKey(card.id);
 			return reviews.reduce((min, card) => key(card) < key(min) ? card : min);

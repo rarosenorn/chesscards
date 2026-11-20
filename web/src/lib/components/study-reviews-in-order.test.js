@@ -84,6 +84,25 @@ describe("due cards", () => {
 		expect(await session(deckOf({ reviewsInOrder: true, inOrder: false }))).toEqual(["a1", "b1", "a2", "b2"]);
 	})
 
+	// a card left on its 10m learning step, graded `ago` ms back
+	const learning = (card, ago) => ({
+		...card, state: 1, reps: 1, stability: 2, difficulty: 5, scheduled_days: 0, learning_steps: 1,
+		last_review: new Date(Date.now() - ago), due: new Date(Date.now() - ago + 10 * 6e4)
+	});
+	const withA2 = (deck, ago) => ({ ...deck, cards: deck.cards.map(card => card.id === "a2" ? learning(card, ago) : card) });
+
+	it("take a learning card left from an earlier day in its place where they come in order", async () => {
+		expect((await session(withA2(deckOf({ reviewsInOrder: true }), 2 * 864e5))).slice(0, 3)).toEqual(["a1", "a2", "b1"]);
+	})
+
+	it("still follow a learning card stepped today", async () => {
+		expect((await session(withA2(deckOf({ reviewsInOrder: true }), 15 * 6e4)))[0]).toEqual("a2");
+	})
+
+	it("follow a learning card from an earlier day where they come shuffled", async () => {
+		expect((await session(withA2(deckOf({ reviewsInOrder: false }), 2 * 864e5)))[0]).toEqual("a2");
+	})
+
 	it("come shuffled otherwise", async () => {
 		let next = 1;
 		vi.spyOn(Math, "random").mockImplementation(() => next++ / 10);

@@ -474,7 +474,7 @@
                   }
                 ]
               },
-              "back": "- [3.Nc3] We focus on 3.Nc3, as it is the most popular move and the one that features some variations where concrete knowledge is needed.\n- [3.Nf3] is a common move, but it has very little independent value for us. We play [3.Nf3 | 3...c5].\n- [3.cxd5] is possible, but we play ...c5 as fast as possible and get back to the positions of 3.Nc3 c5 4.cxd5 exd5.\n- [3.e3] [3.e3 c5 4.Nc3 Nf6] is a different way to reach 3.Nc3 c5 4.e3 Nf6.\n\nWhite can stop our ...c5 idea with [3.c5]? though, which is premature."
+              "back": "- [3.Nc3] We focus on 3.Nc3, as it is the most popular move and the one that features some variations where concrete knowledge is needed.\n- [3.Nf3] is a common move, but it has very little independent value for us. We play [3.Nf3 | 3...c5].\n- [3.cxd5] is possible, but we play ...c5 as fast as possible and get back to the positions of 3.Nc3 c5 4.cxd5 exd5.\n- 3.e3 [3.e3 c5 4.Nc3 Nf6] is a different way to reach 3.Nc3 c5 4.e3 Nf6.\n\nWhite can stop our ...c5 idea with [3.c5]? though, which is premature."
             },
             {
               "id": "tr-nf3",
@@ -896,7 +896,7 @@
                   }
                 ]
               },
-              "back": "- [5.Nxd4] claude: The natural recapture, which we meet with ...e5.\n- [5.Qxd4]? After [5.Qxd4 Nc6 6.Qd1 d4 7.Nb5 e5], Black is much better already."
+              "back": "- [5.Nxd4] claude: The natural recapture, which we meet with ...e5.\n- 5.Qxd4? After [5.Qxd4 Nc6 6.Qd1 d4 7.Nb5 e5], Black is much better already."
             },
             {
               "id": "nf3-qxd4",
@@ -1123,7 +1123,7 @@
                   }
                 ]
               },
-              "back": "- [7.Na3]? [7.Na3 d4] is great for Black.\n- [7.Qa4]! Only [7.Qa4 Bd7 8.cxd5 Nf6] works."
+              "back": "- 7.Na3? [7.Na3 d4] is great for Black.\n- 7.Qa4! Only [7.Qa4 Bd7 8.cxd5 Nf6] works."
             },
             {
               "id": "nf3-na3",
@@ -1284,7 +1284,7 @@
                   }
                 ]
               },
-              "back": "- [7.Nd5 Nf6] One of the two most common moves, when we get a good game by simple means.\n- [7.Ne4]? The other common move, and even worse: [7.Ne4 f5 8.Ng3 f4 9.Ne4 Nf6] gives Black a fabulous game.\n- [7.Nxe5] Wait, what?! This move is scarce but could be a shock."
+              "back": "- [7.Nd5 Nf6] One of the two most common moves, when we get a good game by simple means.\n- 7.Ne4? The other common move, and even worse: [7.Ne4 f5 8.Ng3 f4 9.Ne4 Nf6] gives Black a fabulous game.\n- [7.Nxe5] Wait, what?! This move is scarce but could be a shock."
             },
             {
               "id": "nf3-nd5",
@@ -1448,7 +1448,7 @@
                   }
                 ]
               },
-              "back": "4...Nf6 Playing this knight first covers the d-pawn. There is nothing wrong with [4...Nc6] though: after [4...Nc6 5.cxd5 exd5 6.dxc5 Nf6], Black will regain the pawn later. It is still much simpler to prevent this option.\n\n4.e3 White opts for a cautious setup, the Symmetrical Variation. White is a tempo up, but the position is closed and has no serious significance."
+              "back": "4...Nf6 Playing this knight first covers the d-pawn. There is nothing wrong with 4...Nc6 though: after [4...Nc6 5.cxd5 exd5 6.dxc5 Nf6], Black will regain the pawn later. It is still much simpler to prevent this option.\n\n4.e3 White opts for a cautious setup, the Symmetrical Variation. White is a tempo up, but the position is closed and has no serious significance."
             },
             {
               "id": "e3-nf6-replies",
@@ -2101,7 +2101,7 @@
                   }
                 ]
               },
-              "back": "- [7.Na4 Bxc5]! This is how we regain our pawn.\n- [7.Ne4] We can choose between [7.Ne4 Bxc5 8.Nxc5 Qa5+] to transpose to the 7.Na4 variation, or [7.Ne4 Qd5]!?, when we also regain the pawn."
+              "back": "- [7.Na4 Bxc5]! This is how we regain our pawn.\n- 7.Ne4 We can choose between [7.Ne4 Bxc5 8.Nxc5 Qa5+] to transpose to the 7.Na4 variation, or [7.Ne4 Qd5]!?, when we also regain the pawn."
             },
             {
               "id": "trm-na4",
@@ -2180,7 +2180,7 @@
                   }
                 ]
               },
-              "back": "Here [7...b5]? does not work, as [7...b5 8.cxb6 axb6 9.e3] prepares the move Bb5, which is extremely annoying, as Black's knight is undefended. A key line is the tragic [7...b5 8.cxb6 axb6 9.e3 Bb4+ 10.Bd2 Bxd2+ 11.Qxd2 Rxa4 12.Bb5], when White wins!"
+              "back": "Here 7...b5? does not work, as [7...b5 8.cxb6 axb6 9.e3] prepares the move Bb5, which is extremely annoying, as Black's knight is undefended. A key line is the tragic [7...b5 8.cxb6 axb6 9.e3 Bb4+ 10.Bd2 Bxd2+ 11.Qxd2 Rxa4 12.Bb5], when White wins!"
             }
           ]
         },
@@ -2842,7 +2842,7 @@
                 }
               ]
             },
-            "## 8.dxc5 d4!\n\nWhite grabs the pawn. Now [8...Qa5] is a way to regain the material, but we have a much better move: 8...d4!. Here we go! Our usual reply to this pawn capture works well here.\n\n9.Ne4 is White's best reply. [9.Nb5]?? [9.Nb5 Qa5+] is a common tactic that we see frequently in this chapter.\n\nAfter 9...O-O, the important concept to understand is that there is no concrete tactic to regain the pawn. We want to develop with ...Bf5 and often ...Qd5, when White will have difficulty holding the pawn in the long run. They can't easily develop due to our strong d-pawn.\n\nTwo sample lines to illustrate matters are [10.g3 Qd5 11.Qb1 Bf5] or [10.e3 Bg4 11.Be2 Qd5], when we'll ultimately win the c5-pawn back with a good position.",
+            "## 8.dxc5 d4!\n\nWhite grabs the pawn. Now [8...Qa5] is a way to regain the material, but we have a much better move: 8...d4!. Here we go! Our usual reply to this pawn capture works well here.\n\n9.Ne4 is White's best reply. 9.Nb5?? [9.Nb5 Qa5+] is a common tactic that we see frequently in this chapter.\n\nAfter 9...O-O, the important concept to understand is that there is no concrete tactic to regain the pawn. We want to develop with ...Bf5 and often ...Qd5, when White will have difficulty holding the pawn in the long run. They can't easily develop due to our strong d-pawn.\n\nTwo sample lines to illustrate matters are [10.g3 Qd5 11.Qb1 Bf5] or [10.e3 Bg4 11.Be2 Qd5], when we'll ultimately win the c5-pawn back with a good position.",
             {
               "boards": [
                 {
@@ -3096,7 +3096,7 @@
                   }
                 ]
               },
-              "back": "- [9.Ne4 O-O] White's best reply.\n- [9.Nb5]?? [9.Nb5 Qa5+] is a common tactic that we see frequently in this chapter."
+              "back": "- [9.Ne4 O-O] White's best reply.\n- 9.Nb5?? [9.Nb5 Qa5+] is a common tactic that we see frequently in this chapter."
             },
             {
               "id": "trm-bg5-oo",

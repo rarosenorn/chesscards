@@ -17968,7 +17968,7 @@
                   }
                 ]
               },
-              "back": "- [6...Bh5] claude: Black keeps the pin, the usual choice.\n- [6...Bxf3] Black should prefer this, but White stays better: [6...Bxf3 7.Qxf3 c6 8.Be3] is nice for White."
+              "back": "- [6...Bh5] claude: Black keeps the pin, the usual choice.\n- 6...Bxf3 Black should prefer this, but White stays better: [6...Bxf3 7.Qxf3 c6 8.Be3] is nice for White."
             },
             {
               "id": "sc-qd8-bxf3",
@@ -18595,7 +18595,7 @@
                   }
                 ]
               },
-              "back": "[6.Bd3] This is the best square for our bishop.\n\nPlaying [6.Bc4]? is worse because Black has the surprising move [6.Bc4 Nxe4]!, when [6.Bc4 Nxe4 | 7.Nxe4 d5] regains the piece.\n\nBlack managed to remove our e-pawn, which is a huge accomplishment. Our whole setup is based on playing e4-e5, after all!"
+              "back": "[6.Bd3] This is the best square for our bishop.\n\nPlaying 6.Bc4? is worse because Black has the surprising move [6.Bc4 Nxe4]!, when [6.Bc4 Nxe4 | 7.Nxe4 d5] regains the piece.\n\nBlack managed to remove our e-pawn, which is a huge accomplishment. Our whole setup is based on playing e4-e5, after all!"
             },
             {
               "id": "pc-bd3-replies",

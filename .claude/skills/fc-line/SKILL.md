@@ -101,7 +101,10 @@ line opens (Shift+arrows) on its own first move, played and tinted on the
 board, and steps back only to the position that move is played in (since
 2026-10-04). On a branch card
 **every candidate is a bracketed line**, even a single move (`[4...Bxf2+]?!`),
-so Shift+arrows step through them all. Annotation marks go after
+so Shift+arrows step through them all — unless the same bullet also has a
+bracketed line starting with that move: then the lead move is plain text
+(`- 7.Na3? [7.Na3 d4] is great for Black.`), so Shift+Right doesn't stop on
+the same move twice (since 2026-11-20). Annotation marks go after
 the bracket when they belong to its last move; inside a bracket they are
 dropped. Never brackets on moves the board's own
 line plays, never in a front that would give the answer away.

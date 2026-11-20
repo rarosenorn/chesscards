@@ -1,10 +1,3 @@
-# AI prompts
-## double check for security, logic, edgecases
-Can you look through this feature and double check if the logic is correct, the edgecasesare correctly handled and if there are any security issues. Its ok if there are none and everything is good, just double check. If there are any, loop through previous statement until there are none. Take your time, its important.
-
-## Add checklist for me to test through for feature
-Can you add checklist in backlog.md for me to test this implemented feature, incl. edgecases.
-
 # Things to test/check
 ## Nested decks
 ### Your existing data (after the migration)
@@ -360,10 +353,175 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] Profile, "A new day starts at": the text says learning steps past the hour wait for it too
 [ ] change the hour (e.g. to 6am): a step graded at 8pm ending at 5am now comes back at 5am exactly; at 4am it would have waited for 4am
 
+## Desired retention
+### Settings
+[ ] Settings, "Desired retention": pills 80% 85% 90% 95% 97%, with 95% chosen on a new account
+[ ] pick 90%: it saves on click (no button), and reload keeps 90%
+[ ] Study a deck without its own: the intervals under Hard/Good/Easy on a review card are longer than at 95%
+[ ] "Use for all decks": "Every deck uses this one now."; every deck's Settings then shows "As in Settings" or "Same as above" chosen
+### A deck's Settings
+[ ] a deck at the top: first pill "As in Settings (90%)", matching Settings; chosen until you pick another
+[ ] a deck inside another: first pill "Same as above (X%)" with the deck above's value; change the deck above and it follows
+[ ] pick 97% on a deck: reload keeps it; Study on that deck shows longer intervals than its sibling at 90%
+[ ] pick "Same as above" again: it goes back to the deck above's value
+[ ] the text under the heading mentions the decks inside only when there are decks inside
+### Use for all decks inside
+[ ] a deck with decks inside, some with their own retention: "Use for all decks inside" says "The decks inside follow this deck now."; each deck inside now shows "Same as above" chosen
+[ ] the deck itself and decks beside it keep their own
+[ ] a deck with nothing inside: no "Use for all decks inside" button
+[ ] Tactic cards: the same button, and after it the decks of your own inside show the deck's ladder in their field
+[ ] a deck holding only marketplace decks: the retention button is there, the tactic cards one is not
+### Study
+[ ] Study a deck with a deck inside at a different retention: cards of each deck show their own deck's intervals under the buttons
+[ ] grade Good: the card's due date in the Cards tab matches what the button said
+[ ] an optimization landing during Study (14+ days after the last): intervals still follow each card's deck retention
+### Marketplace decks
+[ ] a marketplace deck taken: its Settings has "Desired retention" too; pick 85%, reload, still 85%
+[ ] a deck inside it: "Same as above (85%)"; its own pick sticks
+[ ] remove the marketplace deck and take it again: its retention is back to "As in Settings"
+[ ] "Use for all decks inside" on it clears the decks inside it
+
+## Sielecki alt lines
+[ ] a Quickstart card's back ends with "# Alt lines" and a numbered list of the chapter's other lines, in the deck's order, named as their cards are
+[ ] each list item is one unbroken line of moves, no ! or ? between them: clicking a move plays the board from where that line leaves this card's line, to that move
+[ ] the card's own line is not in its list
+[ ] a chapter with one line (e.g. the Alekhine): no "# Alt lines" on its card
+[ ] the Black deck's Tarrasch cards (4.Nf3 and 4.e3) each list the other
+
+## Hide puts the card back as it came
+### A board following a move in the text
+[ ] Show, click a move in the back's text (an alt line): the front board plays it; Hide: the board is back on the position it opened on, the move line under it ends at the question's last move
+[ ] Show again: the board stays on the question position, not on the clicked move
+[ ] Shift+→ onto a text line after Show, then H: same as Hide, back on the opening position
+### A board stepped through
+[ ] a basic card: Show, step the board back to move 1 and forward into the answer, Hide: back where it opened
+[ ] a line long enough to fold ("…"): open the "…", Hide: folded again as it first showed
+[ ] a card with two front boards, both stepped: Hide puts both back
+### Puzzles
+[ ] a puzzle shown before it is played: Hide, and it starts over from its first move; play it through and the card turns
+[ ] a tactic: Show, Hide, play it clean: the grade under Next stays as the first Show set it
+[ ] a wrong move, then Space and H at once: the board shows the question position, not the wrong move
+### Elsewhere
+[ ] the editors' eye toggle (front board): closing the eye puts the board back where it opens
+[ ] Next card after a Hide: the next card opens on its own question, nothing followed
+
+## Marketplace deck names in URLs
+### URLs
+[ ] Marketplace: each deck opens at /marketplace/<its name>, lowercase with - between words ("L'Ami's Caro-Kann" is /marketplace/lamis-caro-kann)
+[ ] Overview and Sample cards are tabs on that page: switching keeps the URL; /marketplace/<name>?view=sample-cards opens on Sample cards
+[ ] the thumbnail, Buy/Get, Take off sale, Take down and the Deck tab's reviews of a taken deck all work from that page
+[ ] Buy a paid deck and cancel on Stripe: back on the deck's page
+[ ] /marketplace/no-such-deck: 404; the old /marketplace/<name>/overview and /cards: 404 too
+[ ] vote on or write a review on Overview: the page stays where it was, the review shows
+[ ] on Sample cards, Take off sale (author) or Take down (admin): the page comes back on Overview
+[ ] logged out, Get on a free deck: log in, and you are back on the deck's page
+### Upload request
+[ ] request an upload named like a deck already on the marketplace, but spelled differently ("caro kann" next to "Caro-Kann"): refused with There is already a marketplace deck named "Caro-Kann"
+[ ] a name with no letter or digit ("????"): A name needs a letter or a digit
+[ ] the name "Checkout complete": A marketplace deck can't have this name
+[ ] two requests with the same name, both pending: approve the first; approving the second says "A marketplace deck with this name already exists"
+### Rename (author)
+[ ] your deck's marketplace page: Rename under the buttons; someone else's deck: no Rename
+[ ] Rename: the field starts with the name, Send for approval and Cancel beside it; Cancel closes it
+[ ] send a new name: Renaming to "<name>" is pending review; the deck keeps its name until approved
+[ ] send another before it's reviewed: the note shows the newer name, and Admin lists only that one
+[ ] the same name as now: That is the deck's name already, and the field stays open with it
+[ ] a name under 4 or over 100 characters: Name must be between 4 and 100 characters
+[ ] another deck's name, in any spelling: There is already a marketplace deck named "<its name>"
+[ ] a taken-down deck can still ask for a rename
+### Rename (admin)
+[ ] Admin: Pending rename requests lists the deck (linked), the new name, the author's email and the date
+[ ] Approve: the deck shows the new name in the Marketplace and on its page, at its new URL; back on Admin, gone from the list
+[ ] Reject without a reason: the browser asks for one; with one: the author sees Renaming to "<name>" was rejected: "<reason>".
+[ ] reload Admin after approving or rejecting: nothing is posted again
+[ ] a name taken by another deck after it was asked for: Approve says "A marketplace deck with this name already exists" and the deck keeps its name
+[ ] the author deletes their account while a rename is pending: it leaves the list
+### Old names
+[ ] after a rename, the old URL lands on the deck under the new name (with ?view=sample-cards, on Sample cards)
+[ ] rename twice (A to B to C): both A's and B's URLs land on C
+[ ] rename back to the first name: its URL is the deck's own again; the middle one still leads to it
+[ ] another deck uploaded or renamed with an old name: that URL now opens the other deck
+[ ] change only the case ("Caro-kann" to "Caro-Kann"): the URL stays the same
+[ ] take a renamed deck off sale, then open its old URL logged out: 404, no redirect to the new name; logged in as someone who has it: lands on the deck
+[ ] a deck off sale or taken down: /marketplace/<name>/thumbnail logged out is a 404; someone who has it still sees the thumbnail on its page and in their Deck tab
+[ ] a page left open from before the rename: a vote, review or Get still works
+
+## Your marketplace decks
+### Getting there
+[ ] Marketplace: "Your marketplace decks" at the top right once you have a deck on the marketplace or an upload request; not there for someone with neither, or logged out
+[ ] a deck's Settings, for a deck on the marketplace: its status and a "Your marketplace decks" button leading there; no Take off sale there any more
+[ ] logged out, /author: the login page, and back to Your marketplace decks after logging in
+[ ] /author-terms still opens logged out
+### The page
+[ ] no marketplace decks: "You have no decks on the marketplace…" with a link to My flashcards
+[ ] a paid deck: "On sale · $10.00", then "N sales, M refunded · $X earned · N people have it · reviews: …"; above the decks the totals "N sales… · $X earned in all"
+[ ] a free deck: "Free", no sales or earnings, only "N people have it"; with only free decks no Latest sales or Payouts sections
+[ ] your own Get of your deck isn't counted in "people have it", nor a buyer whose purchase was refunded
+[ ] Take off sale: the row says "Off sale" and the button "Put back on sale"; the deck is gone from the Marketplace for others but still opens for those who have it
+[ ] a deck taken down by an admin: "Taken down", "Taken down by Chesscards: <reason>", no Take off sale
+[ ] an upload request waiting: "Upload waiting for review"; rejected: "Upload rejected" with the reason
+[ ] Latest sales: the last 50 sales with the date in your time zone, the deck, the price, "your share $X" (or "your share is being worked out" right after a purchase) and "refunded"; nothing about who bought
+[ ] Payouts: the section that was in Settings, now here; Settings no longer has it
+[ ] a refused payout detail (e.g. no currency): the message shows once, under Payouts
+[ ] an expired payout email link: "Ask for a new one in Your marketplace decks" leads here
+### The marketplace deck page
+[ ] as the author: the greyed price with Owned, Get when the deck isn't in My flashcards, and the tabs; no Take off sale, Rename or taken-down note
+[ ] as the author: replying to reviews still works there
+[ ] as an admin: Take down with a reason, or the taken-down note with Restore
+### Request changes
+[ ] Request changes opens with the name, thumbnail and description as the deck's page has them; Next shows the sample cards the page shows
+[ ] change only the name, Send for review: back on Your marketplace decks with "Changes to the name are waiting for review."; the deck's page still has the old name
+[ ] change the thumbnail, description and sample cards: "Changes to the thumbnail, description and sample cards are waiting for review."
+[ ] Request changes again while changes wait: it starts from them (the new name, the new thumbnail) and says "Asking again replaces the changes waiting for review; sending the page as it is takes them back."
+[ ] with a new thumbnail waiting, "Keep the current one": the deck's own thumbnail again; sending drops the new one
+[ ] Send for review with nothing changed and nothing waiting: "Nothing is changed"
+[ ] send the page as it is while changes wait: back on Your marketplace decks, no note (also no old "were rejected" note)
+[ ] a name another marketplace deck has: "There is already a marketplace deck named …"; 3 characters: "Name must be between 4 and 100 characters"
+[ ] an empty description: "A description is required"
+[ ] an image over 2MB, or not jpeg, png or webp: refused with the reason
+[ ] double-click Send for review: one request
+[ ] Cancel on step 1: back on Your marketplace decks, nothing sent
+[ ] someone else opening /author/<your deck's id>/changes: not found
+### Admin
+[ ] Admin: "Pending change requests" lists the deck, what it changes ("name, thumbnail"), the new name, the user and the date
+[ ] its page: Now and Asked for for each part asked for, and only those
+[ ] Approve: the deck's page shows the changes; a new name moves the page to its new address and the old one redirects
+[ ] Reject without a reason: "A rejection reason is required"; with one, the author sees "Changes to the … were rejected: "reason""
+[ ] the author sends new changes while you have the request open: Approve says "Request not found or not pending"
+[ ] approving a name another deck has taken since: "A marketplace deck with this name already exists"
+
 # Needed before launch
 ## today
-[y] fsrs optimizer that uses reviews
-[ ] slug for deck and study?subdeck better?
+[y] slug for deck and study?subdeck better?
+[y] author stats page to see stats of their marketplace decks, sales, refunds etc.
+
+## general stuff
+[ ] fix the card height in different modes differences
+[ ] reporting reviews / decks
+[ ] claude: Legal pages: terms of service, a privacy policy (GDPR), and a copyright and takedown policy. The last one matters because decks can be built from books and paid courses.
+[ ] how to handle updating marketplace deck with what people alrdy have, if it all? (versioning)
+[ ] claude api insteado f my own for importing bad moves from games (the explanations are terrible, probably just do with showing the blunder and showing the best move)
+[ ] should deck progression be auto or allow to unlock when you reach end of current cards?
+[ ] maybe do tactic card intervals and #reps customizable to so creator can make fit different decks, but with sensible defaults.
+[ ] sort marketplace decks?
+[ ] do update marketplace deck function s.t. an author can make changes to a deck and people who own the deck can choose to update to new version or no. how does chessable, anki and others do?
+
+### last
+[ ] db migrations
+[ ] finish why flashcards page
+[ ] change to fsrs 7
+[ ] in zen mode should be able to change subdeck
+[ ] Wiki page better
+[ ] Landing page
+[ ] responsive
+[ ] phone app
+[ ] lichess, chess.com and google login / signup (chess.com needs an OAuth application form: apply close to launch, not before)
+
+## better UI for:
+[ ] better request upload to marketplace UI
+[ ] settings choosing stuff
+[ ] go through alternate line ui
+[ ] request upload to marketplace
 
 ## payment stuff
 [ ] company: Danish sole proprietorship or Bulgarian company, decided with a DK–BG tax adviser before the live Stripe account
@@ -375,32 +533,6 @@ Can you add checklist in backlog.md for me to test this implemented feature, inc
 [ ] seller identity on /terms: company name, address, CVR/VAT number
 [ ] lawyer review of /terms and /author-terms; privacy policy covering purchases and payout details
 [ ] a real live-mode purchase and refund with a small amount before launch
-
-## general stuff
-[ ] change to fsrs 7
-[ ] in zen mode should be able to change subdeck
-[ ] fsrs learning from machine learning reviews
-[ ] Landing page
-[ ] why flashcards page
-[ ] Wiki page better
-[ ] db migrations
-[ ] fix the card height in different modes differences
-[ ] reporting reviews / decks
-[ ] claude: Legal pages: terms of service, a privacy policy (GDPR), and a copyright and takedown policy. The last one matters because decks can be built from books and paid courses.
-[ ] author stats page to see stats of their marketplace decks, sales, refunds etc.
-[ ] better request upload to marketplace UI
-[ ] how to handle updating marketplace deck with what people alrdy have, if it all? (versioning)
-[ ] lichess, chess.com and google login / signup (chess.com needs an OAuth application form: apply close to launch, not before)
-[ ] claude api insteado f my own for importing bad moves from games (the explanations are terrible, probably just do with showing the blunder and showing the best move)
-[y] heatmap
-[ ] responsive
-[ ] phone app
-[ ] should deck progression be auto or allow to unlock when you reach end of current cards?
-[ ] maybe do tactic card intervals and #reps customizable to so creator can make fit different decks, but with sensible defaults.
-[ ] go through alternate line ui
-## better UI for:
-[ ] settings choosing stuff
-[ ] request upload to marketplace
 
 ## Play-out boards (endgame drills)
 Like Chess.com Drills: a board in a card that you play against the computer until a goal. Useful for endgame decks especially.
@@ -436,6 +568,91 @@ Like Chess.com Drills: a board in a card that you play against the computer unti
 - Engine finds the mistakes and best line; AI only explains from the engine output. Filter to mistakes findable at the user's level, 2-3 per game, user picks which to keep.
 - Later: also card your good finds (chess.com's great / brilliant). Great = you played the only move that holds the eval (needs the engine's top two moves); brilliant = that plus a material sacrifice. Front "find the move you played here", back explains why it works; same deck, tagged as a good find.
 - Later, business model: one-time credit packs, not a subscription (see FAQ). Importing a game with engine lines only stays free up to a daily cap (analysis runs on our server); the AI explanation is the paid part, since it is the only thing with a real cost per use (measured at roughly 12-16¢ a game on Opus 5.5). Pack price to be set against that ($5 for 25 games would be too thin); first few free.
+
+# Study features:
+## study all button
+- Button for study all, which studies all your decks in some way for interleaving all, still adhering to subdeck progression.
+
+# when in edit mode, arrows cant both go back and forth in moves and control caret. what to do?
+# footer for proffesional look
+# contact page with email for bugs / ideas / business inquiries
+# editor: do selectors for annotations like pieces with nice icons showing arrows and circle, selectable and between Start position Clean board and pieces above
+# maybe: editor toggle for side to move (click the indicator to flip it) — only way now is editing the w/b in the FEN field
+# finish Chesscards wiki with info on how app works, FSRS, card types etc.
+# Overview over your decks on marketplace / how many got/purchased it stats
+# Versioning of marketplace decks? If you improve it, request to update?
+# Statistics
+
+# Chessboard editor
+# "fork" free deck?
+# link created account with socials, delink created account from socials
+
+# REST OF DOC AI CREATED
+# SPEC: add-cards editor — caret / deletion / merge behavior
+As implemented in `web/src/lib/tiptap-chessboard-block/` (2026-07-28). This is
+the reference for how the editor is SUPPOSED to behave — adjust this first,
+then make the code match.
+
+## Model
+- Each card side is a tiptap document; a chessboard block is ONE atom node
+  holding a boards array, laid out 2 per row. Text lines live around blocks.
+- The virtual board caret sits at gap indices inside one block (0 = before the
+  first board … boards.length = after the last). It renders as a bar 5px off
+  the board face, spanning board + FEN bar (never the number above or the
+  move line below), ~1.5px thick snapped to device pixels.
+- Horizontal navigation walks VISUAL stops (screen order, from DOM geometry):
+  each visual row contributes a "down" stop before its first board and an
+  "up" stop after every board; a same-row middle gap is a single stop. A row
+  break (2-wide wrap, or an open editor taking a full row) gives one gap two
+  stops picked by affinity, like a text line wrap.
+
+## Caret
+- Clicking a board parks the caret at its right. Shift+click extends a range;
+  dragging from the grid's empty space sweep-selects; shift+arrows likewise.
+- Opening a board editor (Edit button or insert): the document keeps focus and
+  the caret parks at the board's right — the editor-right stop EXISTS for
+  navigation but never renders a bar. The editor's left renders like any
+  board; the board below keeps its own left stop.
+- The selection tint covers board + bar exactly and bridges the gap between
+  two same-row selected boards. Plain arrows collapse a range to its edge.
+- While the caret is active, board move-nav (arrows) is off; inside a board
+  editor's moves mode the move recorder claims arrows first.
+- Focus never leaves the document for board presses, editor clicks on
+  non-text controls, or drags (the dnd library's focus steal is reverted);
+  the caret follows a dropped board.
+
+## Enter / typing at a gap
+- Enter before the first board: a line pushes in above, caret stays.
+- Enter mid-block: the block splits, text caret lands on the line between.
+- Enter after the last board: a line below, text caret in it.
+- Typing a character makes the line the keystroke would have made (above /
+  split / below) carrying the character.
+
+## Deletion
+- In-block Backspace/Delete removes the nearest board (or the active range).
+  A block emptied of boards dissolves into an empty line.
+- At a block edge: an empty neighboring line joins away (caret flows into the
+  block); a text line takes the caret; an adjacent block flows the caret
+  through.
+- From text beside a block: an empty line joins away; a non-empty line
+  deletes the block's nearest board and the text caret stays. At the document
+  edge with a block on the other side, the key is consumed — never left to
+  the browser's native delete, which selects the whole island.
+- Every deletion reparks the real selection collapsed (gap cursor when
+  possible) so remapping can never tint blocks as selected.
+
+## Merge (normalizer)
+- Two blocks left adjacent — the line between them deleted by any means —
+  merge into one. The first block's id survives; the caret remaps into the
+  merged block. The normalizer also dissolves empty blocks and assigns ids to
+  blocks born without one (paste).
+
+## Clipboard
+- Mod-c/x/v with the caret active: the board clipboard, within and across
+  blocks and sides. Pasting with a text caret joins a block that touches it
+  (nothing but the line boundary between), else creates a new block at the
+  caret's line. Native paste of block HTML regenerates all ids.
+
 
 ## subdecks
 - Order could be subdeck.number? like if a card is the 3rd card in the 2nd subdeck its order is 2.3?
@@ -535,97 +752,20 @@ Progress:
 - [x] 5. Marketplace: a Contents card on the deck's page and on the Deck tab (the outline of its subdecks, with how many cards sit under each); the taker's own depth setting works on their copy. (Fixed on the way: approving an upload request with a description failed.)
 - [x] 6. Metadecks: listed in their own section at the bottom of My flashcards (always there, with its own create field under it), with the summed counts of the decks they come to (each deck once), opening onto what they hold, level by level, and reordered by dragging. They are filled there too: drag a deck, a marketplace deck or a metadeck onto a metadeck to put it inside (the deck stays in its own list), drag a row out of a metadeck to take it out, or onto another metadeck to move it; a right-click on a row offers the same ("Add to metadeck", "Remove from …"). A metadeck that would close a loop is not a target. A metadeck's pages: Study (the deck study page, each deck keeping its own progression; marketplace cards stay read-only) Cards (read-only: each deck a heading with its subdecks and cards under it, "Open deck" leading to that deck's own cards page) and Settings (rename, Mix / In order, delete: only the grouping goes). In order takes the new cards deck by deck; its due reviews come from all decks first unless set to go deck by deck too. Every metadeck is listed at the top level, also when another holds it.
 
-# Study features:
-## Setting on customizing fsrs (also somehow see personal optimization)
-Decided 2026-10-09: do as Anki and FSRS's own optimizer do. Optimize only from cards that still exist, and for each card only from its last fresh start (the reviews since it was last new; a review log's `state` says where that is, so a reset needs no marker). Reviews of deleted cards are kept for the heatmap and statistics, not for optimization.
+# AI prompts
+## double check for security, logic, edgecases
+Can you look through this feature and double check if the logic is correct, the edgecasesare correctly handled and if there are any security issues. Its ok if there are none and everything is good, just double check. If there are any, loop through previous statement until there are none. Take your time, its important.
 
-## restart deck (delete all progress of deck and do such that its a fresh deck from fsrs perspective)
+## Add checklist for me to test through for feature
+Can you add checklist in backlog.md for me to test this implemented feature, incl. edgecases.
 
-## study all button
-- Button for study all, which studies all your decks in some way for interleaving all, still adhering to subdeck progression.
-
-# when in edit mode, arrows cant both go back and forth in moves and control caret. what to do?
-# footer for proffesional look
-# contact page with email for bugs / ideas / business inquiries
-# allow PGN for board editor for both positions and moves import
-# editor: do selectors for annotations like pieces with nice icons showing arrows and circle, selectable and between Start position Clean board and pieces above
-# maybe: editor toggle for side to move (click the indicator to flip it) — only way now is editing the w/b in the FEN field
-# Chesscards wiki with info on how app works, FSRS, card types etc.
-# Do so if i card becomes due during a day, it becomes due at 2am local time, s.t. cards are rdy in the morning instead of dumping in through the day.(look how anki does)
-# Overview over your decks on marketplace / how many got/purchased it stats
-# Versioning of marketplace decks? If you improve it, request to update?
-# Statistics
-# if its your deck, do such that if you press e in study mode the editor comes up and youcan change stuff
+# Done
+[y] fsrs optimizer that uses reviews
+[y] fsrs learning from machine learning reviews
+[y] heatmap
+[y] heatmap in myflashcards like anki heatmap and github heatmap
+[y] allow PGN for board editor for both positions and moves import
+[y] Do so if i card becomes due during a day, it becomes due at 2am local time, s.t. cards are rdy in the morning instead of dumping in through the day.(look how anki does)
+[y] restart deck (delete all progress of deck and do such that its a fresh deck from fsrs perspective)
+[y] if its your deck, do such that if you press e in study mode the editor comes up and youcan change stuff
 [y] evaluation of deck: dont do stars theyre reductive. do recommend / do not recommend like steam and do comments with upvote / downvote buttons.
-# heatmap in myflashcards like anki heatmap and github heatmap
-
-# Chessboard editor
-# "fork" free deck?
-# link created account with socials, delink created account from socials
-
-# REST OF DOC AI CREATED
-# SPEC: add-cards editor — caret / deletion / merge behavior
-As implemented in `web/src/lib/tiptap-chessboard-block/` (2026-07-28). This is
-the reference for how the editor is SUPPOSED to behave — adjust this first,
-then make the code match.
-
-## Model
-- Each card side is a tiptap document; a chessboard block is ONE atom node
-  holding a boards array, laid out 2 per row. Text lines live around blocks.
-- The virtual board caret sits at gap indices inside one block (0 = before the
-  first board … boards.length = after the last). It renders as a bar 5px off
-  the board face, spanning board + FEN bar (never the number above or the
-  move line below), ~1.5px thick snapped to device pixels.
-- Horizontal navigation walks VISUAL stops (screen order, from DOM geometry):
-  each visual row contributes a "down" stop before its first board and an
-  "up" stop after every board; a same-row middle gap is a single stop. A row
-  break (2-wide wrap, or an open editor taking a full row) gives one gap two
-  stops picked by affinity, like a text line wrap.
-
-## Caret
-- Clicking a board parks the caret at its right. Shift+click extends a range;
-  dragging from the grid's empty space sweep-selects; shift+arrows likewise.
-- Opening a board editor (Edit button or insert): the document keeps focus and
-  the caret parks at the board's right — the editor-right stop EXISTS for
-  navigation but never renders a bar. The editor's left renders like any
-  board; the board below keeps its own left stop.
-- The selection tint covers board + bar exactly and bridges the gap between
-  two same-row selected boards. Plain arrows collapse a range to its edge.
-- While the caret is active, board move-nav (arrows) is off; inside a board
-  editor's moves mode the move recorder claims arrows first.
-- Focus never leaves the document for board presses, editor clicks on
-  non-text controls, or drags (the dnd library's focus steal is reverted);
-  the caret follows a dropped board.
-
-## Enter / typing at a gap
-- Enter before the first board: a line pushes in above, caret stays.
-- Enter mid-block: the block splits, text caret lands on the line between.
-- Enter after the last board: a line below, text caret in it.
-- Typing a character makes the line the keystroke would have made (above /
-  split / below) carrying the character.
-
-## Deletion
-- In-block Backspace/Delete removes the nearest board (or the active range).
-  A block emptied of boards dissolves into an empty line.
-- At a block edge: an empty neighboring line joins away (caret flows into the
-  block); a text line takes the caret; an adjacent block flows the caret
-  through.
-- From text beside a block: an empty line joins away; a non-empty line
-  deletes the block's nearest board and the text caret stays. At the document
-  edge with a block on the other side, the key is consumed — never left to
-  the browser's native delete, which selects the whole island.
-- Every deletion reparks the real selection collapsed (gap cursor when
-  possible) so remapping can never tint blocks as selected.
-
-## Merge (normalizer)
-- Two blocks left adjacent — the line between them deleted by any means —
-  merge into one. The first block's id survives; the caret remaps into the
-  merged block. The normalizer also dissolves empty blocks and assigns ids to
-  blocks born without one (paste).
-
-## Clipboard
-- Mod-c/x/v with the caret active: the board clipboard, within and across
-  blocks and sides. Pasting with a text caret joins a block that touches it
-  (nothing but the line boundary between), else creates a new block at the
-  caret's line. Native paste of block HTML regenerates all ids.
-
